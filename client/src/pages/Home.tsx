@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
   Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
-  ArrowLeft, BookOpen, ClipboardList, LogOut
+  ArrowLeft, BookOpen, ClipboardList, LogOut, MapPin
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
@@ -253,6 +253,12 @@ export default function Home() {
                   <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
                     <Bell size={15} />
                     Avisos
+                  </span>
+                </Link>
+                <Link href="/presenca">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                    <MapPin size={15} />
+                    Presença
                   </span>
                 </Link>
                 <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>

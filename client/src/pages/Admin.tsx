@@ -7,7 +7,7 @@ import {
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
-  Award, Star, Medal
+  Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -1175,10 +1175,269 @@ function BadgesManager({ password }: { password: string }) {
   );
 }
 
+// ─── Attendance Manager ───
+function AttendanceManager({ password }: { password: string }) {
+  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [viewMode, setViewMode] = useState<"summary" | "weekly" | "accounts">("summary");
+  const [manualMemberId, setManualMemberId] = useState("");
+  const [manualNote, setManualNote] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = trpc.attendance.getSummary.useQuery(
+    { password }, { enabled: viewMode === "summary" }
+  );
+  const { data: weeklyData, isLoading: weeklyLoading, refetch: refetchWeekly } = trpc.attendance.getByWeek.useQuery(
+    { password, week: selectedWeek }, { enabled: viewMode === "weekly" }
+  );
+  const { data: accounts, isLoading: accountsLoading, refetch: refetchAccounts } = trpc.attendance.getAccounts.useQuery(
+    { password }, { enabled: viewMode === "accounts" }
+  );
+
+  const updateStatusMutation = trpc.attendance.updateStatus.useMutation({
+    onSuccess: () => { toast.success("Status atualizado"); refetchWeekly(); refetchSummary(); },
+  });
+  const manualCheckInMutation = trpc.attendance.manualCheckIn.useMutation({
+    onSuccess: () => { toast.success("Presença manual registrada"); refetchWeekly(); refetchSummary(); setManualMemberId(""); setManualNote(""); },
+  });
+  const deleteRecordMutation = trpc.attendance.delete.useMutation({
+    onSuccess: () => { toast.success("Registro removido"); refetchWeekly(); refetchSummary(); },
+  });
+  const deleteAccountMutation = trpc.attendance.deleteAccount.useMutation({
+    onSuccess: () => { toast.success("Conta removida"); refetchAccounts(); },
+  });
+
+  const filteredSummary = useMemo(() => {
+    if (!summary) return [];
+    if (!searchTerm.trim()) return summary;
+    const s = searchTerm.toLowerCase();
+    return summary.filter((m: any) => m.memberName.toLowerCase().includes(s) || m.teamName.toLowerCase().includes(s));
+  }, [summary, searchTerm]);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
+          <MapPin size={20} className="text-primary" /> Controle de Frequência
+        </h2>
+      </div>
+
+      {/* View Mode Tabs */}
+      <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit mb-4">
+        {[
+          { key: "summary" as const, label: "Resumo Geral" },
+          { key: "weekly" as const, label: "Por Semana" },
+          { key: "accounts" as const, label: "Contas de Alunos" },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setViewMode(tab.key)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              viewMode === tab.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Summary View */}
+      {viewMode === "summary" && (
+        <div>
+          <div className="relative mb-3">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar aluno ou equipe..."
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+            />
+          </div>
+          {summaryLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">Aluno</th>
+                    <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">Equipe</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground font-medium">Conta</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground font-medium">Presenças</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground font-medium">Válidas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSummary.map((m: any) => (
+                    <tr key={m.memberId} className="border-b border-border/50 hover:bg-secondary/30">
+                      <td className="py-2 px-2 text-foreground">{m.memberName}</td>
+                      <td className="py-2 px-2 text-muted-foreground">{m.teamEmoji} {m.teamName}</td>
+                      <td className="py-2 px-2 text-center">
+                        {m.hasAccount ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-500"><CheckCircle size={12} /></span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><XCircle size={12} /></span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2 text-center font-mono">{m.totalPresent}</td>
+                      <td className="py-2 px-2 text-center font-mono text-green-500">{m.validPresent}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Weekly View */}
+      {viewMode === "weekly" && (
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm text-muted-foreground">Semana:</label>
+            <select
+              value={selectedWeek}
+              onChange={e => setSelectedWeek(Number(e.target.value))}
+              className="px-3 py-1.5 rounded-lg bg-secondary border border-border text-foreground text-sm"
+            >
+              {Array.from({ length: 19 }, (_, i) => i + 1).map(w => (
+                <option key={w} value={w}>Semana {w}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Manual check-in */}
+          <div className="p-3 rounded-lg bg-secondary/30 border border-border mb-4">
+            <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+              <UserCheck size={14} /> Presença Manual
+            </h4>
+            <div className="flex gap-2 items-end flex-wrap">
+              <div className="flex-1 min-w-[150px]">
+                <label className="text-xs text-muted-foreground block mb-1">ID do Aluno (membro)</label>
+                <input
+                  type="number"
+                  value={manualMemberId}
+                  onChange={e => setManualMemberId(e.target.value)}
+                  placeholder="ID"
+                  className="w-full px-2 py-1.5 rounded-md bg-secondary border border-border text-foreground text-sm"
+                />
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="text-xs text-muted-foreground block mb-1">Observação</label>
+                <input
+                  type="text"
+                  value={manualNote}
+                  onChange={e => setManualNote(e.target.value)}
+                  placeholder="Opcional"
+                  className="w-full px-2 py-1.5 rounded-md bg-secondary border border-border text-foreground text-sm"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (!manualMemberId) return;
+                  const today = new Date().toISOString().split("T")[0];
+                  manualCheckInMutation.mutate({
+                    password, memberId: Number(manualMemberId),
+                    week: selectedWeek, classDate: today, note: manualNote || undefined,
+                  });
+                }}
+                disabled={!manualMemberId || manualCheckInMutation.isPending}
+                className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+              >
+                Registrar
+              </button>
+            </div>
+          </div>
+
+          {weeklyLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : !weeklyData || weeklyData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro na semana {selectedWeek}</p>
+          ) : (
+            <div className="space-y-2">
+              {weeklyData.map((r: any) => (
+                <div key={r.id} className="p-3 rounded-lg bg-secondary/30 border border-border flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    r.status === "valid" || r.status === "manual" ? "bg-green-500/15" : "bg-red-500/15"
+                  }`}>
+                    {r.status === "valid" || r.status === "manual" ? (
+                      <CheckCircle size={16} className="text-green-500" />
+                    ) : (
+                      <XCircle size={16} className="text-red-500" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-foreground font-medium">{r.memberName}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.teamEmoji} {r.teamName} • {r.classDate}
+                      {r.distanceMeters && ` • ${parseFloat(r.distanceMeters).toFixed(0)}m`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={r.status}
+                      onChange={e => updateStatusMutation.mutate({ password, id: r.id, status: e.target.value as any })}
+                      className="px-2 py-1 rounded-md bg-secondary border border-border text-xs text-foreground"
+                    >
+                      <option value="valid">Válida</option>
+                      <option value="invalid">Inválida</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                    <button
+                      onClick={() => { if (confirm("Remover este registro?")) deleteRecordMutation.mutate({ password, id: r.id }); }}
+                      className="p-1 rounded-md hover:bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Accounts View */}
+      {viewMode === "accounts" && (
+        <div>
+          {accountsLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : !accounts || accounts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma conta de aluno cadastrada</p>
+          ) : (
+            <div className="space-y-2">
+              {accounts.map((a: any) => (
+                <div key={a.id} className="p-3 rounded-lg bg-secondary/30 border border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCheck size={16} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-foreground font-medium">{a.memberName}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {a.teamEmoji} {a.teamName} • {a.email} • Mat: {a.matricula}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm(`Remover conta de ${a.memberName}?`)) deleteAccountMutation.mutate({ password, id: a.id }); }}
+                    className="p-1 rounded-md hover:bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground mt-2">{accounts.length} conta(s) cadastrada(s)</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
@@ -1190,6 +1449,7 @@ export default function Admin() {
     { key: "notifications" as const, label: "Notificações", icon: <Bell size={16} /> },
     { key: "materials" as const, label: "Materiais", icon: <FileText size={16} /> },
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
+    { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -1235,6 +1495,7 @@ export default function Admin() {
         {activeSection === "notifications" && <NotificationsManager password={password} />}
         {activeSection === "materials" && <MaterialsManager password={password} />}
         {activeSection === "badges" && <BadgesManager password={password} />}
+        {activeSection === "attendance" && <AttendanceManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

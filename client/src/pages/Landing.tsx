@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { useStudentAuth } from "./StudentLogin";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
@@ -132,6 +133,7 @@ export default function Landing() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
+  const { isAuthenticated: isStudentAuth, student: studentData } = useStudentAuth();
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
   const totalTeams = leaderboard?.teams?.length ?? 0;
@@ -579,7 +581,7 @@ export default function Landing() {
                   Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
                 </p>
                 <div className="space-y-3">
-                  {isAuthenticated ? (
+                  {isStudentAuth ? (
                     <button
                       onClick={() => setLocation("/leaderboard")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
@@ -590,14 +592,14 @@ export default function Landing() {
                       <ArrowRight size={18} />
                     </button>
                   ) : (
-                    <a
-                      href={getLoginUrl()}
+                    <button
+                      onClick={() => setLocation("/login-aluno")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
                       style={{ backgroundColor: "#F7941D", color: "#fff" }}
                     >
                       <LogIn size={18} />
-                      Fazer Login
-                    </a>
+                      Fazer Login / Cadastrar
+                    </button>
                   )}
                 </div>
               </div>

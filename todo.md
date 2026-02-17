@@ -101,3 +101,11 @@
 - [x] Integrar gestão de badges no painel admin (criar, atribuir, revogar, excluir)
 - [x] Escrever testes para o sistema de conquistas (25 testes passando)
 - [x] Corrigir botão Sair: ao clicar deve fazer logout e redirecionar para a página inicial (/)
+- [x] Gerar badges temáticos para todas as semanas (Farmacocinética, SNA, Colinérgicos, etc.)
+- [x] Cadastrar todos os badges no banco de dados (19 badges, semanas 1-19)
+- [x] Criar sistema de cadastro/login com email institucional @edu.unirio.br + matrícula
+- [x] Criar sistema de presença com geolocalização (Frei Caneca 94, sala D201, raio 100m)
+- [x] Presença só disponível durante horário de aula (terças 8h-12h)
+- [x] Criar aba de controle de frequência no painel do professor
+- [ ] Implementar notificações automáticas para badges e pontuações
+- [ ] Incorporar playlists do YouTube na página de materiais por tema

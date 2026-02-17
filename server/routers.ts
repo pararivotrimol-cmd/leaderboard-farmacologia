@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // Admin password check middleware (simple password-based, no OAuth needed)
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -661,6 +663,355 @@ export const appRouter = router({
         });
       }),
   }),
+
+  // ─── Student Auth (email institucional @edu.unirio.br) ───
+  studentAuth: router({
+    // Register a new student account
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email().refine(e => e.endsWith("@edu.unirio.br"), { message: "Email deve ser @edu.unirio.br" }),
+        matricula: z.string().min(5, "Matrícula deve ter pelo menos 5 caracteres"),
+        password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+        memberId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Check if email already registered
+        const existingEmail = await db.getStudentAccountByEmail(input.email);
+        if (existingEmail) return { success: false, message: "Este email já está cadastrado" } as const;
+        // Check if matricula already registered
+        const existingMatricula = await db.getStudentAccountByMatricula(input.matricula);
+        if (existingMatricula) return { success: false, message: "Esta matrícula já está cadastrada" } as const;
+        // Check if member already has an account
+        const existingMember = await db.getStudentAccountByMemberId(input.memberId);
+        if (existingMember) return { success: false, message: "Este aluno já possui uma conta cadastrada" } as const;
+        // Hash password
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        // Create session token
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        const id = await db.createStudentAccount({
+          memberId: input.memberId,
+          email: input.email,
+          matricula: input.matricula,
+          passwordHash,
+          sessionToken,
+        });
+        return { success: true, message: "Conta criada com sucesso!", sessionToken, studentId: id } as const;
+      }),
+
+    // Login with email + password
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const account = await db.getStudentAccountByEmail(input.email);
+        if (!account) return { success: false, message: "Email não encontrado" } as const;
+        if (!account.isActive) return { success: false, message: "Conta desativada" } as const;
+        const valid = await bcrypt.compare(input.password, account.passwordHash);
+        if (!valid) return { success: false, message: "Senha incorreta" } as const;
+        // Generate new session token
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        await db.updateStudentAccountSession(account.id, sessionToken);
+        return { success: true, sessionToken, studentId: account.id, memberId: account.memberId } as const;
+      }),
+
+    // Verify session token (for persistent login)
+    me: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (!account) return null;
+        // Get member info
+        const allMembers = await db.getAllMembers();
+        const member = allMembers.find(m => m.id === account.memberId);
+        const allTeams = await db.getAllTeams();
+        const team = allTeams.find(t => t.id === member?.teamId);
+        return {
+          id: account.id,
+          memberId: account.memberId,
+          email: account.email,
+          matricula: account.matricula,
+          memberName: member?.name || "Desconhecido",
+          teamId: team?.id,
+          teamName: team?.name,
+          teamEmoji: team?.emoji,
+        };
+      }),
+
+    // Logout
+    logout: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .mutation(async ({ input }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (account) {
+          await db.updateStudentAccountSession(account.id, null);
+        }
+        return { success: true };
+      }),
+
+    // Get available members (not yet registered)
+    getAvailableMembers: publicProcedure.query(async () => {
+      const [allMembers, allAccounts, allTeams] = await Promise.all([
+        db.getAllMembers(),
+        db.getAllStudentAccounts(),
+        db.getAllTeams(),
+      ]);
+      const registeredMemberIds = new Set(allAccounts.map(a => a.memberId));
+      return allMembers
+        .filter(m => !registeredMemberIds.has(m.id))
+        .map(m => {
+          const team = allTeams.find(t => t.id === m.teamId);
+          return { id: m.id, name: m.name, teamName: team?.name || "Sem equipe", teamEmoji: team?.emoji || "🧪" };
+        });
+    }),
+
+    // Change password
+    changePassword: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        currentPassword: z.string(),
+        newPassword: z.string().min(6),
+      }))
+      .mutation(async ({ input }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (!account) return { success: false, message: "Sessão inválida" } as const;
+        const valid = await bcrypt.compare(input.currentPassword, account.passwordHash);
+        if (!valid) return { success: false, message: "Senha atual incorreta" } as const;
+        const passwordHash = await bcrypt.hash(input.newPassword, 10);
+        await db.updateStudentAccountPassword(account.id, passwordHash);
+        return { success: true, message: "Senha alterada com sucesso" } as const;
+      }),
+  }),
+
+  // ─── Attendance (Presença com Geolocalização) ───
+  attendance: router({
+    // Student: check in with geolocation
+    checkIn: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        latitude: z.number(),
+        longitude: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (!account) return { success: false, message: "Sessão inválida. Faça login novamente." } as const;
+
+        // Check if it's Tuesday (day 2) and within class hours (8h-12h BRT = 11h-15h UTC)
+        const now = new Date();
+        const brasiliaOffset = -3 * 60; // BRT is UTC-3
+        const brasiliaTime = new Date(now.getTime() + (brasiliaOffset + now.getTimezoneOffset()) * 60000);
+        const dayOfWeek = brasiliaTime.getDay(); // 0=Sun, 2=Tue
+        const hour = brasiliaTime.getHours();
+
+        // Allow check-in on Tuesdays between 7:30 and 12:30 (with 30min buffer)
+        if (dayOfWeek !== 2) {
+          return { success: false, message: "A presença só pode ser registrada às terças-feiras." } as const;
+        }
+        if (hour < 7 || hour > 12) {
+          return { success: false, message: "A presença só pode ser registrada entre 7:30 e 12:30." } as const;
+        }
+
+        // Calculate distance from classroom
+        // Frei Caneca 94, Rio de Janeiro (approximate coordinates)
+        const CLASSROOM_LAT = -22.9176;
+        const CLASSROOM_LNG = -43.1831;
+        const MAX_DISTANCE_METERS = 100;
+
+        const distance = calculateDistance(
+          input.latitude, input.longitude,
+          CLASSROOM_LAT, CLASSROOM_LNG
+        );
+
+        const isWithinRange = distance <= MAX_DISTANCE_METERS;
+
+        // Calculate current week (based on semester start)
+        const semesterStart = new Date("2026-03-10"); // Adjust to actual semester start
+        const weeksSinceStart = Math.floor((brasiliaTime.getTime() - semesterStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const currentWeek = Math.max(1, weeksSinceStart + 1);
+
+        const classDate = brasiliaTime.toISOString().split("T")[0];
+
+        const result = await db.createAttendanceRecord({
+          studentAccountId: account.id,
+          memberId: account.memberId,
+          week: currentWeek,
+          classDate,
+          latitude: input.latitude.toString(),
+          longitude: input.longitude.toString(),
+          distanceMeters: distance.toFixed(2),
+          status: isWithinRange ? "valid" : "invalid",
+          ipAddress: ctx.req.ip || ctx.req.headers["x-forwarded-for"]?.toString() || "unknown",
+          userAgent: ctx.req.headers["user-agent"] || "unknown",
+        });
+
+        if (result.alreadyCheckedIn) {
+          return { success: false, message: "Você já registrou presença nesta semana." } as const;
+        }
+
+        return {
+          success: true,
+          message: isWithinRange
+            ? `Presença registrada com sucesso! (${distance.toFixed(0)}m da sala)`
+            : `Presença registrada, mas você está a ${distance.toFixed(0)}m da sala (máximo: ${MAX_DISTANCE_METERS}m). O professor será notificado.`,
+          distance: Math.round(distance),
+          isWithinRange,
+          week: currentWeek,
+        } as const;
+      }),
+
+    // Student: get my attendance history
+    myAttendance: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (!account) return [];
+        return db.getAttendanceByStudent(account.id);
+      }),
+
+    // Admin: get all attendance for a week
+    getByWeek: publicProcedure
+      .input(z.object({ password: z.string(), week: z.number() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const [records, allMembers, allTeams, allAccounts] = await Promise.all([
+          db.getAttendanceByWeek(input.week),
+          db.getAllMembers(),
+          db.getAllTeams(),
+          db.getAllStudentAccounts(),
+        ]);
+        return records.map(r => {
+          const member = allMembers.find(m => m.id === r.memberId);
+          const team = allTeams.find(t => t.id === member?.teamId);
+          const account = allAccounts.find(a => a.id === r.studentAccountId);
+          return {
+            ...r,
+            memberName: member?.name || "Desconhecido",
+            teamName: team?.name || "Sem equipe",
+            teamEmoji: team?.emoji || "🧪",
+            email: account?.email,
+          };
+        });
+      }),
+
+    // Admin: get attendance summary (all members, all weeks)
+    getSummary: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const [summary, allMembers, allTeams, allAccounts] = await Promise.all([
+          db.getAttendanceSummary(),
+          db.getAllMembers(),
+          db.getAllTeams(),
+          db.getAllStudentAccounts(),
+        ]);
+        return allMembers.map(m => {
+          const team = allTeams.find(t => t.id === m.teamId);
+          const account = allAccounts.find(a => a.memberId === m.id);
+          const stats = summary.find(s => s.memberId === m.id);
+          return {
+            memberId: m.id,
+            memberName: m.name,
+            teamName: team?.name || "Sem equipe",
+            teamEmoji: team?.emoji || "🧪",
+            hasAccount: !!account,
+            email: account?.email,
+            totalPresent: stats?.totalPresent || 0,
+            validPresent: stats?.validPresent || 0,
+          };
+        });
+      }),
+
+    // Admin: update attendance status
+    updateStatus: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        status: z.enum(["valid", "invalid", "manual"]),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        await db.updateAttendanceStatus(input.id, input.status, input.note);
+        return { success: true };
+      }),
+
+    // Admin: manual attendance
+    manualCheckIn: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        memberId: z.number(),
+        week: z.number(),
+        classDate: z.string(),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const id = await db.createManualAttendance(input.memberId, input.week, input.classDate, input.note);
+        return { id, success: true };
+      }),
+
+    // Admin: delete attendance record
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        await db.deleteAttendanceRecord(input.id);
+        return { success: true };
+      }),
+
+    // Admin: get all student accounts
+    getAccounts: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const [accounts, allMembers, allTeams] = await Promise.all([
+          db.getAllStudentAccounts(),
+          db.getAllMembers(),
+          db.getAllTeams(),
+        ]);
+        return accounts.map(a => {
+          const member = allMembers.find(m => m.id === a.memberId);
+          const team = allTeams.find(t => t.id === member?.teamId);
+          return {
+            ...a,
+            passwordHash: undefined, // Don't expose
+            sessionToken: undefined, // Don't expose
+            memberName: member?.name || "Desconhecido",
+            teamName: team?.name || "Sem equipe",
+            teamEmoji: team?.emoji || "🧪",
+          };
+        });
+      }),
+
+    // Admin: delete student account
+    deleteAccount: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        await db.deleteStudentAccount(input.id);
+        return { success: true };
+      }),
+  }),
 });
+
+// Haversine formula to calculate distance between two coordinates in meters
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Earth's radius in meters
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export type AppRouter = typeof appRouter;

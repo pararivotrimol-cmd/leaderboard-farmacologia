@@ -1,4 +1,4 @@
-import { eq, asc, desc, sql } from "drizzle-orm";
+import { eq, asc, desc, sql, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -11,6 +11,8 @@ import {
   materials, InsertMaterial,
   badges, InsertBadge,
   memberBadges, InsertMemberBadge,
+  studentAccounts, InsertStudentAccount,
+  attendance, InsertAttendance,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -383,4 +385,165 @@ export async function deleteMemberBadge(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(memberBadges).where(eq(memberBadges.id, id));
+}
+
+// ─── Student Accounts ───
+
+export async function getStudentAccountByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studentAccounts).where(eq(studentAccounts.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getStudentAccountByMatricula(matricula: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studentAccounts).where(eq(studentAccounts.matricula, matricula)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getStudentAccountByMemberId(memberId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studentAccounts).where(eq(studentAccounts.memberId, memberId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getStudentAccountBySessionToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studentAccounts)
+    .where(and(eq(studentAccounts.sessionToken, token), eq(studentAccounts.isActive, 1)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createStudentAccount(data: InsertStudentAccount) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(studentAccounts).values(data);
+  return result[0].insertId;
+}
+
+export async function updateStudentAccountSession(id: number, sessionToken: string | null) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentAccounts).set({
+    sessionToken,
+    lastLoginAt: sessionToken ? new Date() : undefined,
+  }).where(eq(studentAccounts.id, id));
+}
+
+export async function updateStudentAccountPassword(id: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentAccounts).set({ passwordHash }).where(eq(studentAccounts.id, id));
+}
+
+export async function getAllStudentAccounts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(studentAccounts).orderBy(asc(studentAccounts.email));
+}
+
+export async function deleteStudentAccount(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Delete attendance records first
+  await db.delete(attendance).where(eq(attendance.studentAccountId, id));
+  await db.delete(studentAccounts).where(eq(studentAccounts.id, id));
+}
+
+// ─── Attendance ───
+
+export async function createAttendanceRecord(data: InsertAttendance) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Check if already checked in for this week
+  const existing = await db.select().from(attendance)
+    .where(and(
+      eq(attendance.studentAccountId, data.studentAccountId!),
+      eq(attendance.week, data.week!),
+    ))
+    .limit(1);
+  if (existing.length > 0) return { id: existing[0].id, alreadyCheckedIn: true };
+  const result = await db.insert(attendance).values(data);
+  return { id: result[0].insertId, alreadyCheckedIn: false };
+}
+
+export async function getAttendanceByStudent(studentAccountId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(attendance)
+    .where(eq(attendance.studentAccountId, studentAccountId))
+    .orderBy(asc(attendance.week));
+}
+
+export async function getAttendanceByWeek(week: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(attendance)
+    .where(eq(attendance.week, week))
+    .orderBy(asc(attendance.memberId));
+}
+
+export async function getAllAttendance() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(attendance).orderBy(desc(attendance.checkedInAt));
+}
+
+export async function getAttendanceSummary() {
+  const db = await getDb();
+  if (!db) return [];
+  // Get count of attendance per member across all weeks
+  const result = await db.select({
+    memberId: attendance.memberId,
+    totalPresent: sql<number>`COUNT(DISTINCT ${attendance.week})`,
+    validPresent: sql<number>`COUNT(DISTINCT CASE WHEN ${attendance.status} IN ('valid', 'manual') THEN ${attendance.week} END)`,
+  }).from(attendance).groupBy(attendance.memberId);
+  return result;
+}
+
+export async function updateAttendanceStatus(id: number, status: "valid" | "invalid" | "manual", note?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = { status };
+  if (note !== undefined) updateData.note = note;
+  await db.update(attendance).set(updateData as any).where(eq(attendance.id, id));
+}
+
+export async function deleteAttendanceRecord(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(attendance).where(eq(attendance.id, id));
+}
+
+export async function createManualAttendance(memberId: number, week: number, classDate: string, note?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Find the student account for this member
+  const account = await db.select().from(studentAccounts).where(eq(studentAccounts.memberId, memberId)).limit(1);
+  const studentAccountId = account.length > 0 ? account[0].id : 0;
+  // Check if already has attendance for this week
+  if (studentAccountId > 0) {
+    const existing = await db.select().from(attendance)
+      .where(and(eq(attendance.studentAccountId, studentAccountId), eq(attendance.week, week)))
+      .limit(1);
+    if (existing.length > 0) {
+      // Update to manual
+      await db.update(attendance).set({ status: "manual", note }).where(eq(attendance.id, existing[0].id));
+      return existing[0].id;
+    }
+  }
+  const result = await db.insert(attendance).values({
+    studentAccountId: studentAccountId || 0,
+    memberId,
+    week,
+    classDate,
+    status: "manual",
+    note: note || "Presença registrada manualmente pelo professor",
+  });
+  return result[0].insertId;
 }

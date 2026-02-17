@@ -180,3 +180,64 @@ export const memberBadges = mysqlTable("memberBadges", {
 
 export type MemberBadge = typeof memberBadges.$inferSelect;
 export type InsertMemberBadge = typeof memberBadges.$inferInsert;
+
+/**
+ * Student Accounts - login with institutional email @edu.unirio.br
+ * Links a student to their member record for self-service features
+ */
+export const studentAccounts = mysqlTable("studentAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  // Link to the members table
+  memberId: int("memberId").notNull().unique(),
+  // Institutional email (must be @edu.unirio.br)
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  // Student registration number (matrícula)
+  matricula: varchar("matricula", { length: 30 }).notNull().unique(),
+  // Hashed password (bcrypt)
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  // Whether the account is verified/active
+  isActive: int("isActive").notNull().default(1),
+  // Session token for login persistence
+  sessionToken: varchar("sessionToken", { length: 255 }),
+  lastLoginAt: timestamp("lastLoginAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentAccount = typeof studentAccounts.$inferSelect;
+export type InsertStudentAccount = typeof studentAccounts.$inferInsert;
+
+/**
+ * Attendance - geolocation-based attendance records
+ * Students check in during class hours (Tuesdays 8h-12h)
+ * Location: Frei Caneca 94, sala D201 (lat/lng with 100m radius)
+ */
+export const attendance = mysqlTable("attendance", {
+  id: int("id").autoincrement().primaryKey(),
+  // Link to the student account
+  studentAccountId: int("studentAccountId").notNull(),
+  // Link to the member
+  memberId: int("memberId").notNull(),
+  // Week number
+  week: int("week").notNull(),
+  // Date of the class
+  classDate: varchar("classDate", { length: 20 }).notNull(),
+  // Check-in timestamp
+  checkedInAt: timestamp("checkedInAt").defaultNow().notNull(),
+  // Geolocation data
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  // Distance from classroom in meters
+  distanceMeters: decimal("distanceMeters", { precision: 8, scale: 2 }),
+  // Status: valid (within range), invalid (outside range), manual (professor override)
+  status: mysqlEnum("status", ["valid", "invalid", "manual"]).default("valid").notNull(),
+  // IP address for audit
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  // User agent for audit
+  userAgent: text("userAgent"),
+  // Optional note
+  note: text("note"),
+});
+
+export type Attendance = typeof attendance.$inferSelect;
+export type InsertAttendance = typeof attendance.$inferInsert;
