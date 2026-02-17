@@ -3,7 +3,7 @@ import { Bell, AlertTriangle, Info, Clock, ArrowLeft, FlaskConical, Youtube } fr
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/oUYumbCRVNHBqtNw.png";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/bQaermuTleJBguWb.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
 
 function PriorityIcon({ priority }: { priority: string }) {
@@ -67,7 +67,7 @@ export default function Avisos() {
       <div className="border-b border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <div className="container py-6">
           <div className="flex items-center gap-3 mb-4">
-            <Link href="/">
+            <Link href="/leaderboard">
               <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft size={16} />
                 Voltar ao Ranking
@@ -224,7 +224,7 @@ export default function Avisos() {
       <footer className="border-t border-border py-6 mt-8">
         <div className="container text-center">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/">
+            <Link href="/leaderboard">
               <span className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors cursor-pointer"><FlaskConical size={10} /> Ranking PF</span>
             </Link>
             <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="text-xs text-red-400/60 hover:text-red-400 flex items-center gap-1 transition-colors"><Youtube size={10} /> Conexão em Ciência</a>

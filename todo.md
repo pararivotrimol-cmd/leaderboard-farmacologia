@@ -39,3 +39,12 @@
 - [ ] Implement email notification sending (future)
 - [x] Add notification management to admin panel
 - [x] Write vitest tests for notification API (25 tests passing)
+- [x] Analyze vinheta from Conexão em Ciência channel for visual identity
+- [x] Use the Farmacológicas logo from YouTube channel
+- [x] Create new introduction video for Conexão em Farmacologia channel (4 shots, 16s)
+- [x] Create professional landing page with animations (hero, stats, features, timeline, CTA)
+- [x] Integrate landing page as site entry point (/ = Landing, /leaderboard = Ranking)
+- [x] Generate transparent logo for dark backgrounds
+- [x] Update logo across all pages (Home, Avisos, Landing)
+- [x] Update all internal navigation links for new routing structure
+- [x] Add video intro modal with vinheta playback on landing page

@@ -13,7 +13,7 @@ import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
 const HERO_BANNER = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/PxxmnrVLfupqXVFw.png";
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/oUYumbCRVNHBqtNw.png";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/bQaermuTleJBguWb.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
 
 const MAX_PF_SEMESTER = 45;
@@ -198,6 +198,12 @@ export default function Home() {
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
               <div className="flex items-center gap-3 mt-3 flex-wrap">
+                <Link href="/">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-500/30 text-orange-400 text-sm font-medium hover:bg-orange-500/10 transition-colors">
+                    <FlaskConical size={16} />
+                    Início
+                  </button>
+                </Link>
                 <Link href="/meu-progresso">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-md">
                     <Users size={16} />

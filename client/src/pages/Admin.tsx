@@ -66,7 +66,7 @@ function LoginScreen({ onLogin }: { onLogin: (pw: string) => void }) {
           </button>
         </form>
         <div className="mt-6 text-center">
-          <a href="/" className="text-xs text-muted-foreground hover:text-primary flex items-center justify-center gap-1">
+          <a href="/leaderboard" className="text-xs text-muted-foreground hover:text-primary flex items-center justify-center gap-1">
             <ArrowLeft size={12} /> Voltar ao Ranking
           </a>
         </div>
@@ -702,7 +702,7 @@ export default function Admin() {
         <div className="container py-4 flex items-center gap-3">
           <FlaskConical size={20} className="text-primary" />
           <h1 className="font-display font-bold text-lg text-foreground flex-1">Painel Admin</h1>
-          <a href="/" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mr-3">
+          <a href="/leaderboard" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mr-3">
             <ArrowLeft size={12} /> Ranking
           </a>
           <button onClick={() => setPassword(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
