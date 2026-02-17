@@ -161,6 +161,7 @@ export default function Landing() {
     setIntroStarted(true);
     setIsMuted(false);
     if (videoRef.current) {
+      videoRef.current.currentTime = 0;
       videoRef.current.muted = false;
       videoRef.current.play().catch(() => {
         // Fallback: if unmuted play fails, play muted
@@ -232,15 +233,25 @@ export default function Landing() {
   ];
 
   const timeline = [
-    { week: "Semana 1", title: "Introdução & Formação de Equipes", icon: <GraduationCap size={18} /> },
-    { week: "Semanas 2-4", title: "Farmacocinética & Farmacodinâmica", icon: <Pill size={18} /> },
-    { week: "Semanas 5-7", title: "SNA: Colinérgicos & Bloqueadores Neuromusculares + Jigsaw 1-3", icon: <Activity size={18} /> },
-    { week: "Semana 8", title: "Prova P1 + Escape Room", icon: <Zap size={18} /> },
-    { week: "Semanas 9-11", title: "SNA: Adrenérgicos & Anti-adrenérgicos", icon: <FlaskConical size={18} /> },
-    { week: "Semanas 12-14", title: "Anti-inflamatórios, Analgésicos & Anestésicos", icon: <Brain size={18} /> },
-    { week: "Semana 15", title: "Seminários Finais & Revisão", icon: <Target size={18} /> },
-    { week: "Semana 16", title: "Prova P2 + Premiação Final", icon: <Trophy size={18} /> },
+    { week: "Semana 1", title: "Introdução à Farmacologia & Formação de Equipes", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes e TBL diagnóstico.", icon: <GraduationCap size={18} /> },
+    { week: "Semana 2", title: "Farmacocinética I — Absorção e Distribuição", detail: "Vias de administração, biodisponibilidade, volume de distribuição. TBL 1.", icon: <Pill size={18} /> },
+    { week: "Semana 3", title: "Farmacocinética II — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. Caso Clínico 1.", icon: <Pill size={18} /> },
+    { week: "Semana 4", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. TBL 2.", icon: <Brain size={18} /> },
+    { week: "Semana 5", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", icon: <Activity size={18} /> },
+    { week: "Semana 6", title: "SNA — Bloqueadores Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", icon: <Activity size={18} /> },
+    { week: "Semana 7", title: "Seminários Jigsaw 2 e 3", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", icon: <Target size={18} /> },
+    { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1). Escape Room temático com desafios de farmacocinética e SNA.", icon: <Zap size={18} /> },
+    { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} /> },
+    { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} /> },
+    { week: "Semana 11", title: "Seminários Jigsaw 4 e 5", detail: "Apresentações dos grupos especialistas sobre SNA adrenérgico.", icon: <Target size={18} /> },
+    { week: "Semana 12", title: "Anti-inflamatórios Não Esteroidais (AINEs)", detail: "Inibidores de COX, seletividade, efeitos adversos. TBL 4.", icon: <Brain size={18} /> },
+    { week: "Semana 13", title: "Corticosteroides & Analgésicos Opioides", detail: "Mecanismo anti-inflamatório, receptores opioides, escala analgésica. Caso Clínico 4.", icon: <Brain size={18} /> },
+    { week: "Semana 14", title: "Anestésicos Locais & Seminário Jigsaw 6", detail: "Mecanismo de bloqueio neural, tipos de anestésicos. Último seminário.", icon: <Brain size={18} /> },
+    { week: "Semana 15", title: "Revisão Integrativa & Grand Rounds", detail: "Revisão geral, casos clínicos integrativos, preparação para P2.", icon: <Target size={18} /> },
+    { week: "Semana 16", title: "Prova P2 + Premiação Final", detail: "Avaliação individual (P2). Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} /> },
   ];
+
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
@@ -255,66 +266,58 @@ export default function Landing() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {!introStarted ? (
-              /* ── Click-to-start screen ── */
-              <div className="flex flex-col items-center justify-center gap-6 cursor-pointer w-full h-full"
+            {/* Single persistent video element */}
+            <video
+              ref={videoRef}
+              src={INTRO_VIDEO_URL}
+              playsInline
+              muted
+              preload="auto"
+              className="w-full h-full object-contain absolute inset-0"
+              onEnded={handleIntroEnd}
+              style={{ filter: introStarted ? "none" : "brightness(0.3)" }}
+            />
+
+            {!introStarted && (
+              /* ── Click-to-start overlay ── */
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 cursor-pointer z-10"
                 onClick={startIntro}
               >
-                <video
-                  ref={videoRef}
-                  src={INTRO_VIDEO_URL}
-                  playsInline
-                  muted
-                  preload="auto"
-                  className="w-full h-full object-contain absolute inset-0"
-                  onEnded={handleIntroEnd}
-                  style={{ filter: "brightness(0.3)" }}
-                />
-                <div className="relative z-10 flex flex-col items-center gap-4">
-                  <motion.div
-                    className="w-20 h-20 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: "rgba(247,148,29,0.9)" }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Play size={36} className="text-white ml-1" />
-                  </motion.div>
-                  <p className="text-white text-lg font-semibold">Clique para iniciar</p>
-                  <p className="text-white/50 text-sm">Conexão em Farmacologia</p>
-                </div>
-              </div>
-            ) : (
-              /* ── Video playing ── */
-              <>
-                <video
-                  ref={videoRef}
-                  src={INTRO_VIDEO_URL}
-                  playsInline
-                  className="w-full h-full object-contain"
-                  onEnded={handleIntroEnd}
-                />
-                {/* Sound toggle */}
-                <button
-                  onClick={toggleMute}
-                  className="absolute bottom-8 left-8 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                  style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-                  title={isMuted ? "Ativar som" : "Desativar som"}
+                <motion.div
+                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "rgba(247,148,29,0.9)" }}
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
-                  {isMuted ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <line x1="23" y1="9" x2="17" y2="15" />
-                      <line x1="17" y1="9" x2="23" y2="15" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                    </svg>
-                  )}
-                </button>
-              </>
+                  <Play size={36} className="text-white ml-1" />
+                </motion.div>
+                <p className="text-white text-lg font-semibold">Clique para iniciar</p>
+                <p className="text-white/50 text-sm">Conexão em Farmacologia</p>
+              </div>
+            )}
+
+            {introStarted && (
+              /* ── Sound toggle (visible during playback) ── */
+              <button
+                onClick={toggleMute}
+                className="absolute bottom-8 left-8 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 z-10"
+                style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+                title={isMuted ? "Ativar som" : "Desativar som"}
+              >
+                {isMuted ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  </svg>
+                )}
+              </button>
             )}
             <button
               onClick={skipIntro}
@@ -470,6 +473,14 @@ export default function Landing() {
                         Meu Progresso
                       </button>
                       <button
+                        onClick={() => setLocation("/materiais")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
+                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
+                      >
+                        <BookOpen size={18} />
+                        Materiais de Estudo
+                      </button>
+                      <button
                         onClick={() => logout()}
                         className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-[1.02]"
                         style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -487,6 +498,14 @@ export default function Landing() {
                       >
                         <Trophy size={18} />
                         Ver Leaderboard
+                      </button>
+                      <button
+                        onClick={() => setLocation("/materiais")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
+                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
+                      >
+                        <BookOpen size={18} />
+                        Materiais de Estudo
                       </button>
                       <a
                         href={getLoginUrl()}
@@ -655,30 +674,94 @@ export default function Landing() {
               {timeline.map((item, i) => (
                 <motion.div
                   key={item.week}
-                  className="relative flex items-start gap-4 sm:gap-6 pl-2"
+                  className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  transition={{ delay: i * 0.05, duration: 0.3 }}
+                  onClick={() => setExpandedWeek(expandedWeek === i ? null : i)}
                 >
                   <div
-                    className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0"
+                    className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                     style={{
-                      backgroundColor: i === 0 || i === timeline.length - 1 ? "#F7941D" : "rgba(247,148,29,0.15)",
-                      color: i === 0 || i === timeline.length - 1 ? "#fff" : "#F7941D",
-                      border: `2px solid ${i === 0 || i === timeline.length - 1 ? "#F7941D" : "rgba(247,148,29,0.3)"}`,
+                      backgroundColor: i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.15)",
+                      color: i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#fff" : "#F7941D",
+                      border: `2px solid ${i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.3)"}`,
                     }}
                   >
                     {item.icon}
                   </div>
-                  <div className="pt-1.5">
+                  <div className="pt-1.5 flex-1">
                     <span className="text-xs font-mono font-bold" style={{ color: "#F7941D" }}>{item.week}</span>
                     <h3 className="text-base sm:text-lg font-semibold text-white mt-0.5">{item.title}</h3>
+                    <AnimatePresence>
+                      {expandedWeek === i && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="text-sm mt-1.5 leading-relaxed"
+                          style={{ color: "rgba(255,255,255,0.55)" }}
+                        >
+                          {item.detail}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="pt-3 shrink-0">
+                    <ChevronDown
+                      size={16}
+                      className="transition-transform duration-300"
+                      style={{
+                        color: "rgba(255,255,255,0.3)",
+                        transform: expandedWeek === i ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    />
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ═══════ GOOGLE CALENDAR ═══════ */}
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <Calendar size={40} className="mx-auto mb-4" style={{ color: "#F7941D" }} />
+            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Agenda da Disciplina
+            </h2>
+            <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Acompanhe datas de aulas, provas, seminários e entregas em tempo real
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-2xl overflow-hidden border"
+            style={{ borderColor: "rgba(247,148,29,0.15)", backgroundColor: "#0D1B2A" }}
+          >
+            <iframe
+               src="https://calendar.google.com/calendar/embed?src=pedro.alexandre%40unirio.br&ctz=America%2FSao_Paulo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&showTz=0&mode=MONTH"
+               style={{ border: 0, width: "100%", height: "600px", background: "white", borderRadius: "8px" }}
+               frameBorder="0"
+              scrolling="no"
+              title="Agenda Farmacologia I — Prof. Pedro Braga"
+            />
+          </motion.div>
+
+          <p className="text-center text-xs mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>
+            Calendário sincronizado com Google Agenda do Prof. Pedro Braga (pedro.alexandre@unirio.br)
+          </p>
         </div>
       </div>
 

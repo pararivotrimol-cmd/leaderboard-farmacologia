@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
-  FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock
+  FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
+  FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -679,10 +680,314 @@ function NotificationsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Materials Manager ───
+const MODULES = [
+  "Geral", "Introdução à Farmacologia", "Farmacocinética", "Farmacodinâmica",
+  "SNA — Adrenérgicos", "SNA — Colinérgicos", "Bloqueadores Neuromusculares",
+  "Anti-inflamatórios", "Seminários Jigsaw", "Casos Clínicos",
+];
+
+function MaterialsManager({ password }: { password: string }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [materialType, setMaterialType] = useState<"file" | "link" | "comment">("file");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [module, setModule] = useState("Geral");
+  const [week, setWeek] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const utils = trpc.useUtils();
+  const { data: materials, isLoading } = trpc.materials.getAll.useQuery({ password });
+
+  const uploadMaterial = trpc.materials.upload.useMutation({
+    onSuccess: () => {
+      utils.materials.getAll.invalidate();
+      utils.materials.getVisible.invalidate();
+      toast.success("Arquivo enviado com sucesso!");
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao enviar arquivo"),
+  });
+
+  const createMaterial = trpc.materials.create.useMutation({
+    onSuccess: () => {
+      utils.materials.getAll.invalidate();
+      utils.materials.getVisible.invalidate();
+      toast.success("Material adicionado!");
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao adicionar material"),
+  });
+
+  const toggleVisibility = trpc.materials.update.useMutation({
+    onSuccess: () => {
+      utils.materials.getAll.invalidate();
+      utils.materials.getVisible.invalidate();
+      toast.success("Visibilidade atualizada!");
+    },
+  });
+
+  const deleteMaterial = trpc.materials.delete.useMutation({
+    onSuccess: () => {
+      utils.materials.getAll.invalidate();
+      utils.materials.getVisible.invalidate();
+      toast.success("Material removido!");
+    },
+  });
+
+  function resetForm() {
+    setTitle(""); setDescription(""); setLinkUrl(""); setModule("Geral"); setWeek(""); setSelectedFile(null); setUploading(false);
+  }
+
+  async function handleSubmit() {
+    if (!title) { toast.error("Título é obrigatório"); return; }
+    setUploading(true);
+    try {
+      if (materialType === "file" && selectedFile) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve(result.split(",")[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+        await uploadMaterial.mutateAsync({
+          password,
+          title,
+          description: description || undefined,
+          module,
+          week: week ? parseInt(week) : undefined,
+          fileName: selectedFile.name,
+          mimeType: selectedFile.type || "application/octet-stream",
+          fileBase64: base64,
+        });
+      } else if (materialType === "link") {
+        if (!linkUrl) { toast.error("URL é obrigatória para links"); setUploading(false); return; }
+        await createMaterial.mutateAsync({
+          password,
+          title,
+          description: description || undefined,
+          type: "link",
+          url: linkUrl,
+          module,
+          week: week ? parseInt(week) : undefined,
+        });
+      } else if (materialType === "comment") {
+        await createMaterial.mutateAsync({
+          password,
+          title,
+          description: description || undefined,
+          type: "comment",
+          module,
+          week: week ? parseInt(week) : undefined,
+        });
+      }
+    } catch {
+      toast.error("Erro ao enviar material");
+    }
+    setUploading(false);
+  }
+
+  const typeIcons: Record<string, React.ReactNode> = {
+    file: <FileText size={14} className="text-blue-400" />,
+    link: <Link2 size={14} className="text-primary" />,
+    comment: <MessageSquare size={14} className="text-green-400" />,
+  };
+
+  const typeLabels: Record<string, string> = {
+    file: "Arquivo",
+    link: "Link",
+    comment: "Comentário",
+  };
+
+  // Group materials by module
+  const grouped = useMemo(() => {
+    if (!materials) return {};
+    const g: Record<string, typeof materials> = {};
+    for (const m of materials) {
+      const mod = m.module || "Geral";
+      if (!g[mod]) g[mod] = [];
+      g[mod].push(m);
+    }
+    return g;
+  }, [materials]);
+
+  return (
+    <div className="space-y-6">
+      {/* Add Material */}
+      <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+          <Plus size={16} className="text-primary" /> Novo Material
+        </h3>
+
+        {/* Type selector */}
+        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit mb-4">
+          {(["file", "link", "comment"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setMaterialType(t)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                materialType === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "file" && <Upload size={12} />}
+              {t === "link" && <Link2 size={12} />}
+              {t === "comment" && <MessageSquare size={12} />}
+              {typeLabels[t]}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+            placeholder="Título do material..."
+          />
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground min-h-[60px] resize-y"
+            placeholder="Descrição ou comentário..."
+          />
+
+          {materialType === "file" && (
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border text-foreground text-sm cursor-pointer hover:bg-secondary/80">
+                <Paperclip size={14} />
+                {selectedFile ? selectedFile.name : "Selecionar arquivo..."}
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.mp3,.zip"
+                />
+              </label>
+              {selectedFile && (
+                <span className="text-xs text-muted-foreground">
+                  {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                </span>
+              )}
+            </div>
+          )}
+
+          {materialType === "link" && (
+            <input
+              value={linkUrl}
+              onChange={e => setLinkUrl(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+              placeholder="https://..."
+            />
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={module}
+              onChange={e => setModule(e.target.value)}
+              className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm"
+            >
+              {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <input
+              type="number"
+              value={week}
+              onChange={e => setWeek(e.target.value)}
+              className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+              placeholder="Semana (opcional)"
+              min={1}
+              max={16}
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={uploading || !title || (materialType === "file" && !selectedFile) || (materialType === "link" && !linkUrl)}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {uploading ? "Enviando..." : <><Upload size={14} /> Publicar Material</>}
+          </button>
+        </div>
+      </div>
+
+      {/* Materials List */}
+      <div>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Materiais Publicados ({materials?.length || 0})</h3>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+        ) : !materials || materials.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Nenhum material publicado</p>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(grouped).map(([mod, items]) => (
+              <div key={mod}>
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wide mb-2">{mod}</h4>
+                <div className="space-y-2">
+                  {items.map(mat => (
+                    <div
+                      key={mat.id}
+                      className={`border rounded-lg p-3 ${mat.isVisible ? "border-border" : "border-border/30 opacity-50"}`}
+                      style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5">{typeIcons[mat.type]}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{typeLabels[mat.type]}</span>
+                            {mat.week && <span className="text-xs text-muted-foreground">Semana {mat.week}</span>}
+                            {!mat.isVisible && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/20 text-destructive">Oculto</span>}
+                          </div>
+                          <h4 className="font-medium text-sm text-foreground">{mat.title}</h4>
+                          {mat.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>}
+                          {mat.type === "file" && mat.fileName && (
+                            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                              <Paperclip size={10} /> {mat.fileName}
+                            </p>
+                          )}
+                          {mat.type === "link" && mat.url && (
+                            <a href={mat.url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary hover:underline mt-1 flex items-center gap-1">
+                              <Link2 size={10} /> {mat.url}
+                            </a>
+                          )}
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {new Date(mat.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => toggleVisibility.mutate({ password, id: mat.id, isVisible: mat.isVisible ? 0 : 1 })}
+                            className="p-1.5 rounded hover:bg-secondary text-muted-foreground"
+                            title={mat.isVisible ? "Ocultar" : "Mostrar"}
+                          >
+                            {mat.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                          </button>
+                          <button
+                            onClick={() => { if (confirm("Remover este material?")) deleteMaterial.mutate({ password, id: mat.id }); }}
+                            className="p-1.5 rounded hover:bg-destructive/20 text-destructive"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
@@ -692,6 +997,7 @@ export default function Admin() {
     { key: "activities" as const, label: "Atividades", icon: <Trophy size={16} /> },
     { key: "highlights" as const, label: "Destaques", icon: <Activity size={16} /> },
     { key: "notifications" as const, label: "Notificações", icon: <Bell size={16} /> },
+    { key: "materials" as const, label: "Materiais", icon: <FileText size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -735,6 +1041,7 @@ export default function Admin() {
         {activeSection === "activities" && <ActivitiesManager password={password} />}
         {activeSection === "highlights" && <HighlightsManager password={password} />}
         {activeSection === "notifications" && <NotificationsManager password={password} />}
+        {activeSection === "materials" && <MaterialsManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

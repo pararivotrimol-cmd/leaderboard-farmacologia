@@ -379,6 +379,112 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Materials (files, links, comments) ───
+  materials: router({
+    // Public: get visible materials for students
+    getVisible: publicProcedure.query(async () => {
+      return db.getVisibleMaterials();
+    }),
+
+    // Admin: get all materials
+    getAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        return db.getAllMaterials();
+      }),
+
+    // Admin: create a material (file upload handled separately)
+    create: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        type: z.enum(["file", "link", "comment"]),
+        url: z.string().optional(),
+        fileKey: z.string().optional(),
+        fileName: z.string().optional(),
+        mimeType: z.string().optional(),
+        module: z.string().default("Geral"),
+        week: z.number().optional(),
+        isVisible: z.number().default(1),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const { password, ...data } = input;
+        const id = await db.createMaterial(data);
+        return { id };
+      }),
+
+    // Admin: update a material
+    update: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        url: z.string().optional(),
+        module: z.string().optional(),
+        week: z.number().nullable().optional(),
+        isVisible: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const { password, id, ...data } = input;
+        await db.updateMaterial(id, data as any);
+        return { success: true };
+      }),
+
+    // Admin: delete a material
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        await db.deleteMaterial(input.id);
+        return { success: true };
+      }),
+
+    // Admin: upload file to S3 and create material
+    upload: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        module: z.string().default("Geral"),
+        week: z.number().optional(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        fileBase64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        
+        const { storagePut } = await import("./storage");
+        const buffer = Buffer.from(input.fileBase64, "base64");
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        const fileKey = `materials/${Date.now()}-${randomSuffix}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        const id = await db.createMaterial({
+          title: input.title,
+          description: input.description,
+          type: "file",
+          url,
+          fileKey,
+          fileName: input.fileName,
+          mimeType: input.mimeType,
+          module: input.module,
+          week: input.week,
+        });
+        return { id, url };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

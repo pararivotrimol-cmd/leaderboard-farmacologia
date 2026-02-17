@@ -8,6 +8,7 @@ import {
   weeklyHighlights, InsertWeeklyHighlight,
   courseSettings, InsertCourseSetting,
   notifications, InsertNotification,
+  materials, InsertMaterial,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -250,4 +251,37 @@ export async function deleteNotification(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(notifications).where(eq(notifications.id, id));
+}
+
+// ─── Materials ───
+
+export async function getAllMaterials() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(materials).orderBy(desc(materials.createdAt));
+}
+
+export async function getVisibleMaterials() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(materials).where(eq(materials.isVisible, 1)).orderBy(desc(materials.createdAt));
+}
+
+export async function createMaterial(data: InsertMaterial) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(materials).values(data);
+  return result[0].insertId;
+}
+
+export async function updateMaterial(id: number, data: Partial<InsertMaterial>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(materials).set(data).where(eq(materials.id, id));
+}
+
+export async function deleteMaterial(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(materials).where(eq(materials.id, id));
 }

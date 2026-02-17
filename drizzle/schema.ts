@@ -109,3 +109,33 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+/**
+ * Materials - files, links, and comments organized by module/week
+ * Professor uploads materials, students can view and download
+ */
+export const materials = mysqlTable("materials", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  type: mysqlEnum("type", ["file", "link", "comment"]).notNull(),
+  // For files: S3 URL; For links: external URL; For comments: null
+  url: text("url"),
+  // S3 file key for files
+  fileKey: varchar("fileKey", { length: 500 }),
+  // Original filename for files
+  fileName: varchar("fileName", { length: 300 }),
+  // MIME type for files
+  mimeType: varchar("mimeType", { length: 100 }),
+  // Module/category for organization
+  module: varchar("module", { length: 100 }).notNull().default("Geral"),
+  // Week number (optional)
+  week: int("week"),
+  // Whether the material is visible to students
+  isVisible: int("isVisible").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Material = typeof materials.$inferSelect;
+export type InsertMaterial = typeof materials.$inferInsert;

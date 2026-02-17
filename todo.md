@@ -72,3 +72,12 @@
 - [x] Criar botão de sair/deslogar visível nas páginas
 - [x] Corrigir SEO: adicionar meta description (50-160 chars) na página /
 - [x] Corrigir SEO: adicionar meta keywords na página /
+- [x] Corrigir vídeo de intro que não inicia ao clicar (video element único persistente)
+- [x] Corrigir SEO: reduzir keywords de 13 para 6 palavras-chave focadas
+- [ ] Deslogar nome/conta do professor da área de alunos na landing page
+- [ ] Criar schema para materiais (arquivos, comentários, links)
+- [ ] Criar rotas tRPC para upload de arquivos, comentários e links (admin)
+- [ ] Adicionar funcionalidades de upload/comentário/links na área do professor
+- [ ] Adicionar aba de materiais/anexos na página dos alunos
+- [x] Disponibilizar cronograma completo na página de introdução (landing page)
+- [x] Integrar Google Calendar do professor pedro.alexandre@unirio.br via iframe público

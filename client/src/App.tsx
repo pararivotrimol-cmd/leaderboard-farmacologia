@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import StudentProgress from "./pages/StudentProgress";
 import Avisos from "./pages/Avisos";
+import Materiais from "./pages/Materiais";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path={"/admin"} component={Admin} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
+      <Route path={"/materiais"} component={Materiais} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
