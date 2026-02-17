@@ -43,6 +43,13 @@
       "when": 1771362305486,
       "tag": "0005_wakeful_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1771364232120,
+      "tag": "0006_cheerful_expediter",
+      "breakpoints": true
     }
   ]
 }

@@ -107,10 +107,15 @@
 - [x] Criar sistema de presença com geolocalização (Frei Caneca 94, sala D201, raio 100m)
 - [x] Presença só disponível durante horário de aula (terças 8h-12h)
 - [x] Criar aba de controle de frequência no painel do professor
-- [ ] Implementar notificações automáticas para badges e pontuações
-- [ ] Incorporar playlists do YouTube na página de materiais por tema
+- [x] Implementar notificações automáticas para badges e pontuações
+- [x] Incorporar playlists do YouTube na página de materiais por tema
 - [x] Alterar campo senha para CPF do aluno no cadastro e login
 - [x] Implementar notificações automáticas para badges conquistados
 - [x] Implementar notificações automáticas para pontuações atualizadas
 - [x] Implementar relatório de frequência exportável em PDF
 - [x] Implementar relatório de frequência exportável em CSV
+- [x] Criar tabela de playlists do YouTube no banco de dados
+- [x] Implementar rotas tRPC para CRUD de playlists (admin)
+- [x] Implementar UI de gerenciamento de playlists no painel admin
+- [x] Implementar exibição de playlists na página de materiais para alunos
+- [x] Organizar playlists por módulo/tema do cronograma

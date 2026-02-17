@@ -13,6 +13,7 @@ import {
   memberBadges, InsertMemberBadge,
   studentAccounts, InsertStudentAccount,
   attendance, InsertAttendance,
+  youtubePlaylistsTable, InsertYoutubePlaylist,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -546,4 +547,39 @@ export async function createManualAttendance(memberId: number, week: number, cla
     note: note || "Presença registrada manualmente pelo professor",
   });
   return result[0].insertId;
+}
+
+// ─── YouTube Playlists ───
+
+export async function createYoutubePlaylist(data: InsertYoutubePlaylist) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(youtubePlaylistsTable).values(data);
+  return result[0].insertId;
+}
+
+export async function getAllYoutubePlaylists() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(youtubePlaylistsTable).orderBy(youtubePlaylistsTable.sortOrder, youtubePlaylistsTable.createdAt);
+}
+
+export async function getVisibleYoutubePlaylists() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(youtubePlaylistsTable)
+    .where(eq(youtubePlaylistsTable.isVisible, 1))
+    .orderBy(youtubePlaylistsTable.sortOrder, youtubePlaylistsTable.createdAt);
+}
+
+export async function updateYoutubePlaylist(id: number, data: Partial<InsertYoutubePlaylist>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(youtubePlaylistsTable).set(data).where(eq(youtubePlaylistsTable.id, id));
+}
+
+export async function deleteYoutubePlaylist(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(youtubePlaylistsTable).where(eq(youtubePlaylistsTable.id, id));
 }

@@ -241,3 +241,32 @@ export const attendance = mysqlTable("attendance", {
 
 export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = typeof attendance.$inferInsert;
+
+/**
+ * YouTube Playlists - organized by module/theme
+ * Professor adds playlists, students view embedded players
+ */
+export const youtubePlaylistsTable = mysqlTable("youtubePlaylistsTable", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // YouTube playlist ID (e.g., PLxxxxxx) or video ID
+  youtubeId: varchar("youtubeId", { length: 100 }).notNull(),
+  // Type: playlist or single video
+  videoType: mysqlEnum("videoType", ["playlist", "video"]).default("playlist").notNull(),
+  // Module/category for organization (matches materials modules)
+  module: varchar("module", { length: 100 }).notNull().default("Geral"),
+  // Week number (optional)
+  week: int("week"),
+  // Thumbnail URL (auto-fetched or custom)
+  thumbnailUrl: text("thumbnailUrl"),
+  // Display order within module
+  sortOrder: int("sortOrder").notNull().default(0),
+  // Whether visible to students
+  isVisible: int("isVisible").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type YoutubePlaylist = typeof youtubePlaylistsTable.$inferSelect;
+export type InsertYoutubePlaylist = typeof youtubePlaylistsTable.$inferInsert;

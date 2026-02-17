@@ -38,6 +38,47 @@ async function verifyAdminPassword(password: string): Promise<boolean> {
   return password === correctPassword;
 }
 
+// Extract YouTube ID from various URL formats
+function extractYoutubeId(url: string, type: string): string | null {
+  try {
+    // Handle direct ID input (no URL)
+    if (!url.includes("http") && !url.includes("www")) {
+      // Might be a direct ID
+      if (type === "playlist" && url.startsWith("PL")) return url;
+      if (type === "video" && /^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+    }
+    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
+    if (type === "playlist") {
+      // youtube.com/playlist?list=PLxxxxxx
+      const listId = urlObj.searchParams.get("list");
+      if (listId) return listId;
+    }
+    if (type === "video") {
+      // youtube.com/watch?v=xxxxx
+      const videoId = urlObj.searchParams.get("v");
+      if (videoId) return videoId;
+      // youtu.be/xxxxx
+      if (urlObj.hostname === "youtu.be") {
+        return urlObj.pathname.slice(1);
+      }
+      // youtube.com/embed/xxxxx
+      const embedMatch = urlObj.pathname.match(/\/embed\/([a-zA-Z0-9_-]+)/);
+      if (embedMatch) return embedMatch[1];
+      // youtube.com/shorts/xxxxx
+      const shortsMatch = urlObj.pathname.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
+      if (shortsMatch) return shortsMatch[1];
+    }
+    // Fallback: try to extract list param for playlists from video URLs
+    if (type === "playlist") {
+      const listId = urlObj.searchParams.get("list");
+      if (listId) return listId;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -1121,6 +1162,108 @@ export const appRouter = router({
           };
         });
         return { report, weeks };
+      }),
+  }),
+
+  // ─── YouTube Playlists ───
+  youtubePlaylists: router({
+    // Public: get visible playlists for students
+    getVisible: publicProcedure.query(async () => {
+      return db.getVisibleYoutubePlaylists();
+    }),
+
+    // Admin: get all playlists
+    getAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        return db.getAllYoutubePlaylists();
+      }),
+
+    // Admin: create a new playlist
+    create: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        youtubeUrl: z.string().min(1),
+        videoType: z.enum(["playlist", "video"]).default("playlist"),
+        module: z.string().default("Geral"),
+        week: z.number().optional(),
+        sortOrder: z.number().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        // Extract YouTube ID from URL
+        const youtubeId = extractYoutubeId(input.youtubeUrl, input.videoType);
+        if (!youtubeId) throw new Error("URL do YouTube inválida. Use uma URL de playlist ou vídeo válida.");
+        const thumbnailUrl = input.videoType === "video"
+          ? `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+          : `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+        const id = await db.createYoutubePlaylist({
+          title: input.title,
+          description: input.description || null,
+          youtubeId,
+          videoType: input.videoType,
+          module: input.module,
+          week: input.week ?? null,
+          thumbnailUrl,
+          sortOrder: input.sortOrder,
+          isVisible: 1,
+        });
+        return { success: true, id };
+      }),
+
+    // Admin: update a playlist
+    update: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        description: z.string().optional(),
+        youtubeUrl: z.string().optional(),
+        videoType: z.enum(["playlist", "video"]).optional(),
+        module: z.string().optional(),
+        week: z.number().nullable().optional(),
+        sortOrder: z.number().optional(),
+        isVisible: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        const { password, id, youtubeUrl, ...data } = input;
+        const updateData: any = { ...data };
+        if (youtubeUrl) {
+          const vType = input.videoType || "playlist";
+          const youtubeId = extractYoutubeId(youtubeUrl, vType);
+          if (!youtubeId) throw new Error("URL do YouTube inválida.");
+          updateData.youtubeId = youtubeId;
+          updateData.thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+        }
+        await db.updateYoutubePlaylist(id, updateData);
+        return { success: true };
+      }),
+
+    // Admin: delete a playlist
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        await db.deleteYoutubePlaylist(input.id);
+        return { success: true };
+      }),
+
+    // Admin: toggle visibility
+    toggleVisibility: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number(), isVisible: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        await db.updateYoutubePlaylist(input.id, { isVisible: input.isVisible });
+        return { success: true };
       }),
   }),
 });

@@ -7,7 +7,8 @@ import {
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
-  Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download
+  Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
+  Youtube, Play, Video, GripVertical
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -1514,10 +1515,305 @@ function AttendanceManager({ password }: { password: string }) {
   );
 }
 
+// ─── YouTube Playlists Manager ───
+function YouTubePlaylistsManager({ password }: { password: string }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [videoType, setVideoType] = useState<"playlist" | "video">("playlist");
+  const [module, setModule] = useState("Geral");
+  const [week, setWeek] = useState<string>("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editModule, setEditModule] = useState("");
+  const [editWeek, setEditWeek] = useState<string>("");
+
+  const { data: playlists, isLoading, refetch } = trpc.youtubePlaylists.getAll.useQuery({ password });
+
+  const createMutation = trpc.youtubePlaylists.create.useMutation({
+    onSuccess: () => {
+      toast.success("Playlist adicionada!");
+      setTitle(""); setDescription(""); setYoutubeUrl("");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateMutation = trpc.youtubePlaylists.update.useMutation({
+    onSuccess: () => { toast.success("Playlist atualizada!"); setEditingId(null); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteMutation = trpc.youtubePlaylists.delete.useMutation({
+    onSuccess: () => { toast.success("Playlist removida!"); refetch(); },
+  });
+
+  const toggleMutation = trpc.youtubePlaylists.toggleVisibility.useMutation({
+    onSuccess: () => { toast.success("Visibilidade atualizada!"); refetch(); },
+  });
+
+  const handleCreate = () => {
+    if (!title.trim() || !youtubeUrl.trim()) {
+      toast.error("Preencha título e URL do YouTube");
+      return;
+    }
+    createMutation.mutate({
+      password,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      youtubeUrl: youtubeUrl.trim(),
+      videoType,
+      module,
+      week: week ? Number(week) : undefined,
+    });
+  };
+
+  const startEdit = (p: any) => {
+    setEditingId(p.id);
+    setEditTitle(p.title);
+    setEditDescription(p.description || "");
+    setEditModule(p.module);
+    setEditWeek(p.week ? String(p.week) : "");
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    updateMutation.mutate({
+      password,
+      id: editingId,
+      title: editTitle.trim(),
+      description: editDescription.trim() || undefined,
+      module: editModule,
+      week: editWeek ? Number(editWeek) : null,
+    });
+  };
+
+  // Group playlists by module
+  const grouped = useMemo(() => {
+    if (!playlists) return {};
+    const g: Record<string, typeof playlists> = {};
+    for (const p of playlists) {
+      const mod = p.module || "Geral";
+      if (!g[mod]) g[mod] = [];
+      g[mod].push(p);
+    }
+    return g;
+  }, [playlists]);
+
+  const getEmbedUrl = (p: any) => {
+    if (p.videoType === "playlist") {
+      return `https://www.youtube.com/embed/videoseries?list=${p.youtubeId}`;
+    }
+    return `https://www.youtube.com/embed/${p.youtubeId}`;
+  };
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-lg text-foreground flex items-center gap-2 mb-4">
+        <Youtube size={20} className="text-red-500" /> Playlists do YouTube
+      </h2>
+
+      {/* Add New Playlist Form */}
+      <div className="border border-border rounded-lg p-4 mb-6" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+          <Plus size={14} className="text-primary" /> Adicionar Playlist / Vídeo
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Título da playlist/vídeo"
+            className="px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+          />
+          <input
+            value={youtubeUrl}
+            onChange={e => setYoutubeUrl(e.target.value)}
+            placeholder="URL do YouTube (playlist ou vídeo)"
+            className="px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+          />
+          <input
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Descrição (opcional)"
+            className="px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+          />
+          <div className="flex gap-2">
+            <select
+              value={videoType}
+              onChange={e => setVideoType(e.target.value as "playlist" | "video")}
+              className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+            >
+              <option value="playlist">Playlist</option>
+              <option value="video">Vídeo único</option>
+            </select>
+            <select
+              value={module}
+              onChange={e => setModule(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+            >
+              {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={week}
+              onChange={e => setWeek(e.target.value)}
+              placeholder="Semana (opcional)"
+              min="1" max="19"
+              className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={createMutation.isPending}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              <Youtube size={14} /> {createMutation.isPending ? "Adicionando..." : "Adicionar"}
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">
+          Cole a URL completa do YouTube. Exemplos: https://www.youtube.com/playlist?list=PLxxxxx ou https://www.youtube.com/watch?v=xxxxx
+        </p>
+      </div>
+
+      {/* Playlists List */}
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+      ) : !playlists || playlists.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          <Youtube size={32} className="mx-auto mb-3 opacity-50" />
+          <p className="text-sm font-medium">Nenhuma playlist adicionada</p>
+          <p className="text-xs mt-1">Adicione playlists ou vídeos do YouTube para os alunos.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(grouped).map(([mod, items]) => (
+            <div key={mod}>
+              <h3 className="font-display font-semibold text-sm text-primary uppercase tracking-wide mb-3 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                {mod}
+                <span className="text-muted-foreground font-normal text-xs">({items.length})</span>
+              </h3>
+              <div className="grid gap-3">
+                {items.map((p: any) => (
+                  <div
+                    key={p.id}
+                    className={`border rounded-lg overflow-hidden transition-colors ${
+                      p.isVisible ? "border-border" : "border-border/50 opacity-60"
+                    }`}
+                    style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+                  >
+                    {editingId === p.id ? (
+                      /* Edit Mode */
+                      <div className="p-4 space-y-3">
+                        <input
+                          value={editTitle}
+                          onChange={e => setEditTitle(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+                          placeholder="Título"
+                        />
+                        <input
+                          value={editDescription}
+                          onChange={e => setEditDescription(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+                          placeholder="Descrição"
+                        />
+                        <div className="flex gap-2">
+                          <select
+                            value={editModule}
+                            onChange={e => setEditModule(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+                          >
+                            {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                          <input
+                            type="number"
+                            value={editWeek}
+                            onChange={e => setEditWeek(e.target.value)}
+                            placeholder="Semana"
+                            min="1" max="19"
+                            className="w-24 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={saveEdit} disabled={updateMutation.isPending}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+                            <Save size={12} /> Salvar
+                          </button>
+                          <button onClick={() => setEditingId(null)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-secondary text-foreground text-xs font-medium">
+                            <X size={12} /> Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* View Mode */
+                      <div className="flex flex-col sm:flex-row">
+                        {/* Thumbnail / Preview */}
+                        <div className="sm:w-48 h-28 sm:h-auto bg-black/50 flex items-center justify-center shrink-0 relative">
+                          {p.thumbnailUrl ? (
+                            <img src={p.thumbnailUrl} alt={p.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <Youtube size={32} className="text-red-500 opacity-50" />
+                          )}
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-black/70 text-white">
+                            {p.videoType === "playlist" ? "PLAYLIST" : "VÍDEO"}
+                          </div>
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm text-foreground truncate">{p.title}</h4>
+                              {p.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{p.description}</p>}
+                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{p.module}</span>
+                                {p.week && <span className="text-[10px] text-muted-foreground">Sem. {p.week}</span>}
+                                <span className="text-[10px] text-muted-foreground font-mono">ID: {p.youtubeId.substring(0, 12)}...</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => toggleMutation.mutate({ password, id: p.id, isVisible: p.isVisible ? 0 : 1 })}
+                                className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground"
+                                title={p.isVisible ? "Ocultar" : "Mostrar"}
+                              >
+                                {p.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                              </button>
+                              <button
+                                onClick={() => startEdit(p)}
+                                className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => { if (confirm("Remover esta playlist?")) deleteMutation.mutate({ password, id: p.id }); }}
+                                className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
@@ -1530,6 +1826,7 @@ export default function Admin() {
     { key: "materials" as const, label: "Materiais", icon: <FileText size={16} /> },
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
+    { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -1576,6 +1873,7 @@ export default function Admin() {
         {activeSection === "materials" && <MaterialsManager password={password} />}
         {activeSection === "badges" && <BadgesManager password={password} />}
         {activeSection === "attendance" && <AttendanceManager password={password} />}
+        {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>
