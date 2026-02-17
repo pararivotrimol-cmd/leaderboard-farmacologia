@@ -9,7 +9,7 @@ import {
   FlaskConical, Users, Trophy, Zap, BookOpen, Youtube,
   ChevronDown, Play, GraduationCap, Brain, Pill, Activity,
   Target, Sparkles, ArrowRight, Clock, Calendar, LogIn,
-  Shield, Settings, Lock, User
+  Shield, Settings, Lock, User, LogOut
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -129,10 +129,12 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [showIntro, setShowIntro] = useState(true);
   const [introEnded, setIntroEnded] = useState(false);
+  const [introStarted, setIntroStarted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
   const totalTeams = leaderboard?.teams?.length ?? 0;
@@ -151,8 +153,32 @@ export default function Landing() {
     if (shown) {
       setShowIntro(false);
       setIntroEnded(true);
+      setIntroStarted(true);
     }
   }, []);
+
+  const startIntro = () => {
+    setIntroStarted(true);
+    setIsMuted(false);
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {
+        // Fallback: if unmuted play fails, play muted
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          setIsMuted(true);
+          videoRef.current.play();
+        }
+      });
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
 
   const handleIntroEnd = () => {
     sessionStorage.setItem("intro_shown", "true");
@@ -229,18 +255,70 @@ export default function Landing() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <video
-              ref={videoRef}
-              src={INTRO_VIDEO_URL}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-contain"
-              onEnded={handleIntroEnd}
-            />
+            {!introStarted ? (
+              /* ── Click-to-start screen ── */
+              <div className="flex flex-col items-center justify-center gap-6 cursor-pointer w-full h-full"
+                onClick={startIntro}
+              >
+                <video
+                  ref={videoRef}
+                  src={INTRO_VIDEO_URL}
+                  playsInline
+                  muted
+                  preload="auto"
+                  className="w-full h-full object-contain absolute inset-0"
+                  onEnded={handleIntroEnd}
+                  style={{ filter: "brightness(0.3)" }}
+                />
+                <div className="relative z-10 flex flex-col items-center gap-4">
+                  <motion.div
+                    className="w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "rgba(247,148,29,0.9)" }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Play size={36} className="text-white ml-1" />
+                  </motion.div>
+                  <p className="text-white text-lg font-semibold">Clique para iniciar</p>
+                  <p className="text-white/50 text-sm">Conexão em Farmacologia</p>
+                </div>
+              </div>
+            ) : (
+              /* ── Video playing ── */
+              <>
+                <video
+                  ref={videoRef}
+                  src={INTRO_VIDEO_URL}
+                  playsInline
+                  className="w-full h-full object-contain"
+                  onEnded={handleIntroEnd}
+                />
+                {/* Sound toggle */}
+                <button
+                  onClick={toggleMute}
+                  className="absolute bottom-8 left-8 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+                  title={isMuted ? "Ativar som" : "Desativar som"}
+                >
+                  {isMuted ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <line x1="23" y1="9" x2="17" y2="15" />
+                      <line x1="17" y1="9" x2="23" y2="15" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </svg>
+                  )}
+                </button>
+              </>
+            )}
             <button
               onClick={skipIntro}
-              className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105"
+              className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105 z-10"
               style={{
                 backgroundColor: "rgba(247,148,29,0.9)",
                 color: "#fff",
@@ -390,6 +468,14 @@ export default function Landing() {
                       >
                         <Target size={18} />
                         Meu Progresso
+                      </button>
+                      <button
+                        onClick={() => logout()}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-[1.02]"
+                        style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}
+                      >
+                        <LogOut size={16} />
+                        Sair da Conta
                       </button>
                     </>
                   ) : (

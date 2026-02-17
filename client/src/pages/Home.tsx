@@ -8,10 +8,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
   Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
-  ArrowLeft, BookOpen, ClipboardList
+  ArrowLeft, BookOpen, ClipboardList, LogOut
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
@@ -134,6 +135,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules">("teams");
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
+  const { logout } = useAuth();
 
   const teamsData: TeamData[] = useMemo(() => leaderboard?.teams ?? [], [leaderboard]);
   const rankedTeams = useMemo(() => [...teamsData].sort((a, b) => getTeamPF(b) - getTeamPF(a)), [teamsData]);
@@ -215,6 +217,14 @@ export default function Home() {
                   Início
                 </span>
               </Link>
+              <button
+                onClick={() => logout()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+              >
+                <LogOut size={14} />
+                Sair
+              </button>
             </div>
           </div>
 
@@ -246,7 +256,7 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-24 h-24 sm:w-32 sm:h-32 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
+            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-40 h-40 sm:w-52 sm:h-52 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
 
           {/* Stats Row */}

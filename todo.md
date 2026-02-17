@@ -62,3 +62,13 @@
 - [x] Corrigir cronograma: remover antibioticoterapia/quimioterapia; P1 até colinérgicos/BNM + 3 primeiros Jigsaw
 - [x] Top 10 Individual: não mostrar nomes até que haja pontuações
 - [x] Adicionar aba com regras de cada atividade
+- [ ] Corrigir vídeo introdutório sem áudio — adicionar trilha sonora
+- [ ] Adicionar seção de materiais de estudo com links para PDFs e slides por módulo
+- [ ] Criar schema de banco para módulos e materiais
+- [ ] Criar rotas tRPC para CRUD de materiais (admin) e listagem (público)
+- [ ] Criar página de materiais para alunos (/materiais)
+- [ ] Adicionar gestão de materiais no painel admin
+- [x] Ampliar ainda mais o logotipo abaixo do botão Início no leaderboard
+- [x] Criar botão de sair/deslogar visível nas páginas
+- [x] Corrigir SEO: adicionar meta description (50-160 chars) na página /
+- [x] Corrigir SEO: adicionar meta keywords na página /
