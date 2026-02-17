@@ -48,3 +48,9 @@
 - [x] Update logo across all pages (Home, Avisos, Landing)
 - [x] Update all internal navigation links for new routing structure
 - [x] Add video intro modal with vinheta playback on landing page
+- [x] Auto-play vídeo de introdução ao abrir o site
+- [x] Criar vídeo com avatar do professor Pedro Braga baseado no vídeo do canal
+- [x] Implementar seção de login dos alunos na página inicial
+- [x] Implementar seção exclusiva para o professor na página inicial
+- [x] Padronizar layout do leaderboard nas cores laranja, cinza e branco
+- [x] Corrigir texto da semana (deve começar em semana 1 e avançar conforme o período)

@@ -43,9 +43,9 @@
   --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --font-body: "DM Sans", sans-serif;
-  --color-emerald: oklch(0.696 0.17 162.48);
-  --color-cyan-accent: oklch(0.715 0.143 215.221);
-  --color-amber-accent: oklch(0.795 0.16 86.047);
+  /* Conexão em Farmacologia brand colors */
+  --color-orange-brand: oklch(0.75 0.18 55);
+  --color-gray-brand: oklch(0.45 0.01 264);
   --color-navy-deep: oklch(0.178 0.032 264.052);
   --color-navy-mid: oklch(0.228 0.032 264.052);
   --color-navy-light: oklch(0.278 0.032 264.052);
@@ -53,38 +53,45 @@
 
 :root {
   --radius: 0.5rem;
-  --primary: oklch(0.696 0.17 162.48);
-  --primary-foreground: oklch(0.15 0.02 162);
+  /* Primary = Orange brand (#F7941D) */
+  --primary: oklch(0.75 0.18 55);
+  --primary-foreground: oklch(0.98 0 0);
+  /* Background = Dark navy */
   --background: oklch(0.145 0.028 264.052);
   --foreground: oklch(0.93 0.005 264);
+  /* Card = Slightly lighter navy */
   --card: oklch(0.195 0.03 264.052);
   --card-foreground: oklch(0.93 0.005 264);
   --popover: oklch(0.195 0.03 264.052);
   --popover-foreground: oklch(0.93 0.005 264);
+  /* Secondary = Gray */
   --secondary: oklch(0.245 0.03 264.052);
   --secondary-foreground: oklch(0.85 0.005 264);
   --muted: oklch(0.245 0.03 264.052);
   --muted-foreground: oklch(0.65 0.015 264);
-  --accent: oklch(0.245 0.03 264.052);
+  /* Accent = Orange tinted */
+  --accent: oklch(0.3 0.04 55);
   --accent-foreground: oklch(0.93 0.005 264);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.32 0.025 264.052);
   --input: oklch(0.32 0.025 264.052);
-  --ring: oklch(0.696 0.17 162.48);
-  --chart-1: oklch(0.696 0.17 162.48);
-  --chart-2: oklch(0.715 0.143 215.221);
-  --chart-3: oklch(0.795 0.16 86.047);
-  --chart-4: oklch(0.65 0.2 280);
-  --chart-5: oklch(0.7 0.18 30);
+  --ring: oklch(0.75 0.18 55);
+  /* Charts = Orange/Gray palette */
+  --chart-1: oklch(0.75 0.18 55);
+  --chart-2: oklch(0.55 0.01 264);
+  --chart-3: oklch(0.85 0.12 55);
+  --chart-4: oklch(0.45 0.01 264);
+  --chart-5: oklch(0.65 0.14 55);
+  /* Sidebar */
   --sidebar: oklch(0.178 0.032 264.052);
   --sidebar-foreground: oklch(0.93 0.005 264);
-  --sidebar-primary: oklch(0.696 0.17 162.48);
-  --sidebar-primary-foreground: oklch(0.15 0.02 162);
+  --sidebar-primary: oklch(0.75 0.18 55);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
   --sidebar-accent: oklch(0.245 0.03 264.052);
   --sidebar-accent-foreground: oklch(0.93 0.005 264);
   --sidebar-border: oklch(0.32 0.025 264.052);
-  --sidebar-ring: oklch(0.696 0.17 162.48);
+  --sidebar-ring: oklch(0.75 0.18 55);
 }
 
 @layer base {
@@ -149,23 +156,35 @@
     font-family: "DM Sans", sans-serif;
   }
 
-  .glow-emerald {
-    box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 0.15), 0 0 40px oklch(0.696 0.17 162.48 / 0.05);
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(247, 148, 29, 0.2), 0 0 40px rgba(247, 148, 29, 0.08);
   }
 
   .glow-amber {
-    box-shadow: 0 0 20px oklch(0.795 0.16 86.047 / 0.2), 0 0 40px oklch(0.795 0.16 86.047 / 0.08);
+    box-shadow: 0 0 20px rgba(247, 148, 29, 0.25), 0 0 40px rgba(247, 148, 29, 0.1);
   }
 
-  .text-gradient-emerald {
-    background: linear-gradient(135deg, oklch(0.696 0.17 162.48), oklch(0.715 0.143 215.221));
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #F7941D, #FFB347);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, oklch(0.795 0.16 86.047), oklch(0.85 0.12 80));
+    background: linear-gradient(135deg, #F7941D, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Keep emerald for backward compat */
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(247, 148, 29, 0.15), 0 0 40px rgba(247, 148, 29, 0.05);
+  }
+
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, #F7941D, #FFB347);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT * FROM courseSettings WHERE settingKey = 'currentWeek';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT * FROM courseSettings WHERE settingKey = 'currentWeek';",
+  "rows": [
+    {
+      "id": "1",
+      "settingKey": "currentWeek",
+      "settingValue": "5",
+      "updatedAt": "2026-02-17 12:13:33"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsettingKey\tsettingValue\tupdatedAt\n1\tcurrentWeek\t5\t2026-02-17 12:13:33\n",
+  "stderr": "",
+  "execution_time_ms": 605
+}

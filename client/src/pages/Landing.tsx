@@ -1,19 +1,23 @@
 /**
  * Landing Page — Conexão em Farmacologia
- * Professional entrance page with animations inspired by the YouTube channel identity
- * Orange + Dark Gray palette on parchment-like background
+ * Auto-play intro video on first visit, login section, professor section
+ * Orange (#F7941D) + Gray (#4A4A4A) + White palette
  */
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   FlaskConical, Users, Trophy, Zap, BookOpen, Youtube,
   ChevronDown, Play, GraduationCap, Brain, Pill, Activity,
-  Target, Sparkles, ArrowRight, Clock, Calendar
+  Target, Sparkles, ArrowRight, Clock, Calendar, LogIn,
+  Shield, Settings, Lock, User
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
-const VINHETA_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/GJhASTpXByssdGde.mp4";
+const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
 
 // Floating particles for background
@@ -38,7 +42,7 @@ function FloatingParticles() {
             top: `${p.y}%`,
             width: p.size,
             height: p.size,
-            backgroundColor: p.id % 3 === 0 ? "#F7941D" : p.id % 3 === 1 ? "#10B981" : "#4A4A4A",
+            backgroundColor: p.id % 3 === 0 ? "#F7941D" : p.id % 3 === 1 ? "#999" : "#4A4A4A",
             opacity: 0.15,
           }}
           animate={{
@@ -74,15 +78,15 @@ function DNAHelix({ side }: { side: "left" | "right" }) {
           <div
             className="w-2 h-2 rounded-full"
             style={{
-              backgroundColor: i % 2 === 0 ? "#F7941D" : "#10B981",
+              backgroundColor: i % 2 === 0 ? "#F7941D" : "#999",
               marginLeft: side === "left" ? `${Math.sin(i * 0.8) * 15 + 15}px` : undefined,
               marginRight: side === "right" ? `${Math.sin(i * 0.8) * 15 + 15}px` : undefined,
             }}
           />
-          <div className="w-8 h-px" style={{ backgroundColor: i % 2 === 0 ? "#F7941D33" : "#10B98133" }} />
+          <div className="w-8 h-px" style={{ backgroundColor: i % 2 === 0 ? "#F7941D33" : "#99999933" }} />
           <div
             className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: i % 2 === 0 ? "#10B981" : "#F7941D" }}
+            style={{ backgroundColor: i % 2 === 0 ? "#999" : "#F7941D" }}
           />
         </motion.div>
       ))}
@@ -123,14 +127,44 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 
 export default function Landing() {
   const [, setLocation] = useLocation();
+  const [showIntro, setShowIntro] = useState(true);
+  const [introEnded, setIntroEnded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated } = useAuth();
+  const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
+  const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
+  const totalTeams = leaderboard?.teams?.length ?? 0;
+  const maxPF = 45;
+
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+
+  // Check if intro was already shown this session
+  useEffect(() => {
+    const shown = sessionStorage.getItem("intro_shown");
+    if (shown) {
+      setShowIntro(false);
+      setIntroEnded(true);
+    }
+  }, []);
+
+  const handleIntroEnd = () => {
+    sessionStorage.setItem("intro_shown", "true");
+    setIntroEnded(true);
+    setTimeout(() => setShowIntro(false), 800);
+  };
+
+  const skipIntro = () => {
+    sessionStorage.setItem("intro_shown", "true");
+    setIntroEnded(true);
+    setTimeout(() => setShowIntro(false), 400);
+  };
 
   const features = [
     {
@@ -141,21 +175,21 @@ export default function Landing() {
     },
     {
       icon: <Users size={28} />,
-      title: "16 Equipes Farmacológicas",
-      desc: "Equipes nomeadas com fármacos reais: Paracetamol, Atropina, Adrenalina e mais. Competição saudável!",
-      color: "#10B981",
+      title: "Equipes Farmacológicas",
+      desc: "Equipes nomeadas com fármacos reais: Acetilcolina, Atropina, Adrenalina e mais. Competição saudável!",
+      color: "#4A4A4A",
     },
     {
       icon: <BookOpen size={28} />,
       title: "Casos Clínicos Reais",
-      desc: "14 casos clínicos integrados com Semiologia, Patologia e Microbiologia. Aprendizado contextualizado.",
+      desc: "Casos clínicos integrados com Semiologia, Patologia e Microbiologia. Aprendizado contextualizado.",
       color: "#F7941D",
     },
     {
       icon: <Brain size={28} />,
       title: "Metodologias Ativas",
       desc: "TBL, PBL, Jigsaw, Escape Room e BYOD. Aulas dinâmicas que transformam o aprendizado.",
-      color: "#10B981",
+      color: "#4A4A4A",
     },
     {
       icon: <Target size={28} />,
@@ -167,7 +201,7 @@ export default function Landing() {
       icon: <Youtube size={28} />,
       title: "Canal no YouTube",
       desc: "Videoaulas, discussões de casos e conteúdo complementar no canal Conexão em Ciência — Farmacológicas.",
-      color: "#10B981",
+      color: "#4A4A4A",
     },
   ];
 
@@ -183,7 +217,41 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
-      {/* Hero Section */}
+      {/* ═══════ INTRO VIDEO OVERLAY ═══════ */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            style={{ backgroundColor: "#000" }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: introEnded ? 0 : 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <video
+              ref={videoRef}
+              src={INTRO_VIDEO_URL}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-contain"
+              onEnded={handleIntroEnd}
+            />
+            <button
+              onClick={skipIntro}
+              className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105"
+              style={{
+                backgroundColor: "rgba(247,148,29,0.9)",
+                color: "#fff",
+              }}
+            >
+              Pular Intro →
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════ HERO SECTION ═══════ */}
       <motion.div
         ref={heroRef}
         className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
@@ -289,15 +357,153 @@ export default function Landing() {
         </motion.div>
       </motion.div>
 
-      {/* Stats Section */}
+      {/* ═══════ LOGIN / ACCESS SECTION ═══════ */}
       <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0D1B2A" }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Acesse a Plataforma
+            </h2>
+            <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Escolha seu perfil para acessar as funcionalidades
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
+            {/* Student Login Card */}
+            <motion.div
+              className="relative p-8 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(247,148,29,0.04)",
+                borderColor: "rgba(247,148,29,0.2)",
+              }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ borderColor: "#F7941D", boxShadow: "0 0 40px rgba(247,148,29,0.15)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                  <GraduationCap size={32} style={{ color: "#F7941D" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Aluno
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
+                </p>
+                <div className="space-y-3">
+                  {isAuthenticated ? (
+                    <>
+                      <p className="text-sm" style={{ color: "#F7941D" }}>
+                        <User size={14} className="inline mr-1" />
+                        Logado como <strong>{user?.name || "Aluno"}</strong>
+                      </p>
+                      <button
+                        onClick={() => setLocation("/leaderboard")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                        style={{ backgroundColor: "#F7941D", color: "#fff" }}
+                      >
+                        <Trophy size={18} />
+                        Ir para o Leaderboard
+                      </button>
+                      <button
+                        onClick={() => setLocation("/meu-progresso")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
+                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
+                      >
+                        <Target size={18} />
+                        Meu Progresso
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setLocation("/leaderboard")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                        style={{ backgroundColor: "#F7941D", color: "#fff" }}
+                      >
+                        <Trophy size={18} />
+                        Ver Leaderboard
+                      </button>
+                      <a
+                        href={getLoginUrl()}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
+                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
+                      >
+                        <LogIn size={18} />
+                        Fazer Login
+                      </a>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Professor Card */}
+            <motion.div
+              className="relative p-8 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(74,74,74,0.08)",
+                borderColor: "rgba(255,255,255,0.1)",
+              }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ borderColor: "rgba(255,255,255,0.3)", boxShadow: "0 0 40px rgba(255,255,255,0.05)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5" style={{ backgroundColor: "#fff" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                  <Shield size={32} style={{ color: "#ccc" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Professor
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
+                </p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setLocation("/admin")}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                    style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                  >
+                    <Lock size={18} />
+                    Painel Administrativo
+                  </button>
+                  <button
+                    onClick={() => setLocation("/avisos")}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
+                    style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", backgroundColor: "transparent" }}
+                  >
+                    <Settings size={18} />
+                    Mural de Avisos
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ STATS SECTION ═══════ */}
+      <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0A1628" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {[
-              { value: 84, suffix: "", label: "Alunos", icon: <Users size={24} /> },
-              { value: 16, suffix: "", label: "Equipes", icon: <Trophy size={24} /> },
+              { value: totalStudents || 84, suffix: "", label: "Alunos", icon: <Users size={24} /> },
+              { value: totalTeams || 16, suffix: "", label: "Equipes", icon: <Trophy size={24} /> },
               { value: 14, suffix: "", label: "Casos Clínicos", icon: <BookOpen size={24} /> },
-              { value: 45, suffix: " PF", label: "Máximo por Aluno", icon: <Zap size={24} /> },
+              { value: maxPF, suffix: " PF", label: "Máximo por Aluno", icon: <Zap size={24} /> },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -318,8 +524,8 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
+      {/* ═══════ FEATURES SECTION ═══════ */}
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
         <div className="max-w-6xl mx-auto">
           <motion.div
             className="text-center mb-12 sm:mb-16"
@@ -355,7 +561,7 @@ export default function Landing() {
               >
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: feat.color + "15", color: feat.color }}
+                  style={{ backgroundColor: feat.color + "15", color: feat.color === "#4A4A4A" ? "#ccc" : feat.color }}
                 >
                   {feat.icon}
                 </div>
@@ -371,8 +577,8 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Timeline Section */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
+      {/* ═══════ TIMELINE SECTION ═══════ */}
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
         <div className="max-w-3xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -389,9 +595,7 @@ export default function Landing() {
           </motion.div>
 
           <div className="relative">
-            {/* Vertical line */}
             <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: "rgba(247,148,29,0.2)" }} />
-
             <div className="space-y-6">
               {timeline.map((item, i) => (
                 <motion.div
@@ -423,8 +627,8 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
+      {/* ═══════ CTA SECTION ═══════ */}
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -459,9 +663,9 @@ export default function Landing() {
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 border"
                 style={{
-                  borderColor: "rgba(16,185,129,0.4)",
-                  color: "#10B981",
-                  backgroundColor: "rgba(16,185,129,0.08)",
+                  borderColor: "rgba(255,255,255,0.2)",
+                  color: "#fff",
+                  backgroundColor: "rgba(255,255,255,0.05)",
                 }}
               >
                 <Youtube size={20} />
@@ -472,7 +676,7 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* ═══════ FOOTER ═══════ */}
       <footer className="py-8 px-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "#0A1628" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
@@ -482,12 +686,12 @@ export default function Landing() {
           <div className="flex items-center gap-4 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
             <span>UNIRIO — Farmacologia I — 2026.1</span>
             <span>•</span>
-            <span>Prof. Dr.</span>
+            <span>Prof. Pedro Braga</span>
           </div>
         </div>
       </footer>
 
-      {/* Video Modal */}
+      {/* ═══════ VIDEO MODAL ═══════ */}
       <AnimatePresence>
         {showVideo && (
           <motion.div
@@ -508,7 +712,7 @@ export default function Landing() {
               onClick={(e) => e.stopPropagation()}
             >
               <video
-                src={VINHETA_URL}
+                src={INTRO_VIDEO_URL}
                 controls
                 autoPlay
                 className="w-full h-full object-contain"

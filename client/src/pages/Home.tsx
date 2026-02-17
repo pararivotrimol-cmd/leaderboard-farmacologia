@@ -1,20 +1,26 @@
-/*
- * DESIGN: Pharma Lab Dashboard — Conexão em Farmacologia
- * Dark navy background, emerald/cyan accents, scientific data visualization
+/**
+ * Leaderboard — Conexão em Farmacologia
+ * Padronizado: Laranja (#F7941D) + Cinza (#4A4A4A) + Branco
  * Typography: Outfit (display), JetBrains Mono (data), DM Sans (body)
  */
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
-  Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell
+  Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
+  ArrowLeft
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
-const HERO_BANNER = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/PxxmnrVLfupqXVFw.png";
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/bQaermuTleJBguWb.png";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
+
+// Brand colors
+const ORANGE = "#F7941D";
+const GRAY = "#4A4A4A";
+const DARK_BG = "#0A1628";
+const CARD_BG = "#0D1B2A";
 
 const MAX_PF_SEMESTER = 45;
 
@@ -25,16 +31,16 @@ function getTeamPF(team: TeamData) { return team.members.reduce((sum, m) => sum 
 function getTeamAvg(team: TeamData) { return team.members.length > 0 ? getTeamPF(team) / team.members.length : 0; }
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center font-mono font-bold text-sm text-black shadow-lg">1</div>;
-  if (rank === 2) return <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center font-mono font-bold text-sm text-black shadow-lg">2</div>;
-  if (rank === 3) return <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center font-mono font-bold text-sm text-white shadow-lg">3</div>;
-  return <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-mono font-bold text-sm text-muted-foreground">{rank}</div>;
+  if (rank === 1) return <div className="w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm text-white shadow-lg" style={{ background: "linear-gradient(135deg, #F7941D, #FFD700)" }}>1</div>;
+  if (rank === 2) return <div className="w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm text-white shadow-lg" style={{ background: "linear-gradient(135deg, #999, #ccc)" }}>2</div>;
+  if (rank === 3) return <div className="w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm text-white shadow-lg" style={{ background: "linear-gradient(135deg, #8B6914, #B8860B)" }}>3</div>;
+  return <div className="w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm" style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{rank}</div>;
 }
 
 function PFBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
-    <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
+    <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
       <motion.div className="h-full rounded-full" style={{ backgroundColor: color }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2, ease: "easeOut" }} />
     </div>
   );
@@ -49,12 +55,12 @@ function CircularGauge({ value, max, color, size = 120 }: { value: number; max: 
     <div className="flex flex-col items-center gap-1">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="oklch(0.245 0.03 264.052)" strokeWidth="8" />
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
           <motion.circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset }} transition={{ duration: 1.5, ease: "easeOut" }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-mono font-bold text-lg" style={{ color }}>{value.toFixed(1)}</span>
-          <span className="text-[10px] text-muted-foreground">/ {max}</span>
+          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>/ {max}</span>
         </div>
       </div>
     </div>
@@ -67,43 +73,53 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
   const avgPF = getTeamAvg(team);
   const maxMemberPF = Math.max(...team.members.map(m => m.xp), 0);
   return (
-    <motion.div layout className="border border-border rounded-lg overflow-hidden transition-colors hover:border-primary/30" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: rank * 0.05 }}>
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left">
+    <motion.div
+      layout
+      className="rounded-lg overflow-hidden transition-all"
+      style={{
+        backgroundColor: CARD_BG,
+        border: `1px solid rgba(247,148,29,0.12)`,
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: rank * 0.05 }}
+    >
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-white/[0.02] transition-colors">
         <RankBadge rank={rank} />
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: team.color + "22", border: `1px solid ${team.color}44` }}>{team.emoji}</div>
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{team.emoji}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-display font-semibold text-foreground truncate">{team.name}</span>
-            <span className="text-xs text-muted-foreground">#{team.id}</span>
+            <span className="font-display font-semibold text-white truncate">{team.name}</span>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>#{team.id}</span>
           </div>
-          <div className="mt-1.5"><PFBar value={totalPF} max={MAX_PF_SEMESTER * team.members.length} color={team.color} /></div>
+          <div className="mt-1.5"><PFBar value={totalPF} max={MAX_PF_SEMESTER * team.members.length} color={ORANGE} /></div>
         </div>
         <div className="text-right shrink-0 ml-2">
-          <div className="font-mono font-bold text-lg" style={{ color: team.color }}>{totalPF.toFixed(1)}</div>
-          <div className="text-[11px] text-muted-foreground">PF total</div>
+          <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>{totalPF.toFixed(1)}</div>
+          <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>PF total</div>
         </div>
         <div className="text-right shrink-0 ml-2 hidden sm:block">
-          <div className="font-mono font-semibold text-sm text-foreground">{avgPF.toFixed(1)}</div>
-          <div className="text-[11px] text-muted-foreground">média</div>
+          <div className="font-mono font-semibold text-sm text-white">{avgPF.toFixed(1)}</div>
+          <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>média</div>
         </div>
-        <div className="shrink-0 text-muted-foreground">{expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
+        <div className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>{expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
       </button>
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-            <div className="px-4 pb-4 pt-0 border-t border-border/50">
+            <div className="px-4 pb-4 pt-0" style={{ borderTop: "1px solid rgba(247,148,29,0.08)" }}>
               <div className="grid gap-2 mt-3">
                 {[...team.members].sort((a, b) => b.xp - a.xp).map((member, idx) => (
                   <div key={member.id} className="flex items-center gap-3 py-1.5">
-                    <span className="w-5 text-center text-xs text-muted-foreground font-mono">{idx + 1}</span>
+                    <span className="w-5 text-center text-xs font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>{idx + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-foreground truncate block">
+                      <span className="text-sm text-white truncate block">
                         {member.name}
-                        {member.xp === maxMemberPF && <Star size={12} className="inline ml-1 text-amber-400" />}
+                        {member.xp === maxMemberPF && <Star size={12} className="inline ml-1" style={{ color: ORANGE }} />}
                       </span>
                     </div>
-                    <div className="w-24 sm:w-32"><PFBar value={member.xp} max={MAX_PF_SEMESTER} color={team.color} /></div>
-                    <span className="font-mono text-sm font-medium w-12 text-right" style={{ color: team.color }}>{member.xp.toFixed(1)}</span>
+                    <div className="w-24 sm:w-32"><PFBar value={member.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
+                    <span className="font-mono text-sm font-medium w-12 text-right" style={{ color: ORANGE }}>{member.xp.toFixed(1)}</span>
                   </div>
                 ))}
               </div>
@@ -142,35 +158,32 @@ export default function Home() {
   const courseName = leaderboard?.settings?.courseName || "Farmacologia I";
   const semester = leaderboard?.settings?.semester || "2026.1";
 
-  // Fetch active notifications
   const { data: notifications } = trpc.notifications.getActive.useQuery();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-          <FlaskConical size={40} className="text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground font-display">Carregando Conexão em Farmacologia...</p>
+          <FlaskConical size={40} className="mx-auto mb-4 animate-pulse" style={{ color: ORANGE }} />
+          <p className="font-display" style={{ color: "rgba(255,255,255,0.5)" }}>Carregando Conexão em Farmacologia...</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
       {/* Notification Banners */}
       {notifications && notifications.length > 0 && (
         <div className="w-full">
           {notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`px-4 py-2.5 text-center text-sm font-medium flex items-center justify-center gap-2 ${
-                notif.priority === "urgent"
-                  ? "bg-red-600/90 text-white"
-                  : notif.priority === "important"
-                  ? "bg-amber-500/90 text-black"
-                  : "bg-primary/90 text-primary-foreground"
-              }`}
+              className="px-4 py-2.5 text-center text-sm font-medium flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: notif.priority === "urgent" ? "rgba(239,68,68,0.9)" : notif.priority === "important" ? "rgba(247,148,29,0.9)" : "rgba(247,148,29,0.15)",
+                color: notif.priority === "urgent" || notif.priority === "important" ? "#fff" : ORANGE,
+              }}
             >
               <Bell size={14} />
               <span className="font-display font-semibold">{notif.title}</span>
@@ -181,49 +194,61 @@ export default function Home() {
       )}
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${HERO_BANNER})` }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
-        <div className="relative container pt-8 pb-12 sm:pt-12 sm:pb-16">
-          <div className="flex items-center gap-3 mb-2">
-            <img src={LOGO_URL} alt="Logo" className="w-8 h-8 rounded-full object-contain" />
-            <span className="text-sm font-medium text-primary tracking-wide uppercase font-display">{universityName} — {courseName} — {semester}</span>
+      <div className="relative overflow-hidden" style={{ backgroundColor: CARD_BG }}>
+        {/* Orange accent line at top */}
+        <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${ORANGE}, transparent 50%, ${ORANGE})` }} />
+
+        <div className="relative container pt-6 pb-10 sm:pt-10 sm:pb-14">
+          {/* Top Nav */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <img src={LOGO_URL} alt="Logo" className="w-10 h-10 object-contain" />
+              <div>
+                <span className="text-sm font-display font-semibold text-white block">Conexão em Farmacologia</span>
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{universityName} — {courseName} — {semester}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "12", border: `1px solid ${ORANGE}25` }}>
+                  <ArrowLeft size={14} />
+                  Início
+                </span>
+              </Link>
+            </div>
           </div>
+
+          {/* Title */}
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="flex-1">
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-foreground leading-tight">
-                Conexão em<span className="text-gradient-emerald"> Farmacologia</span>
+              <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white leading-tight">
+                Leaderboard<span className="text-gradient-orange"> PF</span>
               </h1>
-              <p className="mt-2 text-muted-foreground text-sm sm:text-base max-w-xl font-body">
+              <p className="mt-2 text-sm sm:text-base max-w-xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
-              <div className="flex items-center gap-3 mt-3 flex-wrap">
-                <Link href="/">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-500/30 text-orange-400 text-sm font-medium hover:bg-orange-500/10 transition-colors">
-                    <FlaskConical size={16} />
-                    Início
-                  </button>
-                </Link>
+              <div className="flex items-center gap-2 mt-4 flex-wrap">
                 <Link href="/meu-progresso">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-md">
-                    <Users size={16} />
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
+                    <Users size={15} />
                     Meu Progresso
-                  </button>
+                  </span>
                 </Link>
                 <Link href="/avisos">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 text-primary text-sm font-medium hover:bg-primary/10 transition-colors">
-                    <Bell size={16} />
-                    Mural de Avisos
-                  </button>
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                    <Bell size={15} />
+                    Avisos
+                  </span>
                 </Link>
-                <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors">
-                  <Youtube size={16} />
-                  Canal YouTube
+                <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <Youtube size={15} />
+                  YouTube
                 </a>
               </div>
             </div>
-            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-16 h-16 sm:w-24 sm:h-24 object-contain shrink-0 drop-shadow-lg hidden sm:block rounded-full" />
+            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
+
           {/* Stats Row */}
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {[
@@ -232,10 +257,20 @@ export default function Home() {
               { icon: <TrendingUp size={18} />, label: "Média por Aluno", value: avgPFPerStudent.toFixed(1), sub: `de ${MAX_PF_SEMESTER} possíveis` },
               { icon: <Trophy size={18} />, label: "Líder", value: topTeam?.name ?? "—", sub: `${topTeamPF.toFixed(1)} PF` },
             ].map((stat, i) => (
-              <motion.div key={stat.label} className="border border-border rounded-lg p-3 sm:p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052 / 0.8)" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}>
-                <div className="flex items-center gap-2 text-primary mb-1">{stat.icon}<span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</span></div>
-                <div className="font-mono font-bold text-lg sm:text-xl text-foreground truncate">{stat.value}</div>
-                <div className="text-[11px] text-muted-foreground">{stat.sub}</div>
+              <motion.div
+                key={stat.label}
+                className="rounded-lg p-3 sm:p-4"
+                style={{ backgroundColor: "rgba(247,148,29,0.05)", border: `1px solid rgba(247,148,29,0.12)` }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ color: ORANGE }}>{stat.icon}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>{stat.label}</span>
+                </div>
+                <div className="font-mono font-bold text-lg sm:text-xl text-white truncate">{stat.value}</div>
+                <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>{stat.sub}</div>
               </motion.div>
             ))}
           </div>
@@ -245,18 +280,24 @@ export default function Home() {
       {/* Latest Highlight Banner */}
       {latestHighlight && (
         <div className="container -mt-2 mb-6">
-          <motion.div className="border border-primary/20 rounded-lg p-4 flex items-start gap-3 glow-emerald" style={{ backgroundColor: "oklch(0.696 0.17 162.48 / 0.06)" }} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.6 }}>
-            <Activity size={20} className="text-primary mt-0.5 shrink-0" />
+          <motion.div
+            className="rounded-lg p-4 flex items-start gap-3"
+            style={{ backgroundColor: ORANGE + "0A", border: `1px solid ${ORANGE}25` }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Activity size={20} className="mt-0.5 shrink-0" style={{ color: ORANGE }} />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono text-primary font-medium">SEMANA {latestHighlight.week}</span>
-                <span className="text-xs text-muted-foreground">{latestHighlight.date}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{latestHighlight.activity}</span>
+                <span className="text-xs font-mono font-medium" style={{ color: ORANGE }}>SEMANA {latestHighlight.week}</span>
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{latestHighlight.date}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: ORANGE + "15", color: ORANGE }}>{latestHighlight.activity}</span>
               </div>
-              <p className="text-sm text-foreground mt-1">{latestHighlight.description}</p>
-              <div className="flex gap-4 mt-1.5 text-xs text-muted-foreground">
-                <span>Equipe destaque: <strong className="text-foreground">{latestHighlight.topTeam}</strong></span>
-                <span>Aluno(a) destaque: <strong className="text-foreground">{latestHighlight.topStudent}</strong></span>
+              <p className="text-sm text-white mt-1">{latestHighlight.description}</p>
+              <div className="flex gap-4 mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <span>Equipe destaque: <strong className="text-white">{latestHighlight.topTeam}</strong></span>
+                <span>Aluno(a) destaque: <strong className="text-white">{latestHighlight.topStudent}</strong></span>
               </div>
             </div>
           </motion.div>
@@ -265,13 +306,21 @@ export default function Home() {
 
       {/* Tab Navigation */}
       <div className="container mb-6">
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit">
+        <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
           {[
             { key: "teams" as const, label: "Ranking Equipes", icon: <Users size={15} /> },
             { key: "individual" as const, label: "Top 10 Individual", icon: <Award size={15} /> },
             { key: "activities" as const, label: "Atividades PF", icon: <Target size={15} /> },
           ].map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${activeTab === tab.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
+              style={{
+                backgroundColor: activeTab === tab.key ? ORANGE : "transparent",
+                color: activeTab === tab.key ? "#fff" : "rgba(255,255,255,0.5)",
+              }}
+            >
               {tab.icon}<span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.label.split(" ")[0]}</span>
             </button>
           ))}
@@ -289,47 +338,74 @@ export default function Home() {
                     const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
                     const isFirst = actualRank === 1;
                     return (
-                      <motion.div key={team.id} className={`border rounded-lg p-3 sm:p-5 text-center ${isFirst ? "border-amber-500/30 glow-amber" : "border-border"}`} style={{ backgroundColor: isFirst ? "oklch(0.795 0.16 86.047 / 0.06)" : "oklch(0.195 0.03 264.052)", marginTop: isFirst ? 0 : "1.5rem" }} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 + idx * 0.15 }}>
+                      <motion.div
+                        key={team.id}
+                        className="rounded-lg p-3 sm:p-5 text-center"
+                        style={{
+                          backgroundColor: isFirst ? ORANGE + "0A" : CARD_BG,
+                          border: `1px solid ${isFirst ? ORANGE + "40" : "rgba(255,255,255,0.08)"}`,
+                          marginTop: isFirst ? 0 : "1.5rem",
+                          boxShadow: isFirst ? `0 0 30px ${ORANGE}15` : "none",
+                        }}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 + idx * 0.15 }}
+                      >
                         <div className="text-2xl sm:text-3xl mb-2">{team.emoji}</div>
-                        <div className={`text-xs font-mono font-bold mb-1 ${actualRank === 1 ? "text-amber-400" : actualRank === 2 ? "text-gray-400" : "text-amber-700"}`}>#{actualRank}</div>
-                        <div className="font-display font-bold text-sm sm:text-base text-foreground truncate">{team.name}</div>
-                        <div className="font-mono font-bold text-xl sm:text-2xl mt-1" style={{ color: team.color }}>{getTeamPF(team).toFixed(1)}</div>
-                        <div className="text-[11px] text-muted-foreground">PF total</div>
+                        <div className="text-xs font-mono font-bold mb-1" style={{ color: isFirst ? ORANGE : actualRank === 2 ? "#999" : "#8B6914" }}>#{actualRank}</div>
+                        <div className="font-display font-bold text-sm sm:text-base text-white truncate">{team.name}</div>
+                        <div className="font-mono font-bold text-xl sm:text-2xl mt-1" style={{ color: ORANGE }}>{getTeamPF(team).toFixed(1)}</div>
+                        <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>PF total</div>
                       </motion.div>
                     );
                   })}
                 </div>
               )}
-              <h2 className="font-display font-bold text-lg text-foreground mb-4 flex items-center gap-2"><Trophy size={20} className="text-primary" />Ranking Completo das Equipes</h2>
+              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <Trophy size={20} style={{ color: ORANGE }} />
+                Ranking Completo das Equipes
+              </h2>
               <div className="grid gap-2">{rankedTeams.map((team, idx) => <TeamCard key={team.id} team={team} rank={idx + 1} />)}</div>
             </motion.div>
           )}
 
           {activeTab === "individual" && (
             <motion.div key="individual" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              <h2 className="font-display font-bold text-lg text-foreground mb-4 flex items-center gap-2"><Award size={20} className="text-primary" />Top 10 — Alunos com Maior PF</h2>
+              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <Award size={20} style={{ color: ORANGE }} />
+                Top 10 — Alunos com Maior PF
+              </h2>
               <div className="flex justify-center gap-6 sm:gap-10 mb-8">
                 {topStudents.slice(0, 3).map((student, idx) => (
                   <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
-                    <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={student.teamColor} size={idx === 0 ? 110 : 90} />
+                    <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={idx === 0 ? 110 : 90} />
                     <div className="mt-2 text-center">
-                      <div className="font-display font-semibold text-sm text-foreground truncate max-w-[100px]">{student.name}</div>
-                      <div className="text-[11px] text-muted-foreground flex items-center gap-1 justify-center"><span>{student.teamEmoji}</span><span>{student.teamName}</span></div>
+                      <div className="font-display font-semibold text-sm text-white truncate max-w-[100px]">{student.name}</div>
+                      <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        <span>{student.teamEmoji}</span><span>{student.teamName}</span>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
-              <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+              <div className="rounded-lg overflow-hidden" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
                 {topStudents.map((student, idx) => (
-                  <motion.div key={student.name} className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 ${idx < topStudents.length - 1 ? "border-b border-border/50" : ""}`} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: idx * 0.05 }}>
+                  <motion.div
+                    key={student.name}
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
+                    style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                  >
                     <RankBadge rank={idx + 1} />
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: student.teamColor + "22", border: `1px solid ${student.teamColor}44` }}>{student.teamEmoji}</div>
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{student.teamEmoji}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-foreground truncate">{student.name}</div>
-                      <div className="text-[11px] text-muted-foreground">{student.teamName}</div>
+                      <div className="font-medium text-sm text-white truncate">{student.name}</div>
+                      <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{student.teamName}</div>
                     </div>
-                    <div className="w-20 sm:w-32"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={student.teamColor} /></div>
-                    <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: student.teamColor }}>{student.xp.toFixed(1)}</div>
+                    <div className="w-20 sm:w-32"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
+                    <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: ORANGE }}>{student.xp.toFixed(1)}</div>
                   </motion.div>
                 ))}
               </div>
@@ -338,32 +414,54 @@ export default function Home() {
 
           {activeTab === "activities" && (
             <motion.div key="activities" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              <h2 className="font-display font-bold text-lg text-foreground mb-4 flex items-center gap-2"><Target size={20} className="text-primary" />Atividades que Geram PF</h2>
+              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <Target size={20} style={{ color: ORANGE }} />
+                Atividades que Geram PF
+              </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-10">
                 {activities.map((act, idx) => (
-                  <motion.div key={act.id} className="border border-border rounded-lg p-4 flex items-center gap-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.06 }}>
+                  <motion.div
+                    key={act.id}
+                    className="rounded-lg p-4 flex items-center gap-4"
+                    style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.06 }}
+                  >
                     <div className="text-2xl">{act.icon}</div>
-                    <div className="flex-1"><div className="font-display font-semibold text-sm text-foreground">{act.name}</div><div className="text-xs text-muted-foreground mt-0.5">Até {act.maxXP} PF por sessão</div></div>
-                    <div className="font-mono font-bold text-lg text-primary">+{act.maxXP}</div>
+                    <div className="flex-1">
+                      <div className="font-display font-semibold text-sm text-white">{act.name}</div>
+                      <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Até {act.maxXP} PF por sessão</div>
+                    </div>
+                    <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>+{act.maxXP}</div>
                   </motion.div>
                 ))}
               </div>
-              <h2 className="font-display font-bold text-lg text-foreground mb-4 flex items-center gap-2"><Activity size={20} className="text-primary" />Histórico Semanal</h2>
+              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <Activity size={20} style={{ color: ORANGE }} />
+                Histórico Semanal
+              </h2>
               <div className="relative">
-                <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+                <div className="absolute left-4 top-0 bottom-0 w-px" style={{ backgroundColor: ORANGE + "25" }} />
                 <div className="grid gap-4">
                   {highlights.map((highlight, idx) => (
                     <motion.div key={highlight.id} className="relative pl-10" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: idx * 0.08 }}>
-                      <div className={`absolute left-2.5 top-3 w-3 h-3 rounded-full border-2 ${idx === highlights.length - 1 ? "bg-primary border-primary" : "bg-secondary border-border"}`} />
-                      <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+                      <div
+                        className="absolute left-2.5 top-3 w-3 h-3 rounded-full"
+                        style={{
+                          backgroundColor: idx === highlights.length - 1 ? ORANGE : "rgba(255,255,255,0.1)",
+                          border: `2px solid ${idx === highlights.length - 1 ? ORANGE : "rgba(255,255,255,0.15)"}`,
+                        }}
+                      />
+                      <div className="rounded-lg p-4" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="font-mono text-xs font-bold text-primary">SEM {highlight.week}</span>
-                          <span className="text-xs text-muted-foreground">{highlight.date}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{highlight.activity}</span>
+                          <span className="font-mono text-xs font-bold" style={{ color: ORANGE }}>SEM {highlight.week}</span>
+                          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{highlight.date}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: ORANGE + "15", color: ORANGE }}>{highlight.activity}</span>
                         </div>
-                        <p className="text-sm text-foreground">{highlight.description}</p>
+                        <p className="text-sm text-white">{highlight.description}</p>
                         {highlight.topTeam !== "—" && (
-                          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                          <div className="flex gap-4 mt-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
                             <span>🏆 {highlight.topTeam}</span>
                             <span>⭐ {highlight.topStudent}</span>
                           </div>
@@ -379,14 +477,27 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6">
+      <footer className="py-6 px-4" style={{ borderTop: `1px solid rgba(247,148,29,0.1)`, backgroundColor: CARD_BG }}>
         <div className="container text-center">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <p className="text-xs text-muted-foreground">{universityName} — {courseName} — Semestre {semester}</p>
-            <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="text-xs text-red-400/60 hover:text-red-400 flex items-center gap-1 transition-colors"><Youtube size={10} /> Conexão em Ciência</a>
-            <a href="/admin" className="text-xs text-muted-foreground/40 hover:text-primary flex items-center gap-1 transition-colors"><Settings size={10} /> Admin</a>
+            <div className="flex items-center gap-2">
+              <img src={LOGO_URL} alt="Logo" className="w-6 h-6 object-contain" />
+              <span className="text-xs text-white/60">Conexão em Farmacologia</span>
+            </div>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>•</span>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{universityName} — {courseName} — {semester}</span>
+            <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="text-xs flex items-center gap-1 transition-colors" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <Youtube size={10} /> YouTube
+            </a>
+            <Link href="/admin">
+              <span className="text-xs flex items-center gap-1 transition-colors" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <Settings size={10} /> Admin
+              </span>
+            </Link>
           </div>
-          <p className="text-[11px] text-muted-foreground/60 mt-1">Conexão em Farmacologia • Semana {currentWeek} • Sistema de Gamificação com Metodologias Ativas</p>
+          <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+            Conexão em Farmacologia • Semana {currentWeek} • Prof. Pedro Braga • Sistema de Gamificação
+          </p>
         </div>
       </footer>
     </div>
