@@ -54,6 +54,18 @@ vi.mock("./db", () => {
     createHighlight: vi.fn().mockResolvedValue(2),
     updateHighlight: vi.fn().mockResolvedValue(undefined),
     deleteHighlight: vi.fn().mockResolvedValue(undefined),
+    getActiveNotifications: vi.fn().mockResolvedValue([
+      { id: 1, title: "Prova P1", content: "Estudem cap. 1-5", priority: "urgent", type: "banner", isActive: 1, expiresAt: null, createdAt: new Date() },
+      { id: 2, title: "Seminário", content: "Grupo 3 apresenta", priority: "normal", type: "announcement", isActive: 1, expiresAt: null, createdAt: new Date() },
+    ]),
+    getAllNotifications: vi.fn().mockResolvedValue([
+      { id: 1, title: "Prova P1", content: "Estudem cap. 1-5", priority: "urgent", type: "banner", isActive: 1, expiresAt: null, createdAt: new Date() },
+      { id: 2, title: "Seminário", content: "Grupo 3 apresenta", priority: "normal", type: "announcement", isActive: 1, expiresAt: null, createdAt: new Date() },
+      { id: 3, title: "Antigo", content: "Aviso expirado", priority: "normal", type: "reminder", isActive: 0, expiresAt: null, createdAt: new Date() },
+    ]),
+    createNotification: vi.fn().mockResolvedValue(4),
+    updateNotification: vi.fn().mockResolvedValue(undefined),
+    deleteNotification: vi.fn().mockResolvedValue(undefined),
     getDb: vi.fn(),
     upsertUser: vi.fn(),
     getUserByOpenId: vi.fn(),
@@ -246,6 +258,86 @@ describe("settings (admin-protected)", () => {
     const caller = appRouter.createCaller(ctx);
     await expect(
       caller.settings.update({ password: "wrong", key: "currentWeek", value: "6" })
+    ).rejects.toThrow("Não autorizado");
+  });
+});
+
+describe("notifications (public + admin)", () => {
+  it("returns active notifications publicly", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const notifs = await caller.notifications.getActive();
+    expect(notifs).toHaveLength(2);
+    expect(notifs[0].title).toBe("Prova P1");
+    expect(notifs[1].type).toBe("announcement");
+  });
+
+  it("returns all notifications for admin", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const notifs = await caller.notifications.getAll({ password: "farmaco2026" });
+    expect(notifs).toHaveLength(3);
+  });
+
+  it("rejects getAll with wrong password", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.notifications.getAll({ password: "wrong" })
+    ).rejects.toThrow("Não autorizado");
+  });
+
+  it("creates a notification", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.notifications.create({
+      password: "farmaco2026",
+      title: "Novo Aviso",
+      content: "Conteúdo do aviso",
+      priority: "important",
+      type: "banner",
+    });
+    expect(result.id).toBe(4);
+  });
+
+  it("rejects create with wrong password", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.notifications.create({
+        password: "wrong",
+        title: "Teste",
+      })
+    ).rejects.toThrow("Não autorizado");
+  });
+
+  it("updates a notification", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.notifications.update({
+      password: "farmaco2026",
+      id: 1,
+      title: "Prova P1 Atualizada",
+      isActive: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("deletes a notification", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.notifications.delete({
+      password: "farmaco2026",
+      id: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects delete with wrong password", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.notifications.delete({ password: "wrong", id: 1 })
     ).rejects.toThrow("Não autorizado");
   });
 });

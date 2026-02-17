@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -91,3 +91,21 @@ export const courseSettings = mysqlTable("courseSettings", {
 
 export type CourseSetting = typeof courseSettings.$inferSelect;
 export type InsertCourseSetting = typeof courseSettings.$inferInsert;
+
+/**
+ * Notifications - announcements and alerts for students
+ */
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content"),
+  priority: mysqlEnum("priority", ["normal", "important", "urgent"]).default("normal").notNull(),
+  type: mysqlEnum("type", ["banner", "announcement", "reminder"]).default("announcement").notNull(),
+  isActive: int("isActive").notNull().default(1),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;

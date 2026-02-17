@@ -14,3 +14,28 @@
 - [x] Connect public leaderboard to database (replace static data)
 - [x] Write vitest tests for admin API
 - [x] Save checkpoint and deliver to user
+- [x] Replace sample names with 84 real student names in database
+- [x] Implement student progress page (individual PF + team view)
+- [x] Add route for student progress page
+- [x] Write tests for new functionality
+- [x] Rename 16 teams with drug names from the pharmacology syllabus
+- [x] Randomize student distribution across teams
+- [x] Rename project from "Leaderboard XP" to "Conexão em Farmacologia"
+- [x] Replace "XP" with pharmacology-related acronym (PF) throughout
+- [x] Update visual identity inspired by "Conexão em Ciência" YouTube channel
+- [x] Update all pages (Home, Admin, StudentProgress) with new branding
+- [x] Generate logo inspired by Conexão em Ciência channel
+- [x] Add direct link to YouTube channel Conexão em Ciência
+- [ ] Create integrated video section with YouTube playlists (future)
+- [ ] Create study materials/resources section (mega platform) (future)
+- [x] Rename project to "Conexão em Farmacologia" throughout
+- [x] Replace XP with pharmacology-related acronym (PF)
+- [x] Fix Admin.tsx import error
+- [x] Create notifications database schema (title, content, type, priority, active, createdAt)
+- [x] Create tRPC API routes for notification CRUD
+- [x] Implement top banner notification component on public pages
+- [x] Implement announcements board/mural page (/avisos)
+- [ ] Implement browser push notifications (future)
+- [ ] Implement email notification sending (future)
+- [x] Add notification management to admin panel
+- [x] Write vitest tests for notification API (25 tests passing)

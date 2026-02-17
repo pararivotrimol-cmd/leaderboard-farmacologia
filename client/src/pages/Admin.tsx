@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
-  FlaskConical, ArrowLeft, KeyRound
+  FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -43,7 +43,7 @@ function LoginScreen({ onLogin }: { onLogin: (pw: string) => void }) {
             <Lock size={28} className="text-primary" />
           </div>
           <h1 className="font-display font-bold text-2xl text-foreground">Painel Admin</h1>
-          <p className="text-sm text-muted-foreground mt-1">Farmacologia I — Leaderboard XP</p>
+          <p className="text-sm text-muted-foreground mt-1">Conexão em Farmacologia — Pontos Farmacológicos</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -67,7 +67,7 @@ function LoginScreen({ onLogin }: { onLogin: (pw: string) => void }) {
         </form>
         <div className="mt-6 text-center">
           <a href="/" className="text-xs text-muted-foreground hover:text-primary flex items-center justify-center gap-1">
-            <ArrowLeft size={12} /> Voltar ao Leaderboard
+            <ArrowLeft size={12} /> Voltar ao Ranking
           </a>
         </div>
       </motion.div>
@@ -162,7 +162,7 @@ function TeamManager({ password }: { password: string }) {
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: team.color }} />
                   <span className="text-xs text-muted-foreground font-mono">{team.members.length} membros</span>
                   <span className="text-xs font-mono font-bold" style={{ color: team.color }}>
-                    {team.members.reduce((s, m) => s + m.xp, 0).toFixed(1)} XP
+                    {team.members.reduce((s, m) => s + m.xp, 0).toFixed(1)} PF
                   </span>
                   <button onClick={() => { setEditingTeam(team.id); setEditName(team.name); setEditEmoji(team.emoji); setEditColor(team.color); }} className="p-1.5 rounded hover:bg-secondary text-muted-foreground"><Edit2 size={14} /></button>
                   <button onClick={() => { if (confirm(`Remover equipe "${team.name}" e todos os membros?`)) deleteTeam.mutate({ password, id: team.id }); }} className="p-1.5 rounded hover:bg-destructive/20 text-destructive"><Trash2 size={14} /></button>
@@ -320,7 +320,7 @@ function BulkXPManager({ password }: { password: string }) {
             <span className="text-lg">{team.emoji}</span>
             <span className="font-display font-semibold text-sm text-foreground">{team.name}</span>
             <span className="text-xs text-muted-foreground ml-auto font-mono">
-              Total: {team.members.reduce((s, m) => s + (xpUpdates[m.id] !== undefined ? parseFloat(xpUpdates[m.id] || "0") : m.xp), 0).toFixed(1)} XP
+              Total: {team.members.reduce((s, m) => s + (xpUpdates[m.id] !== undefined ? parseFloat(xpUpdates[m.id] || "0") : m.xp), 0).toFixed(1)} PF
             </span>
           </div>
           <div className="grid gap-1.5">
@@ -503,18 +503,195 @@ function SettingsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Notifications Manager ───
+function NotificationsManager({ password }: { password: string }) {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [priority, setPriority] = useState<"normal" | "important" | "urgent">("normal");
+  const [type, setType] = useState<"banner" | "announcement" | "reminder">("announcement");
+  const [expiresAt, setExpiresAt] = useState("");
+
+  const utils = trpc.useUtils();
+  const { data: notifs, isLoading } = trpc.notifications.getAll.useQuery({ password });
+
+  const createNotif = trpc.notifications.create.useMutation({
+    onSuccess: () => {
+      utils.notifications.getAll.invalidate();
+      utils.notifications.getActive.invalidate();
+      toast.success("Notificação criada!");
+      setTitle(""); setContent(""); setPriority("normal"); setType("announcement"); setExpiresAt("");
+    },
+    onError: () => toast.error("Erro ao criar notificação"),
+  });
+
+  const toggleActive = trpc.notifications.update.useMutation({
+    onSuccess: () => {
+      utils.notifications.getAll.invalidate();
+      utils.notifications.getActive.invalidate();
+      toast.success("Notificação atualizada!");
+    },
+  });
+
+  const deleteNotif = trpc.notifications.delete.useMutation({
+    onSuccess: () => {
+      utils.notifications.getAll.invalidate();
+      utils.notifications.getActive.invalidate();
+      toast.success("Notificação removida!");
+    },
+  });
+
+  const priorityColors: Record<string, string> = {
+    urgent: "text-red-400",
+    important: "text-amber-400",
+    normal: "text-primary",
+  };
+
+  const priorityLabels: Record<string, string> = {
+    urgent: "Urgente",
+    important: "Importante",
+    normal: "Normal",
+  };
+
+  const typeLabels: Record<string, string> = {
+    banner: "Banner",
+    announcement: "Comunicado",
+    reminder: "Lembrete",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Create Notification */}
+      <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
+          <Plus size={16} className="text-primary" /> Nova Notificação
+        </h3>
+        <div className="space-y-3">
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+            placeholder="Título do aviso..."
+          />
+          <textarea
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground min-h-[80px] resize-y"
+            placeholder="Conteúdo detalhado (opcional)..."
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <select
+              value={priority}
+              onChange={e => setPriority(e.target.value as "normal" | "important" | "urgent")}
+              className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm"
+            >
+              <option value="normal">Normal</option>
+              <option value="important">Importante</option>
+              <option value="urgent">Urgente</option>
+            </select>
+            <select
+              value={type}
+              onChange={e => setType(e.target.value as "banner" | "announcement" | "reminder")}
+              className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm"
+            >
+              <option value="announcement">Comunicado</option>
+              <option value="banner">Banner</option>
+              <option value="reminder">Lembrete</option>
+            </select>
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={e => setExpiresAt(e.target.value)}
+              className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm"
+              title="Data de expiração (opcional)"
+            />
+          </div>
+          <button
+            onClick={() => createNotif.mutate({
+              password,
+              title,
+              content: content || undefined,
+              priority,
+              type,
+              expiresAt: expiresAt || undefined,
+            })}
+            disabled={!title || createNotif.isPending}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <Bell size={14} /> Publicar Aviso
+          </button>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Avisos Publicados ({notifs?.length || 0})</h3>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+        ) : !notifs || notifs.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Nenhum aviso publicado</p>
+        ) : (
+          <div className="space-y-2">
+            {notifs.map(notif => (
+              <div
+                key={notif.id}
+                className={`border rounded-lg p-3 ${notif.isActive ? "border-border" : "border-border/30 opacity-50"}`}
+                style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={`text-xs font-bold ${priorityColors[notif.priority] || "text-primary"}`}>
+                        {notif.priority === "urgent" && <AlertTriangle size={12} className="inline mr-1" />}
+                        {priorityLabels[notif.priority] || "Normal"}
+                      </span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{typeLabels[notif.type] || notif.type}</span>
+                      {!notif.isActive && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/20 text-destructive">Inativo</span>}
+                    </div>
+                    <h4 className="font-medium text-sm text-foreground">{notif.title}</h4>
+                    {notif.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{notif.content}</p>}
+                    <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
+                      <Clock size={10} />
+                      <span>{new Date(notif.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      {notif.expiresAt && <span className="text-amber-400">Expira: {new Date(notif.expiresAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => toggleActive.mutate({ password, id: notif.id, isActive: notif.isActive ? 0 : 1 })}
+                      className={`px-2 py-1 rounded text-xs font-medium ${notif.isActive ? "bg-amber-500/20 text-amber-400" : "bg-primary/20 text-primary"}`}
+                    >
+                      {notif.isActive ? "Desativar" : "Ativar"}
+                    </button>
+                    <button
+                      onClick={() => { if (confirm("Remover esta notificação?")) deleteNotif.mutate({ password, id: notif.id }); }}
+                      className="p-1.5 rounded hover:bg-destructive/20 text-destructive"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
   const sections = [
     { key: "teams" as const, label: "Equipes", icon: <Users size={16} /> },
-    { key: "xp" as const, label: "Atualizar XP", icon: <Zap size={16} /> },
+    { key: "xp" as const, label: "Atualizar PF", icon: <Zap size={16} /> },
     { key: "activities" as const, label: "Atividades", icon: <Trophy size={16} /> },
     { key: "highlights" as const, label: "Destaques", icon: <Activity size={16} /> },
+    { key: "notifications" as const, label: "Notificações", icon: <Bell size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -526,7 +703,7 @@ export default function Admin() {
           <FlaskConical size={20} className="text-primary" />
           <h1 className="font-display font-bold text-lg text-foreground flex-1">Painel Admin</h1>
           <a href="/" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mr-3">
-            <ArrowLeft size={12} /> Leaderboard
+            <ArrowLeft size={12} /> Ranking
           </a>
           <button onClick={() => setPassword(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
             <LogOut size={12} /> Sair
@@ -557,6 +734,7 @@ export default function Admin() {
         {activeSection === "xp" && <BulkXPManager password={password} />}
         {activeSection === "activities" && <ActivitiesManager password={password} />}
         {activeSection === "highlights" && <HighlightsManager password={password} />}
+        {activeSection === "notifications" && <NotificationsManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

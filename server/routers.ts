@@ -312,6 +312,73 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Notifications ───
+  notifications: router({
+    getActive: publicProcedure.query(async () => {
+      return db.getActiveNotifications();
+    }),
+
+    getAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        return db.getAllNotifications();
+      }),
+
+    create: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        title: z.string().min(1),
+        content: z.string().optional(),
+        priority: z.enum(["normal", "important", "urgent"]).default("normal"),
+        type: z.enum(["banner", "announcement", "reminder"]).default("announcement"),
+        expiresAt: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const { password, expiresAt, ...data } = input;
+        const id = await db.createNotification({
+          ...data,
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+        });
+        return { id };
+      }),
+
+    update: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        priority: z.enum(["normal", "important", "urgent"]).optional(),
+        type: z.enum(["banner", "announcement", "reminder"]).optional(),
+        isActive: z.number().optional(),
+        expiresAt: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const { password, id, expiresAt, ...data } = input;
+        const updateData: Record<string, unknown> = { ...data };
+        if (expiresAt !== undefined) {
+          updateData.expiresAt = expiresAt ? new Date(expiresAt) : null;
+        }
+        await db.updateNotification(id, updateData as any);
+        return { success: true };
+      }),
+
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        await db.deleteNotification(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

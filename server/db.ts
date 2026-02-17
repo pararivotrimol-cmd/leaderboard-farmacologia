@@ -7,6 +7,7 @@ import {
   xpActivities, InsertXpActivity,
   weeklyHighlights, InsertWeeklyHighlight,
   courseSettings, InsertCourseSetting,
+  notifications, InsertNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -214,4 +215,39 @@ export async function getAllSettings() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(courseSettings);
+}
+
+// ─── Notifications ───
+
+export async function getActiveNotifications() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const all = await db.select().from(notifications).where(eq(notifications.isActive, 1)).orderBy(desc(notifications.createdAt));
+  return all.filter(n => !n.expiresAt || n.expiresAt > now);
+}
+
+export async function getAllNotifications() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notifications).orderBy(desc(notifications.createdAt));
+}
+
+export async function createNotification(data: InsertNotification) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(notifications).values(data);
+  return result[0].insertId;
+}
+
+export async function updateNotification(id: number, data: Partial<InsertNotification>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(notifications).set(data).where(eq(notifications.id, id));
+}
+
+export async function deleteNotification(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(notifications).where(eq(notifications.id, id));
 }
