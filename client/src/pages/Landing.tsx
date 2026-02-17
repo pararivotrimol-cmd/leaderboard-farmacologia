@@ -208,10 +208,11 @@ export default function Landing() {
   const timeline = [
     { week: "Semana 1", title: "Introdução & Formação de Equipes", icon: <GraduationCap size={18} /> },
     { week: "Semanas 2-4", title: "Farmacocinética & Farmacodinâmica", icon: <Pill size={18} /> },
-    { week: "Semanas 5-7", title: "SNA: Simpático & Parassimpático", icon: <Activity size={18} /> },
+    { week: "Semanas 5-7", title: "SNA: Colinérgicos & Bloqueadores Neuromusculares + Jigsaw 1-3", icon: <Activity size={18} /> },
     { week: "Semana 8", title: "Prova P1 + Escape Room", icon: <Zap size={18} /> },
-    { week: "Semanas 9-12", title: "Anti-inflamatórios & Analgésicos", icon: <FlaskConical size={18} /> },
-    { week: "Semanas 13-15", title: "Antibióticos & Quimioterápicos", icon: <Brain size={18} /> },
+    { week: "Semanas 9-11", title: "SNA: Adrenérgicos & Anti-adrenérgicos", icon: <FlaskConical size={18} /> },
+    { week: "Semanas 12-14", title: "Anti-inflamatórios, Analgésicos & Anestésicos", icon: <Brain size={18} /> },
+    { week: "Semana 15", title: "Seminários Finais & Revisão", icon: <Target size={18} /> },
     { week: "Semana 16", title: "Prova P2 + Premiação Final", icon: <Trophy size={18} /> },
   ];
 
@@ -312,39 +313,7 @@ export default function Landing() {
             </motion.p>
           </motion.div>
 
-          {/* CTA Buttons */}
-          <motion.div
-            className="mt-8 flex flex-col sm:flex-row gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.6, duration: 0.6 }}
-          >
-            <button
-              onClick={() => setLocation("/leaderboard")}
-              className="group flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              style={{
-                backgroundColor: "#F7941D",
-                color: "#fff",
-                boxShadow: "0 0 30px rgba(247,148,29,0.3)",
-              }}
-            >
-              <Trophy size={20} />
-              Ver Leaderboard
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={() => setShowVideo(true)}
-              className="group flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 border"
-              style={{
-                borderColor: "rgba(247,148,29,0.4)",
-                color: "#F7941D",
-                backgroundColor: "rgba(247,148,29,0.08)",
-              }}
-            >
-              <Play size={20} />
-              Assistir Vinheta
-            </button>
-          </motion.div>
+
         </motion.div>
 
         {/* Scroll indicator */}

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
   Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
-  ArrowLeft
+  ArrowLeft, BookOpen, ClipboardList
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
@@ -132,7 +132,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities">("teams");
+  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules">("teams");
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
 
   const teamsData: TeamData[] = useMemo(() => leaderboard?.teams ?? [], [leaderboard]);
@@ -222,7 +222,7 @@ export default function Home() {
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="flex-1">
               <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white leading-tight">
-                Leaderboard<span className="text-gradient-orange"> PF</span>
+                Quadro Geral de<span className="text-gradient-orange"> Pontuação</span>
               </h1>
               <p className="mt-2 text-sm sm:text-base max-w-xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
@@ -246,7 +246,7 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
+            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-24 h-24 sm:w-32 sm:h-32 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
 
           {/* Stats Row */}
@@ -255,7 +255,7 @@ export default function Home() {
               { icon: <Users size={18} />, label: "Equipes", value: teamsData.length.toString(), sub: `${totalStudents} alunos` },
               { icon: <Zap size={18} />, label: "PF Total Turma", value: totalPFEarned.toFixed(0), sub: `de ${MAX_PF_SEMESTER * totalStudents}` },
               { icon: <TrendingUp size={18} />, label: "Média por Aluno", value: avgPFPerStudent.toFixed(1), sub: `de ${MAX_PF_SEMESTER} possíveis` },
-              { icon: <Trophy size={18} />, label: "Líder", value: topTeam?.name ?? "—", sub: `${topTeamPF.toFixed(1)} PF` },
+              { icon: <Trophy size={18} />, label: "Líder", value: topTeamPF > 0 ? (topTeam?.name ?? "—") : "—", sub: topTeamPF > 0 ? `${topTeamPF.toFixed(1)} PF` : "Sem pontuação" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -278,7 +278,7 @@ export default function Home() {
       </div>
 
       {/* Latest Highlight Banner */}
-      {latestHighlight && (
+      {latestHighlight && totalPFEarned > 0 && (
         <div className="container -mt-2 mb-6">
           <motion.div
             className="rounded-lg p-4 flex items-start gap-3"
@@ -311,6 +311,7 @@ export default function Home() {
             { key: "teams" as const, label: "Ranking Equipes", icon: <Users size={15} /> },
             { key: "individual" as const, label: "Top 10 Individual", icon: <Award size={15} /> },
             { key: "activities" as const, label: "Atividades PF", icon: <Target size={15} /> },
+            { key: "rules" as const, label: "Regras", icon: <ClipboardList size={15} /> },
           ].map(tab => (
             <button
               key={tab.key}
@@ -332,7 +333,7 @@ export default function Home() {
         <AnimatePresence mode="wait">
           {activeTab === "teams" && (
             <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              {rankedTeams.length >= 3 && (
+              {rankedTeams.length >= 3 && totalPFEarned > 0 && (
                 <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
                   {[rankedTeams[1], rankedTeams[0], rankedTeams[2]].map((team, idx) => {
                     const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
@@ -375,40 +376,57 @@ export default function Home() {
                 <Award size={20} style={{ color: ORANGE }} />
                 Top 10 — Alunos com Maior PF
               </h2>
-              <div className="flex justify-center gap-6 sm:gap-10 mb-8">
-                {topStudents.slice(0, 3).map((student, idx) => (
-                  <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
-                    <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={idx === 0 ? 110 : 90} />
-                    <div className="mt-2 text-center">
-                      <div className="font-display font-semibold text-sm text-white truncate max-w-[100px]">{student.name}</div>
-                      <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        <span>{student.teamEmoji}</span><span>{student.teamName}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="rounded-lg overflow-hidden" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
-                {topStudents.map((student, idx) => (
-                  <motion.div
-                    key={student.name}
-                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
-                    style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  >
-                    <RankBadge rank={idx + 1} />
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{student.teamEmoji}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-white truncate">{student.name}</div>
-                      <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{student.teamName}</div>
-                    </div>
-                    <div className="w-20 sm:w-32"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
-                    <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: ORANGE }}>{student.xp.toFixed(1)}</div>
-                  </motion.div>
-                ))}
-              </div>
+              {totalPFEarned === 0 ? (
+                <motion.div
+                  className="rounded-lg p-12 text-center"
+                  style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <Award size={48} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.15)" }} />
+                  <h3 className="font-display font-bold text-lg text-white mb-2">Aguardando Início do Semestre</h3>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    O ranking individual será exibido assim que as pontuações começarem a ser registradas.
+                  </p>
+                </motion.div>
+              ) : (
+                <>
+                  <div className="flex justify-center gap-6 sm:gap-10 mb-8">
+                    {topStudents.slice(0, 3).map((student, idx) => (
+                      <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
+                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={idx === 0 ? 110 : 90} />
+                        <div className="mt-2 text-center">
+                          <div className="font-display font-semibold text-sm text-white truncate max-w-[100px]">{student.name}</div>
+                          <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
+                            <span>{student.teamEmoji}</span><span>{student.teamName}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg overflow-hidden" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
+                    {topStudents.map((student, idx) => (
+                      <motion.div
+                        key={student.name}
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
+                        style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: idx * 0.05 }}
+                      >
+                        <RankBadge rank={idx + 1} />
+                        <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{student.teamEmoji}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-white truncate">{student.name}</div>
+                          <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{student.teamName}</div>
+                        </div>
+                        <div className="w-20 sm:w-32"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
+                        <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: ORANGE }}>{student.xp.toFixed(1)}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 
@@ -471,6 +489,134 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+            </motion.div>
+          )}
+          {activeTab === "rules" && (
+            <motion.div key="rules" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              <h2 className="font-display font-bold text-lg text-white mb-6 flex items-center gap-2">
+                <ClipboardList size={20} style={{ color: ORANGE }} />
+                Regras das Atividades
+              </h2>
+              <div className="grid gap-4">
+                {[
+                  {
+                    title: "TBL (Team-Based Learning)",
+                    icon: "🧠",
+                    rules: [
+                      "Prova individual (iRAT) seguida de prova em equipe (tRAT)",
+                      "Pontuação individual + pontuação da equipe",
+                      "Recurso com argumentação baseada em evidências",
+                      "Aplicação de conceitos em casos clínicos",
+                    ],
+                    pf: "Até 3.0 PF por sessão",
+                  },
+                  {
+                    title: "Seminário Jigsaw",
+                    icon: "🧩",
+                    rules: [
+                      "Cada membro da equipe estuda um tópico específico",
+                      "Formação de grupos de especialistas para discussão",
+                      "Retorno à equipe original para ensinar o conteúdo",
+                      "Avaliação individual e coletiva do aprendizado",
+                    ],
+                    pf: "Até 2.0 PF por sessão",
+                  },
+                  {
+                    title: "Casos Clínicos",
+                    icon: "🏥",
+                    rules: [
+                      "Análise de caso clínico real integrado com Semiologia, Patologia e Microbiologia",
+                      "Discussão em equipe com identificação de fármacos e mecanismos",
+                      "Apresentação da resolução para a turma",
+                      "Avaliação por rubrica: raciocínio clínico + farmacologia",
+                    ],
+                    pf: "Até 2.5 PF por caso",
+                  },
+                  {
+                    title: "Escape Room Farmacológico",
+                    icon: "🔓",
+                    rules: [
+                      "Desafios em equipe com enigmas farmacológicos",
+                      "Tempo limitado para resolver todos os desafios",
+                      "Pontuação baseada em acertos e tempo",
+                      "Bônus para equipes que completarem todos os desafios",
+                    ],
+                    pf: "Até 2.0 PF por sessão",
+                  },
+                  {
+                    title: "BYOD (Bring Your Own Device)",
+                    icon: "📱",
+                    rules: [
+                      "Atividades interativas usando dispositivos pessoais",
+                      "Quiz em tempo real com plataformas digitais",
+                      "Pontuação individual por acerto e velocidade",
+                      "Ranking ao vivo durante a atividade",
+                    ],
+                    pf: "Até 1.5 PF por sessão",
+                  },
+                  {
+                    title: "Participação em Aula",
+                    icon: "✨",
+                    rules: [
+                      "Contribuições relevantes durante discussões",
+                      "Perguntas pertinentes ao conteúdo",
+                      "Colaboração ativa com colegas",
+                      "Avaliada pelo professor a cada aula",
+                    ],
+                    pf: "Até 0.5 PF por aula",
+                  },
+                  {
+                    title: "Provas (P1 e P2)",
+                    icon: "📝",
+                    rules: [
+                      "P1: Conteúdo até Colinérgicos, Bloqueadores Neuromusculares e 3 primeiros Jigsaw",
+                      "P2: Conteúdo restante do semestre",
+                      "Questões objetivas e discursivas",
+                      "Pontuação individual convertida em PF",
+                    ],
+                    pf: "Até 10.0 PF por prova",
+                  },
+                ].map((rule, idx) => (
+                  <motion.div
+                    key={rule.title}
+                    className="rounded-lg p-5"
+                    style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.06 }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">{rule.icon}</span>
+                      <div className="flex-1">
+                        <h3 className="font-display font-bold text-base text-white">{rule.title}</h3>
+                      </div>
+                      <span className="font-mono font-bold text-sm px-3 py-1 rounded-full" style={{ backgroundColor: ORANGE + "15", color: ORANGE }}>{rule.pf}</span>
+                    </div>
+                    <ul className="space-y-1.5 ml-10">
+                      {rule.rules.map((r, i) => (
+                        <li key={i} className="text-sm flex items-start gap-2" style={{ color: "rgba(255,255,255,0.6)" }}>
+                          <span style={{ color: ORANGE }} className="mt-1.5 shrink-0">•</span>
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ))}
+              </div>
+              <motion.div
+                className="mt-6 rounded-lg p-5 text-center"
+                style={{ backgroundColor: ORANGE + "08", border: `1px solid ${ORANGE}20` }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  <strong className="text-white">PF Máximo por Aluno no Semestre:</strong> {MAX_PF_SEMESTER} PF
+                </p>
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  A pontuação é acumulativa. Cada atividade contribui para o total individual e da equipe.
+                </p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

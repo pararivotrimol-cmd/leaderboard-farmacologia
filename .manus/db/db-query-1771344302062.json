@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, week, date, activity, description, topTeam, topStudent FROM weeklyHighlights ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, week, date, activity, description, topTeam, topStudent FROM weeklyHighlights ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "week": "1",
+      "date": "10/03/2026",
+      "activity": "Aula Inaugural",
+      "description": "Apresentação das regras e formação das equipes",
+      "topTeam": "—",
+      "topStudent": "—"
+    },
+    {
+      "id": "2",
+      "week": "2",
+      "date": "17/03/2026",
+      "activity": "Jigsaw Farmacocinética + Quiz",
+      "description": "Primeiro Jigsaw do semestre! Equipe Adrenalina dominou com 8.5 XP",
+      "topTeam": "Adrenalina",
+      "topStudent": "Isabela Nunes"
+    },
+    {
+      "id": "3",
+      "week": "3",
+      "date": "24/03/2026",
+      "activity": "Caso Integrado Pneumonia",
+      "description": "Caso interdisciplinar com 4 estações. Ximena acertou todas as questões!",
+      "topTeam": "Endorfina",
+      "topStudent": "Ximena Coelho"
+    },
+    {
+      "id": "4",
+      "week": "4",
+      "date": "31/03/2026",
+      "activity": "Scavenger Hunt + Kahoot 1",
+      "description": "Caça ao tesouro científica! Sara encontrou o artigo-chave em 3 minutos",
+      "topTeam": "Serotonina",
+      "topStudent": "Sara Monteiro"
+    },
+    {
+      "id": "5",
+      "week": "5",
+      "date": "07/04/2026",
+      "activity": "Seminário Jigsaw 1",
+      "description": "Primeiro seminário Grand Rounds. Apresentação impecável da equipe Noradrenalina",
+      "topTeam": "Noradrenalina",
+      "topStudent": "Bianca Lopes"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tweek\tdate\tactivity\tdescription\ttopTeam\ttopStudent\n1\t1\t10/03/2026\tAula Inaugural\tApresentação das regras e formação das equipes\t—\t—\n2\t2\t17/03/2026\tJigsaw Farmacocinética + Quiz\tPrimeiro Jigsaw do semestre! Equipe Adrenalina dominou com 8.5 XP\tAdrenalina\tIsabela Nunes\n3\t3\t24/03/2026\tCaso Integrado Pneumonia\tCaso interdisciplinar com 4 estações. Ximena acertou todas as questões!\tEndorfina\tXimena Coelho\n4\t4\t31/03/2026\tScavenger Hunt + Kahoot 1\tCaça ao tesouro científica! Sara encontrou o artigo-chave em 3 minutos\tSerotonina\tSara Monteiro\n5\t5\t07/04/2026\tSeminário Jigsaw 1\tPrimeiro seminário Grand Rounds. Apresentação impecável da equipe Noradrenalina\tNoradrenalina\tBianca Lopes\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

@@ -54,3 +54,11 @@
 - [x] Implementar seção exclusiva para o professor na página inicial
 - [x] Padronizar layout do leaderboard nas cores laranja, cinza e branco
 - [x] Corrigir texto da semana (deve começar em semana 1 e avançar conforme o período)
+- [x] Corrigir banner semanal: deve refletir semana 1 (não semana 5) e dados reais
+- [x] Remover links "Ver Leaderboard" e "Assistir Vinheta" após vídeo de intro — ir direto ao quadro de login
+- [x] Zerar líder no início (traço ou xxxxx quando não há pontuação)
+- [x] Renomear "Leaderboard PF" para "Quadro Geral de Pontuação"
+- [x] Ampliar logotipo abaixo do botão Início
+- [x] Corrigir cronograma: remover antibioticoterapia/quimioterapia; P1 até colinérgicos/BNM + 3 primeiros Jigsaw
+- [x] Top 10 Individual: não mostrar nomes até que haja pontuações
+- [x] Adicionar aba com regras de cada atividade
