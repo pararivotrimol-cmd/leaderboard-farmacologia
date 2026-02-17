@@ -8,7 +8,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical
+  Youtube, Play, Video, GripVertical, CalendarClock, ExternalLink, Monitor
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -1810,10 +1810,305 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Meetings Manager ───
+const PLATFORMS = [
+  { value: "google_meet", label: "Google Meet", icon: "📹" },
+  { value: "zoom", label: "Zoom", icon: "💻" },
+  { value: "teams", label: "Teams", icon: "💬" },
+  { value: "discord", label: "Discord", icon: "🎮" },
+  { value: "other", label: "Outro", icon: "🔗" },
+];
+
+function MeetingsManager({ password }: { password: string }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [monitorName, setMonitorName] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState("");
+  const [platform, setPlatform] = useState<"google_meet" | "zoom" | "teams" | "discord" | "other">("google_meet");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [module, setModule] = useState("Geral");
+  const [maxParticipants, setMaxParticipants] = useState(0);
+  const [recurrence, setRecurrence] = useState<"none" | "weekly">("none");
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const utils = trpc.useUtils();
+  const { data: meetings, isLoading } = trpc.meetings.getAll.useQuery({ password });
+
+  const createMeeting = trpc.meetings.create.useMutation({
+    onSuccess: () => {
+      utils.meetings.getAll.invalidate();
+      utils.meetings.getUpcoming.invalidate();
+      toast.success("Monitoria agendada!");
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao agendar monitoria"),
+  });
+
+  const updateMeeting = trpc.meetings.update.useMutation({
+    onSuccess: () => {
+      utils.meetings.getAll.invalidate();
+      utils.meetings.getUpcoming.invalidate();
+      toast.success("Monitoria atualizada!");
+      setEditingId(null);
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao atualizar"),
+  });
+
+  const deleteMeeting = trpc.meetings.delete.useMutation({
+    onSuccess: () => {
+      utils.meetings.getAll.invalidate();
+      utils.meetings.getUpcoming.invalidate();
+      toast.success("Monitoria removida!");
+    },
+    onError: () => toast.error("Erro ao remover"),
+  });
+
+  const toggleVisibility = trpc.meetings.toggleVisibility.useMutation({
+    onSuccess: () => {
+      utils.meetings.getAll.invalidate();
+      toast.success("Visibilidade atualizada!");
+    },
+  });
+
+  const updateStatus = trpc.meetings.updateStatus.useMutation({
+    onSuccess: () => {
+      utils.meetings.getAll.invalidate();
+      utils.meetings.getUpcoming.invalidate();
+      toast.success("Status atualizado!");
+    },
+  });
+
+  function resetForm() {
+    setTitle(""); setDescription(""); setMonitorName(""); setMeetingUrl("");
+    setPlatform("google_meet"); setScheduledDate(""); setScheduledTime("");
+    setDurationMinutes(60); setModule("Geral"); setMaxParticipants(0);
+    setRecurrence("none"); setEditingId(null);
+  }
+
+  function startEdit(m: any) {
+    setEditingId(m.id);
+    setTitle(m.title);
+    setDescription(m.description || "");
+    setMonitorName(m.monitorName);
+    setMeetingUrl(m.meetingUrl);
+    setPlatform(m.platform);
+    const d = new Date(m.scheduledAt);
+    setScheduledDate(d.toISOString().slice(0, 10));
+    setScheduledTime(d.toTimeString().slice(0, 5));
+    setDurationMinutes(m.durationMinutes);
+    setModule(m.module);
+    setMaxParticipants(m.maxParticipants);
+    setRecurrence(m.recurrence);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title || !monitorName || !meetingUrl || !scheduledDate || !scheduledTime) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
+    const data = {
+      password, title, description: description || undefined, monitorName, meetingUrl,
+      platform, scheduledAt, durationMinutes, module, maxParticipants, recurrence,
+    };
+    if (editingId) {
+      updateMeeting.mutate({ ...data, id: editingId });
+    } else {
+      createMeeting.mutate(data);
+    }
+  }
+
+  function getStatusBadge(status: string) {
+    const map: Record<string, { bg: string; text: string; label: string }> = {
+      scheduled: { bg: "bg-blue-500/10", text: "text-blue-400", label: "Agendada" },
+      live: { bg: "bg-green-500/10", text: "text-green-400", label: "Ao Vivo" },
+      completed: { bg: "bg-gray-500/10", text: "text-gray-400", label: "Concluída" },
+      cancelled: { bg: "bg-red-500/10", text: "text-red-400", label: "Cancelada" },
+    };
+    const s = map[status] || map.scheduled;
+    return <span className={`text-xs px-2 py-0.5 rounded-full ${s.bg} ${s.text} font-medium`}>{s.label}</span>;
+  }
+
+  function formatDate(d: string | Date) {
+    return new Date(d).toLocaleDateString("pt-BR", {
+      weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    });
+  }
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-xl text-foreground mb-4 flex items-center gap-2">
+        <CalendarClock size={20} className="text-primary" /> Gerenciar Monitorias Online
+      </h2>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="border border-border rounded-lg p-4 mb-6" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Título *</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Monitoria de Farmacocinética"
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Monitor(a) *</label>
+            <input value={monitorName} onChange={e => setMonitorName(e.target.value)} placeholder="Nome do monitor(a)"
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label className="text-xs text-muted-foreground mb-1 block">Descrição</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="O que será abordado na monitoria..."
+            className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none resize-none" rows={2} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Link da Reunião *</label>
+            <input value={meetingUrl} onChange={e => setMeetingUrl(e.target.value)} placeholder="https://meet.google.com/..."
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Plataforma</label>
+            <select value={platform} onChange={e => setPlatform(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none">
+              {PLATFORMS.map(p => <option key={p.value} value={p.value}>{p.icon} {p.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Módulo/Tema</label>
+            <select value={module} onChange={e => setModule(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none">
+              {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Data *</label>
+            <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Horário *</label>
+            <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Duração (min)</label>
+            <input type="number" value={durationMinutes} onChange={e => setDurationMinutes(Number(e.target.value))} min={15} max={480}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Recorrência</label>
+            <select value={recurrence} onChange={e => setRecurrence(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-md bg-secondary text-foreground text-sm border border-border focus:border-primary outline-none">
+              <option value="none">Única vez</option>
+              <option value="weekly">Semanal</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button type="submit" disabled={createMeeting.isPending || updateMeeting.isPending}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:opacity-90">
+            {editingId ? <><Save size={14} /> Atualizar</> : <><Plus size={14} /> Agendar Monitoria</>}
+          </button>
+          {editingId && (
+            <button type="button" onClick={resetForm}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-secondary text-foreground text-sm font-medium hover:opacity-80">
+              <X size={14} /> Cancelar
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* List */}
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+      ) : !meetings?.length ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <CalendarClock size={40} className="mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Nenhuma monitoria agendada ainda.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {meetings.map((m: any) => {
+            const platformInfo = PLATFORMS.find(p => p.value === m.platform);
+            const isPast = new Date(m.scheduledAt) < new Date();
+            return (
+              <motion.div key={m.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className={`border border-border rounded-lg p-4 ${isPast ? "opacity-60" : ""}`}
+                style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg shrink-0">
+                    {platformInfo?.icon || "📹"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-foreground text-sm">{m.title}</span>
+                      {getStatusBadge(m.status)}
+                      {m.recurrence === "weekly" && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">🔁 Semanal</span>}
+                      {!m.isVisible && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-medium"><EyeOff size={10} className="inline" /> Oculta</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-3 flex-wrap">
+                      <span className="flex items-center gap-1"><Monitor size={12} /> {m.monitorName}</span>
+                      <span className="flex items-center gap-1"><Clock size={12} /> {formatDate(m.scheduledAt)}</span>
+                      <span>{m.durationMinutes}min</span>
+                      <span className="text-primary">{m.module}</span>
+                    </div>
+                    {m.description && <p className="text-xs text-muted-foreground mt-1.5">{m.description}</p>}
+                    <a href={m.meetingUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1">
+                      <ExternalLink size={10} /> {m.meetingUrl.slice(0, 50)}{m.meetingUrl.length > 50 ? "..." : ""}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {m.status === "scheduled" && (
+                      <button onClick={() => updateStatus.mutate({ password, id: m.id, status: "live" })}
+                        className="p-1.5 rounded-md hover:bg-green-500/10 text-green-400" title="Iniciar">
+                        <Play size={14} />
+                      </button>
+                    )}
+                    {m.status === "live" && (
+                      <button onClick={() => updateStatus.mutate({ password, id: m.id, status: "completed" })}
+                        className="p-1.5 rounded-md hover:bg-gray-500/10 text-gray-400" title="Encerrar">
+                        <CheckCircle size={14} />
+                      </button>
+                    )}
+                    <button onClick={() => toggleVisibility.mutate({ password, id: m.id, isVisible: m.isVisible ? 0 : 1 })}
+                      className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground" title={m.isVisible ? "Ocultar" : "Mostrar"}>
+                      {m.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                    <button onClick={() => startEdit(m)}
+                      className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground" title="Editar">
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => { if (confirm("Remover esta monitoria?")) deleteMeeting.mutate({ password, id: m.id }); }}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive" title="Remover">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "meetings" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
@@ -1827,6 +2122,7 @@ export default function Admin() {
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
+    { key: "meetings" as const, label: "Monitorias", icon: <CalendarClock size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -1874,6 +2170,7 @@ export default function Admin() {
         {activeSection === "badges" && <BadgesManager password={password} />}
         {activeSection === "attendance" && <AttendanceManager password={password} />}
         {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
+        {activeSection === "meetings" && <MeetingsManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

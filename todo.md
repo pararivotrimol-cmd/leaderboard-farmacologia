@@ -119,3 +119,8 @@
 - [x] Implementar UI de gerenciamento de playlists no painel admin
 - [x] Implementar exibição de playlists na página de materiais para alunos
 - [x] Organizar playlists por módulo/tema do cronograma
+- [x] Corrigir erro tRPC retornando HTML em vez de JSON na página inicial (transiente - sandbox hibernation)
+- [x] Criar sistema de chat/reuniões online para monitores agendarem dúvidas
+- [x] Criar schema de banco para reuniões online (título, link, monitor, data/hora)
+- [x] Criar rotas tRPC para CRUD de reuniões (monitores/admin)
+- [x] Criar página/botão de reuniões online acessível pelos alunos

@@ -1266,6 +1266,125 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Online Meetings ───
+  meetings: router({
+    // Public: get upcoming meetings for students
+    getUpcoming: publicProcedure.query(async () => {
+      return db.getUpcomingMeetings();
+    }),
+
+    // Public: get all visible meetings
+    getVisible: publicProcedure.query(async () => {
+      return db.getVisibleMeetings();
+    }),
+
+    // Admin: get all meetings
+    getAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        return db.getAllMeetings();
+      }),
+
+    // Admin: create a new meeting
+    create: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        monitorName: z.string().min(1),
+        meetingUrl: z.string().url(),
+        platform: z.enum(["google_meet", "zoom", "teams", "discord", "other"]).default("google_meet"),
+        scheduledAt: z.string(), // ISO date string
+        durationMinutes: z.number().min(15).max(480).default(60),
+        module: z.string().default("Geral"),
+        maxParticipants: z.number().default(0),
+        recurrence: z.enum(["none", "weekly"]).default("none"),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        const { password, scheduledAt, ...data } = input;
+        const result = await db.createMeeting({
+          ...data,
+          scheduledAt: new Date(scheduledAt),
+        });
+
+        // Notify students about new meeting
+        createStudentNotification(
+          `Nova Monitoria: ${input.title}`,
+          `${input.monitorName} agendou uma sessão de dúvidas para ${new Date(scheduledAt).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}. Tema: ${input.module}.`,
+          "important"
+        );
+
+        // Notify owner
+        sendNotificationAsync(
+          "Nova Monitoria Agendada",
+          `${input.monitorName} agendou "${input.title}" para ${new Date(scheduledAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}`
+        );
+
+        return { id: result.insertId };
+      }),
+
+    // Admin: update a meeting
+    update: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        monitorName: z.string().optional(),
+        meetingUrl: z.string().url().optional(),
+        platform: z.enum(["google_meet", "zoom", "teams", "discord", "other"]).optional(),
+        scheduledAt: z.string().optional(),
+        durationMinutes: z.number().min(15).max(480).optional(),
+        module: z.string().optional(),
+        maxParticipants: z.number().optional(),
+        status: z.enum(["scheduled", "live", "completed", "cancelled"]).optional(),
+        recurrence: z.enum(["none", "weekly"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        const { password, id, scheduledAt, ...data } = input;
+        const updateData: any = { ...data };
+        if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
+        await db.updateMeeting(id, updateData);
+        return { success: true };
+      }),
+
+    // Admin: delete a meeting
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        await db.deleteMeeting(input.id);
+        return { success: true };
+      }),
+
+    // Admin: toggle visibility
+    toggleVisibility: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number(), isVisible: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        await db.updateMeeting(input.id, { isVisible: input.isVisible });
+        return { success: true };
+      }),
+
+    // Admin: update meeting status
+    updateStatus: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number(), status: z.enum(["scheduled", "live", "completed", "cancelled"]) }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Senha inválida");
+        await db.updateMeetingStatus(input.id, input.status);
+        return { success: true };
+      }),
+  }),
 });
 
 // Haversine formula to calculate distance between two coordinates in meters

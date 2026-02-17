@@ -14,6 +14,7 @@ import {
   studentAccounts, InsertStudentAccount,
   attendance, InsertAttendance,
   youtubePlaylistsTable, InsertYoutubePlaylist,
+  onlineMeetings, InsertOnlineMeeting,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -582,4 +583,59 @@ export async function deleteYoutubePlaylist(id: number) {
   const db = await getDb();
   if (!db) return;
   await db.delete(youtubePlaylistsTable).where(eq(youtubePlaylistsTable.id, id));
+}
+
+// ─── Online Meetings ───────────────────────────────────────────
+
+export async function getAllMeetings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onlineMeetings).orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
+}
+
+export async function getVisibleMeetings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onlineMeetings)
+    .where(eq(onlineMeetings.isVisible, 1))
+    .orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
+}
+
+export async function getUpcomingMeetings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onlineMeetings)
+    .where(
+      and(
+        eq(onlineMeetings.isVisible, 1),
+        sql`${onlineMeetings.status} IN ('scheduled', 'live')`,
+        sql`${onlineMeetings.scheduledAt} >= DATE_SUB(NOW(), INTERVAL ${onlineMeetings.durationMinutes} MINUTE)`
+      )
+    )
+    .orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
+}
+
+export async function createMeeting(data: InsertOnlineMeeting) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(onlineMeetings).values(data);
+  return result;
+}
+
+export async function updateMeeting(id: number, data: Partial<InsertOnlineMeeting>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(onlineMeetings).set(data).where(eq(onlineMeetings.id, id));
+}
+
+export async function deleteMeeting(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(onlineMeetings).where(eq(onlineMeetings.id, id));
+}
+
+export async function updateMeetingStatus(id: number, status: "scheduled" | "live" | "completed" | "cancelled") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(onlineMeetings).set({ status }).where(eq(onlineMeetings.id, id));
 }
