@@ -6,6 +6,27 @@ import { z } from "zod";
 import * as db from "./db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { notifyOwner } from "./_core/notification";
+
+// Helper: fire-and-forget notification (never blocks the main operation)
+function sendNotificationAsync(title: string, content: string) {
+  notifyOwner({ title, content }).catch(err => console.warn("[Notification] Failed:", err));
+}
+
+// Helper: create in-app notification for students
+async function createStudentNotification(title: string, content: string, priority: "normal" | "important" | "urgent" = "normal") {
+  try {
+    await db.createNotification({
+      title,
+      content,
+      priority,
+      type: "announcement",
+      isActive: 1,
+    });
+  } catch (err) {
+    console.warn("[StudentNotification] Failed:", err);
+  }
+}
 
 // Admin password check middleware (simple password-based, no OAuth needed)
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -185,6 +206,17 @@ export const appRouter = router({
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.updateMemberXP(input.id, input.xp);
+        // Notification: XP updated
+        try {
+          const allMembers = await db.getAllMembers();
+          const member = allMembers.find(m => m.id === input.id);
+          if (member) {
+            sendNotificationAsync(
+              "📊 Pontuação Atualizada",
+              `PF de ${member.name} atualizado para ${input.xp}`
+            );
+          }
+        } catch {}
         return { success: true };
       }),
 
@@ -197,7 +229,18 @@ export const appRouter = router({
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.bulkUpdateXP(input.updates);
-        return { success: true, count: input.updates.length };
+        // Notification: bulk XP update
+        const count = input.updates.length;
+        createStudentNotification(
+          "🎯 Pontuações Atualizadas",
+          `Os Pontos Farmacológicos de ${count} aluno(s) foram atualizados. Confira o leaderboard!`,
+          "important"
+        );
+        sendNotificationAsync(
+          "📊 Atualização em Massa de PF",
+          `${count} aluno(s) tiveram seus PF atualizados`
+        );
+        return { success: true, count };
       }),
 
     delete: publicProcedure
@@ -609,12 +652,30 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("N\u00e3o autorizado");
+        if (!valid) throw new Error("Não autorizado");
         const id = await db.awardBadge({
           badgeId: input.badgeId,
           memberId: input.memberId,
           note: input.note,
         });
+        // Notification: badge awarded
+        try {
+          const allBadges = await db.getAllBadges();
+          const badge = allBadges.find(b => b.id === input.badgeId);
+          const allMembers = await db.getAllMembers();
+          const member = allMembers.find(m => m.id === input.memberId);
+          if (badge && member) {
+            createStudentNotification(
+              `🏅 Nova Conquista: ${badge.name}`,
+              `${member.name} conquistou o badge "${badge.name}"! ${badge.description || ""}`,
+              "important"
+            );
+            sendNotificationAsync(
+              "🏅 Badge Concedido",
+              `${member.name} recebeu o badge "${badge.name}"`
+            );
+          }
+        } catch {}
         return { id };
       }),
 
@@ -628,8 +689,26 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("N\u00e3o autorizado");
+        if (!valid) throw new Error("Não autorizado");
         const awarded = await db.bulkAwardBadge(input.badgeId, input.memberIds, input.note);
+        // Notification: bulk badge award
+        if (awarded > 0) {
+          try {
+            const allBadges = await db.getAllBadges();
+            const badge = allBadges.find(b => b.id === input.badgeId);
+            if (badge) {
+              createStudentNotification(
+                `🏅 Conquista Desbloqueada: ${badge.name}`,
+                `${awarded} aluno(s) conquistaram o badge "${badge.name}"! Confira na página de conquistas.`,
+                "important"
+              );
+              sendNotificationAsync(
+                "🏅 Badges em Massa",
+                `${awarded} aluno(s) receberam o badge "${badge.name}"`
+              );
+            }
+          } catch {}
+        }
         return { success: true, awarded };
       }),
 
@@ -671,7 +750,7 @@ export const appRouter = router({
       .input(z.object({
         email: z.string().email().refine(e => e.endsWith("@edu.unirio.br"), { message: "Email deve ser @edu.unirio.br" }),
         matricula: z.string().min(5, "Matrícula deve ter pelo menos 5 caracteres"),
-        password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+        password: z.string().length(11, "CPF deve ter exatamente 11 dígitos").regex(/^\d{11}$/, "CPF deve conter apenas números"),
         memberId: z.number(),
       }))
       .mutation(async ({ input }) => {
@@ -771,7 +850,7 @@ export const appRouter = router({
       .input(z.object({
         sessionToken: z.string(),
         currentPassword: z.string(),
-        newPassword: z.string().min(6),
+        newPassword: z.string().length(11, "CPF deve ter exatamente 11 dígitos").regex(/^\d{11}$/, "CPF deve conter apenas números"),
       }))
       .mutation(async ({ input }) => {
         const account = await db.getStudentAccountBySessionToken(input.sessionToken);
@@ -998,6 +1077,50 @@ export const appRouter = router({
         if (!valid) throw new Error("Não autorizado");
         await db.deleteStudentAccount(input.id);
         return { success: true };
+      }),
+
+    // Admin: export attendance report data
+    exportReport: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const [allMembers, allTeams, allAccounts, allRecords] = await Promise.all([
+          db.getAllMembers(),
+          db.getAllTeams(),
+          db.getAllStudentAccounts(),
+          db.getAllAttendance(),
+        ]);
+
+        // Build per-member summary with weekly breakdown
+        const weeks = Array.from({ length: 19 }, (_, i) => i + 1);
+        const report = allMembers.map(m => {
+          const team = allTeams.find(t => t.id === m.teamId);
+          const account = allAccounts.find(a => a.memberId === m.id);
+          const memberRecords = allRecords.filter(r => r.memberId === m.id);
+          const weeklyStatus: Record<number, string> = {};
+          for (const w of weeks) {
+            const rec = memberRecords.find(r => r.week === w);
+            if (rec) {
+              weeklyStatus[w] = rec.status === "valid" ? "P" : rec.status === "manual" ? "M" : "I";
+            } else {
+              weeklyStatus[w] = "-";
+            }
+          }
+          const totalValid = memberRecords.filter(r => r.status === "valid" || r.status === "manual").length;
+          const totalInvalid = memberRecords.filter(r => r.status === "invalid").length;
+          return {
+            nome: m.name,
+            equipe: team?.name || "Sem equipe",
+            matricula: account?.matricula || "-",
+            email: account?.email || "-",
+            weeklyStatus,
+            totalValid,
+            totalInvalid,
+            totalAusente: weeks.length - totalValid - totalInvalid,
+          };
+        });
+        return { report, weeks };
       }),
   }),
 });

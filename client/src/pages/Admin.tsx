@@ -7,7 +7,7 @@ import {
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
-  Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search
+  Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -1213,12 +1213,92 @@ function AttendanceManager({ password }: { password: string }) {
     return summary.filter((m: any) => m.memberName.toLowerCase().includes(s) || m.teamName.toLowerCase().includes(s));
   }, [summary, searchTerm]);
 
+  const reportQuery = trpc.attendance.exportReport.useQuery({ password });
+
+  const exportCSV = () => {
+    const data = reportQuery.data;
+    if (!data) { toast.error("Dados não carregados ainda"); return; }
+    const { report, weeks } = data;
+    const header = ["Nome", "Equipe", "Matrícula", "Email", ...weeks.map((w: number) => `Sem ${w}`), "Presenças", "Inválidas", "Ausências"];
+    const rows = report.map((r: any) => [
+      r.nome, r.equipe, r.matricula, r.email,
+      ...weeks.map((w: number) => r.weeklyStatus[w] || "-"),
+      r.totalValid, r.totalInvalid, r.totalAusente,
+    ]);
+    const csv = [header, ...rows].map(row => row.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `frequencia_farmacologia_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado com sucesso!");
+  };
+
+  const exportPDF = () => {
+    const data = reportQuery.data;
+    if (!data) { toast.error("Dados não carregados ainda"); return; }
+    const { report, weeks } = data;
+    // Generate a printable HTML table and open in new window for PDF printing
+    const legendHTML = `<p style="font-size:11px;margin-bottom:8px;"><b>Legenda:</b> P = Presente | M = Manual | I = Inválida | - = Ausente</p>`;
+    const headerCells = ["Nome", "Equipe", "Mat.", ...weeks.map((w: number) => `S${w}`), "P", "I", "A"]
+      .map(h => `<th style="border:1px solid #ccc;padding:3px 5px;font-size:10px;background:#f0f0f0;">${h}</th>`).join("");
+    const bodyRows = report.map((r: any) => {
+      const cells = [
+        r.nome, r.equipe, r.matricula,
+        ...weeks.map((w: number) => {
+          const v = r.weeklyStatus[w] || "-";
+          const color = v === "P" ? "#16a34a" : v === "M" ? "#2563eb" : v === "I" ? "#dc2626" : "#999";
+          return `<span style="color:${color};font-weight:bold;">${v}</span>`;
+        }),
+        r.totalValid, r.totalInvalid, r.totalAusente,
+      ];
+      return `<tr>${cells.map(c => `<td style="border:1px solid #ccc;padding:2px 4px;font-size:10px;text-align:center;">${c}</td>`).join("")}</tr>`;
+    }).join("");
+    const html = `<!DOCTYPE html><html><head><title>Relatório de Frequência - Farmacologia I</title>
+      <style>@media print { body { margin: 0; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }</style>
+    </head><body style="font-family:Arial,sans-serif;padding:20px;">
+      <h2 style="margin-bottom:4px;">Relatório de Frequência — Farmacologia I (2026.1)</h2>
+      <p style="color:#666;font-size:12px;margin-bottom:12px;">UNIRIO — Gerado em ${new Date().toLocaleDateString("pt-BR")}</p>
+      ${legendHTML}
+      <table style="border-collapse:collapse;width:100%;">
+        <thead><tr>${headerCells}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+      <p style="font-size:10px;color:#999;margin-top:16px;">Conexão em Farmacologia — Sistema de Controle de Frequência</p>
+    </body></html>`;
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      setTimeout(() => win.print(), 500);
+    }
+    toast.success("PDF aberto para impressão!");
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
           <MapPin size={20} className="text-primary" /> Controle de Frequência
         </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={exportCSV}
+            disabled={reportQuery.isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors disabled:opacity-50"
+          >
+            <Download size={14} /> CSV
+          </button>
+          <button
+            onClick={exportPDF}
+            disabled={reportQuery.isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors disabled:opacity-50"
+          >
+            <Download size={14} /> PDF
+          </button>
+        </div>
       </div>
 
       {/* View Mode Tabs */}

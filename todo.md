@@ -109,3 +109,8 @@
 - [x] Criar aba de controle de frequência no painel do professor
 - [ ] Implementar notificações automáticas para badges e pontuações
 - [ ] Incorporar playlists do YouTube na página de materiais por tema
+- [x] Alterar campo senha para CPF do aluno no cadastro e login
+- [x] Implementar notificações automáticas para badges conquistados
+- [x] Implementar notificações automáticas para pontuações atualizadas
+- [x] Implementar relatório de frequência exportável em PDF
+- [x] Implementar relatório de frequência exportável em CSV

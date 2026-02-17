@@ -40,18 +40,40 @@ describe("studentAuth", () => {
         caller.studentAuth.register({
           email: "test@gmail.com",
           matricula: "12345",
-          password: "password123",
+          password: "12345678901",
           memberId: 1,
         })
       ).rejects.toThrow();
     });
 
-    it("rejects short password", async () => {
+    it("rejects CPF with wrong length (too short)", async () => {
       await expect(
         caller.studentAuth.register({
           email: "test@edu.unirio.br",
           matricula: "12345",
-          password: "12",
+          password: "12345",
+          memberId: 1,
+        })
+      ).rejects.toThrow();
+    });
+
+    it("rejects CPF with wrong length (too long)", async () => {
+      await expect(
+        caller.studentAuth.register({
+          email: "test@edu.unirio.br",
+          matricula: "12345",
+          password: "123456789012",
+          memberId: 1,
+        })
+      ).rejects.toThrow();
+    });
+
+    it("rejects CPF with non-numeric characters", async () => {
+      await expect(
+        caller.studentAuth.register({
+          email: "test@edu.unirio.br",
+          matricula: "12345",
+          password: "1234567890a",
           memberId: 1,
         })
       ).rejects.toThrow();
@@ -62,7 +84,7 @@ describe("studentAuth", () => {
         caller.studentAuth.register({
           email: "test@edu.unirio.br",
           matricula: "12",
-          password: "password123",
+          password: "12345678901",
           memberId: 1,
         })
       ).rejects.toThrow();
@@ -73,7 +95,7 @@ describe("studentAuth", () => {
     it("returns error for non-existent email", async () => {
       const result = await caller.studentAuth.login({
         email: "nonexistent@edu.unirio.br",
-        password: "password123",
+        password: "12345678901",
       });
       expect(result.success).toBe(false);
       expect(result.message).toContain("não encontrado");
@@ -102,11 +124,21 @@ describe("studentAuth", () => {
     it("returns error for invalid session", async () => {
       const result = await caller.studentAuth.changePassword({
         sessionToken: "invalid-token",
-        currentPassword: "old",
-        newPassword: "newpassword",
+        currentPassword: "12345678901",
+        newPassword: "10987654321",
       });
       expect(result.success).toBe(false);
       expect(result.message).toContain("inválida");
+    });
+
+    it("rejects non-11-digit new CPF", async () => {
+      await expect(
+        caller.studentAuth.changePassword({
+          sessionToken: "some-token",
+          currentPassword: "12345678901",
+          newPassword: "short",
+        })
+      ).rejects.toThrow();
     });
   });
 });
@@ -186,6 +218,35 @@ describe("attendance", () => {
       await expect(
         caller.attendance.deleteAccount({ password: "wrong-password", id: 1 })
       ).rejects.toThrow();
+    });
+  });
+
+  describe("exportReport (admin)", () => {
+    it("rejects invalid admin password", async () => {
+      await expect(
+        caller.attendance.exportReport({ password: "wrong-password" })
+      ).rejects.toThrow();
+    });
+
+    it("returns report data with valid admin password", async () => {
+      const result = await caller.attendance.exportReport({ password: "farmaco2026" });
+      expect(result).toHaveProperty("report");
+      expect(result).toHaveProperty("weeks");
+      expect(Array.isArray(result.report)).toBe(true);
+      expect(Array.isArray(result.weeks)).toBe(true);
+      expect(result.weeks.length).toBe(19);
+      // Each report entry should have expected fields
+      if (result.report.length > 0) {
+        const entry = result.report[0];
+        expect(entry).toHaveProperty("nome");
+        expect(entry).toHaveProperty("equipe");
+        expect(entry).toHaveProperty("matricula");
+        expect(entry).toHaveProperty("email");
+        expect(entry).toHaveProperty("weeklyStatus");
+        expect(entry).toHaveProperty("totalValid");
+        expect(entry).toHaveProperty("totalInvalid");
+        expect(entry).toHaveProperty("totalAusente");
+      }
     });
   });
 });

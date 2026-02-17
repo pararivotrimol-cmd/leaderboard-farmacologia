@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Mail, Lock, User, Hash, ArrowRight,
   ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle,
-  FlaskConical, Search
+  FlaskConical, Search, Fingerprint
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -128,12 +128,12 @@ export default function StudentLogin() {
       setError("O email deve ser institucional (@edu.unirio.br)");
       return;
     }
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+    if (password.length !== 11) {
+      setError("O CPF deve ter exatamente 11 dígitos");
       return;
     }
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem");
+      setError("Os CPFs não coincidem");
       return;
     }
     if (!selectedMemberId) {
@@ -313,19 +313,24 @@ export default function StudentLogin() {
                   </div>
                 </div>
 
-                {/* Password */}
+                {/* CPF (Password) */}
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    Senha
+                    CPF (senha)
                   </label>
                   <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <Fingerprint size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Sua senha"
+                      onChange={e => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        setPassword(v);
+                      }}
+                      placeholder="Somente números (11 dígitos)"
                       required
+                      inputMode="numeric"
+                      maxLength={11}
                       className="w-full pl-10 pr-12 py-3 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all"
                       style={{
                         backgroundColor: "rgba(255,255,255,0.06)",
@@ -341,6 +346,9 @@ export default function StudentLogin() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Seu CPF é sua senha de acesso
+                  </p>
                 </div>
 
                 {/* Submit */}
@@ -473,19 +481,24 @@ export default function StudentLogin() {
                   </div>
                 </div>
 
-                {/* Password */}
+                {/* CPF (Password) */}
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    Senha
+                    CPF (senha)
                   </label>
                   <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <Fingerprint size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
+                      onChange={e => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        setPassword(v);
+                      }}
+                      placeholder="Somente números (11 dígitos)"
                       required
+                      inputMode="numeric"
+                      maxLength={11}
                       className="w-full pl-10 pr-12 py-3 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all"
                       style={{
                         backgroundColor: "rgba(255,255,255,0.06)",
@@ -501,21 +514,29 @@ export default function StudentLogin() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Seu CPF é sua senha de acesso
+                  </p>
                 </div>
 
-                {/* Confirm Password */}
+                {/* Confirm CPF */}
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    Confirmar Senha
+                    Confirmar CPF
                   </label>
                   <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <Fingerprint size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      placeholder="Repita a senha"
+                      onChange={e => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        setConfirmPassword(v);
+                      }}
+                      placeholder="Repita o CPF"
                       required
+                      inputMode="numeric"
+                      maxLength={11}
                       className="w-full pl-10 pr-4 py-3 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all"
                       style={{
                         backgroundColor: "rgba(255,255,255,0.06)",
@@ -525,7 +546,7 @@ export default function StudentLogin() {
                   </div>
                   {confirmPassword && password !== confirmPassword && (
                     <p className="text-xs mt-1" style={{ color: "#ef4444" }}>
-                      As senhas não coincidem
+                      Os CPFs não coincidem
                     </p>
                   )}
                 </div>
