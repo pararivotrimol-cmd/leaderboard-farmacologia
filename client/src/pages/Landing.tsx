@@ -1,15 +1,15 @@
 /**
  * Landing Page — Conexão em Farmacologia
- * Auto-play intro video on first visit, login section, professor section
+ * Auto-play intro video (muted, background music only), login section at bottom
  * Orange (#F7941D) + Gray (#4A4A4A) + White palette
  */
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   FlaskConical, Users, Trophy, Zap, BookOpen, Youtube,
-  ChevronDown, Play, GraduationCap, Brain, Pill, Activity,
-  Target, Sparkles, ArrowRight, Clock, Calendar, LogIn,
-  Shield, Settings, Lock, User, LogOut
+  ChevronDown, GraduationCap, Brain, Pill, Activity,
+  Target, Sparkles, ArrowRight, LogIn,
+  Shield, Lock, AlertTriangle
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -129,12 +129,9 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [showIntro, setShowIntro] = useState(true);
   const [introEnded, setIntroEnded] = useState(false);
-  const [introStarted, setIntroStarted] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
   const totalTeams = leaderboard?.teams?.length ?? 0;
@@ -153,33 +150,19 @@ export default function Landing() {
     if (shown) {
       setShowIntro(false);
       setIntroEnded(true);
-      setIntroStarted(true);
     }
   }, []);
 
-  const startIntro = () => {
-    setIntroStarted(true);
-    setIsMuted(false);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = false;
+  // Auto-play video muted on mount (no click needed)
+  useEffect(() => {
+    if (showIntro && videoRef.current) {
+      videoRef.current.muted = true;
       videoRef.current.play().catch(() => {
-        // Fallback: if unmuted play fails, play muted
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          setIsMuted(true);
-          videoRef.current.play();
-        }
+        // If auto-play fails, skip intro
+        handleIntroEnd();
       });
     }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
-  };
+  }, [showIntro]);
 
   const handleIntroEnd = () => {
     sessionStorage.setItem("intro_shown", "true");
@@ -240,22 +223,31 @@ export default function Landing() {
     { week: "Semana 5", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", icon: <Activity size={18} /> },
     { week: "Semana 6", title: "SNA — Bloqueadores Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", icon: <Activity size={18} /> },
     { week: "Semana 7", title: "Seminários Jigsaw 2 e 3", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", icon: <Target size={18} /> },
-    { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1). Escape Room temático com desafios de farmacocinética e SNA.", icon: <Zap size={18} /> },
+    { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático.", icon: <Zap size={18} />, highlight: true },
     { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 11", title: "Seminários Jigsaw 4 e 5", detail: "Apresentações dos grupos especialistas sobre SNA adrenérgico.", icon: <Target size={18} /> },
     { week: "Semana 12", title: "Anti-inflamatórios Não Esteroidais (AINEs)", detail: "Inibidores de COX, seletividade, efeitos adversos. TBL 4.", icon: <Brain size={18} /> },
     { week: "Semana 13", title: "Corticosteroides & Analgésicos Opioides", detail: "Mecanismo anti-inflamatório, receptores opioides, escala analgésica. Caso Clínico 4.", icon: <Brain size={18} /> },
-    { week: "Semana 14", title: "Anestésicos Locais & Seminário Jigsaw 6", detail: "Mecanismo de bloqueio neural, tipos de anestésicos. Último seminário.", icon: <Brain size={18} /> },
-    { week: "Semana 15", title: "Revisão Integrativa & Grand Rounds", detail: "Revisão geral, casos clínicos integrativos, preparação para P2.", icon: <Target size={18} /> },
-    { week: "Semana 16", title: "Prova P2 + Premiação Final", detail: "Avaliação individual (P2). Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} /> },
+    { week: "Semana 14", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Seminário Jigsaw 6.", icon: <Pill size={18} /> },
+    { week: "Semana 15", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias.", icon: <Pill size={18} /> },
+    { week: "Semana 16", title: "Seminários Jigsaw 7 e 8 (2º dia)", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa.", icon: <Target size={18} /> },
+    { week: "Semana 17", title: "Prova P2", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos.", icon: <Zap size={18} />, highlight: true },
+    { week: "Semana 18", title: "Prova de Segunda Chamada", detail: "Prova substitutiva para alunos que perderam P1 ou P2 com justificativa.", icon: <Zap size={18} /> },
+    { week: "Semana 19", title: "Prova Final + Premiação", detail: "Prova final para alunos em recuperação. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
+  ];
+
+  // Feriados que caem em terça-feira no 1º semestre 2026
+  const holidays = [
+    { date: "17/02/2026", name: "Carnaval", note: "Terça-feira de Carnaval — Ponto facultativo. Não haverá aula." },
+    { date: "21/04/2026", name: "Tiradentes", note: "Feriado Nacional — Dia de Tiradentes. Não haverá aula." },
   ];
 
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
-      {/* ═══════ INTRO VIDEO OVERLAY ═══════ */}
+      {/* ═══════ INTRO VIDEO OVERLAY (auto-play, muted) ═══════ */}
       <AnimatePresence>
         {showIntro && (
           <motion.div
@@ -266,59 +258,16 @@ export default function Landing() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {/* Single persistent video element */}
             <video
               ref={videoRef}
               src={INTRO_VIDEO_URL}
               playsInline
               muted
+              autoPlay
               preload="auto"
               className="w-full h-full object-contain absolute inset-0"
               onEnded={handleIntroEnd}
-              style={{ filter: introStarted ? "none" : "brightness(0.3)" }}
             />
-
-            {!introStarted && (
-              /* ── Click-to-start overlay ── */
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 cursor-pointer z-10"
-                onClick={startIntro}
-              >
-                <motion.div
-                  className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(247,148,29,0.9)" }}
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Play size={36} className="text-white ml-1" />
-                </motion.div>
-                <p className="text-white text-lg font-semibold">Clique para iniciar</p>
-                <p className="text-white/50 text-sm">Conexão em Farmacologia</p>
-              </div>
-            )}
-
-            {introStarted && (
-              /* ── Sound toggle (visible during playback) ── */
-              <button
-                onClick={toggleMute}
-                className="absolute bottom-8 left-8 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 z-10"
-                style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-                title={isMuted ? "Ativar som" : "Desativar som"}
-              >
-                {isMuted ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <line x1="23" y1="9" x2="17" y2="15" />
-                    <line x1="17" y1="9" x2="23" y2="15" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                  </svg>
-                )}
-              </button>
-            )}
             <button
               onClick={skipIntro}
               className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105 z-10"
@@ -339,7 +288,6 @@ export default function Landing() {
         className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
         style={{ opacity: heroOpacity, scale: heroScale }}
       >
-        {/* Background gradient */}
         <div className="absolute inset-0" style={{
           background: "radial-gradient(ellipse at center, rgba(247,148,29,0.08) 0%, rgba(10,22,40,0) 70%)"
         }} />
@@ -347,7 +295,6 @@ export default function Landing() {
         <DNAHelix side="left" />
         <DNAHelix side="right" />
 
-        {/* Logo */}
         <motion.div
           className="relative z-10 flex flex-col items-center px-4"
           initial={{ opacity: 0, y: 40 }}
@@ -393,11 +340,8 @@ export default function Landing() {
               Uma experiência gamificada de aprendizado com metodologias ativas
             </motion.p>
           </motion.div>
-
-
         </motion.div>
 
-        {/* Scroll indicator */}
         <motion.div
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
           animate={{ y: [0, 10, 0] }}
@@ -407,170 +351,8 @@ export default function Landing() {
         </motion.div>
       </motion.div>
 
-      {/* ═══════ LOGIN / ACCESS SECTION ═══════ */}
-      <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0D1B2A" }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Acesse a Plataforma
-            </h2>
-            <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Escolha seu perfil para acessar as funcionalidades
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
-            {/* Student Login Card */}
-            <motion.div
-              className="relative p-8 rounded-2xl border overflow-hidden group"
-              style={{
-                backgroundColor: "rgba(247,148,29,0.04)",
-                borderColor: "rgba(247,148,29,0.2)",
-              }}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ borderColor: "#F7941D", boxShadow: "0 0 40px rgba(247,148,29,0.15)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
-                  <GraduationCap size={32} style={{ color: "#F7941D" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Aluno
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
-                </p>
-                <div className="space-y-3">
-                  {isAuthenticated ? (
-                    <>
-                      <p className="text-sm" style={{ color: "#F7941D" }}>
-                        <User size={14} className="inline mr-1" />
-                        Logado como <strong>{user?.name || "Aluno"}</strong>
-                      </p>
-                      <button
-                        onClick={() => setLocation("/leaderboard")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                        style={{ backgroundColor: "#F7941D", color: "#fff" }}
-                      >
-                        <Trophy size={18} />
-                        Ir para o Leaderboard
-                      </button>
-                      <button
-                        onClick={() => setLocation("/meu-progresso")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
-                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
-                      >
-                        <Target size={18} />
-                        Meu Progresso
-                      </button>
-                      <button
-                        onClick={() => setLocation("/materiais")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
-                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
-                      >
-                        <BookOpen size={18} />
-                        Materiais de Estudo
-                      </button>
-                      <button
-                        onClick={() => logout()}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-[1.02]"
-                        style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}
-                      >
-                        <LogOut size={16} />
-                        Sair da Conta
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setLocation("/leaderboard")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                        style={{ backgroundColor: "#F7941D", color: "#fff" }}
-                      >
-                        <Trophy size={18} />
-                        Ver Leaderboard
-                      </button>
-                      <button
-                        onClick={() => setLocation("/materiais")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
-                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
-                      >
-                        <BookOpen size={18} />
-                        Materiais de Estudo
-                      </button>
-                      <a
-                        href={getLoginUrl()}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
-                        style={{ borderColor: "rgba(247,148,29,0.3)", color: "#F7941D", backgroundColor: "rgba(247,148,29,0.05)" }}
-                      >
-                        <LogIn size={18} />
-                        Fazer Login
-                      </a>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Professor Card */}
-            <motion.div
-              className="relative p-8 rounded-2xl border overflow-hidden group"
-              style={{
-                backgroundColor: "rgba(74,74,74,0.08)",
-                borderColor: "rgba(255,255,255,0.1)",
-              }}
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ borderColor: "rgba(255,255,255,0.3)", boxShadow: "0 0 40px rgba(255,255,255,0.05)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5" style={{ backgroundColor: "#fff" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                  <Shield size={32} style={{ color: "#ccc" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Professor
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
-                </p>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setLocation("/admin")}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                    style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                  >
-                    <Lock size={18} />
-                    Painel Administrativo
-                  </button>
-                  <button
-                    onClick={() => setLocation("/avisos")}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base border transition-all duration-300 hover:scale-[1.02]"
-                    style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", backgroundColor: "transparent" }}
-                  >
-                    <Settings size={18} />
-                    Mural de Avisos
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
       {/* ═══════ STATS SECTION ═══════ */}
-      <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0A1628" }}>
+      <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0D1B2A" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {[
@@ -599,7 +381,7 @@ export default function Landing() {
       </div>
 
       {/* ═══════ FEATURES SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
         <div className="max-w-6xl mx-auto">
           <motion.div
             className="text-center mb-12 sm:mb-16"
@@ -652,7 +434,7 @@ export default function Landing() {
       </div>
 
       {/* ═══════ TIMELINE SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
+      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
         <div className="max-w-3xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -664,8 +446,35 @@ export default function Landing() {
               Jornada do Semestre
             </h2>
             <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-              16 semanas de aprendizado intensivo e gamificado
+              19 semanas de aprendizado intensivo e gamificado
             </p>
+          </motion.div>
+
+          {/* Feriados Alert */}
+          <motion.div
+            className="mb-8 p-4 rounded-xl border"
+            style={{ backgroundColor: "rgba(247,148,29,0.06)", borderColor: "rgba(247,148,29,0.2)" }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={18} style={{ color: "#F7941D" }} />
+              <span className="text-sm font-bold" style={{ color: "#F7941D" }}>
+                Feriados em Terça-feira — 1º Semestre 2026
+              </span>
+            </div>
+            <div className="space-y-2">
+              {holidays.map((h) => (
+                <div key={h.date} className="flex items-start gap-3 text-sm">
+                  <span className="font-mono font-semibold shrink-0" style={{ color: "#F7941D" }}>{h.date}</span>
+                  <div>
+                    <span className="font-semibold text-white">{h.name}</span>
+                    <span className="ml-2" style={{ color: "rgba(255,255,255,0.5)" }}>— {h.note}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           <div className="relative">
@@ -684,9 +493,9 @@ export default function Landing() {
                   <div
                     className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                     style={{
-                      backgroundColor: i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.15)",
-                      color: i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#fff" : "#F7941D",
-                      border: `2px solid ${i === 0 || i === timeline.length - 1 || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.3)"}`,
+                      backgroundColor: (item as any).highlight || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.15)",
+                      color: (item as any).highlight || expandedWeek === i ? "#fff" : "#F7941D",
+                      border: `2px solid ${(item as any).highlight || expandedWeek === i ? "#F7941D" : "rgba(247,148,29,0.3)"}`,
                     }}
                   >
                     {item.icon}
@@ -725,50 +534,11 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* ═══════ GOOGLE CALENDAR ═══════ */}
+      {/* ═══════ CTA + LOGIN SECTION ═══════ */}
       <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0A1628" }}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <Calendar size={40} className="mx-auto mb-4" style={{ color: "#F7941D" }} />
-            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Agenda da Disciplina
-            </h2>
-            <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Acompanhe datas de aulas, provas, seminários e entregas em tempo real
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-2xl overflow-hidden border"
-            style={{ borderColor: "rgba(247,148,29,0.15)", backgroundColor: "#0D1B2A" }}
-          >
-            <iframe
-               src="https://calendar.google.com/calendar/embed?src=pedro.alexandre%40unirio.br&ctz=America%2FSao_Paulo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&showTz=0&mode=MONTH"
-               style={{ border: 0, width: "100%", height: "600px", background: "white", borderRadius: "8px" }}
-               frameBorder="0"
-              scrolling="no"
-              title="Agenda Farmacologia I — Prof. Pedro Braga"
-            />
-          </motion.div>
-
-          <p className="text-center text-xs mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>
-            Calendário sincronizado com Google Agenda do Prof. Pedro Braga (pedro.alexandre@unirio.br)
-          </p>
-        </div>
-      </div>
-
-      {/* ═══════ CTA SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
+            className="text-center mb-12"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -777,45 +547,134 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
               Pronto para a Jornada?
             </h2>
-            <p className="text-base sm:text-lg mb-8 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="text-base sm:text-lg mb-4 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
               Acesse o leaderboard, acompanhe sua equipe e conquiste seus Pontos Farmacológicos!
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => setLocation("/leaderboard")}
-                className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105"
-                style={{
-                  backgroundColor: "#F7941D",
-                  color: "#fff",
-                  boxShadow: "0 0 30px rgba(247,148,29,0.3)",
-                }}
-              >
-                <Trophy size={20} />
-                Acessar Leaderboard
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-              <a
-                href={YOUTUBE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 border"
-                style={{
-                  borderColor: "rgba(255,255,255,0.2)",
-                  color: "#fff",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                }}
-              >
-                <Youtube size={20} />
-                Canal no YouTube
-              </a>
-            </div>
           </motion.div>
+
+          {/* Login Cards */}
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
+            {/* Student Login Card */}
+            <motion.div
+              className="relative p-8 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(247,148,29,0.04)",
+                borderColor: "rgba(247,148,29,0.2)",
+              }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ borderColor: "#F7941D", boxShadow: "0 0 40px rgba(247,148,29,0.15)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                  <GraduationCap size={32} style={{ color: "#F7941D" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Aluno
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
+                </p>
+                <div className="space-y-3">
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => setLocation("/leaderboard")}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "#F7941D", color: "#fff" }}
+                    >
+                      <Trophy size={18} />
+                      Acessar Plataforma
+                      <ArrowRight size={18} />
+                    </button>
+                  ) : (
+                    <a
+                      href={getLoginUrl()}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "#F7941D", color: "#fff" }}
+                    >
+                      <LogIn size={18} />
+                      Fazer Login
+                    </a>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Professor Card */}
+            <motion.div
+              className="relative p-8 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(74,74,74,0.08)",
+                borderColor: "rgba(255,255,255,0.1)",
+              }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ borderColor: "rgba(255,255,255,0.3)", boxShadow: "0 0 40px rgba(255,255,255,0.05)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5" style={{ backgroundColor: "#fff" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                  <Shield size={32} style={{ color: "#ccc" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Professor
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
+                </p>
+                <div className="space-y-3">
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => setLocation("/admin")}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                    >
+                      <Lock size={18} />
+                      Painel Administrativo
+                      <ArrowRight size={18} />
+                    </button>
+                  ) : (
+                    <a
+                      href={getLoginUrl()}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                    >
+                      <LogIn size={18} />
+                      Fazer Login
+                    </a>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* YouTube CTA */}
+          <div className="flex justify-center mt-8">
+            <a
+              href={YOUTUBE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 border"
+              style={{
+                borderColor: "rgba(255,255,255,0.2)",
+                color: "#fff",
+                backgroundColor: "rgba(255,255,255,0.05)",
+              }}
+            >
+              <Youtube size={20} />
+              Canal no YouTube
+            </a>
+          </div>
         </div>
       </div>
 
       {/* ═══════ FOOTER ═══════ */}
-      <footer className="py-8 px-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "#0A1628" }}>
+      <footer className="py-8 px-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "#0D1B2A" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="Logo" className="w-8 h-8 object-contain" />
@@ -828,44 +687,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-
-      {/* ═══════ VIDEO MODAL ═══════ */}
-      <AnimatePresence>
-        {showVideo && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowVideo(false)}
-          >
-            <motion.div
-              className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden"
-              style={{ backgroundColor: "#000" }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <video
-                src={INTRO_VIDEO_URL}
-                controls
-                autoPlay
-                className="w-full h-full object-contain"
-              />
-              <button
-                onClick={() => setShowVideo(false)}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-              >
-                ✕
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

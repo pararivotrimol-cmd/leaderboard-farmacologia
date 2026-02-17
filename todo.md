@@ -62,22 +62,34 @@
 - [x] Corrigir cronograma: remover antibioticoterapia/quimioterapia; P1 até colinérgicos/BNM + 3 primeiros Jigsaw
 - [x] Top 10 Individual: não mostrar nomes até que haja pontuações
 - [x] Adicionar aba com regras de cada atividade
-- [ ] Corrigir vídeo introdutório sem áudio — adicionar trilha sonora
-- [ ] Adicionar seção de materiais de estudo com links para PDFs e slides por módulo
-- [ ] Criar schema de banco para módulos e materiais
-- [ ] Criar rotas tRPC para CRUD de materiais (admin) e listagem (público)
-- [ ] Criar página de materiais para alunos (/materiais)
-- [ ] Adicionar gestão de materiais no painel admin
+- [x] Corrigir vídeo introdutório sem áudio — adicionar trilha sonora
+- [x] Adicionar seção de materiais de estudo com links para PDFs e slides por módulo
+- [x] Criar schema de banco para módulos e materiais
+- [x] Criar rotas tRPC para CRUD de materiais (admin) e listagem (público)
+- [x] Criar página de materiais para alunos (/materiais)
+- [x] Adicionar gestão de materiais no painel admin
 - [x] Ampliar ainda mais o logotipo abaixo do botão Início no leaderboard
 - [x] Criar botão de sair/deslogar visível nas páginas
 - [x] Corrigir SEO: adicionar meta description (50-160 chars) na página /
 - [x] Corrigir SEO: adicionar meta keywords na página /
 - [x] Corrigir vídeo de intro que não inicia ao clicar (video element único persistente)
 - [x] Corrigir SEO: reduzir keywords de 13 para 6 palavras-chave focadas
-- [ ] Deslogar nome/conta do professor da área de alunos na landing page
-- [ ] Criar schema para materiais (arquivos, comentários, links)
-- [ ] Criar rotas tRPC para upload de arquivos, comentários e links (admin)
-- [ ] Adicionar funcionalidades de upload/comentário/links na área do professor
-- [ ] Adicionar aba de materiais/anexos na página dos alunos
+- [x] Deslogar nome/conta do professor da área de alunos na landing page
+- [x] Criar schema para materiais (arquivos, comentários, links)
+- [x] Criar rotas tRPC para upload de arquivos, comentários e links (admin)
+- [x] Adicionar funcionalidades de upload/comentário/links na área do professor
+- [x] Adicionar aba de materiais/anexos na página dos alunos
 - [x] Disponibilizar cronograma completo na página de introdução (landing page)
 - [x] Integrar Google Calendar do professor pedro.alexandre@unirio.br via iframe público
+- [x] Vídeo intro: auto-play sem botão "clicar para iniciar" (mudo, só trilha sonora)
+- [x] Vídeo intro: somente trilha sonora sem fala do avatar
+- [x] Área do aluno: apenas botão de login (remover outros botões quando não logado)
+- [x] Área do professor: apenas botão de login
+- [x] Excluir Google Calendar e qualquer calendário da landing page
+- [x] Cronograma: adicionar aula de anti-histamínicos após anestésicos
+- [x] Cronograma: adicionar segundo dia de seminários (jigsaw) após anti-histamínicos
+- [x] Cronograma: após P2 adicionar prova de segunda chamada
+- [x] Cronograma: após segunda chamada adicionar prova final
+- [x] Cronograma: alertar feriados de terça-feira no primeiro semestre 2026
+- [x] Mover caixas de login do aluno para baixo na seção "Pronto para a Jornada"
+- [x] Implementar sistema de upload de materiais (PDFs, slides, documentos) no painel admin
