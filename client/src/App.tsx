@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import StudentProgress from "./pages/StudentProgress";
 import Avisos from "./pages/Avisos";
 import Materiais from "./pages/Materiais";
+import Conquistas from "./pages/Conquistas";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />
+      <Route path={"/conquistas"} component={Conquistas} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -485,6 +485,182 @@ export const appRouter = router({
         return { id, url };
       }),
   }),
+
+  // ─── Badges (Conquistas) ───
+  badges: router({
+    // Public: get active badges with earned counts
+    getPublic: publicProcedure.query(async () => {
+      const [badgesData, allMemberBadges] = await Promise.all([
+        db.getActiveBadges(),
+        db.getAllMemberBadges(),
+      ]);
+      return badgesData.map(b => ({
+        ...b,
+        earnedCount: allMemberBadges.filter(mb => mb.badgeId === b.id).length,
+      }));
+    }),
+
+    // Public: get badges earned by a specific member
+    getByMember: publicProcedure
+      .input(z.object({ memberId: z.number() }))
+      .query(async ({ input }) => {
+        const [memberBadgesData, allBadges] = await Promise.all([
+          db.getMemberBadgesByMember(input.memberId),
+          db.getAllBadges(),
+        ]);
+        return memberBadgesData.map(mb => {
+          const badge = allBadges.find(b => b.id === mb.badgeId);
+          return { ...mb, badge };
+        });
+      }),
+
+    // Public: get all badges with member info (for leaderboard display)
+    getWithMembers: publicProcedure.query(async () => {
+      const [badgesData, allMemberBadges, allMembers] = await Promise.all([
+        db.getActiveBadges(),
+        db.getAllMemberBadges(),
+        db.getAllMembers(),
+      ]);
+      return badgesData.map(b => {
+        const earned = allMemberBadges.filter(mb => mb.badgeId === b.id);
+        const membersWithBadge = earned.map(mb => {
+          const member = allMembers.find(m => m.id === mb.memberId);
+          return { ...mb, memberName: member?.name || "Desconhecido" };
+        });
+        return { ...b, members: membersWithBadge };
+      });
+    }),
+
+    // Admin: get all badges
+    getAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const [allBadges, allMemberBadges] = await Promise.all([
+          db.getAllBadges(),
+          db.getAllMemberBadges(),
+        ]);
+        return allBadges.map(b => ({
+          ...b,
+          earnedCount: allMemberBadges.filter(mb => mb.badgeId === b.id).length,
+        }));
+      }),
+
+    // Admin: create a badge
+    create: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        name: z.string().min(1),
+        description: z.string().optional(),
+        iconUrl: z.string().optional(),
+        category: z.string().default("Geral"),
+        week: z.number().optional(),
+        criteria: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const { password, ...data } = input;
+        const id = await db.createBadge(data);
+        return { id };
+      }),
+
+    // Admin: update a badge
+    update: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        iconUrl: z.string().optional(),
+        category: z.string().optional(),
+        week: z.number().nullable().optional(),
+        criteria: z.string().optional(),
+        isActive: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const { password, id, ...data } = input;
+        await db.updateBadge(id, data as any);
+        return { success: true };
+      }),
+
+    // Admin: delete a badge
+    delete: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        await db.deleteBadge(input.id);
+        return { success: true };
+      }),
+
+    // Admin: award badge to a member
+    award: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        badgeId: z.number(),
+        memberId: z.number(),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const id = await db.awardBadge({
+          badgeId: input.badgeId,
+          memberId: input.memberId,
+          note: input.note,
+        });
+        return { id };
+      }),
+
+    // Admin: bulk award badge to multiple members
+    bulkAward: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        badgeId: z.number(),
+        memberIds: z.array(z.number()),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const awarded = await db.bulkAwardBadge(input.badgeId, input.memberIds, input.note);
+        return { success: true, awarded };
+      }),
+
+    // Admin: revoke badge from a member
+    revoke: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        badgeId: z.number(),
+        memberId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        await db.revokeBadge(input.memberId, input.badgeId);
+        return { success: true };
+      }),
+
+    // Admin: get members who earned a specific badge
+    getEarners: publicProcedure
+      .input(z.object({ password: z.string(), badgeId: z.number() }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+        const [earners, allMembers] = await Promise.all([
+          db.getMemberBadgesByBadge(input.badgeId),
+          db.getAllMembers(),
+        ]);
+        return earners.map(e => {
+          const member = allMembers.find(m => m.id === e.memberId);
+          return { ...e, memberName: member?.name || "Desconhecido" };
+        });
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

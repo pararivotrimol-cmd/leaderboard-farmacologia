@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO badges (name, description, iconUrl, category, week, criteria, isActive) VALUES ('Desbravador Farmacológico', 'Completou todas as atividades da Semana 1 — Introdução à Farmacologia', 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/gRFEdwhxijdIQEtR.png', 'Semana 1', 1, 'Participar da aula inaugural, completar o TBL de Introdução à Farmacologia e entregar a atividade BYOD da semana.', 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute INSERT INTO badges (name, description, iconUrl, category, week, criteria, isActive) VALUES ('Desbravador Farmacológico', 'Completou todas as atividades da Semana 1 — Introdução à Farmacologia', 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/gRFEdwhxijdIQEtR.png', 'Semana 1', 1, 'Participar da aula inaugural, completar o TBL de Introdução à Farmacologia e entregar a atividade BYOD da semana.', 1);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 68
+}

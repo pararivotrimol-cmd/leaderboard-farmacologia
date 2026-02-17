@@ -9,6 +9,8 @@ import {
   courseSettings, InsertCourseSetting,
   notifications, InsertNotification,
   materials, InsertMaterial,
+  badges, InsertBadge,
+  memberBadges, InsertMemberBadge,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -284,4 +286,101 @@ export async function deleteMaterial(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(materials).where(eq(materials.id, id));
+}
+
+// ─── Badges ───
+
+export async function getAllBadges() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(badges).orderBy(asc(badges.id));
+}
+
+export async function getActiveBadges() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(badges).where(eq(badges.isActive, 1)).orderBy(asc(badges.week), asc(badges.id));
+}
+
+export async function createBadge(data: InsertBadge) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(badges).values(data);
+  return result[0].insertId;
+}
+
+export async function updateBadge(id: number, data: Partial<InsertBadge>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(badges).set(data).where(eq(badges.id, id));
+}
+
+export async function deleteBadge(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Delete all member badges first
+  await db.delete(memberBadges).where(eq(memberBadges.badgeId, id));
+  await db.delete(badges).where(eq(badges.id, id));
+}
+
+// ─── Member Badges ───
+
+export async function getAllMemberBadges() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberBadges).orderBy(desc(memberBadges.earnedAt));
+}
+
+export async function getMemberBadgesByMember(memberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberBadges).where(eq(memberBadges.memberId, memberId)).orderBy(desc(memberBadges.earnedAt));
+}
+
+export async function getMemberBadgesByBadge(badgeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberBadges).where(eq(memberBadges.badgeId, badgeId)).orderBy(desc(memberBadges.earnedAt));
+}
+
+export async function awardBadge(data: InsertMemberBadge) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Check if already awarded
+  const existing = await db.select().from(memberBadges)
+    .where(sql`${memberBadges.memberId} = ${data.memberId} AND ${memberBadges.badgeId} = ${data.badgeId}`)
+    .limit(1);
+  if (existing.length > 0) return existing[0].id; // Already awarded
+  const result = await db.insert(memberBadges).values(data);
+  return result[0].insertId;
+}
+
+export async function bulkAwardBadge(badgeId: number, memberIds: number[], note?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  let awarded = 0;
+  for (const memberId of memberIds) {
+    const existing = await db.select().from(memberBadges)
+      .where(sql`${memberBadges.memberId} = ${memberId} AND ${memberBadges.badgeId} = ${badgeId}`)
+      .limit(1);
+    if (existing.length === 0) {
+      await db.insert(memberBadges).values({ memberId, badgeId, note });
+      awarded++;
+    }
+  }
+  return awarded;
+}
+
+export async function revokeBadge(memberId: number, badgeId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(memberBadges).where(
+    sql`${memberBadges.memberId} = ${memberId} AND ${memberBadges.badgeId} = ${badgeId}`
+  );
+}
+
+export async function deleteMemberBadge(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(memberBadges).where(eq(memberBadges.id, id));
 }

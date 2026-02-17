@@ -139,3 +139,44 @@ export const materials = mysqlTable("materials", {
 
 export type Material = typeof materials.$inferSelect;
 export type InsertMaterial = typeof materials.$inferInsert;
+
+/**
+ * Badges - achievement definitions
+ * Professor creates badges, assigns to students who earn them
+ */
+export const badges = mysqlTable("badges", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  // Icon URL (S3 or external)
+  iconUrl: text("iconUrl"),
+  // Category for grouping
+  category: varchar("category", { length: 100 }).notNull().default("Geral"),
+  // Week associated with this badge (optional)
+  week: int("week"),
+  // Criteria description (what the student needs to do)
+  criteria: text("criteria"),
+  // Whether the badge is active and can be earned
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Badge = typeof badges.$inferSelect;
+export type InsertBadge = typeof badges.$inferInsert;
+
+/**
+ * MemberBadges - junction table linking members to earned badges
+ */
+export const memberBadges = mysqlTable("memberBadges", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull(),
+  badgeId: int("badgeId").notNull(),
+  // When the badge was earned
+  earnedAt: timestamp("earnedAt").defaultNow().notNull(),
+  // Optional note from professor
+  note: text("note"),
+});
+
+export type MemberBadge = typeof memberBadges.$inferSelect;
+export type InsertMemberBadge = typeof memberBadges.$inferInsert;

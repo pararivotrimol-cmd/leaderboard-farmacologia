@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO badges (name, description, icon_url, category, week, criteria, is_active) VALUES ('Desbravador Farmacológico', 'Completou todas as atividades da Semana 1 — Introdução à Farmacologia', 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/gRFEdwhxijdIQEtR.png', 'Semana 1', 1, 'Participar da aula inaugural, completar o TBL de Introdução à Farmacologia e entregar a atividade BYOD da semana.', 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute INSERT INTO badges (name, description, icon_url, category, week, criteria, is_active) VALUES ('Desbravador Farmacológico', 'Completou todas as atividades da Semana 1 — Introdução à Farmacologia', 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/gRFEdwhxijdIQEtR.png', 'Semana 1', 1, 'Participar da aula inaugural, completar o TBL de Introdução à Farmacologia e entregar a atividade BYOD da semana.', 1);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'icon_url' in 'field list'"
+  ]
+}

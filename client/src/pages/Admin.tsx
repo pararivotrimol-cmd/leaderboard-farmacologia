@@ -6,7 +6,8 @@ import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
-  FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip
+  FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
+  Award, Star, Medal
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -984,10 +985,200 @@ function MaterialsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Badges Manager ───
+function BadgesManager({ password }: { password: string }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [newBadge, setNewBadge] = useState({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" });
+  const [assignBadgeId, setAssignBadgeId] = useState<number | null>(null);
+  const [assignMemberId, setAssignMemberId] = useState<number | null>(null);
+  const [assignNote, setAssignNote] = useState("");
+
+  const { data: badges, refetch: refetchBadges } = trpc.badges.getWithMembers.useQuery();
+  const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
+  const createBadge = trpc.badges.create.useMutation({ onSuccess: () => { refetchBadges(); setShowCreate(false); setNewBadge({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" }); toast.success("Badge criado!"); } });
+  const assignBadge = trpc.badges.award.useMutation({ onSuccess: () => { refetchBadges(); setAssignBadgeId(null); setAssignMemberId(null); setAssignNote(""); toast.success("Badge atribuído!"); } });
+  const removeBadge = trpc.badges.revoke.useMutation({ onSuccess: () => { refetchBadges(); toast.success("Badge removido!"); } });
+  const deleteBadge = trpc.badges.delete.useMutation({ onSuccess: () => { refetchBadges(); toast.success("Badge excluído!"); } });
+
+  const allMembers = useMemo(() => {
+    if (!leaderboard?.teams) return [];
+    return leaderboard.teams.flatMap(t => t.members.map(m => ({ id: m.id, name: m.name, teamName: t.name })));
+  }, [leaderboard]);
+
+  const categories = ["Semana 1", "Semana 2", "Semana 3", "TBL", "Jigsaw", "Casos Clínicos", "Escape Room", "Participação", "Geral"];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
+          <Award size={20} className="text-primary" /> Gerenciar Conquistas
+        </h2>
+        <button
+          onClick={() => setShowCreate(!showCreate)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium"
+        >
+          <Plus size={14} /> Novo Badge
+        </button>
+      </div>
+
+      {/* Create Badge Form */}
+      <AnimatePresence>
+        {showCreate && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+              <h3 className="text-sm font-semibold text-foreground">Criar Novo Badge</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  value={newBadge.name}
+                  onChange={e => setNewBadge(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Nome do badge"
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+                />
+                <select
+                  value={newBadge.category}
+                  onChange={e => setNewBadge(p => ({ ...p, category: e.target.value }))}
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <input
+                  value={newBadge.description}
+                  onChange={e => setNewBadge(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Descrição"
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+                />
+                <input
+                  type="number"
+                  value={newBadge.week}
+                  onChange={e => setNewBadge(p => ({ ...p, week: parseInt(e.target.value) || 1 }))}
+                  placeholder="Semana"
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+                />
+                <input
+                  value={newBadge.criteria}
+                  onChange={e => setNewBadge(p => ({ ...p, criteria: e.target.value }))}
+                  placeholder="Critério (ex: Completar TBL da semana 1)"
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground sm:col-span-2"
+                />
+                <input
+                  value={newBadge.iconUrl}
+                  onChange={e => setNewBadge(p => ({ ...p, iconUrl: e.target.value }))}
+                  placeholder="URL do ícone (opcional)"
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground sm:col-span-2"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => createBadge.mutate({ password, ...newBadge, week: newBadge.week || undefined, iconUrl: newBadge.iconUrl || undefined, criteria: newBadge.criteria || undefined, description: newBadge.description || undefined })}
+                  disabled={!newBadge.name || createBadge.isPending}
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+                >
+                  {createBadge.isPending ? "Criando..." : "Criar Badge"}
+                </button>
+                <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-md bg-secondary text-foreground text-xs">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Assign Badge */}
+      <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Star size={14} className="text-primary" /> Atribuir Badge a Aluno
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <select
+            value={assignBadgeId ?? ""}
+            onChange={e => setAssignBadgeId(e.target.value ? parseInt(e.target.value) : null)}
+            className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+          >
+            <option value="">Selecione o badge...</option>
+            {badges?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+          <select
+            value={assignMemberId ?? ""}
+            onChange={e => setAssignMemberId(e.target.value ? parseInt(e.target.value) : null)}
+            className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+          >
+            <option value="">Selecione o aluno...</option>
+            {allMembers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.teamName})</option>)}
+          </select>
+          <input
+            value={assignNote}
+            onChange={e => setAssignNote(e.target.value)}
+            placeholder="Nota (opcional)"
+            className="px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+          />
+        </div>
+        <button
+          onClick={() => assignBadgeId && assignMemberId && assignBadge.mutate({ password, badgeId: assignBadgeId, memberId: assignMemberId, note: assignNote || undefined })}
+          disabled={!assignBadgeId || !assignMemberId || assignBadge.isPending}
+          className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+        >
+          {assignBadge.isPending ? "Atribuindo..." : "Atribuir Badge"}
+        </button>
+      </div>
+
+      {/* Badges List */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-foreground">Badges Existentes ({badges?.length ?? 0})</h3>
+        {badges?.map(badge => (
+          <div key={badge.id} className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{badge.iconUrl ? "🏅" : "🏆"}</span>
+                <span className="font-semibold text-foreground text-sm">{badge.name}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{badge.category}</span>
+                {badge.week && <span className="text-[10px] text-muted-foreground">Sem {badge.week}</span>}
+              </div>
+              <button
+                onClick={() => { if (confirm(`Excluir badge "${badge.name}"?`)) deleteBadge.mutate({ password, id: badge.id }); }}
+                className="text-destructive hover:text-destructive/80 p-1"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+            {badge.description && <p className="text-xs text-muted-foreground mb-2">{badge.description}</p>}
+            {badge.members.length > 0 ? (
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Alunos ({badge.members.length}):</span>
+                {badge.members.map((m, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-1 px-2 rounded bg-background/50 text-xs">
+                    <span className="text-foreground">{m.memberName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{new Date(m.earnedAt).toLocaleDateString("pt-BR")}</span>
+                      <button
+                        onClick={() => removeBadge.mutate({ password, badgeId: badge.id, memberId: (m as any).memberId })}
+                        className="text-destructive hover:text-destructive/80 p-0.5"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">Nenhum aluno conquistou ainda</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "settings">("teams");
 
   if (!password) return <LoginScreen onLogin={setPassword} />;
 
@@ -998,6 +1189,7 @@ export default function Admin() {
     { key: "highlights" as const, label: "Destaques", icon: <Activity size={16} /> },
     { key: "notifications" as const, label: "Notificações", icon: <Bell size={16} /> },
     { key: "materials" as const, label: "Materiais", icon: <FileText size={16} /> },
+    { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -1042,6 +1234,7 @@ export default function Admin() {
         {activeSection === "highlights" && <HighlightsManager password={password} />}
         {activeSection === "notifications" && <NotificationsManager password={password} />}
         {activeSection === "materials" && <MaterialsManager password={password} />}
+        {activeSection === "badges" && <BadgesManager password={password} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

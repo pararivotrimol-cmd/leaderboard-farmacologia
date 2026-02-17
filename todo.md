@@ -93,3 +93,11 @@
 - [x] Cronograma: alertar feriados de terça-feira no primeiro semestre 2026
 - [x] Mover caixas de login do aluno para baixo na seção "Pronto para a Jornada"
 - [x] Implementar sistema de upload de materiais (PDFs, slides, documentos) no painel admin
+- [x] Criar schema de banco para conquistas/badges (badges + student_badges)
+- [x] Criar rotas tRPC para CRUD de badges (admin) e listagem (alunos)
+- [x] Implementar lógica de atribuição de badges (manual pelo admin + bulk award)
+- [x] Gerar imagem do badge "Desbravador Farmacológico" (Semana 1)
+- [x] Criar página de conquistas para alunos (/conquistas)
+- [x] Integrar gestão de badges no painel admin (criar, atribuir, revogar, excluir)
+- [x] Escrever testes para o sistema de conquistas (25 testes passando)
+- [x] Corrigir botão Sair: ao clicar deve fazer logout e redirecionar para a página inicial (/)

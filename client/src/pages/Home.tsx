@@ -3,7 +3,7 @@
  * Padronizado: Laranja (#F7941D) + Cinza (#4A4A4A) + Branco
  * Typography: Outfit (display), JetBrains Mono (data), DM Sans (body)
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
@@ -137,6 +137,11 @@ export default function Home() {
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { logout } = useAuth();
 
+  const handleLogout = useCallback(async () => {
+    await logout();
+    window.location.href = "/";
+  }, [logout]);
+
   const teamsData: TeamData[] = useMemo(() => leaderboard?.teams ?? [], [leaderboard]);
   const rankedTeams = useMemo(() => [...teamsData].sort((a, b) => getTeamPF(b) - getTeamPF(a)), [teamsData]);
 
@@ -218,7 +223,7 @@ export default function Home() {
                 </span>
               </Link>
               <button
-                onClick={() => logout()}
+                onClick={handleLogout}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                 style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
               >
