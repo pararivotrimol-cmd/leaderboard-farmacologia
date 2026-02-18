@@ -134,6 +134,13 @@ export default function Landing() {
   const heroRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
   const { isAuthenticated: isStudentAuth, student: studentData } = useStudentAuth();
+  
+  // Check if teacher is logged in
+  const [teacherLoggedIn, setTeacherLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("teacherSessionToken");
+    setTeacherLoggedIn(!!token);
+  }, []);
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
   const totalTeams = leaderboard?.teams?.length ?? 0;
@@ -630,7 +637,7 @@ export default function Landing() {
                   Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
                 </p>
                 <div className="space-y-3">
-                  {isAuthenticated ? (
+                  {teacherLoggedIn ? (
                     <button
                       onClick={() => setLocation("/admin")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
@@ -641,14 +648,14 @@ export default function Landing() {
                       <ArrowRight size={18} />
                     </button>
                   ) : (
-                    <a
-                      href={getLoginUrl()}
+                    <button
+                      onClick={() => setLocation("/professor/login")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
                       style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
                     >
                       <LogIn size={18} />
                       Fazer Login
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>

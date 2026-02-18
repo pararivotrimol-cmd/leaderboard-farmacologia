@@ -57,6 +57,13 @@
       "when": 1771430952394,
       "tag": "0007_fixed_hairball",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771445973124,
+      "tag": "0008_magical_the_renegades",
+      "breakpoints": true
     }
   ]
 }

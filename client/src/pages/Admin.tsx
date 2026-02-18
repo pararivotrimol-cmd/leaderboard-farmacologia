@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1814,8 +1814,37 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "settings">("teams");
-
-  if (!password) return <LoginScreen onLogin={setPassword} />;
+  const [, setLocation] = useState("/");
+  
+  // Check teacher authentication
+  const [teacherToken, setTeacherToken] = useState<string | null>(null);
+  const [teacherName, setTeacherName] = useState<string>("");
+  
+  useEffect(() => {
+    const token = localStorage.getItem("teacherSessionToken");
+    const name = localStorage.getItem("teacherName") || "";
+    if (token) {
+      setTeacherToken(token);
+      setTeacherName(name);
+      // Set a dummy password for backward compatibility with existing components
+      setPassword("authenticated");
+    }
+  }, []);
+  
+  const handleLogout = () => {
+    localStorage.removeItem("teacherSessionToken");
+    localStorage.removeItem("teacherName");
+    localStorage.removeItem("teacherEmail");
+    setTeacherToken(null);
+    setPassword(null);
+    window.location.href = "/professor/login";
+  };
+  
+  // If not authenticated with teacher token, redirect to login
+  if (!teacherToken || !password) {
+    window.location.href = "/professor/login";
+    return null;
+  }
 
   const sections = [
     { key: "teams" as const, label: "Equipes", icon: <Users size={16} /> },
@@ -1840,9 +1869,12 @@ export default function Admin() {
           <a href="/leaderboard" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mr-3">
             <ArrowLeft size={12} /> Ranking
           </a>
-          <button onClick={() => setPassword(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
-            <LogOut size={12} /> Sair
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{teacherName}</span>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
+              <LogOut size={12} /> Sair
+            </button>
+          </div>
         </div>
       </div>
 

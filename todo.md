@@ -137,3 +137,17 @@
 - [x] Validar gráfico de evolução com dados reais
 - [x] Atualizar studentDashboard.getEvolution para buscar histórico real de PF (usando mock temporariamente)
 - [x] Testar dashboard com dados reais de alunos logados
+
+## Autenticação de Professores
+- [x] Criar tabela teacherAccounts no schema do banco de dados
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar funções helper no db.ts para CRUD de contas de professores
+- [x] Criar rotas tRPC para cadastro de professores (primeiro acesso)
+- [x] Criar rotas tRPC para login de professores
+- [x] Criar rotas tRPC para logout de professores
+- [x] Criar página de primeiro acesso (/professor/cadastro)
+- [x] Criar página de login de professores (/professor/login)
+- [x] Atualizar painel admin para verificar autenticação de professor
+- [x] Substituir sistema de senha única por autenticação individual
+- [x] Escrever testes para autenticação de professores (74 testes passando)
+- [x] Validar fluxo completo (cadastro → login → acesso ao painel)

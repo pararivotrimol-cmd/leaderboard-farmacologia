@@ -1,4 +1,4 @@
-import { eq, asc, desc, sql, and } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -15,9 +15,9 @@ import {
   attendance, InsertAttendance,
   youtubePlaylistsTable, InsertYoutubePlaylist,
   xpHistory, InsertXpHistory,
+  teacherAccounts, InsertTeacherAccount,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { sql } from 'drizzle-orm';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -703,4 +703,87 @@ export async function deleteXpHistoryByMember(memberId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(xpHistory).where(eq(xpHistory.memberId, memberId));
+}
+
+// ─── Teacher Accounts ───
+
+/**
+ * Create a new teacher account
+ */
+export async function createTeacherAccount(data: InsertTeacherAccount) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(teacherAccounts).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get teacher account by email
+ */
+export async function getTeacherAccountByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(teacherAccounts).where(eq(teacherAccounts.email, email)).limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Get teacher account by session token
+ */
+export async function getTeacherAccountBySessionToken(sessionToken: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(teacherAccounts)
+    .where(eq(teacherAccounts.sessionToken, sessionToken))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Update teacher account session token
+ */
+export async function updateTeacherSessionToken(id: number, sessionToken: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(teacherAccounts)
+    .set({ sessionToken, lastLoginAt: new Date() })
+    .where(eq(teacherAccounts.id, id));
+}
+
+/**
+ * Clear teacher session token (logout)
+ */
+export async function clearTeacherSessionToken(sessionToken: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(teacherAccounts)
+    .set({ sessionToken: null })
+    .where(eq(teacherAccounts.sessionToken, sessionToken));
+}
+
+/**
+ * Get all teacher accounts (admin only)
+ */
+export async function getAllTeacherAccounts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(teacherAccounts).orderBy(asc(teacherAccounts.name));
+}
+
+/**
+ * Update teacher account
+ */
+export async function updateTeacherAccount(id: number, data: Partial<InsertTeacherAccount>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(teacherAccounts).set(data).where(eq(teacherAccounts.id, id));
+}
+
+/**
+ * Delete teacher account
+ */
+export async function deleteTeacherAccount(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(teacherAccounts).where(eq(teacherAccounts.id, id));
 }

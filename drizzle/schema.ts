@@ -291,3 +291,27 @@ export const xpHistory = mysqlTable("xpHistory", {
 
 export type XpHistory = typeof xpHistory.$inferSelect;
 export type InsertXpHistory = typeof xpHistory.$inferInsert;
+
+/**
+ * Teacher Accounts - login with institutional email @unirio.br
+ * Professors register with email and set password on first access
+ */
+export const teacherAccounts = mysqlTable("teacherAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  // Institutional email (must be @unirio.br)
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  // Full name
+  name: varchar("name", { length: 200 }).notNull(),
+  // Hashed password (bcrypt)
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  // Whether the account is active
+  isActive: int("isActive").notNull().default(1),
+  // Session token for login persistence
+  sessionToken: varchar("sessionToken", { length: 255 }),
+  lastLoginAt: timestamp("lastLoginAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TeacherAccount = typeof teacherAccounts.$inferSelect;
+export type InsertTeacherAccount = typeof teacherAccounts.$inferInsert;

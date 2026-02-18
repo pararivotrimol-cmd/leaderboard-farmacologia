@@ -90,7 +90,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Admin Auth ───
+  // ─── Admin Auth (DEPRECATED - use teacherAuth instead) ───
   admin: router({
     login: publicProcedure
       .input(z.object({ password: z.string() }))
@@ -110,6 +110,120 @@ export const appRouter = router({
         if (!valid) return { success: false, message: "Senha atual incorreta" } as const;
         await db.upsertSetting(ADMIN_PASSWORD_KEY, input.newPassword);
         return { success: true, message: "Senha alterada com sucesso" } as const;
+      }),
+  }),
+
+  // ─── Teacher Authentication ───
+  teacherAuth: router({
+    // Register new teacher account (first access)
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email().refine(email => email.endsWith("@unirio.br"), {
+          message: "Email deve ser institucional @unirio.br"
+        }),
+        name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+        password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+      }))
+      .mutation(async ({ input }) => {
+        // Check if email already exists
+        const existing = await db.getTeacherAccountByEmail(input.email);
+        if (existing) {
+          return { success: false, message: "Email já cadastrado" } as const;
+        }
+
+        // Hash password
+        const passwordHash = await bcrypt.hash(input.password, 10);
+
+        // Create account
+        const teacherId = await db.createTeacherAccount({
+          email: input.email,
+          name: input.name,
+          passwordHash,
+          isActive: 1,
+        });
+
+        // Generate session token
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        await db.updateTeacherSessionToken(teacherId, sessionToken);
+
+        // Notify owner
+        sendNotificationAsync(
+          "👨‍🏫 Novo Professor Cadastrado",
+          `${input.name} (${input.email}) criou uma conta de professor`
+        );
+
+        return {
+          success: true,
+          message: "Conta criada com sucesso",
+          sessionToken,
+          teacher: { id: teacherId, name: input.name, email: input.email },
+        } as const;
+      }),
+
+    // Login teacher
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        // Get teacher account
+        const teacher = await db.getTeacherAccountByEmail(input.email);
+        if (!teacher) {
+          return { success: false, message: "Email ou senha incorretos" } as const;
+        }
+
+        // Check if account is active
+        if (!teacher.isActive) {
+          return { success: false, message: "Conta desativada" } as const;
+        }
+
+        // Verify password
+        const valid = await bcrypt.compare(input.password, teacher.passwordHash);
+        if (!valid) {
+          return { success: false, message: "Email ou senha incorretos" } as const;
+        }
+
+        // Generate new session token
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        await db.updateTeacherSessionToken(teacher.id, sessionToken);
+
+        return {
+          success: true,
+          message: "Login realizado com sucesso",
+          sessionToken,
+          teacher: { id: teacher.id, name: teacher.name, email: teacher.email },
+        } as const;
+      }),
+
+    // Logout teacher
+    logout: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.clearTeacherSessionToken(input.sessionToken);
+        return { success: true, message: "Logout realizado com sucesso" } as const;
+      }),
+
+    // Get current teacher info by session token
+    me: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return null;
+        return {
+          id: teacher.id,
+          name: teacher.name,
+          email: teacher.email,
+          isActive: teacher.isActive,
+        };
+      }),
+
+    // Verify session token is valid
+    verify: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        return { valid: !!teacher && teacher.isActive === 1 };
       }),
   }),
 

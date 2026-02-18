@@ -14,6 +14,8 @@ import Conquistas from "./pages/Conquistas";
 import StudentLogin from "./pages/StudentLogin";
 import Presenca from "./pages/Presenca";
 import Dashboard from "./pages/Dashboard";
+import TeacherLogin from "./pages/TeacherLogin";
+import TeacherRegister from "./pages/TeacherRegister";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -29,6 +31,8 @@ function Router() {
       <Route path={"/login-aluno"} component={StudentLogin} />
       <Route path={"/presenca"} component={Presenca} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/professor/login"} component={TeacherLogin} />
+      <Route path={"/professor/cadastro"} component={TeacherRegister} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
