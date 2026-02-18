@@ -812,45 +812,90 @@ export const appRouter = router({
 
     create: publicProcedure
       .input(z.object({
+        sessionToken: z.string().optional(),
         password: z.string(),
         teamId: z.number(),
         name: z.string().min(1),
         xp: z.string().default("0"),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
-        const { password, ...data } = input;
+        const { password, sessionToken, ...data } = input;
         const id = await db.createMember(data);
+        
+        // Audit log
+        if (sessionToken) {
+          await logAudit({
+            teacherToken: sessionToken,
+            action: "Criar Aluno",
+            entityType: "member",
+            entityId: id,
+            details: `Nome: ${input.name}, Equipe ID: ${input.teamId}`,
+            req: ctx.req,
+          });
+        }
+        
         return { id };
       }),
 
     update: publicProcedure
       .input(z.object({
+        sessionToken: z.string().optional(),
         password: z.string(),
         id: z.number(),
         name: z.string().optional(),
         teamId: z.number().optional(),
         xp: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
-        const { password, id, ...data } = input;
+        const { password, sessionToken, id, ...data } = input;
+        
+        // Get member before update for audit
+        const allMembers = await db.getAllMembers();
+        const member = allMembers.find(m => m.id === id);
+        
         await db.updateMember(id, data);
+        
+        // Audit log
+        if (sessionToken && member) {
+          const changes = [];
+          if (data.name) changes.push(`Nome: ${member.name} → ${data.name}`);
+          if (data.teamId) changes.push(`Equipe: ${member.teamId} → ${data.teamId}`);
+          if (data.xp) changes.push(`PF: ${member.xp} → ${data.xp}`);
+          
+          await logAudit({
+            teacherToken: sessionToken,
+            action: "Atualizar Aluno",
+            entityType: "member",
+            entityId: id,
+            details: changes.join(", "),
+            req: ctx.req,
+          });
+        }
+        
         return { success: true };
       }),
 
     updateXP: publicProcedure
       .input(z.object({
+        sessionToken: z.string().optional(), // Teacher session token for audit
         password: z.string(),
         id: z.number(),
         xp: z.string(),
         week: z.number().optional(), // Optional week number for history tracking
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
+        
+        // Get member before update for audit
+        const allMembers = await db.getAllMembers();
+        const member = allMembers.find(m => m.id === input.id);
+        const oldXP = member?.xp || "0";
+        
         await db.updateMemberXP(input.id, input.xp);
         
         // Record XP history if week is provided
@@ -866,10 +911,20 @@ export const appRouter = router({
           }
         }
         
+        // Audit log
+        if (input.sessionToken) {
+          await logAudit({
+            teacherToken: input.sessionToken,
+            action: "Atualizar PF",
+            entityType: "member",
+            entityId: input.id,
+            details: `${member?.name}: ${oldXP} → ${input.xp} PF${input.week ? ` (Semana ${input.week})` : ''}`,
+            req: ctx.req,
+          });
+        }
+        
         // Notification: XP updated
         try {
-          const allMembers = await db.getAllMembers();
-          const member = allMembers.find(m => m.id === input.id);
           if (member) {
             sendNotificationAsync(
               "📊 Pontuação Atualizada",
@@ -882,11 +937,12 @@ export const appRouter = router({
 
     bulkUpdateXP: publicProcedure
       .input(z.object({
+        sessionToken: z.string().optional(),
         password: z.string(),
         updates: z.array(z.object({ id: z.number(), xp: z.string() })),
         week: z.number().optional(), // Optional week number for history tracking
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.bulkUpdateXP(input.updates);
@@ -906,6 +962,17 @@ export const appRouter = router({
           }
         }
         
+        // Audit log
+        if (input.sessionToken) {
+          await logAudit({
+            teacherToken: input.sessionToken,
+            action: "Atualização em Massa de PF",
+            entityType: "member",
+            details: `${input.updates.length} aluno(s) atualizados${input.week ? ` (Semana ${input.week})` : ''}`,
+            req: ctx.req,
+          });
+        }
+        
         // Notification: bulk XP update
         const count = input.updates.length;
         createStudentNotification(
@@ -921,11 +988,29 @@ export const appRouter = router({
       }),
 
     delete: publicProcedure
-      .input(z.object({ password: z.string(), id: z.number() }))
-      .mutation(async ({ input }) => {
+      .input(z.object({ sessionToken: z.string().optional(), password: z.string(), id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
+        
+        // Get member before delete for audit
+        const allMembers = await db.getAllMembers();
+        const member = allMembers.find(m => m.id === input.id);
+        
         await db.deleteMember(input.id);
+        
+        // Audit log
+        if (input.sessionToken && member) {
+          await logAudit({
+            teacherToken: input.sessionToken,
+            action: "Excluir Aluno",
+            entityType: "member",
+            entityId: input.id,
+            details: `${member.name} (Equipe ${member.teamId})`,
+            req: ctx.req,
+          });
+        }
+        
         return { success: true };
       }),
   }),

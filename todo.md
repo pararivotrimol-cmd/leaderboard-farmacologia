@@ -180,9 +180,9 @@
 - [x] Criar tabela auditLog no schema
 - [x] Executar migração do banco (pnpm db:push)
 - [x] Criar helper function logAudit() para registrar ações
-- [ ] Integrar auditoria em rotas de XP (updateXP, bulkUpdateXP)
+- [x] Integrar auditoria em rotas de XP (updateXP, bulkUpdateXP)
 - [ ] Integrar auditoria em rotas de equipes (create, update, delete)
-- [ ] Integrar auditoria em rotas de membros (create, update, delete)
+- [x] Integrar auditoria em rotas de membros (create, update, delete)
 - [ ] Integrar auditoria em rotas de avisos e materiais
 - [ ] Criar rota tRPC para buscar logs de auditoria
 - [ ] Criar aba "Auditoria" no painel admin para visualizar logs
@@ -249,3 +249,17 @@
 - [x] Adicionar seção de atividades recentes com timeline (preparado para integração)
 - [ ] Adicionar link para perfil no painel admin
 - [ ] Adicionar badge visual "Super Admin" no header do painel
+
+## Responsividade (Mobile, Tablet, TV 4K)
+- [ ] Auditar Landing page para responsividade
+- [ ] Auditar Home/Leaderboard para responsividade
+- [ ] Auditar painel Admin para responsividade
+- [ ] Otimizar Landing page (320px - 3840px)
+- [ ] Otimizar Home/Leaderboard com grid adaptativo
+- [ ] Otimizar painel Admin com sidebar colapsável em mobile
+- [ ] Otimizar Dashboard do aluno para mobile
+- [ ] Otimizar páginas de autenticação (login, cadastro)
+- [ ] Adicionar meta viewport e configurações de responsividade
+- [ ] Testar em resoluções: 320px (mobile), 768px (tablet), 1920px (desktop), 3840px (4K)
+- [ ] Ajustar tamanhos de fonte para escalabilidade
+- [ ] Garantir touch-friendly (botões mínimo 44px)
