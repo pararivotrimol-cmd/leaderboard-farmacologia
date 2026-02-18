@@ -18,6 +18,7 @@ import TeacherLogin from "./pages/TeacherLogin";
 import TeacherRegister from "./pages/TeacherRegister";
 import TeacherForgotPassword from "./pages/TeacherForgotPassword";
 import TeacherResetPassword from "./pages/TeacherResetPassword";
+import SuperAdminSetup from "./pages/SuperAdminSetup";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -37,6 +38,7 @@ function Router() {
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
       <Route path={"/professor/esqueci-senha"} component={TeacherForgotPassword} />
       <Route path={"/professor/redefinir-senha"} component={TeacherResetPassword} />
+      <Route path={"/super-admin/setup"} component={SuperAdminSetup} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

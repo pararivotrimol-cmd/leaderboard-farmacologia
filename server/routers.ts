@@ -345,6 +345,55 @@ export const appRouter = router({
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
         return { valid: !!teacher && teacher.isActive === 1 };
       }),
+
+    // Create super admin account (one-time setup, requires secret key)
+    createSuperAdmin: publicProcedure
+      .input(z.object({
+        secretKey: z.string(),
+        name: z.string(),
+        email: z.string().email(),
+        password: z.string().min(6),
+      }))
+      .mutation(async ({ input }) => {
+        // Secret key for super admin creation (should be changed in production)
+        const SUPER_ADMIN_SECRET = process.env.SUPER_ADMIN_SECRET || "farmaco_super_2026";
+        
+        if (input.secretKey !== SUPER_ADMIN_SECRET) {
+          return { success: false, message: "Chave secreta inválida" } as const;
+        }
+
+        // Check if super admin already exists
+        const allTeachers = await db.getAllTeacherAccounts();
+        const existingSuperAdmin = allTeachers.find(t => t.role === "super_admin");
+        if (existingSuperAdmin) {
+          return { success: false, message: "Super admin já existe" } as const;
+        }
+
+        // Check if email already exists
+        const existing = await db.getTeacherAccountByEmail(input.email);
+        if (existing) {
+          return { success: false, message: "Email já cadastrado" } as const;
+        }
+
+        // Hash password
+        const passwordHash = await bcrypt.hash(input.password, 10);
+
+        // Create super admin account
+        await db.createTeacherAccount({
+          email: input.email,
+          name: input.name,
+          passwordHash,
+          role: "super_admin",
+          isActive: 1,
+        });
+
+        sendNotificationAsync(
+          "👑 Super Admin Criado",
+          `Conta de super admin criada: ${input.name} (${input.email})`
+        );
+
+        return { success: true, message: "Super admin criado com sucesso" } as const;
+      }),
   }),
 
   // ─── Teacher Management (Coordenador only) ───

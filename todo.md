@@ -179,7 +179,7 @@
 ## Auditoria de Ações
 - [x] Criar tabela auditLog no schema
 - [x] Executar migração do banco (pnpm db:push)
-- [ ] Criar helper function logAudit() para registrar ações
+- [x] Criar helper function logAudit() para registrar ações
 - [ ] Integrar auditoria em rotas de XP (updateXP, bulkUpdateXP)
 - [ ] Integrar auditoria em rotas de equipes (create, update, delete)
 - [ ] Integrar auditoria em rotas de membros (create, update, delete)
@@ -230,3 +230,12 @@
 - [ ] Escrever testes para permissões por turma
 - [ ] Escrever testes para gestão de alunos
 - [ ] Validar fluxo completo de cada funcionalidade
+
+## Super Admin (Administrador Geral)
+- [x] Adicionar role "super_admin" ao schema teacherAccounts
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar conta de super admin com login/senha específicos (via /super-admin/setup)
+- [ ] Adicionar verificação de super_admin nas rotas protegidas
+- [ ] Criar seção exclusiva de super admin no painel
+- [ ] Permitir super admin gerenciar professores E alunos
+- [ ] Adicionar badge visual de Super Admin no painel

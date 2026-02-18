@@ -304,8 +304,8 @@ export const teacherAccounts = mysqlTable("teacherAccounts", {
   name: varchar("name", { length: 200 }).notNull(),
   // Hashed password (bcrypt)
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
-  // Role: coordenador (can manage other teachers) or professor (regular teacher)
-  role: mysqlEnum("role", ["coordenador", "professor"]).default("professor").notNull(),
+  // Role: super_admin (full control), coordenador (can manage teachers) or professor (regular teacher)
+  role: mysqlEnum("role", ["super_admin", "coordenador", "professor"]).default("professor").notNull(),
   // Whether the account is active
   isActive: int("isActive").notNull().default(1),
   // Session token for login persistence

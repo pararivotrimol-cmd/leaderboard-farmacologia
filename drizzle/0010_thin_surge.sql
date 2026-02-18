@@ -1,0 +1,1 @@
+ALTER TABLE `teacherAccounts` MODIFY COLUMN `role` enum('super_admin','coordenador','professor') NOT NULL DEFAULT 'professor';
