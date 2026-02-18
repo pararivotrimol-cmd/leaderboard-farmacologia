@@ -139,3 +139,6 @@
 - [x] Semana 16: Segunda Chamada P2 (não P2)
 - [x] Semana 17: Prova Final (não Segunda Chamada + Final + Premiação)
 - [x] Remover: Analgésicos Opioides do cronograma
+- [x] Atualizar badges existentes (semanas 2-17) com novos tópicos do cronograma
+- [x] Pré-popular materiais com PDFs e slides reais organizados por módulo
+- [x] Criar timeline interativa de progresso visual para alunos (17 semanas)
