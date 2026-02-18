@@ -119,26 +119,9 @@
 - [x] Implementar UI de gerenciamento de playlists no painel admin
 - [x] Implementar exibição de playlists na página de materiais para alunos
 - [x] Organizar playlists por módulo/tema do cronograma
-- [x] Corrigir erro tRPC retornando HTML em vez de JSON na página inicial (transiente - sandbox hibernation)
-- [x] Criar sistema de chat/reuniões online para monitores agendarem dúvidas
-- [x] Criar schema de banco para reuniões online (título, link, monitor, data/hora)
-- [x] Criar rotas tRPC para CRUD de reuniões (monitores/admin)
-- [x] Criar página/botão de reuniões online acessível pelos alunos
-- [x] Corrigir cronograma para 17 semanas (não 19)
-- [x] Semana 1: Farmacocinética 1 (Absorção e Vias) + Apresentação do Curso
-- [x] Semana 7: JIGSAW 1 (Interações, Medicamento-Alimento, Alergia, Farmacodependência)
-- [x] Semana 11: Antiinflamatórios + Antitérmicos + Corticoides (aula conjunta)
-- [x] Semana 13: JIGSAW 2 (Canabinoides, Choque Cardiogênico, Emagrecedores)
-- [x] Semana 2: Farmacocinética II (não Distribuição e Metabolismo)
-- [x] Semana 3: Farmacodinâmica (não Farmacocinética II)
-- [x] Semana 4: Boas Práticas Prescritivas
-- [x] Semana 12: Anestésicos Locais (não Analgésicos Opioides)
-- [x] Semana 13: Anti-histamínicos (não JIGSAW 2)
-- [x] Semana 14: JIGSAW 2 (não Anestésicos Locais)
-- [x] Semana 15: P2 (não Anti-histamínicos)
-- [x] Semana 16: Segunda Chamada P2 (não P2)
-- [x] Semana 17: Prova Final (não Segunda Chamada + Final + Premiação)
-- [x] Remover: Analgésicos Opioides do cronograma
-- [x] Atualizar badges existentes (semanas 2-17) com novos tópicos do cronograma
-- [x] Pré-popular materiais com PDFs e slides reais organizados por módulo
-- [x] Criar timeline interativa de progresso visual para alunos (17 semanas)
+- [x] Criar rotas tRPC para dashboard do aluno (ranking individual, badges, evolução PF)
+- [x] Implementar página /dashboard com cards de estatísticas do aluno
+- [x] Adicionar gráfico de evolução de PF ao longo das semanas com Chart.js
+- [x] Adicionar seção de histórico de badges conquistados com thumbnails
+- [x] Adicionar link "Meu Dashboard" na navegação
+- [x] Escrever testes para as novas rotas do dashboard

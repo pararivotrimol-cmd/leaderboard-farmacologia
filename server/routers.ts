@@ -113,6 +113,76 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Student Dashboard ───
+  studentDashboard: router({
+    // Get student's own stats and ranking
+    getMyStats: publicProcedure.query(async ({ ctx }) => {
+      // For now, return mock data - will be replaced with real student auth
+      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
+      const account = await db.getStudentAccountByEmail(studentEmail);
+      if (!account) return null;
+      
+      const allMembers = await db.getAllMembers();
+      const myMember = allMembers.find(m => m.id === account.memberId);
+      if (!myMember) return null;
+      
+      // Calculate ranking
+      const sortedMembers = [...allMembers].sort((a, b) => Number(b.xp) - Number(a.xp));
+      const myRank = sortedMembers.findIndex(m => m.id === myMember.id) + 1;
+      
+      // Get badges
+      const myBadges = await db.getStudentBadges(account.id);
+      
+      // Get attendance
+      const myAttendance = await db.getAttendanceByStudent(account.id);
+      
+      return {
+        studentName: myMember.name,
+        totalPF: myMember.xp,
+        rank: myRank,
+        totalStudents: allMembers.length,
+        badgesCount: myBadges.length,
+        attendanceCount: myAttendance.length,
+        teamName: myMember.teamId ? (await db.getTeamById(myMember.teamId))?.name : "Sem equipe",
+      };
+    }),
+    
+    // Get PF evolution over weeks
+    getEvolution: publicProcedure.query(async ({ ctx }) => {
+      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
+      const account = await db.getStudentAccountByEmail(studentEmail);
+      if (!account) return [];
+      
+      const allMembers = await db.getAllMembers();
+      const myMember = allMembers.find(m => m.id === account.memberId);
+      if (!myMember) return [];
+      
+      // For now, return simulated progressive data
+      // TODO: implement actual weekly activity tracking
+      const totalPF = Number(myMember.xp);
+      const weeklyData: { week: number; pf: number }[] = [];
+      
+      for (let week = 1; week <= 17; week++) {
+        // Simulate progressive accumulation
+        const progress = week / 17;
+        const weekPF = totalPF * progress;
+        weeklyData.push({ week, pf: Math.round(weekPF * 10) / 10 });
+      }
+      
+      return weeklyData;
+    }),
+    
+    // Get badges history
+    getBadges: publicProcedure.query(async ({ ctx }) => {
+      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
+      const account = await db.getStudentAccountByEmail(studentEmail);
+      if (!account) return [];
+      
+      const myBadges = await db.getStudentBadges(account.id);
+      return myBadges;
+    }),
+  }),
+
   // ─── Public Leaderboard Data ───
   leaderboard: router({
     getData: publicProcedure.query(async () => {
@@ -1263,125 +1333,6 @@ export const appRouter = router({
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Senha inválida");
         await db.updateYoutubePlaylist(input.id, { isVisible: input.isVisible });
-        return { success: true };
-      }),
-  }),
-
-  // ─── Online Meetings ───
-  meetings: router({
-    // Public: get upcoming meetings for students
-    getUpcoming: publicProcedure.query(async () => {
-      return db.getUpcomingMeetings();
-    }),
-
-    // Public: get all visible meetings
-    getVisible: publicProcedure.query(async () => {
-      return db.getVisibleMeetings();
-    }),
-
-    // Admin: get all meetings
-    getAll: publicProcedure
-      .input(z.object({ password: z.string() }))
-      .query(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        return db.getAllMeetings();
-      }),
-
-    // Admin: create a new meeting
-    create: publicProcedure
-      .input(z.object({
-        password: z.string(),
-        title: z.string().min(1),
-        description: z.string().optional(),
-        monitorName: z.string().min(1),
-        meetingUrl: z.string().url(),
-        platform: z.enum(["google_meet", "zoom", "teams", "discord", "other"]).default("google_meet"),
-        scheduledAt: z.string(), // ISO date string
-        durationMinutes: z.number().min(15).max(480).default(60),
-        module: z.string().default("Geral"),
-        maxParticipants: z.number().default(0),
-        recurrence: z.enum(["none", "weekly"]).default("none"),
-      }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        const { password, scheduledAt, ...data } = input;
-        const result = await db.createMeeting({
-          ...data,
-          scheduledAt: new Date(scheduledAt),
-        });
-
-        // Notify students about new meeting
-        createStudentNotification(
-          `Nova Monitoria: ${input.title}`,
-          `${input.monitorName} agendou uma sessão de dúvidas para ${new Date(scheduledAt).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}. Tema: ${input.module}.`,
-          "important"
-        );
-
-        // Notify owner
-        sendNotificationAsync(
-          "Nova Monitoria Agendada",
-          `${input.monitorName} agendou "${input.title}" para ${new Date(scheduledAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}`
-        );
-
-        return { id: result.insertId };
-      }),
-
-    // Admin: update a meeting
-    update: publicProcedure
-      .input(z.object({
-        password: z.string(),
-        id: z.number(),
-        title: z.string().optional(),
-        description: z.string().optional(),
-        monitorName: z.string().optional(),
-        meetingUrl: z.string().url().optional(),
-        platform: z.enum(["google_meet", "zoom", "teams", "discord", "other"]).optional(),
-        scheduledAt: z.string().optional(),
-        durationMinutes: z.number().min(15).max(480).optional(),
-        module: z.string().optional(),
-        maxParticipants: z.number().optional(),
-        status: z.enum(["scheduled", "live", "completed", "cancelled"]).optional(),
-        recurrence: z.enum(["none", "weekly"]).optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        const { password, id, scheduledAt, ...data } = input;
-        const updateData: any = { ...data };
-        if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
-        await db.updateMeeting(id, updateData);
-        return { success: true };
-      }),
-
-    // Admin: delete a meeting
-    delete: publicProcedure
-      .input(z.object({ password: z.string(), id: z.number() }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        await db.deleteMeeting(input.id);
-        return { success: true };
-      }),
-
-    // Admin: toggle visibility
-    toggleVisibility: publicProcedure
-      .input(z.object({ password: z.string(), id: z.number(), isVisible: z.number() }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        await db.updateMeeting(input.id, { isVisible: input.isVisible });
-        return { success: true };
-      }),
-
-    // Admin: update meeting status
-    updateStatus: publicProcedure
-      .input(z.object({ password: z.string(), id: z.number(), status: z.enum(["scheduled", "live", "completed", "cancelled"]) }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Senha inválida");
-        await db.updateMeetingStatus(input.id, input.status);
         return { success: true };
       }),
   }),

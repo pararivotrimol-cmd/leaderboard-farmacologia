@@ -14,7 +14,6 @@ import {
   studentAccounts, InsertStudentAccount,
   attendance, InsertAttendance,
   youtubePlaylistsTable, InsertYoutubePlaylist,
-  onlineMeetings, InsertOnlineMeeting,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -585,57 +584,44 @@ export async function deleteYoutubePlaylist(id: number) {
   await db.delete(youtubePlaylistsTable).where(eq(youtubePlaylistsTable.id, id));
 }
 
-// ─── Online Meetings ───────────────────────────────────────────
+// ─── Dashboard Helpers ───
 
-export async function getAllMeetings() {
+export async function getTeamById(id: number) {
   const db = await getDb();
-  if (!db) return [];
-  return db.select().from(onlineMeetings).orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
+  if (!db) return null;
+  const result = await db.select().from(teams).where(eq(teams.id, id)).limit(1);
+  return result[0] || null;
 }
 
-export async function getVisibleMeetings() {
+// Note: getActivitiesByMember removed - xpActivities table doesn't track individual member activities
+// TODO: Create a separate memberActivities table if detailed weekly tracking is needed
+
+export async function getStudentBadges(studentAccountId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(onlineMeetings)
-    .where(eq(onlineMeetings.isVisible, 1))
-    .orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
-}
-
-export async function getUpcomingMeetings() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(onlineMeetings)
-    .where(
-      and(
-        eq(onlineMeetings.isVisible, 1),
-        sql`${onlineMeetings.status} IN ('scheduled', 'live')`,
-        sql`${onlineMeetings.scheduledAt} >= DATE_SUB(NOW(), INTERVAL ${onlineMeetings.durationMinutes} MINUTE)`
-      )
-    )
-    .orderBy(sql`${onlineMeetings.scheduledAt} ASC`);
-}
-
-export async function createMeeting(data: InsertOnlineMeeting) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const [result] = await db.insert(onlineMeetings).values(data);
+  
+  // First get the student account to find their member ID
+  const account = await db.select().from(studentAccounts).where(eq(studentAccounts.id, studentAccountId)).limit(1);
+  if (!account[0] || !account[0].memberId) return [];
+  
+  const memberId = account[0].memberId;
+  
+  // Get all badges awarded to this member with badge details
+  const result = await db
+    .select({
+      id: memberBadges.id,
+      badgeId: memberBadges.badgeId,
+      earnedAt: memberBadges.earnedAt,
+      note: memberBadges.note,
+      badgeName: badges.name,
+      badgeDescription: badges.description,
+      badgeIconUrl: badges.iconUrl,
+      week: badges.week,
+    })
+    .from(memberBadges)
+    .leftJoin(badges, eq(memberBadges.badgeId, badges.id))
+    .where(eq(memberBadges.memberId, memberId))
+    .orderBy(desc(memberBadges.earnedAt));
+  
   return result;
-}
-
-export async function updateMeeting(id: number, data: Partial<InsertOnlineMeeting>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(onlineMeetings).set(data).where(eq(onlineMeetings.id, id));
-}
-
-export async function deleteMeeting(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(onlineMeetings).where(eq(onlineMeetings.id, id));
-}
-
-export async function updateMeetingStatus(id: number, status: "scheduled" | "live" | "completed" | "cancelled") {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(onlineMeetings).set({ status }).where(eq(onlineMeetings.id, id));
 }

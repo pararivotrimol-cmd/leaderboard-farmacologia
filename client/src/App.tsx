@@ -13,8 +13,7 @@ import Materiais from "./pages/Materiais";
 import Conquistas from "./pages/Conquistas";
 import StudentLogin from "./pages/StudentLogin";
 import Presenca from "./pages/Presenca";
-import Reunioes from "@/pages/Reunioes";
-import Progresso from "@/pages/Progresso";
+import Dashboard from "./pages/Dashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -29,8 +28,7 @@ function Router() {
       <Route path={"/conquistas"} component={Conquistas} />
       <Route path={"/login-aluno"} component={StudentLogin} />
       <Route path={"/presenca"} component={Presenca} />
-       <Route path="/reunioes" component={Reunioes} />
-      <Route path="/progresso" component={Progresso} />
+      <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
