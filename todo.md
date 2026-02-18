@@ -271,9 +271,10 @@
 - [x] Adicionar datas corretas de cada atividade
 
 ## Aba Seminários Jigsaw
-- [ ] Criar schema no banco para grupos de seminário (6 grupos)
-- [ ] Criar schema para funções dentro dos grupos (coordenador, relator, etc.)
-- [ ] Criar schema para atribuição de alunos a funções
+- [x] Criar schema no banco para grupos de seminário (6 grupos)
+- [x] Criar schema para funções dentro dos grupos (coordenador, relator, etc.)
+- [x] Criar schema para atribuição de alunos a funções
+- [x] Criar schema para artigos PubMed por seminário
 - [ ] Criar rotas tRPC para CRUD de grupos de seminário
 - [ ] Criar rotas tRPC para atribuir alunos a funções
 - [ ] Criar aba "Seminários" no painel admin

@@ -78,6 +78,13 @@
       "when": 1771456037798,
       "tag": "0010_thin_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1771458352225,
+      "tag": "0011_mushy_scalphunter",
+      "breakpoints": true
     }
   ]
 }

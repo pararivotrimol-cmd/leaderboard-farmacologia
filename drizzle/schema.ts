@@ -391,3 +391,69 @@ export const activityTemplates = mysqlTable("activityTemplates", {
 
 export type ActivityTemplate = typeof activityTemplates.$inferSelect;
 export type InsertActivityTemplate = typeof activityTemplates.$inferInsert;
+
+/**
+ * Seminars table - Jigsaw seminars (6 groups)
+ */
+export const seminars = mysqlTable("seminars", {
+  id: int("id").autoincrement().primaryKey(),
+  week: int("week").notNull(), // Week number (7 or 13)
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  date: varchar("date", { length: 20 }).notNull(),
+  groupPF: decimal("groupPF", { precision: 5, scale: 1 }).default("0"), // Total PF for the group
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Seminar = typeof seminars.$inferSelect;
+export type InsertSeminar = typeof seminars.$inferInsert;
+
+/**
+ * Seminar roles/functions (coordenador, relator, etc.)
+ */
+export const seminarRoles = mysqlTable("seminarRoles", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // e.g., "Coordenador", "Relator", "Pesquisador 1"
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SeminarRole = typeof seminarRoles.$inferSelect;
+export type InsertSeminarRole = typeof seminarRoles.$inferInsert;
+
+/**
+ * Seminar participants - students assigned to roles in seminars
+ */
+export const seminarParticipants = mysqlTable("seminarParticipants", {
+  id: int("id").autoincrement().primaryKey(),
+  seminarId: int("seminarId").notNull(),
+  roleId: int("roleId").notNull(),
+  memberId: int("memberId"), // NULL if not yet assigned
+  memberName: varchar("memberName", { length: 200 }), // Cached name for display
+  individualPF: decimal("individualPF", { precision: 5, scale: 1 }).default("0"), // Individual PF for this role
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SeminarParticipant = typeof seminarParticipants.$inferSelect;
+export type InsertSeminarParticipant = typeof seminarParticipants.$inferInsert;
+
+/**
+ * PubMed articles for seminars
+ */
+export const seminarArticles = mysqlTable("seminarArticles", {
+  id: int("id").autoincrement().primaryKey(),
+  seminarId: int("seminarId").notNull(),
+  pmid: varchar("pmid", { length: 50 }).notNull(), // PubMed ID
+  title: text("title").notNull(),
+  authors: text("authors"),
+  journal: varchar("journal", { length: 300 }),
+  year: int("year"),
+  abstract: text("abstract"),
+  url: varchar("url", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SeminarArticle = typeof seminarArticles.$inferSelect;
+export type InsertSeminarArticle = typeof seminarArticles.$inferInsert;
