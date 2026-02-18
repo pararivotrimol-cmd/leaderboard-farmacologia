@@ -124,3 +124,8 @@
 - [x] Criar schema de banco para reuniões online (título, link, monitor, data/hora)
 - [x] Criar rotas tRPC para CRUD de reuniões (monitores/admin)
 - [x] Criar página/botão de reuniões online acessível pelos alunos
+- [x] Corrigir cronograma para 17 semanas (não 19)
+- [x] Semana 1: Farmacocinética 1 (Absorção e Vias) + Apresentação do Curso
+- [x] Semana 7: JIGSAW 1 (Interações, Medicamento-Alimento, Alergia, Farmacodependência)
+- [x] Semana 11: Antiinflamatórios + Antitérmicos + Corticoides (aula conjunta)
+- [x] Semana 13: JIGSAW 2 (Canabinoides, Choque Cardiogênico, Emagrecedores)
