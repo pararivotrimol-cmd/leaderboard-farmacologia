@@ -16,6 +16,8 @@ import Presenca from "./pages/Presenca";
 import Dashboard from "./pages/Dashboard";
 import TeacherLogin from "./pages/TeacherLogin";
 import TeacherRegister from "./pages/TeacherRegister";
+import TeacherForgotPassword from "./pages/TeacherForgotPassword";
+import TeacherResetPassword from "./pages/TeacherResetPassword";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -33,6 +35,8 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/professor/login"} component={TeacherLogin} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
+      <Route path={"/professor/esqueci-senha"} component={TeacherForgotPassword} />
+      <Route path={"/professor/redefinir-senha"} component={TeacherResetPassword} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

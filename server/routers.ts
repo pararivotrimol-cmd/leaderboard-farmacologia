@@ -214,8 +214,98 @@ export const appRouter = router({
           id: teacher.id,
           name: teacher.name,
           email: teacher.email,
+          role: teacher.role,
           isActive: teacher.isActive,
         };
+      }),
+
+    // Request password reset
+    requestPasswordReset: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+      }))
+      .mutation(async ({ input }) => {
+        // Check if teacher exists
+        const teacher = await db.getTeacherAccountByEmail(input.email);
+        if (!teacher) {
+          // Don't reveal if email exists or not for security
+          return { success: true, message: "Se o email existir, um link de redefinição será enviado" } as const;
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Save token to database
+        await db.createPasswordResetToken({
+          teacherAccountId: teacher.id,
+          token: resetToken,
+          expiresAt,
+          used: 0,
+        });
+
+        // In a real system, send email here
+        // For now, we'll return the reset link that can be copied
+        const resetLink = `/professor/redefinir-senha?token=${resetToken}`;
+
+        // Notify owner with reset link
+        sendNotificationAsync(
+          "🔑 Solicitação de Redefinição de Senha",
+          `${teacher.name} (${teacher.email}) solicitou redefinição de senha.\n\nLink: ${resetLink}\n\nEnvie este link para o email do professor.`
+        );
+
+        return {
+          success: true,
+          message: "Link de redefinição gerado. Verifique as notificações do sistema.",
+          resetLink, // Return link so it can be displayed to admin/coordinator
+        } as const;
+      }),
+
+    // Reset password with token
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        newPassword: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+      }))
+      .mutation(async ({ input }) => {
+        // Get token from database
+        const tokenData = await db.getPasswordResetToken(input.token);
+        if (!tokenData) {
+          return { success: false, message: "Token inválido" } as const;
+        }
+
+        // Check if token is expired
+        if (new Date() > new Date(tokenData.expiresAt)) {
+          return { success: false, message: "Token expirado" } as const;
+        }
+
+        // Check if token was already used
+        if (tokenData.used) {
+          return { success: false, message: "Token já utilizado" } as const;
+        }
+
+        // Hash new password
+        const passwordHash = await bcrypt.hash(input.newPassword, 10);
+
+        // Update teacher password
+        await db.updateTeacherAccount(tokenData.teacherAccountId, { passwordHash });
+
+        // Mark token as used
+        await db.markPasswordResetTokenUsed(tokenData.id);
+
+        // Get teacher info for notification
+        const teacher = await db.getTeacherAccountByEmail(""); // We'll get it by ID instead
+        const allTeachers = await db.getAllTeacherAccounts();
+        const teacherInfo = allTeachers.find(t => t.id === tokenData.teacherAccountId);
+
+        if (teacherInfo) {
+          sendNotificationAsync(
+            "✅ Senha Redefinida",
+            `${teacherInfo.name} (${teacherInfo.email}) redefiniu a senha com sucesso`
+          );
+        }
+
+        return { success: true, message: "Senha redefinida com sucesso" } as const;
       }),
 
     // Verify session token is valid

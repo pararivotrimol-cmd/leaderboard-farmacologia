@@ -304,6 +304,8 @@ export const teacherAccounts = mysqlTable("teacherAccounts", {
   name: varchar("name", { length: 200 }).notNull(),
   // Hashed password (bcrypt)
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  // Role: coordenador (can manage other teachers) or professor (regular teacher)
+  role: mysqlEnum("role", ["coordenador", "professor"]).default("professor").notNull(),
   // Whether the account is active
   isActive: int("isActive").notNull().default(1),
   // Session token for login persistence
@@ -315,3 +317,77 @@ export const teacherAccounts = mysqlTable("teacherAccounts", {
 
 export type TeacherAccount = typeof teacherAccounts.$inferSelect;
 export type InsertTeacherAccount = typeof teacherAccounts.$inferInsert;
+
+/**
+ * Password Reset Tokens - for teacher password recovery
+ * Token expires after 1 hour
+ */
+export const passwordResetTokens = mysqlTable("passwordResetTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherAccountId: int("teacherAccountId").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  used: int("used").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+/**
+ * Audit Log - tracks all actions performed by teachers
+ * Records who did what, when, and on which entity
+ */
+export const auditLog = mysqlTable("auditLog", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherAccountId: int("teacherAccountId").notNull(),
+  teacherName: varchar("teacherName", { length: 200 }).notNull(),
+  teacherEmail: varchar("teacherEmail", { length: 320 }).notNull(),
+  action: varchar("action", { length: 100 }).notNull(), // e.g., "update_xp", "create_team", "delete_member"
+  entityType: varchar("entityType", { length: 50 }).notNull(), // e.g., "member", "team", "activity"
+  entityId: int("entityId"), // ID of the affected entity
+  details: text("details"), // JSON string with additional details
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+/**
+ * Teacher Teams - relationship between teachers and teams they manage
+ * Coordenador can see all teams, professor only sees assigned teams
+ */
+export const teacherTeams = mysqlTable("teacherTeams", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherAccountId: int("teacherAccountId").notNull(),
+  teamId: int("teamId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TeacherTeam = typeof teacherTeams.$inferSelect;
+export type InsertTeacherTeam = typeof teacherTeams.$inferInsert;
+
+/**
+ * Activity Templates - pre-built examples of active methodologies
+ * Each template represents a complete activity with description, objectives, and methodology
+ */
+export const activityTemplates = mysqlTable("activityTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  methodology: varchar("methodology", { length: 100 }).notNull(), // PBL, TBL, Flipped Classroom, Gamification, Case Study
+  description: text("description").notNull(),
+  objectives: text("objectives").notNull(), // JSON array of learning objectives
+  duration: int("duration"), // Duration in minutes
+  xpValue: decimal("xpValue", { precision: 6, scale: 1 }).notNull().default("0"),
+  instructions: text("instructions"), // Step-by-step instructions
+  materials: text("materials"), // Required materials (JSON array)
+  assessment: text("assessment"), // Assessment criteria
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ActivityTemplate = typeof activityTemplates.$inferSelect;
+export type InsertActivityTemplate = typeof activityTemplates.$inferInsert;

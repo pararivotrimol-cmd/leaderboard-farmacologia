@@ -64,6 +64,13 @@
       "when": 1771445973124,
       "tag": "0008_magical_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771450812301,
+      "tag": "0009_ordinary_red_skull",
+      "breakpoints": true
     }
   ]
 }

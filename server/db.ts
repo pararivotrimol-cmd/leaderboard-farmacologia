@@ -16,6 +16,10 @@ import {
   youtubePlaylistsTable, InsertYoutubePlaylist,
   xpHistory, InsertXpHistory,
   teacherAccounts, InsertTeacherAccount,
+  passwordResetTokens, InsertPasswordResetToken,
+  auditLog, InsertAuditLog,
+  teacherTeams, InsertTeacherTeam,
+  activityTemplates, InsertActivityTemplate,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -786,4 +790,202 @@ export async function deleteTeacherAccount(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(teacherAccounts).where(eq(teacherAccounts.id, id));
+}
+
+// ─── Password Reset Tokens ───
+
+/**
+ * Create a password reset token
+ */
+export async function createPasswordResetToken(data: InsertPasswordResetToken) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(passwordResetTokens).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get password reset token by token string
+ */
+export async function getPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Mark password reset token as used
+ */
+export async function markPasswordResetTokenUsed(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(passwordResetTokens)
+    .set({ used: 1 })
+    .where(eq(passwordResetTokens.id, id));
+}
+
+/**
+ * Delete expired password reset tokens (cleanup)
+ */
+export async function deleteExpiredPasswordResetTokens() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(passwordResetTokens)
+    .where(sql`${passwordResetTokens.expiresAt} < NOW()`);
+}
+
+// ─── Audit Log ───
+
+/**
+ * Create an audit log entry
+ */
+export async function createAuditLog(data: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(auditLog).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get audit logs with optional filters
+ */
+export async function getAuditLogs(filters?: {
+  teacherAccountId?: number;
+  action?: string;
+  entityType?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(auditLog);
+  
+  if (filters?.teacherAccountId) {
+    query = query.where(eq(auditLog.teacherAccountId, filters.teacherAccountId)) as any;
+  }
+  if (filters?.action) {
+    query = query.where(eq(auditLog.action, filters.action)) as any;
+  }
+  if (filters?.entityType) {
+    query = query.where(eq(auditLog.entityType, filters.entityType)) as any;
+  }
+  
+  query = query.orderBy(desc(auditLog.createdAt)) as any;
+  
+  if (filters?.limit) {
+    query = query.limit(filters.limit) as any;
+  }
+  if (filters?.offset) {
+    query = query.offset(filters.offset) as any;
+  }
+  
+  return query;
+}
+
+// ─── Teacher Teams ───
+
+/**
+ * Assign a teacher to a team
+ */
+export async function assignTeacherToTeam(teacherAccountId: number, teamId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(teacherTeams).values({ teacherAccountId, teamId });
+  return result[0].insertId;
+}
+
+/**
+ * Get all teams for a teacher
+ */
+export async function getTeacherTeams(teacherAccountId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(teacherTeams)
+    .where(eq(teacherTeams.teacherAccountId, teacherAccountId));
+}
+
+/**
+ * Remove teacher from a team
+ */
+export async function removeTeacherFromTeam(teacherAccountId: number, teamId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(teacherTeams)
+    .where(sql`${teacherTeams.teacherAccountId} = ${teacherAccountId} AND ${teacherTeams.teamId} = ${teamId}`);
+}
+
+/**
+ * Remove all team assignments for a teacher
+ */
+export async function removeAllTeacherTeams(teacherAccountId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(teacherTeams)
+    .where(eq(teacherTeams.teacherAccountId, teacherAccountId));
+}
+
+// ─── Activity Templates ───
+
+/**
+ * Create an activity template
+ */
+export async function createActivityTemplate(data: InsertActivityTemplate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(activityTemplates).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get all activity templates
+ */
+export async function getAllActivityTemplates() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(activityTemplates).orderBy(asc(activityTemplates.name));
+}
+
+/**
+ * Get active activity templates
+ */
+export async function getActiveActivityTemplates() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(activityTemplates)
+    .where(eq(activityTemplates.isActive, 1))
+    .orderBy(asc(activityTemplates.name));
+}
+
+/**
+ * Get activity template by ID
+ */
+export async function getActivityTemplateById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(activityTemplates)
+    .where(eq(activityTemplates.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Update activity template
+ */
+export async function updateActivityTemplate(id: number, data: Partial<InsertActivityTemplate>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(activityTemplates).set(data).where(eq(activityTemplates.id, id));
+}
+
+/**
+ * Delete activity template
+ */
+export async function deleteActivityTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(activityTemplates).where(eq(activityTemplates.id, id));
 }

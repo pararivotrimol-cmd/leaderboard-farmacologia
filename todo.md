@@ -151,3 +151,70 @@
 - [x] Substituir sistema de senha única por autenticação individual
 - [x] Escrever testes para autenticação de professores (74 testes passando)
 - [x] Validar fluxo completo (cadastro → login → acesso ao painel)
+
+## Recuperação de Senha
+- [x] Criar tabela passwordResetTokens no schema
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar rotas tRPC para solicitar reset de senha
+- [x] Criar rotas tRPC para validar token e redefinir senha
+- [x] Criar página "Esqueci minha senha" (/professor/esqueci-senha)
+- [x] Criar página de redefinição de senha (/professor/redefinir-senha)
+- [x] Integrar envio de email com link de redefinição (via notificações do sistema)
+- [x] Adicionar link "Esqueci minha senha" na página de login
+
+## Gestão de Professores (Coordenador)
+- [x] Adicionar campo role (coordenador/professor) na tabela teacherAccounts
+- [ ] Criar aba "Professores" no painel admin (apenas coordenador)
+- [ ] Implementar listagem de todos os professores
+- [ ] Adicionar função ativar/desativar conta de professor
+- [ ] Adicionar função promover professor a coordenador
+- [ ] Adicionar função remover conta de professor
+- [ ] Criar primeiro coordenador via seed ou interface
+
+## Auditoria de Ações
+- [x] Criar tabela auditLog no schema
+- [x] Executar migração do banco (pnpm db:push)
+- [ ] Criar helper para registrar ações no log
+- [ ] Integrar auditoria em todas as rotas de modificação (XP, equipes, avisos, etc.)
+- [ ] Criar aba "Auditoria" no painel admin para visualizar logs
+- [ ] Adicionar filtros por professor, ação e data
+- [ ] Exibir quem fez cada alteração nos registros
+
+## Permissões por Turma
+- [x] Criar tabela teacherTeams (relação professor-turma)
+- [x] Executar migração do banco (pnpm db:push)
+- [ ] Adicionar interface para professor selecionar suas turmas
+- [ ] Filtrar dados do painel por turmas do professor
+- [ ] Permitir coordenador ver todas as turmas
+- [ ] Restringir ações de professor apenas às suas turmas
+
+## Gestão de Alunos
+- [ ] Adicionar função incluir aluno em turma (painel admin)
+- [ ] Adicionar função remover aluno de turma (painel admin)
+- [ ] Adicionar função transferir aluno entre turmas
+- [ ] Criar modal de gestão de membros da equipe
+- [ ] Validar que aluno não pode estar em múltiplas turmas
+
+## Seleção de Atividades
+- [ ] Adicionar campo isActive nas atividades existentes
+- [ ] Criar interface para professor ativar/desativar atividades
+- [ ] Filtrar atividades exibidas no ranking por ativas
+- [ ] Permitir professor criar atividades personalizadas
+- [ ] Adicionar templates de atividades para cada metodologia
+
+## Exemplos de Metodologias Ativas
+- [ ] Criar exemplo completo de PBL (Problem-Based Learning)
+- [ ] Criar exemplo completo de TBL (Team-Based Learning)
+- [ ] Criar exemplo completo de Sala de Aula Invertida
+- [ ] Criar exemplo completo de Gamificação
+- [ ] Criar exemplo completo de Estudo de Caso
+- [ ] Adicionar descrição e objetivos de cada metodologia
+- [ ] Criar página de metodologias no sistema
+
+## Testes e Validação
+- [ ] Escrever testes para recuperação de senha
+- [ ] Escrever testes para gestão de professores
+- [ ] Escrever testes para auditoria
+- [ ] Escrever testes para permissões por turma
+- [ ] Escrever testes para gestão de alunos
+- [ ] Validar fluxo completo de cada funcionalidade

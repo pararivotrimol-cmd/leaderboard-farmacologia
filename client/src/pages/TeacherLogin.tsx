@@ -122,16 +122,28 @@ export default function TeacherLogin() {
                 )}
               </Button>
 
-              <div className="text-center text-sm">
-                <span className="text-muted-foreground">Primeiro acesso? </span>
-                <Button
-                  variant="link"
-                  className="p-0 h-auto"
-                  onClick={() => navigate("/professor/cadastro")}
-                  type="button"
-                >
-                  Criar conta
-                </Button>
+              <div className="text-center text-sm space-y-2">
+                <div>
+                  <span className="text-muted-foreground">Primeiro acesso? </span>
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto"
+                    onClick={() => navigate("/professor/cadastro")}
+                    type="button"
+                  >
+                    Criar conta
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto text-xs"
+                    onClick={() => navigate("/professor/esqueci-senha")}
+                    type="button"
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
