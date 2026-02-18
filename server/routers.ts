@@ -396,6 +396,104 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Super Admin Profile & Stats ───
+  superAdmin: router({
+    // Get system statistics (super admin only)
+    getStats: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        // Verify super admin
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "super_admin") {
+          throw new Error("Acesso negado: apenas super admin pode acessar estatísticas");
+        }
+
+        // Get all data
+        const allTeams = await db.getAllTeams();
+        const allMembers = await db.getAllMembers();
+        const allTeachers = await db.getAllTeacherAccounts();
+        const allStudents = await db.getAllStudentAccounts();
+        
+        // Calculate stats
+        const totalTeams = allTeams.length;
+        const totalMembers = allMembers.length;
+        const totalTeachers = allTeachers.length;
+        const activeTeachers = allTeachers.filter(t => t.isActive === 1).length;
+        const coordenadores = allTeachers.filter(t => t.role === "coordenador").length;
+        const totalStudentAccounts = allStudents.length;
+        const activeStudentAccounts = allStudents.filter(s => s.isActive === 1).length;
+        
+        // Calculate total XP
+        const totalXP = allMembers.reduce((sum: number, m: any) => sum + parseFloat(m.xp.toString()), 0);
+        const avgXPPerMember = totalMembers > 0 ? totalXP / totalMembers : 0;
+
+        return {
+          system: {
+            totalTeams,
+            totalMembers,
+            totalXP: totalXP.toFixed(1),
+            avgXPPerMember: avgXPPerMember.toFixed(1),
+          },
+          teachers: {
+            total: totalTeachers,
+            active: activeTeachers,
+            inactive: totalTeachers - activeTeachers,
+            coordenadores,
+            superAdmins: allTeachers.filter(t => t.role === "super_admin").length,
+          },
+          students: {
+            totalMembers,
+            totalAccounts: totalStudentAccounts,
+            activeAccounts: activeStudentAccounts,
+            withoutAccount: totalMembers - totalStudentAccounts,
+          },
+        };
+      }),
+
+    // Get recent activities (super admin only)
+    getRecentActivities: publicProcedure
+      .input(z.object({ sessionToken: z.string(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        // Verify super admin
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "super_admin") {
+          throw new Error("Acesso negado: apenas super admin pode acessar atividades");
+        }
+
+        // Get recent audit logs for this super admin
+        // TODO: Implement getAuditLogsByTeacher in db.ts
+        return [];
+      }),
+
+    // Get super admin profile
+    getProfile: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        // Verify super admin
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "super_admin") {
+          throw new Error("Acesso negado: apenas super admin pode acessar perfil");
+        }
+
+        return {
+          id: teacher.id,
+          name: teacher.name,
+          email: teacher.email,
+          role: teacher.role,
+          createdAt: teacher.createdAt,
+          lastLoginAt: teacher.lastLoginAt,
+          permissions: [
+            "Gerenciar professores (criar, editar, promover, remover)",
+            "Gerenciar alunos e equipes",
+            "Visualizar e editar todos os dados do sistema",
+            "Acessar logs de auditoria completos",
+            "Configurar parâmetros do sistema",
+            "Exportar relatórios e estatísticas",
+          ],
+        };
+      }),
+  }),
+
   // ─── Teacher Management (Coordenador only) ───
   teacherManagement: router({ // List all teachers (coordenador only)
     listAll: publicProcedure

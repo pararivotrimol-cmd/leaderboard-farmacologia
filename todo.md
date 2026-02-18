@@ -239,3 +239,13 @@
 - [ ] Criar seção exclusiva de super admin no painel
 - [ ] Permitir super admin gerenciar professores E alunos
 - [ ] Adicionar badge visual de Super Admin no painel
+
+## Perfil do Super Admin
+- [x] Criar rota tRPC para buscar estatísticas do sistema
+- [x] Criar rota tRPC para buscar atividades recentes do super admin
+- [x] Criar página de perfil em /super-admin/perfil
+- [x] Adicionar seção de permissões e controles
+- [x] Adicionar seção de estatísticas do sistema (total de professores, alunos, equipes, etc.)
+- [x] Adicionar seção de atividades recentes com timeline (preparado para integração)
+- [ ] Adicionar link para perfil no painel admin
+- [ ] Adicionar badge visual "Super Admin" no header do painel
