@@ -158,8 +158,18 @@ export const appRouter = router({
       const myMember = allMembers.find(m => m.id === account.memberId);
       if (!myMember) return [];
       
-      // For now, return simulated progressive data
-      // TODO: implement actual weekly activity tracking
+      // Get real XP history from database
+      const history = await db.getXpHistoryByMember(account.memberId);
+      
+      // If we have history data, use it
+      if (history.length > 0) {
+        return history.map(h => ({
+          week: h.week,
+          pf: Number(h.xpValue),
+        }));
+      }
+      
+      // Fallback: if no history yet, return simulated progressive data
       const totalPF = Number(myMember.xp);
       const weeklyData: { week: number; pf: number }[] = [];
       
@@ -314,11 +324,26 @@ export const appRouter = router({
         password: z.string(),
         id: z.number(),
         xp: z.string(),
+        week: z.number().optional(), // Optional week number for history tracking
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.updateMemberXP(input.id, input.xp);
+        
+        // Record XP history if week is provided
+        if (input.week) {
+          try {
+            await db.recordXpHistory({
+              memberId: input.id,
+              week: input.week,
+              xpValue: input.xp,
+            });
+          } catch (err) {
+            console.warn("[XP History] Failed to record:", err);
+          }
+        }
+        
         // Notification: XP updated
         try {
           const allMembers = await db.getAllMembers();
@@ -337,11 +362,28 @@ export const appRouter = router({
       .input(z.object({
         password: z.string(),
         updates: z.array(z.object({ id: z.number(), xp: z.string() })),
+        week: z.number().optional(), // Optional week number for history tracking
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.bulkUpdateXP(input.updates);
+        
+        // Record XP history for all updated members if week is provided
+        if (input.week) {
+          for (const update of input.updates) {
+            try {
+              await db.recordXpHistory({
+                memberId: update.id,
+                week: input.week,
+                xpValue: update.xp,
+              });
+            } catch (err) {
+              console.warn(`[XP History] Failed to record for member ${update.id}:`, err);
+            }
+          }
+        }
+        
         // Notification: bulk XP update
         const count = input.updates.length;
         createStudentNotification(

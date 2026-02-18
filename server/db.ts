@@ -14,8 +14,10 @@ import {
   studentAccounts, InsertStudentAccount,
   attendance, InsertAttendance,
   youtubePlaylistsTable, InsertYoutubePlaylist,
+  xpHistory, InsertXpHistory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { sql } from 'drizzle-orm';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -624,4 +626,81 @@ export async function getStudentBadges(studentAccountId: number) {
     .orderBy(desc(memberBadges.earnedAt));
   
   return result;
+}
+
+// ─── XP History ───
+
+/**
+ * Record a snapshot of a member's PF for a specific week
+ */
+export async function recordXpHistory(data: InsertXpHistory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if record already exists for this member and week
+  const existing = await db.select()
+    .from(xpHistory)
+    .where(
+      sql`${xpHistory.memberId} = ${data.memberId} AND ${xpHistory.week} = ${data.week}`
+    )
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing record
+    await db.update(xpHistory)
+      .set({ xpValue: data.xpValue, recordedAt: new Date(), note: data.note })
+      .where(eq(xpHistory.id, existing[0].id));
+    return existing[0].id;
+  } else {
+    // Insert new record
+    const result = await db.insert(xpHistory).values(data);
+    return result[0].insertId;
+  }
+}
+
+/**
+ * Get XP history for a specific member
+ */
+export async function getXpHistoryByMember(memberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(xpHistory)
+    .where(eq(xpHistory.memberId, memberId))
+    .orderBy(asc(xpHistory.week));
+}
+
+/**
+ * Get XP history for a specific member and week range
+ */
+export async function getXpHistoryByMemberAndWeeks(memberId: number, startWeek: number, endWeek: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(xpHistory)
+    .where(
+      sql`${xpHistory.memberId} = ${memberId} AND ${xpHistory.week} >= ${startWeek} AND ${xpHistory.week} <= ${endWeek}`
+    )
+    .orderBy(asc(xpHistory.week));
+}
+
+/**
+ * Get latest XP snapshot for all members (for a specific week)
+ */
+export async function getXpHistoryByWeek(week: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(xpHistory)
+    .where(eq(xpHistory.week, week))
+    .orderBy(desc(xpHistory.xpValue));
+}
+
+/**
+ * Delete all XP history for a member (used when deleting a member)
+ */
+export async function deleteXpHistoryByMember(memberId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(xpHistory).where(eq(xpHistory.memberId, memberId));
 }

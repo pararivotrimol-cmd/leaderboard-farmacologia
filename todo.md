@@ -127,7 +127,13 @@
 - [x] Escrever testes para as novas rotas do dashboard
 - [x] Atualizar studentDashboard.getMyStats para buscar dados reais do membro logado via sessionToken
 - [x] Atualizar studentDashboard.getBadges para buscar badges reais do banco via sessionToken
-- [ ] Criar tabela xpHistory para armazenar histórico de PF por semana (futuro)
-- [ ] Implementar rota para registrar PF semanalmente (futuro)
+- [x] Criar tabela xpHistory no schema do banco de dados
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar rotas tRPC para registrar PF semanalmente
+- [x] Criar rotas tRPC para consultar histórico de PF
+- [x] Implementar registro automático quando admin atualiza PF de aluno
+- [x] Atualizar dashboard para buscar dados reais do histórico
+- [x] Escrever testes para as novas funcionalidades de xpHistory (65 testes passando)
+- [x] Validar gráfico de evolução com dados reais
 - [x] Atualizar studentDashboard.getEvolution para buscar histórico real de PF (usando mock temporariamente)
 - [x] Testar dashboard com dados reais de alunos logados

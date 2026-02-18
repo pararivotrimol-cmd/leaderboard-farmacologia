@@ -270,3 +270,24 @@ export const youtubePlaylistsTable = mysqlTable("youtubePlaylistsTable", {
 
 export type YoutubePlaylist = typeof youtubePlaylistsTable.$inferSelect;
 export type InsertYoutubePlaylist = typeof youtubePlaylistsTable.$inferInsert;
+
+/**
+ * XP History - weekly snapshots of student PF for evolution tracking
+ * Automatically recorded when admin updates member PF
+ */
+export const xpHistory = mysqlTable("xpHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  // Link to the member
+  memberId: int("memberId").notNull(),
+  // Week number (1-17)
+  week: int("week").notNull(),
+  // PF value at the end of this week
+  xpValue: decimal("xpValue", { precision: 6, scale: 1 }).notNull(),
+  // When this snapshot was recorded
+  recordedAt: timestamp("recordedAt").defaultNow().notNull(),
+  // Optional note about what changed
+  note: text("note"),
+});
+
+export type XpHistory = typeof xpHistory.$inferSelect;
+export type InsertXpHistory = typeof xpHistory.$inferInsert;
