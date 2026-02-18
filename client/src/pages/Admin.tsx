@@ -461,6 +461,246 @@ function HighlightsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Professores Manager (Coordenador only) ───
+function ProfessoresManager({ teacherToken }: { teacherToken: string }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showInactive, setShowInactive] = useState(true);
+
+  const utils = trpc.useUtils();
+  
+  // Get current teacher info to check if coordenador
+  const { data: currentTeacher } = trpc.teacherAuth.me.useQuery({ sessionToken: teacherToken });
+  const isCoordinator = currentTeacher?.role === "coordenador";
+
+  // Get all teachers (only works if coordenador)
+  const { data: teachers, isLoading } = trpc.teacherManagement.listAll.useQuery(
+    { sessionToken: teacherToken },
+    { enabled: isCoordinator }
+  );
+
+  const toggleActiveMutation = trpc.teacherManagement.toggleActive.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.teacherManagement.listAll.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const promoteMutation = trpc.teacherManagement.promoteToCoordinator.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.teacherManagement.listAll.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const demoteMutation = trpc.teacherManagement.demoteToTeacher.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.teacherManagement.listAll.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteMutation = trpc.teacherManagement.deleteTeacher.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.teacherManagement.listAll.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  if (!isCoordinator) {
+    return (
+      <div className="container max-w-6xl py-8">
+        <div className="border border-border rounded-lg p-8 text-center" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <Lock size={48} className="mx-auto mb-4 text-muted-foreground" />
+          <h2 className="font-display font-bold text-xl text-foreground mb-2">Acesso Restrito</h2>
+          <p className="text-muted-foreground">Apenas coordenadores podem acessar a gestão de professores.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredTeachers = teachers?.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         t.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = showInactive || t.isActive === 1;
+    return matchesSearch && matchesStatus;
+  }) || [];
+
+  return (
+    <div className="container max-w-6xl py-8">
+      <div className="mb-6">
+        <h1 className="font-display font-bold text-3xl text-foreground mb-2">Gestão de Professores</h1>
+        <p className="text-muted-foreground">Gerencie contas de professores e coordenadores</p>
+      </div>
+
+      {/* First Coordinator Alert */}
+      {teachers && teachers.filter(t => t.role === "coordenador").length === 0 && (
+        <div className="mb-6 border border-amber-500/50 rounded-lg p-4 bg-amber-500/10">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={20} className="text-amber-500 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-1">Nenhum coordenador cadastrado</h3>
+              <p className="text-sm text-muted-foreground">
+                O sistema precisa de pelo menos um coordenador para gerenciar professores. 
+                Promova um professor existente usando o botão "Promover" ao lado do nome dele.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search and Filters */}
+      <div className="mb-6 flex gap-3 flex-wrap">
+        <div className="flex-1 min-w-[250px] relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nome ou email..."
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+          />
+        </div>
+        <button
+          onClick={() => setShowInactive(!showInactive)}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showInactive
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-foreground border border-border"
+          }`}
+        >
+          {showInactive ? "Mostrar Todos" : "Apenas Ativos"}
+        </button>
+      </div>
+
+      {/* Teachers List */}
+      {isLoading ? (
+        <div className="text-center py-12 text-muted-foreground">Carregando professores...</div>
+      ) : filteredTeachers.length === 0 ? (
+        <div className="border border-border rounded-lg p-8 text-center" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <Users size={48} className="mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Nenhum professor encontrado</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredTeachers.map(teacher => (
+            <motion.div
+              key={teacher.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border border-border rounded-lg p-4"
+              style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <UserCheck size={24} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="font-semibold text-foreground">{teacher.name}</h3>
+                    {teacher.role === "coordenador" && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 text-xs font-medium">
+                        Coordenador
+                      </span>
+                    )}
+                    {teacher.isActive === 1 ? (
+                      <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-500 text-xs font-medium">
+                        Ativo
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-500 text-xs font-medium">
+                        Inativo
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-1">{teacher.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Último acesso: {teacher.lastLoginAt ? new Date(teacher.lastLoginAt).toLocaleString('pt-BR') : 'Nunca'}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0 flex-wrap">
+                  {/* Toggle Active/Inactive */}
+                  <button
+                    onClick={() => toggleActiveMutation.mutate({
+                      sessionToken: teacherToken,
+                      teacherId: teacher.id,
+                      isActive: teacher.isActive === 1 ? 0 : 1,
+                    })}
+                    disabled={toggleActiveMutation.isPending || teacher.id === currentTeacher?.id}
+                    className="px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-foreground text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                    title={teacher.isActive === 1 ? "Desativar" : "Ativar"}
+                  >
+                    {teacher.isActive === 1 ? (
+                      <><EyeOff size={12} /> Desativar</>
+                    ) : (
+                      <><Eye size={12} /> Ativar</>
+                    )}
+                  </button>
+
+                  {/* Promote/Demote */}
+                  {teacher.role === "professor" ? (
+                    <button
+                      onClick={() => promoteMutation.mutate({
+                        sessionToken: teacherToken,
+                        teacherId: teacher.id,
+                      })}
+                      disabled={promoteMutation.isPending}
+                      className="px-3 py-1.5 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 text-xs font-medium flex items-center gap-1"
+                      title="Promover a Coordenador"
+                    >
+                      <Trophy size={12} /> Promover
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => demoteMutation.mutate({
+                        sessionToken: teacherToken,
+                        teacherId: teacher.id,
+                      })}
+                      disabled={demoteMutation.isPending || teacher.id === currentTeacher?.id}
+                      className="px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-foreground text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                      title="Rebaixar a Professor"
+                    >
+                      Rebaixar
+                    </button>
+                  )}
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => {
+                      if (confirm(`Tem certeza que deseja remover ${teacher.name}?`)) {
+                        deleteMutation.mutate({
+                          sessionToken: teacherToken,
+                          teacherId: teacher.id,
+                        });
+                      }
+                    }}
+                    disabled={deleteMutation.isPending || teacher.id === currentTeacher?.id}
+                    className="px-3 py-1.5 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-500 text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                    title="Remover Professor"
+                  >
+                    <Trash2 size={12} /> Remover
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-6 p-4 border border-border rounded-lg" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <p className="text-sm text-muted-foreground">
+          <strong>Total:</strong> {filteredTeachers.length} professor(es) • 
+          <strong className="ml-2">Ativos:</strong> {filteredTeachers.filter(t => t.isActive === 1).length} • 
+          <strong className="ml-2">Coordenadores:</strong> {filteredTeachers.filter(t => t.role === "coordenador").length}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Settings ───
 function SettingsManager({ password }: { password: string }) {
   const [currentPw, setCurrentPw] = useState("");
@@ -1813,7 +2053,7 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "settings">("teams");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -1856,6 +2096,7 @@ export default function Admin() {
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
+    { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -1906,6 +2147,7 @@ export default function Admin() {
         {activeSection === "badges" && <BadgesManager password={password} />}
         {activeSection === "attendance" && <AttendanceManager password={password} />}
         {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
+        {activeSection === "professores" && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
     </div>

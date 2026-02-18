@@ -169,10 +169,12 @@
 - [x] Criar rotas tRPC para promover professor a coordenador
 - [x] Criar rotas tRPC para rebaixar coordenador a professor
 - [x] Criar rotas tRPC para remover professor
-- [ ] Criar aba "Professores" no painel admin (apenas coordenador)
-- [ ] Implementar listagem de todos os professores com status
-- [ ] Adicionar botões de ação (ativar/desativar, promover, remover)
-- [ ] Criar primeiro coordenador via seed ou interface
+- [x] Criar aba "Professores" no painel admin (apenas coordenador)
+- [x] Implementar listagem de todos os professores com status
+- [x] Adicionar botões de ação (ativar/desativar, promover, rebaixar, remover)
+- [x] Adicionar busca e filtros (todos/apenas ativos)
+- [x] Adicionar badges visuais de status e role
+- [x] Criar primeiro coordenador via interface (alerta + botão promover)
 
 ## Auditoria de Ações
 - [x] Criar tabela auditLog no schema

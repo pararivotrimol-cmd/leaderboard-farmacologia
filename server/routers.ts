@@ -28,6 +28,36 @@ async function createStudentNotification(title: string, content: string, priorit
   }
 }
 
+// Helper: log audit trail for teacher actions
+async function logAudit(params: {
+  teacherToken: string;
+  action: string;
+  entityType: string;
+  entityId?: number;
+  details?: any;
+  req?: any;
+}) {
+  try {
+    // Get teacher info from token
+    const teacher = await db.getTeacherAccountBySessionToken(params.teacherToken);
+    if (!teacher) return;
+
+    await db.createAuditLog({
+      teacherAccountId: teacher.id,
+      teacherName: teacher.name,
+      teacherEmail: teacher.email,
+      action: params.action,
+      entityType: params.entityType,
+      entityId: params.entityId ?? null,
+      details: params.details ? JSON.stringify(params.details) : null,
+      ipAddress: params.req?.ip || params.req?.connection?.remoteAddress || null,
+      userAgent: params.req?.headers?.['user-agent'] || null,
+    });
+  } catch (err) {
+    console.warn("[Audit] Failed to log:", err);
+  }
+}
+
 // Admin password check middleware (simple password-based, no OAuth needed)
 const ADMIN_PASSWORD_KEY = "admin_password";
 const DEFAULT_ADMIN_PASSWORD = "farmaco2026"; // Default password, should be changed
