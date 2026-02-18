@@ -116,10 +116,10 @@ export const appRouter = router({
   // ─── Student Dashboard ───
   studentDashboard: router({
     // Get student's own stats and ranking
-    getMyStats: publicProcedure.query(async ({ ctx }) => {
-      // For now, return mock data - will be replaced with real student auth
-      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
-      const account = await db.getStudentAccountByEmail(studentEmail);
+    getMyStats: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
       if (!account) return null;
       
       const allMembers = await db.getAllMembers();
@@ -148,9 +148,10 @@ export const appRouter = router({
     }),
     
     // Get PF evolution over weeks
-    getEvolution: publicProcedure.query(async ({ ctx }) => {
-      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
-      const account = await db.getStudentAccountByEmail(studentEmail);
+    getEvolution: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
       if (!account) return [];
       
       const allMembers = await db.getAllMembers();
@@ -173,9 +174,10 @@ export const appRouter = router({
     }),
     
     // Get badges history
-    getBadges: publicProcedure.query(async ({ ctx }) => {
-      const studentEmail = "aluno@edu.unirio.br"; // TODO: get from ctx.studentUser
-      const account = await db.getStudentAccountByEmail(studentEmail);
+    getBadges: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
       if (!account) return [];
       
       const myBadges = await db.getStudentBadges(account.id);

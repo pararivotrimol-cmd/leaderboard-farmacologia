@@ -125,3 +125,9 @@
 - [x] Adicionar seção de histórico de badges conquistados com thumbnails
 - [x] Adicionar link "Meu Dashboard" na navegação
 - [x] Escrever testes para as novas rotas do dashboard
+- [x] Atualizar studentDashboard.getMyStats para buscar dados reais do membro logado via sessionToken
+- [x] Atualizar studentDashboard.getBadges para buscar badges reais do banco via sessionToken
+- [ ] Criar tabela xpHistory para armazenar histórico de PF por semana (futuro)
+- [ ] Implementar rota para registrar PF semanalmente (futuro)
+- [x] Atualizar studentDashboard.getEvolution para buscar histórico real de PF (usando mock temporariamente)
+- [x] Testar dashboard com dados reais de alunos logados

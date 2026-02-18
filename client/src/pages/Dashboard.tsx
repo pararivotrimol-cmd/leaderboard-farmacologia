@@ -2,6 +2,7 @@
  * Dashboard do Aluno — Conexão em Farmacologia
  * Padronizado: Laranja (#F7941D) + Cinza (#4A4A4A) + Branco
  */
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { ArrowLeft, Trophy, Award, MapPin, TrendingUp, Users } from "lucide-react";
@@ -35,9 +36,16 @@ const DARK_BG = "#0A1628";
 const CARD_BG = "#0D1B2A";
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = trpc.studentDashboard.getMyStats.useQuery();
-  const { data: evolution, isLoading: evolutionLoading } = trpc.studentDashboard.getEvolution.useQuery();
-  const { data: badges, isLoading: badgesLoading } = trpc.studentDashboard.getBadges.useQuery();
+  const [sessionToken, setSessionToken] = useState<string>("");
+  
+  useEffect(() => {
+    const token = localStorage.getItem("studentSessionToken") || "";
+    setSessionToken(token);
+  }, []);
+  
+  const { data: stats, isLoading: statsLoading } = trpc.studentDashboard.getMyStats.useQuery({ sessionToken }, { enabled: !!sessionToken });
+  const { data: evolution, isLoading: evolutionLoading } = trpc.studentDashboard.getEvolution.useQuery({ sessionToken }, { enabled: !!sessionToken });
+  const { data: badges, isLoading: badgesLoading } = trpc.studentDashboard.getBadges.useQuery({ sessionToken }, { enabled: !!sessionToken });
 
   if (statsLoading || evolutionLoading || badgesLoading) {
     return (
