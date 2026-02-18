@@ -317,6 +317,147 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Teacher Management (Coordenador only) ───
+  teacherManagement: router({ // List all teachers (coordenador only)
+    listAll: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        // Verify teacher is coordenador
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "coordenador") {
+          throw new Error("Acesso negado: apenas coordenadores podem listar professores");
+        }
+
+        const allTeachers = await db.getAllTeacherAccounts();
+        return allTeachers.map(t => ({
+          id: t.id,
+          name: t.name,
+          email: t.email,
+          role: t.role,
+          isActive: t.isActive,
+          lastLoginAt: t.lastLoginAt,
+          createdAt: t.createdAt,
+        }));
+      }),
+
+    // Toggle teacher active status
+    toggleActive: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        teacherId: z.number(),
+        isActive: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify teacher is coordenador
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "coordenador") {
+          throw new Error("Acesso negado: apenas coordenadores podem ativar/desativar professores");
+        }
+
+        // Can't deactivate yourself
+        if (teacher.id === input.teacherId) {
+          throw new Error("Você não pode desativar sua própria conta");
+        }
+
+        await db.updateTeacherAccount(input.teacherId, { isActive: input.isActive });
+
+        const targetTeacher = await db.getAllTeacherAccounts().then(all => all.find(t => t.id === input.teacherId));
+        sendNotificationAsync(
+          input.isActive ? "✅ Professor Ativado" : "❌ Professor Desativado",
+          `${teacher.name} ${input.isActive ? 'ativou' : 'desativou'} a conta de ${targetTeacher?.name} (${targetTeacher?.email})`
+        );
+
+        return { success: true, message: input.isActive ? "Professor ativado" : "Professor desativado" } as const;
+      }),
+
+    // Promote teacher to coordenador
+    promoteToCoordinator: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        teacherId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify teacher is coordenador
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "coordenador") {
+          throw new Error("Acesso negado: apenas coordenadores podem promover professores");
+        }
+
+        await db.updateTeacherAccount(input.teacherId, { role: "coordenador" });
+
+        const targetTeacher = await db.getAllTeacherAccounts().then(all => all.find(t => t.id === input.teacherId));
+        sendNotificationAsync(
+          "👑 Professor Promovido a Coordenador",
+          `${teacher.name} promoveu ${targetTeacher?.name} (${targetTeacher?.email}) a coordenador`
+        );
+
+        return { success: true, message: "Professor promovido a coordenador" } as const;
+      }),
+
+    // Demote coordenador to professor
+    demoteToTeacher: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        teacherId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify teacher is coordenador
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "coordenador") {
+          throw new Error("Acesso negado: apenas coordenadores podem rebaixar professores");
+        }
+
+        // Can't demote yourself
+        if (teacher.id === input.teacherId) {
+          throw new Error("Você não pode rebaixar sua própria conta");
+        }
+
+        await db.updateTeacherAccount(input.teacherId, { role: "professor" });
+
+        const targetTeacher = await db.getAllTeacherAccounts().then(all => all.find(t => t.id === input.teacherId));
+        sendNotificationAsync(
+          "👨‍🏫 Coordenador Rebaixado a Professor",
+          `${teacher.name} rebaixou ${targetTeacher?.name} (${targetTeacher?.email}) a professor`
+        );
+
+        return { success: true, message: "Coordenador rebaixado a professor" } as const;
+      }),
+
+    // Delete teacher account
+    deleteTeacher: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        teacherId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify teacher is coordenador
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "coordenador") {
+          throw new Error("Acesso negado: apenas coordenadores podem remover professores");
+        }
+
+        // Can't delete yourself
+        if (teacher.id === input.teacherId) {
+          throw new Error("Você não pode remover sua própria conta");
+        }
+
+        const targetTeacher = await db.getAllTeacherAccounts().then(all => all.find(t => t.id === input.teacherId));
+        
+        // Remove all team assignments first
+        await db.removeAllTeacherTeams(input.teacherId);
+        
+        // Delete teacher account
+        await db.deleteTeacherAccount(input.teacherId);
+
+        sendNotificationAsync(
+          "🗑️ Professor Removido",
+          `${teacher.name} removeu a conta de ${targetTeacher?.name} (${targetTeacher?.email})`
+        );
+
+        return { success: true, message: "Professor removido com sucesso" } as const;
+      }),
+  }),
+
   // ─── Student Dashboard ───
   studentDashboard: router({
     // Get student's own stats and ranking

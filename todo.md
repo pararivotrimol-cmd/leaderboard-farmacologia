@@ -164,29 +164,39 @@
 
 ## Gestão de Professores (Coordenador)
 - [x] Adicionar campo role (coordenador/professor) na tabela teacherAccounts
+- [x] Criar rotas tRPC para listar professores (apenas coordenador)
+- [x] Criar rotas tRPC para ativar/desativar professor
+- [x] Criar rotas tRPC para promover professor a coordenador
+- [x] Criar rotas tRPC para rebaixar coordenador a professor
+- [x] Criar rotas tRPC para remover professor
 - [ ] Criar aba "Professores" no painel admin (apenas coordenador)
-- [ ] Implementar listagem de todos os professores
-- [ ] Adicionar função ativar/desativar conta de professor
-- [ ] Adicionar função promover professor a coordenador
-- [ ] Adicionar função remover conta de professor
+- [ ] Implementar listagem de todos os professores com status
+- [ ] Adicionar botões de ação (ativar/desativar, promover, remover)
 - [ ] Criar primeiro coordenador via seed ou interface
 
 ## Auditoria de Ações
 - [x] Criar tabela auditLog no schema
 - [x] Executar migração do banco (pnpm db:push)
-- [ ] Criar helper para registrar ações no log
-- [ ] Integrar auditoria em todas as rotas de modificação (XP, equipes, avisos, etc.)
+- [ ] Criar helper function logAudit() para registrar ações
+- [ ] Integrar auditoria em rotas de XP (updateXP, bulkUpdateXP)
+- [ ] Integrar auditoria em rotas de equipes (create, update, delete)
+- [ ] Integrar auditoria em rotas de membros (create, update, delete)
+- [ ] Integrar auditoria em rotas de avisos e materiais
+- [ ] Criar rota tRPC para buscar logs de auditoria
 - [ ] Criar aba "Auditoria" no painel admin para visualizar logs
-- [ ] Adicionar filtros por professor, ação e data
-- [ ] Exibir quem fez cada alteração nos registros
+- [ ] Adicionar filtros por professor, ação, tipo de entidade e data
+- [ ] Exibir timeline de ações com detalhes
 
 ## Permissões por Turma
 - [x] Criar tabela teacherTeams (relação professor-turma)
 - [x] Executar migração do banco (pnpm db:push)
-- [ ] Adicionar interface para professor selecionar suas turmas
-- [ ] Filtrar dados do painel por turmas do professor
+- [ ] Criar rotas tRPC para atribuir turmas a professor
+- [ ] Criar rotas tRPC para buscar turmas do professor
+- [ ] Adicionar interface no painel admin para selecionar turmas
+- [ ] Filtrar listagem de equipes por turmas do professor
+- [ ] Filtrar listagem de membros por turmas do professor
 - [ ] Permitir coordenador ver todas as turmas
-- [ ] Restringir ações de professor apenas às suas turmas
+- [ ] Restringir ações de professor apenas às suas turmas atribuídas
 
 ## Gestão de Alunos
 - [ ] Adicionar função incluir aluno em turma (painel admin)
