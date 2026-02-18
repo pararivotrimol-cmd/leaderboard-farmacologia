@@ -263,3 +263,43 @@
 - [ ] Testar em resoluções: 320px (mobile), 768px (tablet), 1920px (desktop), 3840px (4K)
 - [ ] Ajustar tamanhos de fonte para escalabilidade
 - [ ] Garantir touch-friendly (botões mínimo 44px)
+
+## Cronograma Completo (17 Semanas)
+- [x] Atualizar weeklyHighlights com 17 semanas do cronograma
+- [x] Incluir Kahoots, Casos Integrados, Palavras Cruzadas e Provas
+- [x] Atualizar currentWeek para semana atual real (semana 1)
+- [x] Adicionar datas corretas de cada atividade
+
+## Aba Seminários Jigsaw
+- [ ] Criar schema no banco para grupos de seminário (6 grupos)
+- [ ] Criar schema para funções dentro dos grupos (coordenador, relator, etc.)
+- [ ] Criar schema para atribuição de alunos a funções
+- [ ] Criar rotas tRPC para CRUD de grupos de seminário
+- [ ] Criar rotas tRPC para atribuir alunos a funções
+- [ ] Criar aba "Seminários" no painel admin
+- [ ] Interface para professor cadastrar nomes de alunos nas funções
+- [ ] Sistema de PF por aluno individual no seminário
+- [ ] Sistema de PF por grupo total no seminário
+
+## Busca de Artigos PubMed
+- [ ] Criar rota tRPC para buscar artigos no PubMed API
+- [ ] Filtrar artigos dos últimos 4 anos
+- [ ] Buscar 2 artigos por tema de seminário
+- [ ] Exibir artigos na aba Seminários
+
+## Cálculo de Média Final
+- [ ] Atualizar explicação na página inicial
+- [ ] Implementar fórmula: MF = (P1 + P2)/2 x 0,75 + NT((SEM+CS+Kahoot)/3) x 0,25
+- [ ] Criar calculadora interativa de média
+
+## QR Code para Provas
+- [ ] Criar sistema de geração de QR code único por prova
+- [ ] Implementar validação de QR code no momento da prova
+- [ ] Adicionar campo de QR code nas provas teóricas
+- [ ] Interface para professor gerar e visualizar QR codes
+
+## Integração Kahoots
+- [ ] Criar links para Kahoots no cronograma
+- [ ] Adicionar 10 perguntas por Kahoot (preparar conteúdo)
+- [ ] Integrar com conta pedro.alexandre@unirio.br
+- [ ] Exibir Kahoots na página de atividades

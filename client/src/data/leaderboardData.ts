@@ -222,39 +222,111 @@ export const teams: Team[] = [
 // Destaques semanais
 export const weeklyHighlights: WeeklyHighlight[] = [
   {
-    week: 1, date: "10/03/2026",
+    week: 1, date: "03/03/2026",
     activity: "Aula Inaugural",
     topTeam: "—", topStudent: "—",
-    description: "Apresentação das regras e formação das equipes"
+    description: "Introdução à Farmacologia, aspectos gerais e importância. Farmacocinética e Farmacodinâmica"
   },
   {
-    week: 2, date: "17/03/2026",
-    activity: "Jigsaw Farmacocinética + Quiz",
-    topTeam: "Adrenalina", topStudent: "Isabela Nunes",
-    description: "Primeiro Jigsaw do semestre! Equipe Adrenalina dominou com 8.5 PF"
+    week: 2, date: "10/03/2026",
+    activity: "Farmacocinética",
+    topTeam: "—", topStudent: "—",
+    description: "Distribuição, Metabolismo e Excreção de fármacos"
   },
   {
-    week: 3, date: "24/03/2026",
-    activity: "Caso Integrado Pneumonia",
-    topTeam: "Endorfina", topStudent: "Ximena Coelho",
-    description: "Caso interdisciplinar com 4 estações. Ximena acertou todas as questões!"
+    week: 3, date: "17/03/2026",
+    activity: "Kahoot 1 + Mecanismo de Ação",
+    topTeam: "—", topStudent: "—",
+    description: "Kahoot 1: Vias de administração e farmacocinética. Mecanismo de ação e interações medicamentosas"
   },
   {
-    week: 4, date: "31/03/2026",
-    activity: "Scavenger Hunt + Kahoot 1",
-    topTeam: "Serotonina", topStudent: "Sara Monteiro",
-    description: "Caça ao tesouro científica! Sara encontrou o artigo-chave em 3 minutos"
+    week: 4, date: "24/03/2026",
+    activity: "CS1: Farmacocinética",
+    topTeam: "—", topStudent: "—",
+    description: "Boas Práticas de Prescrição + Caso Integrado 1: Farmacocinética (11h)"
   },
   {
-    week: 5, date: "07/04/2026",
-    activity: "Seminário Jigsaw 1",
-    topTeam: "Noradrenalina", topStudent: "Bianca Lopes",
-    description: "Primeiro seminário Grand Rounds. Apresentação impecável da equipe Noradrenalina"
+    week: 5, date: "31/03/2026",
+    activity: "Kahoot 2 + Colinérgicos",
+    topTeam: "—", topStudent: "—",
+    description: "Colinérgicos de ação direta e anticolinesterásicos. Kahoot 2: Mecanismo de ação e interações"
+  },
+  {
+    week: 6, date: "07/04/2026",
+    activity: "Kahoot 3 + Bloqueadores",
+    topTeam: "—", topStudent: "—",
+    description: "Antagonistas colinérgicos e bloqueadores neuromusculares. Kahoot 3: Agonistas Colinérgicos"
+  },
+  {
+    week: 7, date: "14/04/2026",
+    activity: "Seminários Jigsaw 1-3 + CS2",
+    topTeam: "—", topStudent: "—",
+    description: "Grupos 1-3: Interações medicamentosas, Alergia, Farmacodependência. CS2: Colinérgicos e Bloqueadores (11h)"
+  },
+  {
+    week: 8, date: "28/04/2026",
+    activity: "1ª Prova Parcial",
+    topTeam: "—", topStudent: "—",
+    description: "Primeira avaliação teórica do semestre"
+  },
+  {
+    week: 9, date: "05/05/2026",
+    activity: "Adrenérgicos + 2ª Chamada",
+    topTeam: "—", topStudent: "—",
+    description: "Adrenérgicos e aminas simpaticomimicéticas. 2ª chamada 1ª Prova Parcial (10:30h)"
+  },
+  {
+    week: 10, date: "12/05/2026",
+    activity: "Bloqueadores Adrenérgicos",
+    topTeam: "—", topStudent: "—",
+    description: "Bloqueadores Adrenérgicos"
+  },
+  {
+    week: 11, date: "19/05/2026",
+    activity: "Kahoot 3 + Palavra Cruzada 1",
+    topTeam: "—", topStudent: "—",
+    description: "Antieméticos/AINES/Glicocorticoides. Kahoot 3: Adrenérgicos. Palavra Cruzada 1: Adrenérgicos e Bloqueadores (10:30h)"
+  },
+  {
+    week: 12, date: "26/05/2026",
+    activity: "CS3: Adrenérgicos",
+    topTeam: "—", topStudent: "—",
+    description: "Anestésicos Locais + Caso Integrado 3: Adrenérgicos (10:30h)"
+  },
+  {
+    week: 13, date: "02/06/2026",
+    activity: "Seminários Jigsaw 4-6 + Kahoot 4",
+    topTeam: "—", topStudent: "—",
+    description: "Grupos 4-6: Canabinóides, Choque cardiogênico, Emagrecedores. Kahoot 4: AINES/Corticoides (11h)"
+  },
+  {
+    week: 14, date: "09/06/2026",
+    activity: "Palavra Cruzada 2 + CS4",
+    topTeam: "—", topStudent: "—",
+    description: "Histamina e Anti-histamínicos. Palavra Cruzada 2: Anestésico Local (9:30). CS4: Inflamação e A.L (10:00h)"
+  },
+  {
+    week: 15, date: "16/06/2026",
+    activity: "2ª Prova Parcial",
+    topTeam: "—", topStudent: "—",
+    description: "Segunda avaliação teórica do semestre"
+  },
+  {
+    week: 16, date: "23/06/2026",
+    activity: "2ª Chamada",
+    topTeam: "—", topStudent: "—",
+    description: "Segunda chamada das provas parciais"
+  },
+  {
+    week: 17, date: "30/06/2026",
+    activity: "Prova Final",
+    topTeam: "—", topStudent: "—",
+    description: "Avaliação final do semestre"
   },
 ];
 
 // Semana atual do semestre
-export const currentWeek = 5;
+export const currentWeek = 1;
 
 // Informações do curso
 export const courseInfo = {
