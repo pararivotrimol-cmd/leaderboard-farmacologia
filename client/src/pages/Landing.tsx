@@ -219,9 +219,9 @@ export default function Landing() {
 
   const timeline = [
     { week: "Semana 1", title: "Apresentação do Curso + Farmacocinética I", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes. Absorção e vias de administração.", icon: <GraduationCap size={18} /> },
-    { week: "Semana 2", title: "Farmacocinética II — Distribuição e Metabolismo", detail: "Biodisponibilidade, volume de distribuição, biotransformação hepática. TBL 1.", icon: <Pill size={18} /> },
-    { week: "Semana 3", title: "Farmacocinética II — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. Caso Clínico 1.", icon: <Pill size={18} /> },
-    { week: "Semana 4", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. TBL 2.", icon: <Brain size={18} /> },
+    { week: "Semana 2", title: "Farmacocinética II", detail: "Distribuição, metabolismo, excreção. Biotransformação hepática, citocromo P450. TBL 1.", icon: <Pill size={18} /> },
+    { week: "Semana 3", title: "Farmacodinâmica", detail: "Receptores, agonistas, antagonistas, dose-resposta, potência e eficácia. Caso Clínico 1.", icon: <Brain size={18} /> },
+    { week: "Semana 4", title: "Boas Práticas Prescritivas", detail: "Prescrição racional, interações medicamentosas, farmacovigilância. TBL 2.", icon: <Brain size={18} /> },
     { week: "Semana 5", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", icon: <Activity size={18} /> },
     { week: "Semana 6", title: "SNA — Bloqueadores Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia.", icon: <Activity size={18} /> },
     { week: "Semana 7", title: "JIGSAW 1 — Seminários", detail: "Interações Medicamentosas, Medicamento-Alimento, Alergia Medicamentosa, Farmacodependência e Drogas de Abuso.", icon: <Target size={18} />, highlight: true },
@@ -229,12 +229,12 @@ export default function Landing() {
     { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 11", title: "Anti-inflamatórios + Antitérmicos + Corticoides", detail: "AINEs, inibidores de COX, antipiréticos, corticosteroides. Aula conjunta. TBL 4.", icon: <Brain size={18} /> },
-    { week: "Semana 12", title: "Analgésicos Opioides", detail: "Receptores opioides, escala analgésica, efeitos adversos. Caso Clínico 4.", icon: <Brain size={18} /> },
-    { week: "Semana 13", title: "JIGSAW 2 — Seminários", detail: "Canabinoides, Choque Cardiogênico, Farmacologia dos Emagrecedores.", icon: <Target size={18} />, highlight: true },
-    { week: "Semana 14", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico.", icon: <Pill size={18} /> },
-    { week: "Semana 15", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias.", icon: <Pill size={18} /> },
-    { week: "Semana 16", title: "Prova P2", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos.", icon: <Zap size={18} />, highlight: true },
-    { week: "Semana 17", title: "Segunda Chamada + Prova Final + Premiação", detail: "Prova substitutiva, prova final para recuperação e cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
+    { week: "Semana 12", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico em procedimentos. Caso Clínico 4.", icon: <Pill size={18} /> },
+    { week: "Semana 13", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias.", icon: <Pill size={18} /> },
+    { week: "Semana 14", title: "JIGSAW 2 — Seminários", detail: "Canabinoides, Choque Cardiogênico, Farmacologia dos Emagrecedores.", icon: <Target size={18} />, highlight: true },
+    { week: "Semana 15", title: "Prova P2", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos.", icon: <Zap size={18} />, highlight: true },
+    { week: "Semana 16", title: "Segunda Chamada P2", detail: "Prova substitutiva para alunos que perderam P2 com justificativa.", icon: <Zap size={18} /> },
+    { week: "Semana 17", title: "Prova Final + Premiação", detail: "Prova final para alunos em recuperação. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
   ];
 
   // Feriados que caem em terça-feira no 1º semestre 2026

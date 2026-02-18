@@ -129,3 +129,13 @@
 - [x] Semana 7: JIGSAW 1 (Interações, Medicamento-Alimento, Alergia, Farmacodependência)
 - [x] Semana 11: Antiinflamatórios + Antitérmicos + Corticoides (aula conjunta)
 - [x] Semana 13: JIGSAW 2 (Canabinoides, Choque Cardiogênico, Emagrecedores)
+- [x] Semana 2: Farmacocinética II (não Distribuição e Metabolismo)
+- [x] Semana 3: Farmacodinâmica (não Farmacocinética II)
+- [x] Semana 4: Boas Práticas Prescritivas
+- [x] Semana 12: Anestésicos Locais (não Analgésicos Opioides)
+- [x] Semana 13: Anti-histamínicos (não JIGSAW 2)
+- [x] Semana 14: JIGSAW 2 (não Anestésicos Locais)
+- [x] Semana 15: P2 (não Anti-histamínicos)
+- [x] Semana 16: Segunda Chamada P2 (não P2)
+- [x] Semana 17: Prova Final (não Segunda Chamada + Final + Premiação)
+- [x] Remover: Analgésicos Opioides do cronograma
