@@ -803,6 +803,44 @@ export default function Landing() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Admin Card */}
+            <motion.div
+              className="relative p-8 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(247,148,29,0.08)",
+                borderColor: "rgba(247,148,29,0.3)",
+              }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ borderColor: "rgba(247,148,29,0.6)", boxShadow: "0 0 40px rgba(247,148,29,0.2)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                  <Lock size={32} style={{ color: "#F7941D" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Administrador
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Acesso total ao sistema, gerenciar professores, alunos, equipes, configurações e relatórios.
+                </p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setLocation("/super-admin/login")}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
+                    style={{ backgroundColor: "#F7941D", color: "#000", border: "none" }}
+                  >
+                    <Shield size={18} />
+                    Acessar Admin
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* YouTube CTA */}
