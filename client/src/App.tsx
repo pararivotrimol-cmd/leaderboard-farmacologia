@@ -20,6 +20,7 @@ import TeacherForgotPassword from "./pages/TeacherForgotPassword";
 import TeacherResetPassword from "./pages/TeacherResetPassword";
 import SuperAdminSetup from "./pages/SuperAdminSetup";
 import SuperAdminProfile from "./pages/SuperAdminProfile";
+import ProfessorLogin from "./pages/ProfessorLogin";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -35,7 +36,7 @@ function Router() {
       <Route path={"/login-aluno"} component={StudentLogin} />
       <Route path={"/presenca"} component={Presenca} />
       <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/professor/login"} component={TeacherLogin} />
+      <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
       <Route path={"/professor/esqueci-senha"} component={TeacherForgotPassword} />
       <Route path={"/professor/redefinir-senha"} component={TeacherResetPassword} />

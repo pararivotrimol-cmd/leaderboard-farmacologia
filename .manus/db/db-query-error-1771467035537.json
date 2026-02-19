@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO teacherAccounts (email, name, passwordHash, isActive, role, createdAt, updatedAt) \nVALUES ('pedro.alexandre@unirio.br', 'Prof. Pedro Alexandre', '$2a$10$5kXVJJJJJJJJJJJJJJJJJOZQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ', 1, 'admin', NOW(), NOW())\nON DUPLICATE KEY UPDATE passwordHash=VALUES(passwordHash), isActive=1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute INSERT INTO teacherAccounts (email, name, passwordHash, isActive, role, createdAt, updatedAt) \nVALUES ('pedro.alexandre@unirio.br', 'Prof. Pedro Alexandre', '$2a$10$5kXVJJJJJJJJJJJJJJJJJOZQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ', 1, 'admin', NOW(), NOW())\nON DUPLICATE KEY UPDATE passwordHash=VALUES(passwordHash), isActive=1;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1265 (01000) at line 1: Data truncated for column 'role' at row 1"
+  ]
+}

@@ -92,6 +92,13 @@
       "when": 1771462692050,
       "tag": "0012_right_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1771466907808,
+      "tag": "0013_silent_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

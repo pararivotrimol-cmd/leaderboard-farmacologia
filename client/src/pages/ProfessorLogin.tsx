@@ -1,0 +1,209 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+
+const ORANGE = "#F7941D";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
+
+export default function ProfessorLogin() {
+  const [, navigate] = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loginMutation = trpc.teacherAuth.login.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        // Save session token to localStorage
+        localStorage.setItem("teacherSessionToken", result.sessionToken);
+        toast.success("Login realizado com sucesso!");
+        // Redirect to home
+        setTimeout(() => navigate("/home"), 500);
+      } else {
+        toast.error(result.message || "Erro ao fazer login");
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      toast.error("Erro ao conectar com o servidor");
+      console.error(error);
+      setIsLoading(false);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+
+    setIsLoading(true);
+    loginMutation.mutate({ email, password });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col lg:flex-row" style={{ backgroundColor: "#0A1628" }}>
+      {/* Left Side - Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12" style={{ backgroundColor: "#0D1B2A" }}>
+        <div className="text-center max-w-md">
+          <img src={LOGO_URL} alt="Logo" className="w-32 h-32 mx-auto mb-8 object-contain" />
+          <h1 className="text-4xl font-bold text-white mb-4">Conexão em Farmacologia</h1>
+          <p className="text-lg mb-2" style={{ color: "rgba(255,255,255,0.7)" }}>
+            UNIRIO - Universidade Federal do Estado do Rio de Janeiro
+          </p>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+            Semestre 2026.1
+          </p>
+          
+          <div className="mt-12 space-y-6">
+            <div className="text-left">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+                  <span style={{ color: ORANGE }}>📊</span>
+                </div>
+                <span className="text-white font-semibold">Leaderboard Gamificado</span>
+              </div>
+              <p className="text-sm ml-13" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Acompanhe o desempenho das equipes em tempo real
+              </p>
+            </div>
+
+            <div className="text-left">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+                  <span style={{ color: ORANGE }}>🎯</span>
+                </div>
+                <span className="text-white font-semibold">Seminários Jigsaw</span>
+              </div>
+              <p className="text-sm ml-13" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Gerencie grupos de seminário e atribua coordenadores
+              </p>
+            </div>
+
+            <div className="text-left">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+                  <span style={{ color: ORANGE }}>📈</span>
+                </div>
+                <span className="text-white font-semibold">Análise Detalhada</span>
+              </div>
+              <p className="text-sm ml-13" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Visualize métricas e progresso dos alunos
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <img src={LOGO_URL} alt="Logo" className="w-16 h-16 mx-auto mb-4 object-contain" />
+            <h1 className="text-2xl font-bold text-white">Conexão em Farmacologia</h1>
+          </div>
+
+          {/* Login Card */}
+          <div className="rounded-lg p-8" style={{ backgroundColor: "#0D1B2A", border: `1px solid rgba(255,255,255,0.1)` }}>
+            <h2 className="text-2xl font-bold text-white mb-2">Acesso Professor</h2>
+            <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Faça login com suas credenciais institucionais
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Email Institucional</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu.email@unirio.br"
+                  className="w-full px-4 py-3 rounded-lg text-white text-sm"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    border: `1px solid rgba(255,255,255,0.1)`,
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Password Input */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Senha</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 rounded-lg text-white text-sm"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      border: `1px solid rgba(255,255,255,0.1)`,
+                    }}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="p-3 rounded-lg flex gap-3" style={{ backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <AlertCircle size={18} style={{ color: ORANGE, flexShrink: 0 }} />
+                <p className="text-xs" style={{ color: ORANGE }}>
+                  Use suas credenciais institucionais UNIRIO (@unirio.br)
+                </p>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: ORANGE }}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Conectando...
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={18} />
+                    Entrar
+                  </>
+                )}
+              </button>
+
+
+            </form>
+
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t border-gray-700">
+              <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Problemas para fazer login?{" "}
+                <a href="/" className="hover:underline" style={{ color: ORANGE }}>
+                  Voltar para início
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

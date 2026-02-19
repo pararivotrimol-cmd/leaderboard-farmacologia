@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE teacherAccounts SET passwordHash = '$2b$10$quBtryjtW3W36hU996nMSupGR2xYKY2/OCVNSmoNV.ZeOYkUVFuny' WHERE email = 'pedro.alexandre@unirio.br';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute UPDATE teacherAccounts SET passwordHash = '$2b$10$quBtryjtW3W36hU996nMSupGR2xYKY2/OCVNSmoNV.ZeOYkUVFuny' WHERE email = 'pedro.alexandre@unirio.br';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 68
+}

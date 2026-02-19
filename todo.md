@@ -403,3 +403,24 @@
 - [ ] Integrar notificações quando badge é desbloqueado
 - [ ] Integrar notificações quando material é publicado
 - [ ] Testar sistema completo de notificações
+
+## Investigação de Problema de Login
+- [ ] Verificar qual página de login o usuário está tentando acessar
+- [ ] Verificar mensagem de erro específica
+- [ ] Checar logs do servidor para erros de autenticação
+- [ ] Verificar se OAuth está configurado corretamente
+- [ ] Testar fluxo de login do professor
+- [ ] Verificar se a plataforma foi publicada corretamente
+- [ ] Confirmar que o sistema de autenticação Manus OAuth está funcionando
+
+## Implementar Sistema de Autenticação Tradicional (Email/Senha)
+- [ ] Criar tabela de professores no banco de dados (email, senha hash, nome)
+- [ ] Implementar endpoints tRPC para login com email/senha
+- [ ] Implementar hash de senha com bcrypt
+- [ ] Criar tela de login customizada para professores
+- [ ] Remover dependência do OAuth da Manus
+- [ ] Criar conta padrão: pedro.alexandre@unirio.br / 08714684764
+- [ ] Implementar sistema de sessão com JWT
+- [ ] Atualizar Landing page para usar novo sistema de login
+- [ ] Testar login completo
+- [ ] Atualizar documentação de acesso
