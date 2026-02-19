@@ -549,8 +549,8 @@ export const appRouter = router({
       .query(async ({ input }) => {
         // Verify teacher is coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "coordenador") {
-          throw new Error("Acesso negado: apenas coordenadores podem listar professores");
+        if (!teacher || (teacher.role !== "coordenador" && teacher.role !== "super_admin")) {
+          throw new Error("Acesso negado: apenas coordenadores ou super admin podem listar professores");
         }
 
         const allTeachers = await db.getAllTeacherAccounts();
@@ -575,8 +575,8 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Verify teacher is coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "coordenador") {
-          throw new Error("Acesso negado: apenas coordenadores podem ativar/desativar professores");
+        if (!teacher || (teacher.role !== "coordenador" && teacher.role !== "super_admin")) {
+          throw new Error("Acesso negado: apenas coordenadores ou super admin podem ativar/desativar professores");
         }
 
         // Can't deactivate yourself
@@ -604,8 +604,8 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Verify teacher is coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "coordenador") {
-          throw new Error("Acesso negado: apenas coordenadores podem promover professores");
+        if (!teacher || (teacher.role !== "coordenador" && teacher.role !== "super_admin")) {
+          throw new Error("Acesso negado: apenas coordenadores ou super admin podem promover professores");
         }
 
         await db.updateTeacherAccount(input.teacherId, { role: "coordenador" });
@@ -628,8 +628,8 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Verify teacher is coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "coordenador") {
-          throw new Error("Acesso negado: apenas coordenadores podem rebaixar professores");
+        if (!teacher || (teacher.role !== "coordenador" && teacher.role !== "super_admin")) {
+          throw new Error("Acesso negado: apenas coordenadores ou super admin podem rebaixar professores");
         }
 
         // Can't demote yourself
@@ -657,8 +657,8 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Verify teacher is coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "coordenador") {
-          throw new Error("Acesso negado: apenas coordenadores podem remover professores");
+        if (!teacher || (teacher.role !== "coordenador" && teacher.role !== "super_admin")) {
+          throw new Error("Acesso negado: apenas coordenadores ou super admin podem remover professores");
         }
 
         // Can't delete yourself
@@ -801,11 +801,20 @@ export const appRouter = router({
   // ─── Admin CRUD (password-protected) ───
   teams: router({
     list: publicProcedure
-      .input(z.object({ password: z.string() }))
+      .input(z.object({ password: z.string().optional(), sessionToken: z.string().optional() }))
       .query(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Não autorizado");
-        return db.getAllTeams();
+        // Allow access via password OR sessionToken (for super admin / coordenador)
+        if (input.sessionToken) {
+          const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+          if (teacher && (teacher.role === "super_admin" || teacher.role === "coordenador")) {
+            return db.getAllTeams();
+          }
+        }
+        if (input.password) {
+          const valid = await verifyAdminPassword(input.password);
+          if (valid) return db.getAllTeams();
+        }
+        throw new Error("Não autorizado");
       }),
 
     create: publicProcedure
@@ -840,10 +849,18 @@ export const appRouter = router({
       }),
 
     delete: publicProcedure
-      .input(z.object({ password: z.string(), id: z.number() }))
+      .input(z.object({ password: z.string().optional(), sessionToken: z.string().optional(), id: z.number() }))
       .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Não autorizado");
+        // Allow access via password OR sessionToken
+        let authorized = false;
+        if (input.sessionToken) {
+          const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+          if (teacher && (teacher.role === "super_admin" || teacher.role === "coordenador")) authorized = true;
+        }
+        if (!authorized && input.password) {
+          authorized = await verifyAdminPassword(input.password);
+        }
+        if (!authorized) throw new Error("Não autorizado");
         await db.deleteTeam(input.id);
         return { success: true };
       }),
@@ -851,10 +868,18 @@ export const appRouter = router({
 
   members: router({
     list: publicProcedure
-      .input(z.object({ password: z.string(), teamId: z.number().optional() }))
+      .input(z.object({ password: z.string().optional(), sessionToken: z.string().optional(), teamId: z.number().optional() }))
       .query(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Não autorizado");
+        // Allow access via password OR sessionToken
+        let authorized = false;
+        if (input.sessionToken) {
+          const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+          if (teacher && (teacher.role === "super_admin" || teacher.role === "coordenador")) authorized = true;
+        }
+        if (!authorized && input.password) {
+          authorized = await verifyAdminPassword(input.password);
+        }
+        if (!authorized) throw new Error("Não autorizado");
         if (input.teamId) return db.getMembersByTeam(input.teamId);
         return db.getAllMembers();
       }),
@@ -1037,10 +1062,18 @@ export const appRouter = router({
       }),
 
     delete: publicProcedure
-      .input(z.object({ sessionToken: z.string().optional(), password: z.string(), id: z.number() }))
+      .input(z.object({ sessionToken: z.string().optional(), password: z.string().optional(), id: z.number() }))
       .mutation(async ({ input, ctx }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Não autorizado");
+        // Allow access via password OR sessionToken
+        let authorized = false;
+        if (input.sessionToken) {
+          const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+          if (teacher && (teacher.role === "super_admin" || teacher.role === "coordenador")) authorized = true;
+        }
+        if (!authorized && input.password) {
+          authorized = await verifyAdminPassword(input.password);
+        }
+        if (!authorized) throw new Error("Não autorizado");
         
         // Get member before delete for audit
         const allMembers = await db.getAllMembers();

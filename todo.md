@@ -569,3 +569,13 @@
 - [x] Corrigir redirecionamento do admin login (volta para cadastro após 1s)
 - [x] Corrigir música na vinheta (não toca)
 - [x] Setup de 10 músicas lounge com reprodução aleatória
+
+## Correções Painel Admin (Feb 19, 2026 - Fase 6)
+- [x] Corrigir botões de deleção de alunos no painel admin
+- [x] Corrigir botões de deleção de professores no painel admin
+- [x] Corrigir botões de deleção de turmas no painel admin
+- [x] Dar acesso livre ao admin logado na área de professores
+- [x] Corrigir músicas lounge que não estão tocando
+- [x] Corrigir botão Sair para redirecionar à página inicial (/)
+- [x] Adicionar interface de geração/gerenciamento de códigos de convite no painel admin
+- [x] Substituir dados mockados por dados reais do banco de dados (alunos e equipes)

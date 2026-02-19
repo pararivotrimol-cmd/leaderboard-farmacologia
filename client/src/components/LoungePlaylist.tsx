@@ -137,7 +137,6 @@ export default function LoungePlaylist() {
     <div className="fixed bottom-4 right-4 z-40">
       <audio
         ref={audioRef}
-        crossOrigin="anonymous"
         preload="auto"
       />
 

@@ -2333,9 +2333,13 @@ export default function Admin() {
     localStorage.removeItem("teacherSessionToken");
     localStorage.removeItem("teacherName");
     localStorage.removeItem("teacherEmail");
+    localStorage.removeItem("sessionToken");
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminRole");
+    localStorage.removeItem("adminLoginTime");
     setTeacherToken(null);
     setPassword(null);
-    window.location.href = "/professor/login";
+    window.location.href = "/";
   };
   
   // If not authenticated with teacher token, redirect to login
