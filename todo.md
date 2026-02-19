@@ -652,3 +652,31 @@
 - [x] Redirecionamento do admin para painel professor (sem login)
 - [x] Acesso direto do admin às seções de alunos e professores
 - [x] Aba Alunos com subdivisão por turmas e ordenação alfabética
+
+
+## Grupos Jigsaw (Seminários, Casos Clínicos, Kahoots)
+- [x] Criar tabela jigsawGroups no schema (groupType, classId, name, description, maxMembers)
+- [x] Criar tabela jigsawMembers no schema (jigsawGroupId, memberId, role)
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar rotas tRPC para criar grupos Jigsaw (alunos)
+- [x] Criar rotas tRPC para listar grupos Jigsaw disponíveis
+- [x] Criar rotas tRPC para entrar/sair de grupos
+- [x] Criar página de gerenciamento de grupos Jigsaw para alunos (/grupos-jigsaw)
+- [x] Criar interface de criação de grupos com seletor de tipo (seminário/caso clínico/Kahoot)
+- [x] Implementar validação de limite de membros por grupo
+- [ ] Escrever testes para Grupos Jigsaw
+
+## Importação UNIRIO
+- [x] Implementar web scraping do portal UNIRIO (login + busca de alunos)
+- [x] Criar rota tRPC para importar alunos do UNIRIO automaticamente
+- [x] Validar credenciais UNIRIO (CPF 08714684764)
+- [ ] Testar importação com dados reais do portal
+- [ ] Criar interface no painel admin para ativar/desativar importação UNIRIO
+- [ ] Adicionar histórico de importações com timestamps
+
+## Dashboard Admin Melhorado
+- [x] Exibir estatísticas gerais (total de alunos, equipes, turmas)
+- [x] Criar cards com métricas principais
+- [ ] Adicionar gráficos de distribuição de alunos por turma
+- [ ] Adicionar gráfico de XP total vs XP médio
+- [ ] Implementar filtro de período/semana

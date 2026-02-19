@@ -518,3 +518,41 @@ export const inviteCodes = mysqlTable("inviteCodes", {
 });
 export type InviteCode = typeof inviteCodes.$inferSelect;
 export type InsertInviteCode = typeof inviteCodes.$inferInsert;
+
+
+/**
+ * Jigsaw Groups - groups for seminars, clinical cases, and Kahoot quizzes
+ * Students create and join groups for collaborative learning activities
+ */
+export const jigsawGroups = mysqlTable("jigsawGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(), // Link to the class (turma)
+  groupType: mysqlEnum("groupType", ["seminar", "clinical_case", "kahoot"]).notNull(),
+  name: varchar("name", { length: 200 }).notNull(), // e.g., "Grupo 1 - Seminário Farmacocinética"
+  description: text("description"),
+  maxMembers: int("maxMembers").notNull().default(5),
+  currentMembers: int("currentMembers").notNull().default(0),
+  createdBy: int("createdBy"), // memberId of the student who created the group
+  createdByName: varchar("createdByName", { length: 200 }),
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JigsawGroup = typeof jigsawGroups.$inferSelect;
+export type InsertJigsawGroup = typeof jigsawGroups.$inferInsert;
+
+/**
+ * Jigsaw Members - students in jigsaw groups
+ */
+export const jigsawMembers = mysqlTable("jigsawMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  jigsawGroupId: int("jigsawGroupId").notNull(),
+  memberId: int("memberId").notNull(),
+  memberName: varchar("memberName", { length: 200 }).notNull(),
+  role: mysqlEnum("role", ["coordinator", "reporter", "researcher", "member"]).default("member").notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type JigsawMember = typeof jigsawMembers.$inferSelect;
+export type InsertJigsawMember = typeof jigsawMembers.$inferInsert;

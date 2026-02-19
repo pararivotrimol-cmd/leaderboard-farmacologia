@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { notifyOwner } from "./_core/notification";
 import { analyticsRouter } from "./routers/analytics";
+import { jigsawRouter } from "./routers/jigsaw";
+import { unirioRouter } from "./routers/unirio";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -480,6 +482,7 @@ export const appRouter = router({
         const allMembers = await db.getAllMembers();
         const allTeachers = await db.getAllTeacherAccounts();
         const allStudents = await db.getAllStudentAccounts();
+        const allClasses = await db.getAllClasses();
         
         // Calculate stats
         const totalTeams = allTeams.length;
@@ -498,6 +501,7 @@ export const appRouter = router({
           system: {
             totalTeams,
             totalMembers,
+            totalClasses: allClasses.length,
             totalXP: totalXP.toFixed(1),
             avgXPPerMember: avgXPPerMember.toFixed(1),
           },
@@ -2617,6 +2621,8 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  jigsawGroups: jigsawRouter,
 
 });
 

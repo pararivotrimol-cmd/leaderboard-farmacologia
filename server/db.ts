@@ -27,6 +27,8 @@ import {
   emailLog, InsertEmailLog,
   inviteCodes, InsertInviteCode,
   classes, InsertClass,
+  jigsawGroups, InsertJigsawGroup,
+  jigsawMembers, InsertJigsawMember,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1334,4 +1336,118 @@ export async function getMembersByClass(classId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(members).where(eq(members.classId, classId)).orderBy(asc(members.name));
+}
+
+
+// ─── Jigsaw Groups ───
+
+/**
+ * Create a jigsaw group
+ */
+export async function createJigsawGroup(data: InsertJigsawGroup) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(jigsawGroups).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get all jigsaw groups for a class
+ */
+export async function getJigsawGroupsByClass(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(jigsawGroups).where(eq(jigsawGroups.classId, classId)).orderBy(asc(jigsawGroups.name));
+}
+
+/**
+ * Get a jigsaw group by ID
+ */
+export async function getJigsawGroup(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(jigsawGroups).where(eq(jigsawGroups.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Update a jigsaw group
+ */
+export async function updateJigsawGroup(id: number, data: Partial<InsertJigsawGroup>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jigsawGroups).set(data).where(eq(jigsawGroups.id, id));
+}
+
+/**
+ * Delete a jigsaw group and its members
+ */
+export async function deleteJigsawGroup(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(jigsawMembers).where(eq(jigsawMembers.jigsawGroupId, id));
+  await db.delete(jigsawGroups).where(eq(jigsawGroups.id, id));
+}
+
+/**
+ * Add a member to a jigsaw group
+ */
+export async function addJigsawMember(data: InsertJigsawMember) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(jigsawMembers).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get members of a jigsaw group
+ */
+export async function getJigsawMembers(jigsawGroupId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(jigsawMembers).where(eq(jigsawMembers.jigsawGroupId, jigsawGroupId)).orderBy(asc(jigsawMembers.memberName));
+}
+
+/**
+ * Remove a member from a jigsaw group
+ */
+export async function removeJigsawMember(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(jigsawMembers).where(eq(jigsawMembers.id, id));
+}
+
+/**
+ * Check if a member is already in a jigsaw group
+ */
+export async function isMemberInJigsawGroup(jigsawGroupId: number, memberId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(jigsawMembers).where(
+    and(
+      eq(jigsawMembers.jigsawGroupId, jigsawGroupId),
+      eq(jigsawMembers.memberId, memberId)
+    )
+  ).limit(1);
+  return result.length > 0;
+}
+
+/**
+ * Get jigsaw groups that a member has joined
+ */
+export async function getMemberJigsawGroups(memberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(jigsawMembers).where(eq(jigsawMembers.memberId, memberId)).orderBy(asc(jigsawMembers.joinedAt));
+}
+
+
+/**
+ * Get a member by ID
+ */
+export async function getMemberById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(members).where(eq(members.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }
