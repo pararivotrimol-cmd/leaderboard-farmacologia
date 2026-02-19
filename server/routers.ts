@@ -708,8 +708,23 @@ export const appRouter = router({
     getMyStats: publicProcedure
       .input(z.object({ sessionToken: z.string() }))
       .query(async ({ input }) => {
-      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
-      if (!account) return null;
+      // Tentar obter conta de aluno primeiro, depois admin
+      let account = await db.getStudentAccountBySessionToken(input.sessionToken);
+      if (!account) {
+        // Se não for aluno, verificar se é admin
+        const adminAccount = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!adminAccount) return null;
+        // Admin pode visualizar dashboard vazio ou com dados gerais
+        return {
+          studentName: "Administrador",
+          totalPF: 0,
+          rank: 0,
+          totalStudents: 0,
+          badgesCount: 0,
+          attendanceCount: 0,
+          teamName: "Admin",
+        };
+      }
       
       const allMembers = await db.getAllMembers();
       const myMember = allMembers.find(m => m.id === account.memberId);
@@ -740,8 +755,13 @@ export const appRouter = router({
     getEvolution: publicProcedure
       .input(z.object({ sessionToken: z.string() }))
       .query(async ({ input }) => {
-      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
-      if (!account) return [];
+      let account = await db.getStudentAccountBySessionToken(input.sessionToken);
+      if (!account) {
+        // Se não for aluno, verificar se é admin
+        const adminAccount = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!adminAccount) return [];
+        return [];
+      }
       
       const allMembers = await db.getAllMembers();
       if (!account.memberId) return [];
@@ -773,12 +793,17 @@ export const appRouter = router({
       return weeklyData;
     }),
     
-    // Get badges history
+    //     // Get badges
     getBadges: publicProcedure
       .input(z.object({ sessionToken: z.string() }))
       .query(async ({ input }) => {
-      const account = await db.getStudentAccountBySessionToken(input.sessionToken);
-      if (!account) return [];
+      let account = await db.getStudentAccountBySessionToken(input.sessionToken);
+      if (!account) {
+        // Se não for aluno, verificar se é admin
+        const adminAccount = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!adminAccount) return [];
+        return [];
+      };
       
       const myBadges = await db.getStudentBadges(account.id);
       return myBadges;
