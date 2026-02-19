@@ -2593,45 +2593,6 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── UNIRIO Portal Integration ───
-  unirioImport: publicProcedure
-    .input(z.object({
-      cpf: z.string(),
-      password: z.string(),
-      classId: z.string(),
-      teacherSessionToken: z.string(),
-    }))
-    .mutation(async ({ input }) => {
-      const teacher = await db.getTeacherAccountBySessionToken(input.teacherSessionToken);
-      if (!teacher) throw new TRPCError({ code: 'UNAUTHORIZED' });
-
-      // Validar que o professor é responsável pela turma
-      const classData = await db.getClassById(parseInt(input.classId));
-      if (!classData || classData.teacherId !== teacher.id) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Você não é responsável por esta turma' });
-      }
-
-      // Importar alunos do portal UNIRIO
-      const result = await db.importStudentsFromUNIRIO(
-        input.cpf,
-        input.password,
-        input.classId,
-        teacher.id.toString()
-      );
-
-      // Registrar auditoria
-      await db.createAuditLog({
-        teacherAccountId: teacher.id,
-        action: 'IMPORT_STUDENTS_UNIRIO',
-        entityType: 'CLASS',
-        entityId: input.classId,
-        details: `Importados ${result.success} alunos, ${result.failed} falharam`,
-        createdAt: new Date(),
-      });
-
-      return result;
-    }),
-
 });
 
 // Haversine formula to calculate distance between two coordinates in meters
