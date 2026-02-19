@@ -3,7 +3,7 @@
  * Padronizado: Laranja (#F7941D) + Cinza (#4A4A4A) + Branco
  * Typography: Outfit (display), JetBrains Mono (data), DM Sans (body)
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
@@ -270,9 +270,27 @@ function GradeCalculator() {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules" | "calculator">("teams");
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [showIntro, setShowIntro] = useState(true);
+  const vinhetaAudioRef = useRef<HTMLAudioElement>(null);
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
   const { logout } = useAuth();
+
+  useEffect(() => {
+    const hasSeenVinheta = localStorage.getItem("hasSeenVinheta");
+    if (hasSeenVinheta) {
+      setShowIntro(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      localStorage.setItem("hasSeenVinheta", "true");
+      setShowIntro(false);
+    }, 4000);
+    if (vinhetaAudioRef.current) {
+      vinhetaAudioRef.current.play().catch(() => {});
+    }
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -323,6 +341,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
+      <audio
+        ref={vinhetaAudioRef}
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
+        preload="auto"
+      />
+      {showIntro && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: DARK_BG }}
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: -180, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, duration: 0.8 }}
+          >
+            <img
+              src={LOGO_URL}
+              alt="Conexão em Farmacologia"
+              className="w-40 h-40 object-contain"
+            />
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Notification Banners */}
       {notifications && notifications.length > 0 && (
         <div className="w-full">

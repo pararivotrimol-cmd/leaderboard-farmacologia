@@ -88,9 +88,10 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/admin/professor")}
+              onClick={() => navigate("/admin")}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
               style={{ backgroundColor: `${ORANGE}30`, color: ORANGE, border: `1px solid ${ORANGE}50` }}
+              title="Painel do Professor"
             >
               <ExternalLink size={16} />
               <span className="hidden sm:inline">Painel Professor</span>

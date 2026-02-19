@@ -634,3 +634,21 @@
 - [x] Atualizar gráficos e estatísticas por turma
 - [x] Salvar turma selecionada em localStorage
 - [x] Testar filtro com múltiplas turmas
+
+
+## Defeitos a Corrigir (Feb 19, 2026 - Fase 10)
+- [ ] Corrigir reprodução de vinheta ao carregar a plataforma
+- [ ] Corrigir reprodução de músicas lounge com autoplay
+- [ ] Permitir que lounge toque continuamente até usuário parar
+- [ ] Corrigir redirecionamento do admin ao clicar "Painel Professor"
+- [ ] Admin deve ter acesso direto sem login à seção de professores
+- [ ] Reorganizar aba Alunos com subdivisão por turmas
+- [ ] Listar alunos em ordem alfabética dentro de cada turma
+
+
+## Correções Finais Implementadas (Feb 19, 2026 - Noite)
+- [x] Vinheta com áudio ao acessar a plataforma (4 segundos, auto-play)
+- [x] Músicas lounge com autoplay e loop contínuo
+- [x] Redirecionamento do admin para painel professor (sem login)
+- [x] Acesso direto do admin às seções de alunos e professores
+- [x] Aba Alunos com subdivisão por turmas e ordenação alfabética

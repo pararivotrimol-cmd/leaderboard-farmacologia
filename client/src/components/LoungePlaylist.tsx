@@ -83,6 +83,25 @@ export default function LoungePlaylist() {
     };
   }, []);
 
+  // Auto-play on mount
+  useEffect(() => {
+    if (audioRef.current && !isPlaying) {
+      audioRef.current.src = currentTrack.url;
+      audioRef.current.load();
+      // Try to autoplay with muted first (browser policy)
+      audioRef.current.muted = true;
+      audioRef.current.play().catch((err) => {
+        console.warn("Autoplay blocked (muted):", err);
+      }).then(() => {
+        // Unmute after successful play
+        if (audioRef.current) {
+          audioRef.current.muted = false;
+          setIsPlaying(true);
+        }
+      });
+    }
+  }, []);
+
   // Update audio element when track changes
   useEffect(() => {
     if (audioRef.current) {
@@ -138,6 +157,7 @@ export default function LoungePlaylist() {
       <audio
         ref={audioRef}
         preload="auto"
+        loop
       />
 
       {/* Playlist Toggle Button */}
