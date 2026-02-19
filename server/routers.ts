@@ -1987,6 +1987,250 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Seminários Jigsaw (6 grupos) ───
+  seminars: router({
+    // Get all seminars
+    getAll: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        return db.getAllSeminars();
+      }),
+
+    // Get seminar by ID with participants and articles
+    getById: publicProcedure
+      .input(z.object({ sessionToken: z.string(), seminarId: z.number() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const [seminar, participants, articles] = await Promise.all([
+          db.getSeminarById(input.seminarId),
+          db.getSeminarParticipants(input.seminarId),
+          db.getSeminarArticles(input.seminarId),
+        ]);
+        
+        return { seminar, participants, articles };
+      }),
+
+    // Create seminar
+    create: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        week: z.number(),
+        title: z.string(),
+        description: z.string().optional(),
+        date: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const { sessionToken, ...data } = input;
+        const id = await db.createSeminar(data);
+        
+        await logAudit({
+          teacherToken: sessionToken,
+          action: "Criar Seminário",
+          entityType: "seminar",
+          entityId: id,
+          details: `Semana ${input.week}: ${input.title}`,
+          req: ctx.req,
+        });
+        
+        return { id };
+      }),
+
+    // Update seminar
+    update: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        date: z.string().optional(),
+        groupPF: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const { sessionToken, id, ...data } = input;
+        await db.updateSeminar(id, data);
+        
+        await logAudit({
+          teacherToken: sessionToken,
+          action: "Atualizar Seminário",
+          entityType: "seminar",
+          entityId: id,
+          details: JSON.stringify(data),
+          req: ctx.req,
+        });
+        
+        return { success: true };
+      }),
+
+    // Delete seminar
+    delete: publicProcedure
+      .input(z.object({ sessionToken: z.string(), id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        await db.deleteSeminar(input.id);
+        
+        await logAudit({
+          teacherToken: input.sessionToken,
+          action: "Excluir Seminário",
+          entityType: "seminar",
+          entityId: input.id,
+          details: "Seminário excluído com cascade (participantes e artigos)",
+          req: ctx.req,
+        });
+        
+        return { success: true };
+      }),
+
+    // Get all seminar roles
+    getRoles: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        return db.getAllSeminarRoles();
+      }),
+
+    // Create seminar role
+    createRole: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const { sessionToken, ...data } = input;
+        const id = await db.createSeminarRole(data);
+        return { id };
+      }),
+
+    // Assign member to participant role
+    assignMember: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        participantId: z.number(),
+        memberId: z.number(),
+        memberName: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        await db.assignMemberToSeminarRole(input.participantId, input.memberId, input.memberName);
+        
+        await logAudit({
+          teacherToken: input.sessionToken,
+          action: "Atribuir Aluno a Função",
+          entityType: "seminarParticipant",
+          entityId: input.participantId,
+          details: `Aluno: ${input.memberName} (ID: ${input.memberId})`,
+          req: ctx.req,
+        });
+        
+        return { success: true };
+      }),
+
+    // Update participant PF
+    updateParticipantPF: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        participantId: z.number(),
+        individualPF: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        await db.updateSeminarParticipant(input.participantId, { individualPF: input.individualPF });
+        
+        await logAudit({
+          teacherToken: input.sessionToken,
+          action: "Atualizar PF Individual (Seminário)",
+          entityType: "seminarParticipant",
+          entityId: input.participantId,
+          details: `PF: ${input.individualPF}`,
+          req: ctx.req,
+        });
+        
+        return { success: true };
+      }),
+
+    // Create participant
+    createParticipant: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        seminarId: z.number(),
+        roleId: z.number(),
+        memberId: z.number().optional(),
+        memberName: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const { sessionToken, ...data } = input;
+        const id = await db.createSeminarParticipant(data);
+        return { id };
+      }),
+
+    // Delete participant
+    deleteParticipant: publicProcedure
+      .input(z.object({ sessionToken: z.string(), participantId: z.number() }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        await db.deleteSeminarParticipant(input.participantId);
+        return { success: true };
+      }),
+
+    // Add article to seminar
+    addArticle: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        seminarId: z.number(),
+        pmid: z.string(),
+        title: z.string(),
+        authors: z.string().optional(),
+        journal: z.string().optional(),
+        year: z.number().optional(),
+        abstract: z.string().optional(),
+        url: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        const { sessionToken, ...data } = input;
+        const id = await db.createSeminarArticle(data);
+        return { id };
+      }),
+
+    // Delete article
+    deleteArticle: publicProcedure
+      .input(z.object({ sessionToken: z.string(), articleId: z.number() }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Não autorizado");
+        
+        await db.deleteSeminarArticle(input.articleId);
+        return { success: true };
+      }),
+  }),
 });
 
 // Haversine formula to calculate distance between two coordinates in meters

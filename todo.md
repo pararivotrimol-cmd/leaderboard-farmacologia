@@ -276,10 +276,10 @@
 - [x] Criar schema para atribuição de alunos a funções
 - [x] Criar schema para artigos PubMed por seminário
 - [x] Criar helper functions no db.ts para seminários
-- [ ] Criar rotas tRPC para CRUD de grupos de seminário
-- [ ] Criar rotas tRPC para atribuir alunos a funções
-- [ ] Criar aba "Seminários" no painel admin
-- [ ] Interface para professor cadastrar nomes de alunos nas funções
+- [x] Criar rotas tRPC para CRUD de grupos de seminário
+- [x] Criar rotas tRPC para atribuir alunos a funções
+- [x] Criar rotas tRPC para registrar PF individual e por grupo
+- [x] Criar rotas tRPC para gerenciar artigos PubMed por semináriora professor cadastrar nomes de alunos nas funções
 - [ ] Sistema de PF por aluno individual no seminário
 - [ ] Sistema de PF por grupo total no seminário
 
