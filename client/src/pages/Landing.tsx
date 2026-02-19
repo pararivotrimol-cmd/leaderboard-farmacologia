@@ -16,7 +16,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useStudentAuth } from "./StudentLogin";
-import IntroVinheta from "@/components/IntroVinheta";
+// Removed IntroVinheta - using video intro instead
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
@@ -266,7 +266,23 @@ export default function Landing() {
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
       {/* ═══════ ANIMATED INTRO VINHETA ═══════ */}
       {showVinheta && !vinhetaComplete && (
-        <IntroVinheta onComplete={handleVinhetaComplete} />
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <video
+            key="intro-video"
+            autoPlay
+            muted
+            onEnded={handleVinhetaComplete}
+            className="w-full h-full object-cover"
+            style={{ backgroundColor: "#000" }}
+          >
+            <source src={INTRO_VIDEO_URL} type="video/mp4" />
+          </video>
+        </motion.div>
       )}
 
       {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}
