@@ -424,3 +424,32 @@
 - [ ] Atualizar Landing page para usar novo sistema de login
 - [ ] Testar login completo
 - [ ] Atualizar documentação de acesso
+
+## Painel de Analytics com Gráficos e Exportação
+- [x] Criar endpoint tRPC para obter dados de desempenho das equipes por semana
+- [ ] Implementar gráfico de linha (Chart.js) mostrando evolução de XP das equipes
+- [ ] Implementar gráfico de barras comparativo de desempenho
+- [ ] Adicionar filtros por período (semana, mês, semestre)
+- [ ] Implementar exportação em PDF usando ReportLab
+- [ ] Implementar exportação em Excel usando openpyxl
+- [ ] Criar página de Analytics no painel admin
+- [ ] Testar gráficos e exportações
+
+## Sistema de Notificações por Email
+- [ ] Criar tabela de configuração de notificações por email
+- [ ] Implementar função para enviar email quando PF é atualizado
+- [ ] Implementar função para enviar email quando badge é desbloqueado
+- [ ] Implementar função para enviar email com avisos do professor
+- [ ] Configurar SMTP para envio de emails
+- [ ] Criar templates de email HTML
+- [ ] Testar envio de emails
+
+## Integração com PubMed API
+- [ ] Criar endpoint tRPC para buscar artigos do PubMed
+- [ ] Implementar busca por tema de seminário
+- [ ] Filtrar artigos dos últimos 4 anos
+- [ ] Limitar a 2 artigos por tema
+- [ ] Armazenar artigos em cache no banco de dados
+- [ ] Criar interface para visualizar artigos sugeridos
+- [ ] Integrar ao painel de Seminários Jigsaw
+- [ ] Testar integração com PubMed

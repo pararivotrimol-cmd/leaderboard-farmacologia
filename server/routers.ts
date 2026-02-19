@@ -7,6 +7,7 @@ import * as db from "./db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { notifyOwner } from "./_core/notification";
+import { analyticsRouter } from "./routers/analytics";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -111,6 +112,7 @@ function extractYoutubeId(url: string, type: string): string | null {
 
 export const appRouter = router({
   system: systemRouter,
+  analytics: analyticsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
