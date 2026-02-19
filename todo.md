@@ -371,3 +371,35 @@
 - [x] Testar em 768px (tablet)
 - [x] Testar em 1024px (tablet landscape)
 - [x] Validar todas as páginas funcionando corretamente
+
+## Interface da Aba Seminários Jigsaw
+- [x] Criar componente JigsawSeminarsManager no Admin.tsx
+- [x] Listar 6 grupos de seminário com temas
+- [x] Interface para atribuir coordenador a cada grupo
+- [x] Interface para atribuir relator a cada grupo
+- [x] Interface para registrar PF individual do coordenador
+- [x] Interface para registrar PF individual do relator
+- [x] Interface para registrar PF do grupo inteiro
+- [x] Adicionar aba "Seminários Jigsaw" no menu do painel admin
+- [x] Testar criação e edição de atribuições
+
+## Calculadora de Média Final na Home
+- [x] Criar seção explicativa da fórmula MF na Home
+- [x] Implementar inputs para P1, P2, SEM, CS, Kahoot
+- [x] Calcular automaticamente NT = (SEM+CS+Kahoot)/3
+- [x] Calcular automaticamente MF = (P1+P2)/2 × 0,75 + NT × 0,25
+- [x] Exibir resultado final com indicador visual (aprovado/reprovado)
+- [x] Tornar calculadora responsiva para mobile
+- [x] Testar cálculos com diferentes valores
+
+## Sistema de Notificações Push (ADIADO - implementar futuramente)
+- [ ] Criar tabela de notificações no banco de dados
+- [ ] Criar endpoints tRPC para enviar notificações
+- [ ] Criar endpoint para listar notificações do aluno
+- [ ] Criar componente de sino de notificações no Dashboard
+- [ ] Implementar badge de contagem de não lidas
+- [ ] Criar modal/dropdown para exibir notificações
+- [ ] Integrar notificações quando PF é atualizado
+- [ ] Integrar notificações quando badge é desbloqueado
+- [ ] Integrar notificações quando material é publicado
+- [ ] Testar sistema completo de notificações

@@ -132,8 +132,143 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
   );
 }
 
+// ─── Grade Calculator Component ───
+function GradeCalculator() {
+  const [p1, setP1] = useState("");
+  const [p2, setP2] = useState("");
+  const [sem, setSem] = useState("");
+  const [cs, setCs] = useState("");
+  const [kahoot, setKahoot] = useState("");
+
+  const p1Val = parseFloat(p1) || 0;
+  const p2Val = parseFloat(p2) || 0;
+  const semVal = parseFloat(sem) || 0;
+  const csVal = parseFloat(cs) || 0;
+  const kahootVal = parseFloat(kahoot) || 0;
+
+  const nt = (semVal + csVal + kahootVal) / 3;
+  const mf = ((p1Val + p2Val) / 2) * 0.75 + nt * 0.25;
+  const isApproved = mf >= 5.0;
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="font-display font-bold text-xl text-white mb-2 flex items-center gap-2">
+        <BarChart3 size={22} style={{ color: ORANGE }} />
+        Calculadora de Média Final
+      </h2>
+      <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+        Simule sua Média Final (MF) com base nas notas das provas e atividades.
+      </p>
+
+      {/* Formula Explanation */}
+      <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: CARD_BG, border: `1px solid ${ORANGE}25` }}>
+        <h3 className="font-semibold text-sm text-white mb-2">Fórmula da Média Final</h3>
+        <div className="font-mono text-xs sm:text-sm mb-3 p-3 rounded" style={{ backgroundColor: "rgba(255,255,255,0.05)", color: ORANGE }}>
+          MF = (P1 + P2) / 2 × 0,75 + NT × 0,25
+        </div>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+          Onde <strong style={{ color: ORANGE }}>NT</strong> (Nota de Trabalho) = (SEM + CS + Kahoot) / 3
+        </p>
+        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <strong style={{ color: ORANGE }}>SEM</strong>: Seminários Jigsaw | <strong style={{ color: ORANGE }}>CS</strong>: Casos Clínicos | <strong style={{ color: ORANGE }}>Kahoot</strong>: Atividades Kahoot
+        </p>
+      </div>
+
+      {/* Input Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label className="text-xs font-medium text-white block mb-1.5">Prova 1 (P1)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={p1}
+            onChange={(e) => setP1(e.target.value)}
+            placeholder="0.0"
+            className="w-full px-3 py-2.5 rounded-lg text-sm font-mono text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: `1px solid rgba(255,255,255,0.1)` }}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-white block mb-1.5">Prova 2 (P2)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={p2}
+            onChange={(e) => setP2(e.target.value)}
+            placeholder="0.0"
+            className="w-full px-3 py-2.5 rounded-lg text-sm font-mono text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: `1px solid rgba(255,255,255,0.1)` }}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-white block mb-1.5">Seminários (SEM)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={sem}
+            onChange={(e) => setSem(e.target.value)}
+            placeholder="0.0"
+            className="w-full px-3 py-2.5 rounded-lg text-sm font-mono text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: `1px solid rgba(255,255,255,0.1)` }}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-white block mb-1.5">Casos Clínicos (CS)</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={cs}
+            onChange={(e) => setCs(e.target.value)}
+            placeholder="0.0"
+            className="w-full px-3 py-2.5 rounded-lg text-sm font-mono text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: `1px solid rgba(255,255,255,0.1)` }}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-white block mb-1.5">Kahoot</label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={kahoot}
+            onChange={(e) => setKahoot(e.target.value)}
+            placeholder="0.0"
+            className="w-full px-3 py-2.5 rounded-lg text-sm font-mono text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: `1px solid rgba(255,255,255,0.1)` }}
+          />
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="p-4 rounded-lg" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(255,255,255,0.1)` }}>
+          <p className="text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Nota de Trabalho (NT)</p>
+          <p className="text-3xl font-mono font-bold" style={{ color: ORANGE }}>{nt.toFixed(2)}</p>
+          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>(SEM + CS + Kahoot) / 3</p>
+        </div>
+        <div className="p-4 rounded-lg" style={{ backgroundColor: isApproved ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${isApproved ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}` }}>
+          <p className="text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Média Final (MF)</p>
+          <p className="text-3xl font-mono font-bold" style={{ color: isApproved ? "#22c55e" : "#ef4444" }}>{mf.toFixed(2)}</p>
+          <p className="text-xs mt-1 font-medium" style={{ color: isApproved ? "#22c55e" : "#ef4444" }}>
+            {isApproved ? "✓ Aprovado" : "✗ Reprovado"} (mínimo 5.0)
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules">("teams");
+  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules" | "calculator">("teams");
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { logout } = useAuth();
 
@@ -338,6 +473,7 @@ export default function Home() {
             { key: "teams" as const, label: "Ranking Equipes", icon: <Users size={15} /> },
             { key: "individual" as const, label: "Top 10 Individual", icon: <Award size={15} /> },
             { key: "activities" as const, label: "Atividades PF", icon: <Target size={15} /> },
+            { key: "calculator" as const, label: "Calcular Média", icon: <BarChart3 size={15} /> },
             { key: "rules" as const, label: "Regras", icon: <ClipboardList size={15} /> },
           ].map(tab => (
             <button
@@ -516,6 +652,11 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+            </motion.div>
+          )}
+          {activeTab === "calculator" && (
+            <motion.div key="calculator" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              <GradeCalculator />
             </motion.div>
           )}
           {activeTab === "rules" && (

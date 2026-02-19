@@ -8,7 +8,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical
+  Youtube, Play, Video, GripVertical, Target
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -2050,10 +2050,268 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Jigsaw Seminars Manager ───
+function JigsawSeminarsManager({ teacherToken }: { teacherToken: string | null }) {
+  const [selectedSeminar, setSelectedSeminar] = useState<number | null>(null);
+  const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
+  const [editPF, setEditPF] = useState("");
+  
+  const utils = trpc.useUtils();
+  const { data: seminars, isLoading } = trpc.seminars.getAll.useQuery({ sessionToken: teacherToken || "" }, { enabled: !!teacherToken });
+  const { data: seminarDetails } = trpc.seminars.getById.useQuery(
+    { sessionToken: teacherToken || "", seminarId: selectedSeminar || 0 },
+    { enabled: !!teacherToken && !!selectedSeminar }
+  );
+  const { data: allMembers } = trpc.leaderboard.getData.useQuery();
+  const { data: roles } = trpc.seminars.getRoles.useQuery({ sessionToken: teacherToken || "" }, { enabled: !!teacherToken });
+
+  const assignMemberMutation = trpc.seminars.assignMember.useMutation({
+    onSuccess: () => {
+      utils.seminars.getById.invalidate();
+      toast.success("Aluno atribuído com sucesso!");
+    },
+    onError: () => toast.error("Erro ao atribuir aluno"),
+  });
+
+  const updatePFMutation = trpc.seminars.updateParticipantPF.useMutation({
+    onSuccess: () => {
+      utils.seminars.getById.invalidate();
+      toast.success("PF atualizado!");
+      setEditingParticipant(null);
+      setEditPF("");
+    },
+    onError: () => toast.error("Erro ao atualizar PF"),
+  });
+
+  const updateGroupPFMutation = trpc.seminars.update.useMutation({
+    onSuccess: () => {
+      utils.seminars.getAll.invalidate();
+      toast.success("PF do grupo atualizado!");
+    },
+    onError: () => toast.error("Erro ao atualizar PF do grupo"),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Carregando seminários...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const flatMembers = allMembers?.teams.flatMap(t => t.members.map(m => ({ ...m, teamName: t.name }))) || [];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display font-bold text-xl text-foreground mb-1">Seminários Jigsaw</h2>
+        <p className="text-sm text-muted-foreground">Gerencie os 6 grupos de seminário, atribua coordenadores/relatores e registre PF individual e do grupo.</p>
+      </div>
+
+      {/* Seminars Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {seminars?.map((sem: any) => (
+          <motion.div
+            key={sem.id}
+            className="p-4 rounded-lg border border-border bg-card cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => setSelectedSeminar(sem.id)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Target size={16} className="text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">Semana {sem.week}</span>
+                </div>
+                <h3 className="font-semibold text-foreground text-sm">{sem.title}</h3>
+              </div>
+            </div>
+            {sem.description && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{sem.description}</p>
+            )}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              <span className="text-xs text-muted-foreground">{sem.date}</span>
+              <span className="text-xs font-mono font-bold text-primary">
+                {sem.groupPF ? `${sem.groupPF} PF` : "—"}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Selected Seminar Details */}
+      {selectedSeminar && seminarDetails && seminarDetails.seminar && (
+        <AnimatePresence>
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedSeminar(null)}
+          >
+            <motion.div
+              className="bg-background rounded-lg border border-border max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display font-bold text-lg text-foreground">{seminarDetails.seminar.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Semana {seminarDetails.seminar.week} • {seminarDetails.seminar.date}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedSeminar(null)}
+                  className="p-2 rounded-md hover:bg-secondary text-muted-foreground"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {/* Group PF */}
+                <div className="p-3 rounded-lg bg-secondary/30 border border-border">
+                  <label className="text-xs font-medium text-muted-foreground block mb-2">PF do Grupo Inteiro</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      defaultValue={seminarDetails.seminar.groupPF || ""}
+                      placeholder="Ex: 2.0"
+                      className="flex-1 px-3 py-2 rounded-md bg-background border border-border text-sm text-foreground"
+                      onBlur={(e) => {
+                        if (seminarDetails?.seminar && e.target.value !== seminarDetails.seminar.groupPF) {
+                          updateGroupPFMutation.mutate({
+                            sessionToken: teacherToken || "",
+                            id: seminarDetails.seminar.id,
+                            groupPF: e.target.value,
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Participants */}
+                <div>
+                  <h4 className="font-semibold text-sm text-foreground mb-3">Participantes</h4>
+                  <div className="space-y-2">
+                    {seminarDetails.participants.map((p: any) => {
+                      const role = roles?.find((r: any) => r.id === p.roleId);
+                      const member = flatMembers.find(m => m.id === p.memberId);
+                      
+                      return (
+                        <div key={p.id} className="p-3 rounded-lg border border-border bg-card">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                                {role?.name || "Função"}
+                              </span>
+                              {member && (
+                                <span className="text-xs text-muted-foreground">
+                                  {member.name} ({member.teamName})
+                                </span>
+                              )}
+                            </div>
+                            {p.individualPF && (
+                              <span className="text-xs font-mono font-bold text-primary">{p.individualPF} PF</span>
+                            )}
+                          </div>
+
+                          {/* Assign Member */}
+                          {!p.memberId && (
+                            <select
+                              className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm"
+                              onChange={(e) => {
+                                const memberId = parseInt(e.target.value);
+                                const selectedMember = flatMembers.find(m => m.id === memberId);
+                                if (selectedMember) {
+                                  assignMemberMutation.mutate({
+                                    sessionToken: teacherToken || "",
+                                    participantId: p.id,
+                                    memberId,
+                                    memberName: selectedMember.name,
+                                  });
+                                }
+                              }}
+                            >
+                              <option value="">Selecionar aluno...</option>
+                              {flatMembers.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} ({m.teamName})</option>
+                              ))}
+                            </select>
+                          )}
+
+                          {/* Update PF */}
+                          {p.memberId && (
+                            <div className="mt-2">
+                              {editingParticipant === p.id ? (
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={editPF}
+                                    onChange={(e) => setEditPF(e.target.value)}
+                                    placeholder="Ex: 2.0"
+                                    className="flex-1 px-3 py-1.5 rounded-md bg-background border border-border text-sm"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      updatePFMutation.mutate({
+                                        sessionToken: teacherToken || "",
+                                        participantId: p.id,
+                                        individualPF: editPF,
+                                      });
+                                    }}
+                                    className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium"
+                                  >
+                                    Salvar
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingParticipant(null);
+                                      setEditPF("");
+                                    }}
+                                    className="px-3 py-1.5 rounded-md bg-secondary text-foreground text-xs"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setEditingParticipant(p.id);
+                                    setEditPF(p.individualPF || "");
+                                  }}
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  {p.individualPF ? "Editar PF Individual" : "Atribuir PF Individual"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings">("teams");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -2096,6 +2354,7 @@ export default function Admin() {
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
+    { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
@@ -2147,6 +2406,7 @@ export default function Admin() {
         {activeSection === "badges" && <BadgesManager password={password} />}
         {activeSection === "attendance" && <AttendanceManager password={password} />}
         {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
+        {activeSection === "jigsaw" && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "professores" && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
