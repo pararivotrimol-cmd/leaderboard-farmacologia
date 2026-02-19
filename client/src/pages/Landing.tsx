@@ -272,53 +272,50 @@ export default function Landing() {
       {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}
       {vinhetaComplete && <BackgroundMusic />}
 
-      {/* ═══════ INTRO VIDEO OVERLAY (auto-play, muted) ═══════ */}
-      <AnimatePresence>
-        {vinhetaComplete && showIntro && (
-          <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-            style={{ backgroundColor: "#000" }}
-            initial={{ opacity: 1 }}
-            animate={{ opacity: introEnded ? 0 : 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <video
-              ref={videoRef}
-              src={INTRO_VIDEO_URL}
-              playsInline
-              muted
-              autoPlay
-              preload="auto"
-              className="w-full h-full object-contain absolute inset-0"
-              onEnded={handleIntroEnd}
-            />
-            <button
-              onClick={skipIntro}
-              className="absolute bottom-8 right-8 px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105 z-10"
-              style={{
-                backgroundColor: "rgba(247,148,29,0.9)",
-                color: "#fff",
-              }}
-            >
-              Pular Intro →
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ═══════ HERO SECTION ═══════ */}
+      {/* ═══════ HERO SECTION (animated like vinheta finale) ═══════ */}
       <motion.div
         ref={heroRef}
         className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
         style={{ opacity: heroOpacity, scale: heroScale }}
       >
-        <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse at center, rgba(247,148,29,0.08) 0%, rgba(10,22,40,0) 70%)"
-        }} />
+        {/* Animated radial gradient background */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{
+            background: [
+              "radial-gradient(ellipse at center, rgba(247,148,29,0.06) 0%, rgba(10,22,40,0) 70%)",
+              "radial-gradient(ellipse at center, rgba(247,148,29,0.12) 0%, rgba(10,22,40,0) 60%)",
+              "radial-gradient(ellipse at center, rgba(247,148,29,0.06) 0%, rgba(10,22,40,0) 70%)",
+            ],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+
         <FloatingParticles />
         <DNAHelix side="left" />
         <DNAHelix side="right" />
+
+        {/* Expanding circle rings (like vinheta) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={`ring-${i}`}
+              className="absolute rounded-full"
+              style={{ border: "1px solid rgba(247,148,29,0.1)" }}
+              animate={{
+                width: [100, 600 + i * 200],
+                height: [100, 600 + i * 200],
+                opacity: [0.3, 0],
+              }}
+              transition={{
+                duration: 4,
+                delay: i * 1.5,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+          ))}
+        </div>
 
         <motion.div
           className="relative z-10 flex flex-col items-center px-4"
@@ -326,14 +323,26 @@ export default function Landing() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut" }}
         >
-          <motion.img
-            src={LOGO_URL}
-            alt="Conexão em Farmacologia"
-            className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 object-contain drop-shadow-2xl"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3, type: "spring", stiffness: 100 }}
-          />
+          {/* Logo with glow effect */}
+          <motion.div className="relative">
+            <motion.div
+              className="absolute inset-0 rounded-full blur-3xl"
+              style={{ backgroundColor: "#F7941D", opacity: 0.15 }}
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.1, 0.25, 0.1],
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.img
+              src={LOGO_URL}
+              alt="Conexão em Farmacologia"
+              className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 object-contain drop-shadow-2xl"
+              initial={{ scale: 0, rotate: -180, opacity: 0 }}
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 150, damping: 20 }}
+            />
+          </motion.div>
 
           <motion.div
             className="mt-6 text-center"
@@ -341,34 +350,97 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
           >
+            {/* Animated title letters like vinheta */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              <span style={{ color: "#F7941D" }}>Conexão</span>
-              <span className="text-white/60 text-2xl sm:text-3xl md:text-4xl mx-2">em</span>
-              <span className="text-white">Farmacologia</span>
+              <span className="inline-flex overflow-hidden">
+                {"Conexão".split("").map((letter, i) => (
+                  <motion.span
+                    key={`c-${i}`}
+                    style={{ color: "#F7941D" }}
+                    initial={{ y: 60, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 + i * 0.05, type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+              </span>
+              <motion.span
+                className="text-white/60 text-2xl sm:text-3xl md:text-4xl mx-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.4 }}
+              >
+                em
+              </motion.span>
+              <span className="inline-flex overflow-hidden">
+                {"Farmacologia".split("").map((letter, i) => (
+                  <motion.span
+                    key={`f-${i}`}
+                    className="text-white"
+                    initial={{ y: 60, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 1.3 + i * 0.03, type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+              </span>
             </h1>
+
+            {/* Animated underline */}
+            <motion.div
+              className="h-1 rounded-full mx-auto mt-3"
+              style={{ backgroundColor: "#F7941D" }}
+              initial={{ width: 0 }}
+              animate={{ width: "60%" }}
+              transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
+            />
+
             {/* Logos das Escolas UNIRIO */}
             <motion.div
-              className="mt-6 flex items-center justify-center gap-4 flex-wrap"
+              className="mt-8 flex items-center justify-center gap-4 flex-wrap"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2, duration: 0.6 }}
+              transition={{ delay: 2.2, duration: 0.6 }}
             >
-              <div className="bg-white rounded-full p-2 shadow-lg">
+              <motion.div
+                className="bg-white rounded-full p-2 shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <img src="/logos/unirio.png" alt="UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
-              </div>
-              <img src="/logos/medicina.png" alt="Escola de Medicina e Cirurgia UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <div className="bg-white rounded-full p-2 shadow-lg">
+              </motion.div>
+              <motion.img
+                src="/logos/medicina.png" alt="Escola de Medicina e Cirurgia UNIRIO"
+                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                whileHover={{ scale: 1.1 }}
+              />
+              <motion.div
+                className="bg-white rounded-full p-2 shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <img src="/logos/ibio.png" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
-              </div>
-              <img src="/logos/nutricao.png" alt="Escola de Nutrição UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <img src="/logos/enfermagem.png" alt="Escola de Enfermagem Alfredo Pinto UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              </motion.div>
+              <motion.img
+                src="/logos/nutricao.png" alt="Escola de Nutrição UNIRIO"
+                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                whileHover={{ scale: 1.1 }}
+              />
+              <motion.img
+                src="/logos/enfermagem.png" alt="Escola de Enfermagem Alfredo Pinto UNIRIO"
+                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                whileHover={{ scale: 1.1 }}
+              />
             </motion.div>
+
             <motion.p
-              className="mt-2 text-sm sm:text-base max-w-xl mx-auto"
+              className="mt-3 text-sm sm:text-base max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.4)" }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.4, duration: 0.6 }}
+              transition={{ delay: 2.6, duration: 0.6 }}
             >
               Uma experiência gamificada de aprendizado com metodologias ativas
             </motion.p>

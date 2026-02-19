@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name, email, role, isActive, passwordHash FROM teacherAccounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, email, role, isActive, passwordHash FROM teacherAccounts;",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "THAIANA DA CUNHA FERREIRA MENDES",
+      "email": "thaiana.mendes@unirio.br",
+      "role": "professor",
+      "isActive": "1",
+      "passwordHash": "$2b$10$N3k8kcWNrSVgxhsZxSgAku1dgSdBejz9tXXPWcXI5CEz.Hq5YyuyG"
+    },
+    {
+      "id": "120005",
+      "name": "Prof. Pedro Alexandre",
+      "email": "pedro.alexandre@unirio.br",
+      "role": "super_admin",
+      "isActive": "1",
+      "passwordHash": "$2b$10$quBtryjtW3W36hU996nMSupGR2xYKY2/OCVNSmoNV.ZeOYkUVFuny"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tisActive\tpasswordHash\n30001\tTHAIANA DA CUNHA FERREIRA MENDES\tthaiana.mendes@unirio.br\tprofessor\t1\t$2b$10$N3k8kcWNrSVgxhsZxSgAku1dgSdBejz9tXXPWcXI5CEz.Hq5YyuyG\n120005\tProf. Pedro Alexandre\tpedro.alexandre@unirio.br\tsuper_admin\t1\t$2b$10$quBtryjtW3W36hU996nMSupGR2xYKY2/OCVNSmoNV.ZeOYkUVFuny\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

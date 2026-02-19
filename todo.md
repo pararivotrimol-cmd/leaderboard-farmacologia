@@ -464,3 +464,16 @@
 - [x] Adicionar efeitos de partículas ou movimento
 - [x] Testar responsividade com novas animações
 - [x] Validar performance e carregamento
+
+## Correções Gerais da Plataforma (Fev 19)
+- [ ] Corrigir erro 404 no ProfessorLogin.tsx (import duplicado useState)
+- [ ] Verificar rota /professor/login no App.tsx
+- [ ] Verificar conta professor pedro.alexandre@unirio.br no banco
+- [ ] Testar login professor completo
+- [ ] Verificar login aluno funcional
+- [ ] Remover qualquer coisa antes da vinheta de abertura
+- [ ] Vinheta deve ser a primeira coisa exibida ao acessar
+- [ ] Reformular hero section pós-vinheta (animado, semelhante ao final da vinheta)
+- [ ] Implementar música lounge funcional com URLs reais
+- [ ] Testar música tocando corretamente
+- [ ] Verificar demais erros na dinâmica da plataforma

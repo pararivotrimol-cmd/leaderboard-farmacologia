@@ -1,27 +1,53 @@
-import { useState, useRef, useEffect } from "react";
-import { Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Volume2, VolumeX, Play, Pause, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ORANGE = "#F7941D";
 
 /**
  * Background Music Player
  * Plays lounge music with volume controls
- * Uses royalty-free music from Pixabay/Mixkit
+ * Auto-starts on first user interaction (click/touch)
  */
 export default function BackgroundMusic() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.3);
+  const [volume, setVolume] = useState(0.25);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Royalty-free lounge music playlist (using placeholder URLs)
-  // TODO: Replace with actual royalty-free music URLs from Pixabay/Mixkit
-  const playlist = [
-    "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3", // Lounge track 1
-    "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c0e3e2e0.mp3", // Lounge track 2
-  ];
+  // CDN-hosted royalty-free ambient lounge music
+  const musicUrl = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/YbUYLOZABZPESahD.wav";
 
-  const [currentTrack, setCurrentTrack] = useState(0);
+  // Auto-play on first user interaction (browsers require user gesture)
+  const startPlayback = useCallback(() => {
+    if (hasInteracted) return;
+    setHasInteracted(true);
+    
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.warn("Audio playback failed:", err);
+      });
+    }
+  }, [hasInteracted, volume]);
+
+  // Listen for any user interaction to auto-start music
+  useEffect(() => {
+    const handler = () => startPlayback();
+    document.addEventListener("click", handler, { once: true });
+    document.addEventListener("touchstart", handler, { once: true });
+    document.addEventListener("keydown", handler, { once: true });
+    
+    return () => {
+      document.removeEventListener("click", handler);
+      document.removeEventListener("touchstart", handler);
+      document.removeEventListener("keydown", handler);
+    };
+  }, [startPlayback]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -29,20 +55,24 @@ export default function BackgroundMusic() {
     }
   }, [volume, isMuted]);
 
-  const togglePlay = () => {
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play().catch(err => {
+        audioRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(err => {
           console.warn("Audio playback failed:", err);
         });
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
-  const toggleMute = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsMuted(!isMuted);
   };
 
@@ -54,18 +84,6 @@ export default function BackgroundMusic() {
     }
   };
 
-  const handleTrackEnd = () => {
-    // Play next track in playlist
-    const nextTrack = (currentTrack + 1) % playlist.length;
-    setCurrentTrack(nextTrack);
-    if (audioRef.current) {
-      audioRef.current.src = playlist[nextTrack];
-      audioRef.current.play().catch(err => {
-        console.warn("Audio playback failed:", err);
-      });
-    }
-  };
-
   return (
     <div
       className="fixed bottom-4 right-4 z-40"
@@ -74,32 +92,37 @@ export default function BackgroundMusic() {
     >
       <audio
         ref={audioRef}
-        src={playlist[currentTrack]}
-        onEnded={handleTrackEnd}
-        loop={false}
+        src={musicUrl}
+        loop
+        preload="auto"
       />
 
       <motion.div
-        className="bg-gray-900/90 backdrop-blur-sm rounded-full shadow-2xl border border-gray-700"
-        initial={{ width: 48, height: 48 }}
+        className="backdrop-blur-md rounded-full shadow-2xl"
+        style={{
+          backgroundColor: "rgba(10, 22, 40, 0.9)",
+          border: `1px solid ${ORANGE}40`,
+        }}
+        initial={{ width: 52, height: 52 }}
         animate={{
-          width: showControls ? 220 : 48,
-          height: 48,
+          width: showControls ? 240 : 52,
+          height: 52,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center gap-2 p-2.5">
           {/* Play/Pause button */}
           <button
             onClick={togglePlay}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 shrink-0"
             style={{
-              backgroundColor: "#F7941D",
+              backgroundColor: ORANGE,
               color: "#fff",
+              boxShadow: isPlaying ? `0 0 12px ${ORANGE}60` : "none",
             }}
-            title={isPlaying ? "Pausar música" : "Tocar música"}
+            title={isPlaying ? "Pausar música" : "Tocar música lounge"}
           >
-            {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+            {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
           </button>
 
           {/* Volume controls (visible on hover) */}
@@ -114,13 +137,13 @@ export default function BackgroundMusic() {
               >
                 <button
                   onClick={toggleMute}
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors shrink-0"
                   title={isMuted ? "Ativar som" : "Silenciar"}
                 >
                   {isMuted || volume === 0 ? (
-                    <VolumeX size={18} />
+                    <VolumeX size={16} />
                   ) : (
-                    <Volume2 size={18} />
+                    <Volume2 size={16} />
                   )}
                 </button>
 
@@ -133,12 +156,12 @@ export default function BackgroundMusic() {
                   onChange={handleVolumeChange}
                   className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #F7941D 0%, #F7941D ${(isMuted ? 0 : volume) * 100}%, #4A4A4A ${(isMuted ? 0 : volume) * 100}%, #4A4A4A 100%)`,
+                    background: `linear-gradient(to right, ${ORANGE} 0%, ${ORANGE} ${(isMuted ? 0 : volume) * 100}%, #333 ${(isMuted ? 0 : volume) * 100}%, #333 100%)`,
                   }}
                   title="Volume"
                 />
 
-                <span className="text-xs text-gray-400 w-8 text-right">
+                <span className="text-xs text-gray-400 w-8 text-right shrink-0">
                   {Math.round((isMuted ? 0 : volume) * 100)}%
                 </span>
               </motion.div>
@@ -147,22 +170,38 @@ export default function BackgroundMusic() {
         </div>
       </motion.div>
 
-      {/* Floating music note animation when playing */}
-      {isPlaying && (
+      {/* Pulsing music icon when playing */}
+      {isPlaying && !showControls && (
         <motion.div
-          className="absolute -top-2 -left-2 text-2xl"
+          className="absolute -top-1 -right-1 pointer-events-none"
           animate={{
-            y: [0, -20, 0],
-            opacity: [0.5, 1, 0.5],
-            rotate: [0, 10, 0],
+            scale: [1, 1.2, 1],
+            opacity: [0.6, 1, 0.6],
           }}
           transition={{
-            duration: 2,
+            duration: 1.5,
             repeat: Infinity,
             ease: "easeInOut",
           }}
         >
-          🎵
+          <Music size={12} style={{ color: ORANGE }} />
+        </motion.div>
+      )}
+
+      {/* Prompt to click if not yet interacted */}
+      {!hasInteracted && (
+        <motion.div
+          className="absolute -top-10 right-0 whitespace-nowrap text-xs px-3 py-1.5 rounded-full"
+          style={{
+            backgroundColor: "rgba(10, 22, 40, 0.9)",
+            color: ORANGE,
+            border: `1px solid ${ORANGE}30`,
+          }}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          🎵 Clique para música
         </motion.div>
       )}
     </div>
