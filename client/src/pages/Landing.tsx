@@ -241,9 +241,7 @@ export default function Landing() {
     { week: "Semana 14", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Seminário Jigsaw 6.", icon: <Pill size={18} /> },
     { week: "Semana 15", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias.", icon: <Pill size={18} /> },
     { week: "Semana 16", title: "Seminários Jigsaw 7 e 8 (2º dia)", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa.", icon: <Target size={18} /> },
-    { week: "Semana 17", title: "Prova P2", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos.", icon: <Zap size={18} />, highlight: true },
-    { week: "Semana 18", title: "Prova de Segunda Chamada", detail: "Prova substitutiva para alunos que perderam P1 ou P2 com justificativa.", icon: <Zap size={18} /> },
-    { week: "Semana 19", title: "Prova Final + Premiação", detail: "Prova final para alunos em recuperação. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
+    { week: "Semana 17", title: "Prova P2 + Premiação", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
   ];
 
   // Feriados que caem em terça-feira no 1º semestre 2026

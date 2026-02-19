@@ -219,109 +219,109 @@ export const teams: Team[] = [
   },
 ];
 
-// Destaques semanais
+// Destaques semanais - CRONOGRAMA COMPLETO 2026.1 (17 SEMANAS)
 export const weeklyHighlights: WeeklyHighlight[] = [
   {
     week: 1, date: "03/03/2026",
-    activity: "Aula Inaugural",
+    activity: "Introdução à Farmacologia",
     topTeam: "—", topStudent: "—",
-    description: "Introdução à Farmacologia, aspectos gerais e importância. Farmacocinética e Farmacodinâmica"
+    description: "Apresentação da disciplina, regras de gamificação, formação das equipes e TBL diagnóstico."
   },
   {
     week: 2, date: "10/03/2026",
-    activity: "Farmacocinética",
+    activity: "Farmacocinética I",
     topTeam: "—", topStudent: "—",
-    description: "Distribuição, Metabolismo e Excreção de fármacos"
+    description: "Vias de administração, biodisponibilidade, volume de distribuição. TBL 1."
   },
   {
     week: 3, date: "17/03/2026",
-    activity: "Kahoot 1 + Mecanismo de Ação",
+    activity: "Farmacocinética II",
     topTeam: "—", topStudent: "—",
-    description: "Kahoot 1: Vias de administração e farmacocinética. Mecanismo de ação e interações medicamentosas"
+    description: "Biotransformação hepática, citocromo P450, depuração renal. Caso Clínico 1."
   },
   {
     week: 4, date: "24/03/2026",
-    activity: "CS1: Farmacocinética",
+    activity: "Farmacodinâmica",
     topTeam: "—", topStudent: "—",
-    description: "Boas Práticas de Prescrição + Caso Integrado 1: Farmacocinética (11h)"
+    description: "Agonistas, antagonistas, dose-resposta, potência e eficácia. TBL 2."
   },
   {
     week: 5, date: "31/03/2026",
-    activity: "Kahoot 2 + Colinérgicos",
+    activity: "SNA — Transmissão Colinérgica",
     topTeam: "—", topStudent: "—",
-    description: "Colinérgicos de ação direta e anticolinesterásicos. Kahoot 2: Mecanismo de ação e interações"
+    description: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2."
   },
   {
     week: 6, date: "07/04/2026",
-    activity: "Kahoot 3 + Bloqueadores",
+    activity: "SNA — Bloqueadores Neuromusculares",
     topTeam: "—", topStudent: "—",
-    description: "Antagonistas colinérgicos e bloqueadores neuromusculares. Kahoot 3: Agonistas Colinérgicos"
+    description: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1."
   },
   {
     week: 7, date: "14/04/2026",
-    activity: "Seminários Jigsaw 1-3 + CS2",
+    activity: "Seminários Jigsaw 2 e 3",
     topTeam: "—", topStudent: "—",
-    description: "Grupos 1-3: Interações medicamentosas, Alergia, Farmacodependência. CS2: Colinérgicos e Bloqueadores (11h)"
+    description: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1."
   },
   {
     week: 8, date: "28/04/2026",
-    activity: "1ª Prova Parcial",
+    activity: "Prova P1 + Escape Room",
     topTeam: "—", topStudent: "—",
-    description: "Primeira avaliação teórica do semestre"
+    description: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático."
   },
   {
     week: 9, date: "05/05/2026",
-    activity: "Adrenérgicos + 2ª Chamada",
+    activity: "SNA — Transmissão Adrenérgica",
     topTeam: "—", topStudent: "—",
-    description: "Adrenérgicos e aminas simpaticomimicéticas. 2ª chamada 1ª Prova Parcial (10:30h)"
+    description: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3."
   },
   {
     week: 10, date: "12/05/2026",
-    activity: "Bloqueadores Adrenérgicos",
+    activity: "SNA — Anti-adrenérgicos",
     topTeam: "—", topStudent: "—",
-    description: "Bloqueadores Adrenérgicos"
+    description: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3."
   },
   {
     week: 11, date: "19/05/2026",
-    activity: "Kahoot 3 + Palavra Cruzada 1",
+    activity: "Seminários Jigsaw 4 e 5",
     topTeam: "—", topStudent: "—",
-    description: "Antieméticos/AINES/Glicocorticoides. Kahoot 3: Adrenérgicos. Palavra Cruzada 1: Adrenérgicos e Bloqueadores (10:30h)"
+    description: "Apresentações dos grupos especialistas sobre SNA adrenérgico."
   },
   {
     week: 12, date: "26/05/2026",
-    activity: "CS3: Adrenérgicos",
+    activity: "Anti-inflamatórios (AINEs)",
     topTeam: "—", topStudent: "—",
-    description: "Anestésicos Locais + Caso Integrado 3: Adrenérgicos (10:30h)"
+    description: "Inibidores de COX, seletividade, efeitos adversos. TBL 4."
   },
   {
     week: 13, date: "02/06/2026",
-    activity: "Seminários Jigsaw 4-6 + Kahoot 4",
+    activity: "Corticosteroides & Opioides",
     topTeam: "—", topStudent: "—",
-    description: "Grupos 4-6: Canabinóides, Choque cardiogênico, Emagrecedores. Kahoot 4: AINES/Corticoides (11h)"
+    description: "Mecanismo anti-inflamatório, receptores opioides, escala analgésica. Caso Clínico 4."
   },
   {
     week: 14, date: "09/06/2026",
-    activity: "Palavra Cruzada 2 + CS4",
+    activity: "Anestésicos Locais",
     topTeam: "—", topStudent: "—",
-    description: "Histamina e Anti-histamínicos. Palavra Cruzada 2: Anestésico Local (9:30). CS4: Inflamação e A.L (10:00h)"
+    description: "Mecanismo de ação, classificação, uso clínico. Seminário Jigsaw 6."
   },
   {
     week: 15, date: "16/06/2026",
-    activity: "2ª Prova Parcial",
+    activity: "Anti-histamínicos",
     topTeam: "—", topStudent: "—",
-    description: "Segunda avaliação teórica do semestre"
+    description: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias."
   },
   {
     week: 16, date: "23/06/2026",
-    activity: "2ª Chamada",
+    activity: "Seminários Jigsaw 7 e 8 (2º dia)",
     topTeam: "—", topStudent: "—",
-    description: "Segunda chamada das provas parciais"
+    description: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa."
   },
   {
     week: 17, date: "30/06/2026",
-    activity: "Prova Final",
+    activity: "Prova P2 + Premiação",
     topTeam: "—", topStudent: "—",
-    description: "Avaliação final do semestre"
+    description: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Cerimônia de premiação das equipes campeãs."
   },
 ];
 

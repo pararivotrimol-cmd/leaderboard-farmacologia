@@ -339,3 +339,18 @@
 - [x] Corrigir para exatamente 17 semanas na interface visual
 - [x] Testar visualização da Landing page
 - [x] Confirmar 17 semanas exibidas corretamente
+
+## Correção do Array Timeline (19 → 17 semanas)
+- [x] Localizar array timeline na Landing.tsx que gera as semanas
+- [x] Remover semanas 18 e 19 do array
+- [x] Verificar se P2 está na semana 17 (última semana)
+- [x] Testar visualização do cronograma
+- [x] Confirmar que apenas 17 semanas são exibidas
+
+## Sincronizar Cronograma Home com Landing
+- [x] Verificar weeklyHighlights no leaderboardData.ts (página Home)
+- [x] Comparar com timeline da Landing.tsx
+- [x] Atualizar assuntos das 17 semanas para ficarem idênticos
+- [x] Remover semanas 18 e 19 se existirem
+- [x] Testar visualização na página Home/Leaderboard
+- [x] Criar documentação de credenciais do super admin
