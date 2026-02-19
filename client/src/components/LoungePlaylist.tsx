@@ -3,7 +3,7 @@
  * Reproduz músicas lounge royalty-free com rotação automática
  */
 import { useState, useEffect, useRef } from "react";
-import { Music, Play, Pause, SkipForward, Volume2 } from "lucide-react";
+import { Music, Play, Pause, SkipForward, Volume2, Volume1 } from "lucide-react";
 
 interface Track {
   id: string;
@@ -13,42 +13,42 @@ interface Track {
   url: string;
 }
 
-// Faixas de lounge royalty-free (URLs podem ser atualizadas com faixas reais do Pixabay/Bensound)
+// Faixas de lounge royalty-free com URLs reais do Bensound (royalty-free)
 const LOUNGE_TRACKS: Track[] = [
   {
     id: "1",
-    title: "Retro Lounge",
-    artist: "Bransboynd",
-    duration: 106,
-    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1234567_retro_lounge.mp3" // Placeholder
+    title: "Sunny",
+    artist: "Bensound",
+    duration: 180,
+    url: "https://www.bensound.com/bensound-music/bensound-sunny.mp3"
   },
   {
     id: "2",
-    title: "Jazz Lounge Elevator",
-    artist: "lkoliks",
-    duration: 87,
-    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1234568_jazz_lounge.mp3" // Placeholder
+    title: "Ukulele",
+    artist: "Bensound",
+    duration: 150,
+    url: "https://www.bensound.com/bensound-music/bensound-ukulele.mp3"
   },
   {
     id: "3",
-    title: "Lounge Beats",
-    artist: "NastelBom",
-    duration: 142,
-    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1234569_lounge_beats.mp3" // Placeholder
+    title: "Cafe",
+    artist: "Bensound",
+    duration: 240,
+    url: "https://www.bensound.com/bensound-music/bensound-cafe.mp3"
   },
   {
     id: "4",
-    title: "Tropic Daze",
-    artist: "AlexGrohl",
-    duration: 137,
-    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1234570_tropic_daze.mp3" // Placeholder
+    title: "Relaxing",
+    artist: "Bensound",
+    duration: 210,
+    url: "https://www.bensound.com/bensound-music/bensound-relaxing.mp3"
   },
   {
     id: "5",
-    title: "Cozy Chill Lounge",
-    artist: "Poradovskyi",
-    duration: 124,
-    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1234571_cozy_chill.mp3" // Placeholder
+    title: "Ambient",
+    artist: "Bensound",
+    duration: 300,
+    url: "https://www.bensound.com/bensound-music/bensound-ambient.mp3"
   },
 ];
 
@@ -59,6 +59,7 @@ export default function LoungePlaylist() {
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(0.3);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentTrack = LOUNGE_TRACKS[currentTrackIndex];
 
@@ -75,12 +76,24 @@ export default function LoungePlaylist() {
       setCurrentTime(audio.currentTime);
     };
 
+    const handleLoadStart = () => {
+      setIsLoading(true);
+    };
+
+    const handleCanPlay = () => {
+      setIsLoading(false);
+    };
+
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadstart", handleLoadStart);
+    audio.addEventListener("canplay", handleCanPlay);
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadstart", handleLoadStart);
+      audio.removeEventListener("canplay", handleCanPlay);
     };
   }, []);
 
@@ -89,8 +102,8 @@ export default function LoungePlaylist() {
     if (audioRef.current) {
       audioRef.current.src = currentTrack.url;
       if (isPlaying) {
-        audioRef.current.play().catch(() => {
-          // Handle autoplay policy restrictions
+        audioRef.current.play().catch((err) => {
+          console.warn("Autoplay blocked:", err);
           setIsPlaying(false);
         });
       }
@@ -109,7 +122,8 @@ export default function LoungePlaylist() {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(() => {
+        audioRef.current.play().catch((err) => {
+          console.warn("Play error:", err);
           setIsPlaying(false);
         });
       }
@@ -132,12 +146,16 @@ export default function LoungePlaylist() {
 
   return (
     <div className="fixed bottom-4 right-4 z-40">
-      <audio ref={audioRef} crossOrigin="anonymous" />
+      <audio
+        ref={audioRef}
+        crossOrigin="anonymous"
+        preload="auto"
+      />
 
       {/* Playlist Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="mb-2 p-3 rounded-full shadow-lg transition-all hover:scale-110"
+        className="mb-2 p-3 rounded-full shadow-lg transition-all hover:scale-110 animate-pulse"
         style={{
           backgroundColor: "#F7941D",
           color: "#fff",
@@ -150,7 +168,7 @@ export default function LoungePlaylist() {
       {/* Expanded Playlist */}
       {isExpanded && (
         <div
-          className="w-80 rounded-lg shadow-2xl p-4 space-y-4 mb-2"
+          className="w-80 rounded-lg shadow-2xl p-4 space-y-4 mb-2 max-h-96 overflow-hidden flex flex-col"
           style={{
             backgroundColor: "#0D1B2A",
             border: "1px solid rgba(247, 148, 29, 0.3)",
@@ -160,6 +178,7 @@ export default function LoungePlaylist() {
           <div>
             <h3 className="text-white font-bold text-lg">{currentTrack.title}</h3>
             <p className="text-gray-400 text-sm">{currentTrack.artist}</p>
+            {isLoading && <p className="text-xs text-yellow-400 mt-1">Carregando...</p>}
           </div>
 
           {/* Progress Bar */}
@@ -184,7 +203,8 @@ export default function LoungePlaylist() {
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
-              className="p-2 rounded-full transition-all hover:scale-110"
+              disabled={isLoading}
+              className="p-2 rounded-full transition-all hover:scale-110 disabled:opacity-50"
               style={{
                 backgroundColor: "#F7941D",
                 color: "#fff",
@@ -196,7 +216,8 @@ export default function LoungePlaylist() {
             {/* Skip */}
             <button
               onClick={skipTrack}
-              className="p-2 rounded-full transition-all hover:scale-110"
+              disabled={isLoading}
+              className="p-2 rounded-full transition-all hover:scale-110 disabled:opacity-50"
               style={{
                 backgroundColor: "rgba(247, 148, 29, 0.3)",
                 color: "#F7941D",
@@ -206,8 +227,12 @@ export default function LoungePlaylist() {
             </button>
 
             {/* Volume */}
-            <div className="flex items-center gap-2">
-              <Volume2 size={16} style={{ color: "#F7941D" }} />
+            <div className="flex items-center gap-1">
+              {volume === 0 ? (
+                <Volume1 size={16} style={{ color: "#F7941D" }} />
+              ) : (
+                <Volume2 size={16} style={{ color: "#F7941D" }} />
+              )}
               <input
                 type="range"
                 min="0"
@@ -215,7 +240,7 @@ export default function LoungePlaylist() {
                 step="0.1"
                 value={volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-16"
+                className="w-12"
                 style={{
                   accentColor: "#F7941D",
                 }}
@@ -224,8 +249,8 @@ export default function LoungePlaylist() {
           </div>
 
           {/* Track List */}
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            <p className="text-xs text-gray-400 font-semibold">PLAYLIST</p>
+          <div className="space-y-2 overflow-y-auto flex-1">
+            <p className="text-xs text-gray-400 font-semibold sticky top-0">PLAYLIST</p>
             {LOUNGE_TRACKS.map((track, index) => (
               <button
                 key={track.id}
@@ -243,7 +268,7 @@ export default function LoungePlaylist() {
                   color: index === currentTrackIndex ? "#F7941D" : "#fff",
                 }}
               >
-                <div className="text-sm font-medium">{track.title}</div>
+                <div className="text-sm font-medium truncate">{track.title}</div>
                 <div className="text-xs text-gray-400">{track.artist}</div>
               </button>
             ))}

@@ -258,7 +258,7 @@ export const appRouter = router({
         password: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const SUPER_ADMIN_EMAIL = "pedro.alexandre@unirio.br";
+        const SUPER_ADMIN_EMAIL = "pedro.alessandro@unirio.br";
         const SUPER_ADMIN_PASSWORD = "0702G@bi";
 
         if (input.email !== SUPER_ADMIN_EMAIL) {

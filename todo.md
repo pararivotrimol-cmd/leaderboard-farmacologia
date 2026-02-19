@@ -526,3 +526,10 @@
 - [x] Corrigir cronograma: Semana 17 - Prova Final
 - [x] Verificar por que botão de acesso admin não está sendo postado
 - [x] Botão de acesso admin verificado e funcional
+
+## Correções Urgentes (Feb 19, 2026 - Noite)
+- [x] Corrigir credenciais Super Admin (pedro.alessandro@unirio.br / 0702G@bi não funcionam)
+- [x] Criar painel de administrador geral com acesso completo
+- [x] Resolver problema de música lounge (não toca, apenas som grave)
+- [x] Verificar URLs de áudio e permissões de autoplay
+- [x] Testar login Super Admin após correção
