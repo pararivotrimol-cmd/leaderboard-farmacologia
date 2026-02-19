@@ -268,7 +268,7 @@ function MemberList({ teamId, members, password, teamColor }: {
   );
 }
 
-// ─── Bulk XP Update ───
+// ─── Bulk PF Update ───
 function BulkXPManager({ password }: { password: string | null }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [xpUpdates, setXpUpdates] = useState<Record<number, string>>({});
@@ -281,7 +281,7 @@ function BulkXPManager({ password }: { password: string | null }) {
       toast.success(`${data.count} alunos atualizados!`);
       setXpUpdates({});
     },
-    onError: () => toast.error("Erro ao atualizar XP"),
+    onError: () => toast.error("Erro ao atualizar PF"),
   });
 
   const filteredTeams = leaderboard?.teams ?? [];
@@ -323,14 +323,14 @@ function BulkXPManager({ password }: { password: string | null }) {
             <span className="text-lg">{team.emoji}</span>
             <span className="font-display font-semibold text-sm text-foreground">{team.name}</span>
             <span className="text-xs text-muted-foreground ml-auto font-mono">
-              Total: {team.members.reduce((s, m) => s + (xpUpdates[m.id] !== undefined ? parseFloat(xpUpdates[m.id] || "0") : m.xp), 0).toFixed(1)} PF
+              Total PF: {team.members.reduce((s, m) => s + (xpUpdates[m.id] !== undefined ? parseFloat(xpUpdates[m.id] || "0") : m.xp), 0).toFixed(1)}
             </span>
           </div>
           <div className="grid gap-1.5">
             {team.members.sort((a, b) => a.name.localeCompare(b.name)).map(member => (
               <div key={member.id} className="flex items-center gap-2">
                 <span className="flex-1 text-xs text-foreground truncate">{member.name}</span>
-                <span className="text-[11px] text-muted-foreground font-mono w-12 text-right">atual: {member.xp.toFixed(1)}</span>
+                <span className="text-[11px] text-muted-foreground font-mono w-12 text-right">PF: {member.xp.toFixed(1)}</span>
                 <input
                   type="number"
                   step="0.5"

@@ -176,8 +176,8 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
     { label: "Equipes Ativas", value: stats.system.totalTeams.toString(), icon: <Users size={24} />, color: "#4A90E2" },
     { label: "Turmas", value: stats.system.totalClasses?.toString() || "0", icon: <FlaskConical size={24} />, color: "#FF6B6B" },
     { label: "Professores", value: stats.teachers.total.toString(), icon: <BookOpen size={24} />, color: "#7ED321" },
-    { label: "XP Total da Turma", value: stats.system.totalXP, icon: <BarChart3 size={24} />, color: "#50E3C2" },
-    { label: "Média XP/Aluno", value: stats.system.avgXPPerMember, icon: <CheckCircle size={24} />, color: "#9B59B6" },
+    { label: "PF Total da Turma", value: stats.system.totalXP, icon: <BarChart3 size={24} />, color: "#50E3C2" },
+    { label: "Média PF/Aluno", value: stats.system.avgXPPerMember, icon: <CheckCircle size={24} />, color: "#9B59B6" },
     { label: "Contas de Alunos", value: stats.students.totalAccounts.toString(), icon: <Eye size={24} />, color: "#E74C3C" },
   ];
 

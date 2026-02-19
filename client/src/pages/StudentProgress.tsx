@@ -326,7 +326,7 @@ export default function StudentProgress() {
                   </div>
                 </div>
 
-                {/* XP to Grade Conversion */}
+                {/* PF to Grade Conversion */}
                 <div className="mt-5 pt-4 border-t border-border/30">
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-muted-foreground">Contribuição para Nota Final (25%)</span>

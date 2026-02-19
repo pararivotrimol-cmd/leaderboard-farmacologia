@@ -716,7 +716,7 @@ export default function Home() {
                       <div className="font-display font-semibold text-sm text-white">{act.name}</div>
                       <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Até {act.maxXP} PF por sessão</div>
                     </div>
-                    <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>+{act.maxXP}</div>
+                    <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>+{act.maxXP} PF</div>
                   </motion.div>
                 ))}
               </div>

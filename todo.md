@@ -680,3 +680,13 @@
 - [ ] Adicionar gráficos de distribuição de alunos por turma
 - [ ] Adicionar gráfico de XP total vs XP médio
 - [ ] Implementar filtro de período/semana
+
+
+## Correção de Nomenclatura: XP → PF (Pontos de Farmacologia)
+- [x] Corrigir labels em Admin.tsx (BulkXPManager, editXP, placeholder "XP")
+- [x] Corrigir textos em Home.tsx (atividades, labels de PF)
+- [x] Corrigir labels em StudentProgress.tsx (XPBar, "XP to Grade", percentual)
+- [x] Corrigir labels em AdminDashboard.tsx (cards de estatísticas)
+- [x] Corrigir labels em JigsawGroups.tsx (se houver)
+- [x] Corrigir dados de exemplo em leaderboardData.ts
+- [x] Corrigir constantes e comentários de negócio
