@@ -2050,6 +2050,170 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Importar Alunos Manager ───
+function ImportarAlunosManager({ teacherToken }: { teacherToken: string | null }) {
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [csvText, setCsvText] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [preview, setPreview] = useState<Array<{ name: string; email?: string; status: "novo" | "cadastrado" }>>([]); 
+  
+  const classesList = trpc.classes.list.useQuery({ sessionToken: teacherToken || "" }, { enabled: !!teacherToken });
+  const importStudents = trpc.members.importBulk.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.imported} aluno(s) importado(s)${data.errors > 0 ? ` (${data.errors} erro(s))` : ''}`);
+      setCsvText("");
+      setSelectedClass(null);
+      setImporting(false);
+      setPreview([]);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setImporting(false);
+    },
+  });
+
+  const handleImport = () => {
+    if (!selectedClass) {
+      toast.error("Selecione uma turma");
+      return;
+    }
+    if (!csvText.trim()) {
+      toast.error("Cole os dados dos alunos");
+      return;
+    }
+
+    const lines = csvText.trim().split("\n");
+    const students = [];
+    const errors = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const parts = line.split(",").map(p => p.trim());
+      if (parts.length < 1) {
+        errors.push(`Linha ${i + 1}: formato inválido`);
+        continue;
+      }
+
+      students.push({
+        name: parts[0],
+        email: parts[1] || undefined,
+        teamId: parts[2] ? parseInt(parts[2]) : undefined,
+        xp: parts[3] || "0",
+      });
+    }
+
+    if (errors.length > 0) {
+      toast.error(`${errors.length} erro(s) encontrado(s)`);
+      return;
+    }
+
+    if (students.length === 0) {
+      toast.error("Nenhum aluno para importar");
+      return;
+    }
+
+    setImporting(true);
+    importStudents.mutate({
+      sessionToken: teacherToken || "",
+      classId: selectedClass,
+      students,
+    });
+  };
+
+  const classes = classesList.data || [];
+  const selectedClassData = classes.find(c => c.id === selectedClass);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-bold text-xl text-foreground">Importar Alunos</h2>
+      </div>
+
+      {/* Info Box */}
+      <div className="rounded-lg p-4 border border-blue-800/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
+        <div className="flex gap-3">
+          <AlertTriangle size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-300">
+            <p className="font-semibold mb-1">Alunos não cadastrados:</p>
+            <p>Alunos que aparecem com status <span className="text-red-400 font-semibold">"Não Cadastrado"</span> ainda não se registraram na plataforma durante este semestre.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Class Selector */}
+      <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <label className="text-sm text-muted-foreground block mb-2">Selecione a Turma</label>
+        <select
+          value={selectedClass || ""}
+          onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value) : null)}
+          className="w-full px-4 py-2 rounded-lg text-foreground text-sm"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+        >
+          <option value="">-- Selecione uma turma --</option>
+          {classes.map(cls => (
+            <option key={cls.id} value={cls.id}>
+              {cls.name} ({cls.discipline})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* CSV Input */}
+      <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <label className="text-sm text-muted-foreground block mb-2">Cole os dados dos alunos (um por linha)</label>
+        <textarea
+          value={csvText}
+          onChange={(e) => setCsvText(e.target.value)}
+          placeholder="João Silva, joao@edu.unirio.br, 1, 0\nMaria Santos, maria@edu.unirio.br, 2, 0"
+          className="w-full px-4 py-3 rounded-lg text-foreground text-sm font-mono"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+          rows={8}
+        />
+      </div>
+
+      {/* Preview */}
+      {csvText.trim() && (
+        <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <h3 className="text-sm font-bold text-foreground mb-3">Preview ({csvText.trim().split("\n").length} alunos)</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {csvText.trim().split("\n").map((line, idx) => {
+              const parts = line.split(",").map(p => p.trim());
+              return (
+                <div key={idx} className="flex items-center gap-2 p-2 rounded text-xs" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                  <span className="text-muted-foreground flex-shrink-0">{idx + 1}.</span>
+                  <span className="text-foreground flex-1">{parts[0]}</span>
+                  <span className="text-muted-foreground text-xs">{parts[1] || "sem email"}</span>
+                  <span className="px-2 py-1 rounded text-xs" style={{ backgroundColor: "rgba(239,68,68,0.2)", color: "#EF4444" }}>Não Cadastrado</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Import Button */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleImport}
+          disabled={importing || !selectedClass || !csvText.trim()}
+          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium disabled:opacity-50"
+        >
+          <Upload size={16} />
+          {importing ? "Importando..." : "Importar Alunos"}
+        </button>
+        <button
+          onClick={() => { setCsvText(""); setPreview([]); }}
+          className="px-6 py-3 rounded-lg bg-secondary text-foreground font-medium"
+        >
+          Limpar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Jigsaw Seminars Manager ───
 function JigsawSeminarsManager({ teacherToken }: { teacherToken: string | null }) {
   const [selectedSeminar, setSelectedSeminar] = useState<number | null>(null);
@@ -2713,7 +2877,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings">("turmas");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -2762,6 +2926,7 @@ export default function Admin() {
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
+    { key: "importar-alunos" as const, label: "Importar Alunos", icon: <Upload size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
@@ -2815,6 +2980,7 @@ export default function Admin() {
         {activeSection === "attendance" && <AttendanceManager password={password} />}
         {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
         {activeSection === "jigsaw" && <JigsawSeminarsManager teacherToken={teacherToken} />}
+        {activeSection === "importar-alunos" && <ImportarAlunosManager teacherToken={teacherToken} />}
         {activeSection === "professores" && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "settings" && <SettingsManager password={password} />}
       </div>
