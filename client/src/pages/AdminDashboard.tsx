@@ -12,7 +12,7 @@ import {
   Plus, Trash2, Eye, RefreshCw, Ticket,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
   Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus,
-  Upload, Download, AlertCircle
+  Upload, Download, AlertCircle, GraduationCap as StudentIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -31,7 +31,6 @@ const ADMIN_TABS: AdminTab[] = [
   { id: "overview", label: "Visão Geral", icon: <BarChart3 size={20} /> },
   { id: "turmas", label: "Turmas", icon: <FlaskConical size={20} /> },
   { id: "import", label: "Importar Alunos", icon: <Upload size={20} /> },
-  { id: "students", label: "Alunos", icon: <GraduationCap size={20} /> },
   { id: "teams", label: "Equipes", icon: <Users size={20} /> },
   { id: "professors", label: "Professores", icon: <BookOpen size={20} /> },
   { id: "invites", label: "Códigos de Convite", icon: <Ticket size={20} /> },
@@ -88,13 +87,22 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/admin")}
+              onClick={() => window.location.href = "/admin"}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
               style={{ backgroundColor: `${ORANGE}30`, color: ORANGE, border: `1px solid ${ORANGE}50` }}
-              title="Painel do Professor"
+              title="Acessar Painel do Professor"
             >
               <ExternalLink size={16} />
               <span className="hidden sm:inline">Painel Professor</span>
+            </button>
+            <button
+              onClick={() => window.location.href = "/student"}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
+              style={{ backgroundColor: `rgba(100,200,255,0.15)`, color: "#64C8FF", border: "1px solid rgba(100,200,255,0.3)" }}
+              title="Acessar Portal do Aluno"
+            >
+              <GraduationCap size={16} />
+              <span className="hidden sm:inline">Portal Aluno</span>
             </button>
             <button
               onClick={handleLogout}
@@ -135,7 +143,7 @@ export default function AdminDashboard() {
         {activeTab === "overview" && <OverviewTab sessionToken={sessionToken} />}
         {activeTab === "turmas" && <TurmasAdminTab sessionToken={sessionToken} />}
         {activeTab === "import" && <ImportStudentsTab sessionToken={sessionToken} />}
-        {activeTab === "students" && <StudentsTab sessionToken={sessionToken} />}
+
         {activeTab === "teams" && <TeamsTab sessionToken={sessionToken} />}
         {activeTab === "professors" && <ProfessorsTab sessionToken={sessionToken} />}
         {activeTab === "invites" && <InviteCodesTab sessionToken={sessionToken} />}

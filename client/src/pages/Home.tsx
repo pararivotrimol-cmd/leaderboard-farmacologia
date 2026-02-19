@@ -271,6 +271,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules" | "calculator">("teams");
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [vinhetaVolume, setVinhetaVolume] = useState(0.7);
   const vinhetaAudioRef = useRef<HTMLAudioElement>(null);
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
@@ -287,10 +288,19 @@ export default function Home() {
       setShowIntro(false);
     }, 4000);
     if (vinhetaAudioRef.current) {
+      vinhetaAudioRef.current.volume = vinhetaVolume;
       vinhetaAudioRef.current.play().catch(() => {});
     }
     return () => clearTimeout(timer);
-  }, []);
+  }, [vinhetaVolume]);
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVinhetaVolume(newVolume);
+    if (vinhetaAudioRef.current) {
+      vinhetaAudioRef.current.volume = newVolume;
+    }
+  };
 
   const handleLogout = useCallback(async () => {
     await logout();
