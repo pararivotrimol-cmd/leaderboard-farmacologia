@@ -64,6 +64,9 @@ export default function StudentLogin() {
   const [matricula, setMatricula] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [registerType, setRegisterType] = useState<"turma" | "externo">("turma");
+  const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -136,8 +139,16 @@ export default function StudentLogin() {
       setError("Os CPFs não coincidem");
       return;
     }
-    if (!selectedMemberId) {
+    if (registerType === "turma" && !selectedMemberId) {
       setError("Selecione seu nome na lista de alunos");
+      return;
+    }
+    if (registerType === "externo" && studentName.trim().length < 2) {
+      setError("Digite seu nome completo");
+      return;
+    }
+    if (registerType === "externo" && inviteCode.trim().length < 4) {
+      setError("Digite o código de convite fornecido pelo professor");
       return;
     }
     if (matricula.length < 5) {
@@ -145,13 +156,20 @@ export default function StudentLogin() {
       return;
     }
 
+    // Determine name: from selected member or typed name
+    const nameToSend = registerType === "turma" && selectedMemberId
+      ? (availableMembers?.find(m => m.id === selectedMemberId)?.name || studentName)
+      : studentName;
+
     setIsSubmitting(true);
     try {
       const result = await registerMutation.mutateAsync({
         email,
+        name: nameToSend,
         matricula,
         password,
-        memberId: selectedMemberId,
+        ...(registerType === "turma" && selectedMemberId ? { memberId: selectedMemberId } : {}),
+        ...(registerType === "externo" ? { inviteCode: inviteCode.trim() } : {}),
       });
       if (result.success && "sessionToken" in result) {
         setStudentSession(result.sessionToken);
@@ -382,7 +400,41 @@ export default function StudentLogin() {
                 onSubmit={handleRegister}
                 className="space-y-4"
               >
-                {/* Select Student Name */}
+                {/* Register Type Selector */}
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    Tipo de Cadastro
+                  </label>
+                  <div className="flex gap-1 p-1 rounded-lg mb-3" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                    <button
+                      type="button"
+                      onClick={() => { setRegisterType("turma"); setError(""); }}
+                      className="flex-1 py-2 rounded-md text-xs font-medium transition-all"
+                      style={{
+                        backgroundColor: registerType === "turma" ? "rgba(247,148,29,0.2)" : "transparent",
+                        color: registerType === "turma" ? ORANGE : "rgba(255,255,255,0.5)",
+                        border: registerType === "turma" ? `1px solid ${ORANGE}40` : "1px solid transparent",
+                      }}
+                    >
+                      🏫 Aluno da Turma
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setRegisterType("externo"); setError(""); }}
+                      className="flex-1 py-2 rounded-md text-xs font-medium transition-all"
+                      style={{
+                        backgroundColor: registerType === "externo" ? "rgba(247,148,29,0.2)" : "transparent",
+                        color: registerType === "externo" ? ORANGE : "rgba(255,255,255,0.5)",
+                        border: registerType === "externo" ? `1px solid ${ORANGE}40` : "1px solid transparent",
+                      }}
+                    >
+                      🎓 Monitor / Externo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Select Student Name (turma) or Type Name (externo) */}
+                {registerType === "turma" ? (
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
                     Selecione seu Nome
@@ -431,6 +483,53 @@ export default function StudentLogin() {
                     )}
                   </div>
                 </div>
+                ) : (
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    Nome Completo
+                  </label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <input
+                      type="text"
+                      value={studentName}
+                      onChange={e => setStudentName(e.target.value)}
+                      placeholder="Seu nome completo"
+                      required
+                      className="w-full pl-10 pr-4 py-3 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Monitores e alunos de outras turmas da UNIRIO
+                  </p>
+                  {/* Código de Convite */}
+                  <label className="block text-xs font-medium mt-3 mb-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    Código de Convite
+                  </label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <input
+                      type="text"
+                      value={inviteCode}
+                      onChange={e => setInviteCode(e.target.value.toUpperCase())}
+                      placeholder="Ex: FARM2026"
+                      required
+                      className="w-full pl-10 pr-4 py-3 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all font-mono tracking-wider"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Solicite o código ao professor ou coordenador
+                  </p>
+                </div>
+                )}
 
                 {/* Email */}
                 <div>

@@ -553,3 +553,19 @@
 - [x] Corrigir login admin: pedro.alexandre@unirio.br / 0702G@bi (sem mostrar email no placeholder)
 - [x] Corrigir números: 84 alunos e 16 equipes (não 122/54)
 - [x] Propor layout mais dinâmico e refinado para seção inicial com logotipos
+
+## Correções Urgentes (Feb 19, 2026 - Fase 5)
+- [x] Corrigir música na vinheta (5317-Mix.mp3 não toca)
+- [x] Setup de 10 músicas lounge com reprodução aleatória na página
+- [x] Permitir cadastro aberto para alunos @edu.unirio.br (não apenas alunos da turma)
+- [x] Corrigir redirecionamento do admin (volta para cadastro após 1 segundo)
+
+## Código de Convite para Monitores/Externos (Feb 19, 2026)
+- [x] Criar tabela inviteCodes no schema (code, maxUses, usedCount, createdBy, expiresAt)
+- [x] Migrar schema para o banco de dados
+- [x] Adicionar endpoint para professor/admin gerar códigos de convite
+- [x] Adicionar endpoint para validar código de convite no cadastro
+- [x] Atualizar formulário de cadastro externo para exigir código
+- [x] Corrigir redirecionamento do admin login (volta para cadastro após 1s)
+- [x] Corrigir música na vinheta (não toca)
+- [x] Setup de 10 músicas lounge com reprodução aleatória

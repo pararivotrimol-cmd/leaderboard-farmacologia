@@ -21,14 +21,16 @@ export default function SuperAdminLogin() {
   const loginMutation = trpc.teacherAuth.superAdminLogin.useMutation({
     onSuccess: (result) => {
       if (result.success) {
+        // Save token in both keys for compatibility
         localStorage.setItem("sessionToken", result.sessionToken || "");
+        localStorage.setItem("teacherSessionToken", result.sessionToken || "");
         localStorage.setItem("adminEmail", email);
         localStorage.setItem("adminRole", "super_admin");
         localStorage.setItem("adminLoginTime", new Date().toISOString());
         toast.success("Acesso de super admin concedido!");
         setTimeout(() => {
           navigate("/admin");
-        }, 500);
+        }, 800);
       } else {
         setError("Email ou senha incorretos");
       }

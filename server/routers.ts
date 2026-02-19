@@ -725,6 +725,7 @@ export const appRouter = router({
       if (!account) return [];
       
       const allMembers = await db.getAllMembers();
+      if (!account.memberId) return [];
       const myMember = allMembers.find(m => m.id === account.memberId);
       if (!myMember) return [];
       
@@ -1559,9 +1560,11 @@ export const appRouter = router({
     register: publicProcedure
       .input(z.object({
         email: z.string().email().refine(e => e.endsWith("@edu.unirio.br"), { message: "Email deve ser @edu.unirio.br" }),
+        name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
         matricula: z.string().min(5, "Matrícula deve ter pelo menos 5 caracteres"),
         password: z.string().length(11, "CPF deve ter exatamente 11 dígitos").regex(/^\d{11}$/, "CPF deve conter apenas números"),
-        memberId: z.number(),
+        memberId: z.number().optional(),
+        inviteCode: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         // Check if email already registered
@@ -1570,15 +1573,28 @@ export const appRouter = router({
         // Check if matricula already registered
         const existingMatricula = await db.getStudentAccountByMatricula(input.matricula);
         if (existingMatricula) return { success: false, message: "Esta matrícula já está cadastrada" } as const;
-        // Check if member already has an account
-        const existingMember = await db.getStudentAccountByMemberId(input.memberId);
-        if (existingMember) return { success: false, message: "Este aluno já possui uma conta cadastrada" } as const;
+        // If no memberId (external/monitor), validate invite code
+        if (!input.memberId) {
+          if (!input.inviteCode) return { success: false, message: "Código de convite obrigatório para monitores/externos" } as const;
+          const code = await db.getInviteCodeByCode(input.inviteCode);
+          if (!code) return { success: false, message: "Código de convite inválido" } as const;
+          if (!code.isActive) return { success: false, message: "Código de convite desativado" } as const;
+          if (code.expiresAt && new Date(code.expiresAt) < new Date()) return { success: false, message: "Código de convite expirado" } as const;
+          if (code.usedCount >= code.maxUses) return { success: false, message: "Código de convite já atingiu o limite de usos" } as const;
+          // Increment usage
+          await db.incrementInviteCodeUsage(code.id);
+        }
+        // Check if member already has an account (only if memberId provided)
+        if (input.memberId) {
+          const existingMember = await db.getStudentAccountByMemberId(input.memberId);
+          if (existingMember) return { success: false, message: "Este aluno já possui uma conta cadastrada" } as const;
+        }
         // Hash password
         const passwordHash = await bcrypt.hash(input.password, 10);
         // Create session token
         const sessionToken = crypto.randomBytes(32).toString("hex");
         const id = await db.createStudentAccount({
-          memberId: input.memberId,
+          memberId: input.memberId || null,
           email: input.email,
           matricula: input.matricula,
           passwordHash,
@@ -1672,8 +1688,66 @@ export const appRouter = router({
         return { success: true, message: "Senha alterada com sucesso" } as const;
       }),
   }),
+  // ─── Invite Codes (Códigos de Convite para Monitores/Externos) ───
+  inviteCodes: router({
+    // Generate a new invite code (teacher/admin only)
+    generate: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        description: z.string().optional(),
+        maxUses: z.number().min(1).max(100).default(10),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Acesso negado" } as const;
+        // Generate random 8-char code
+        const code = "FARM" + crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 4);
+        const id = await db.createInviteCode({
+          code,
+          description: input.description || "C\u00f3digo gerado por " + teacher.name,
+          maxUses: input.maxUses,
+          createdBy: teacher.email,
+        });
+        return { success: true, code, id } as const;
+      }),
 
-  // ─── Attendance (Presença com Geolocalização) ───
+    // List all invite codes (teacher/admin only)
+    list: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return [];
+        return db.getAllInviteCodes();
+      }),
+
+    // Toggle active status
+    toggle: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        id: z.number(),
+        isActive: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Acesso negado" } as const;
+        await db.toggleInviteCode(input.id, input.isActive);
+        return { success: true } as const;
+      }),
+
+    // Delete invite code
+    delete: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        id: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Acesso negado" } as const;
+        await db.deleteInviteCode(input.id);
+        return { success: true } as const;
+      }),
+  }),
+  // ─── Attendance (Presença com Geolocalização) ────
   attendance: router({
     // Student: check in with geolocation
     checkIn: publicProcedure
@@ -1719,8 +1793,10 @@ export const appRouter = router({
         const weeksSinceStart = Math.floor((brasiliaTime.getTime() - semesterStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
         const currentWeek = Math.max(1, weeksSinceStart + 1);
 
-        const classDate = brasiliaTime.toISOString().split("T")[0];
-
+         const classDate = brasiliaTime.toISOString().split("T")[0];
+        if (!account.memberId) {
+          return { success: false, message: "Sua conta não está vinculada a um membro da turma. Contate o professor." } as const;
+        }
         const result = await db.createAttendanceRecord({
           studentAccountId: account.id,
           memberId: account.memberId,

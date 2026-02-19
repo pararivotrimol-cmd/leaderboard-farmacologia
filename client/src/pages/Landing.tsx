@@ -273,6 +273,13 @@ export default function Landing() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
         >
+          {/* Música autoral tocando durante a vinheta */}
+          <audio
+            autoPlay
+            loop
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
+            style={{ display: "none" }}
+          />
           <video
             key="intro-video"
             autoPlay

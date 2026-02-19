@@ -25,6 +25,7 @@ import {
   seminarParticipants, InsertSeminarParticipant,
   seminarArticles, InsertSeminarArticle,
   emailLog, InsertEmailLog,
+  inviteCodes, InsertInviteCode,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1191,4 +1192,65 @@ export async function getEmailLogById(id: number) {
   if (!db) throw new Error("Database not available");
   const results = await db.select().from(emailLog).where(eq(emailLog.id, id));
   return results[0] || null;
+}
+
+
+// ==================== INVITE CODES ====================
+
+/**
+ * Create an invite code
+ */
+export async function createInviteCode(data: InsertInviteCode) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(inviteCodes).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Get invite code by code string
+ */
+export async function getInviteCodeByCode(code: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const results = await db.select().from(inviteCodes).where(eq(inviteCodes.code, code));
+  return results[0] || null;
+}
+
+/**
+ * Increment used count for an invite code
+ */
+export async function incrementInviteCodeUsage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(inviteCodes)
+    .set({ usedCount: sql`${inviteCodes.usedCount} + 1` })
+    .where(eq(inviteCodes.id, id));
+}
+
+/**
+ * Get all invite codes
+ */
+export async function getAllInviteCodes() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(inviteCodes).orderBy(desc(inviteCodes.createdAt));
+}
+
+/**
+ * Delete invite code
+ */
+export async function deleteInviteCode(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(inviteCodes).where(eq(inviteCodes.id, id));
+}
+
+/**
+ * Toggle invite code active status
+ */
+export async function toggleInviteCode(id: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(inviteCodes).set({ isActive }).where(eq(inviteCodes.id, id));
 }

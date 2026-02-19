@@ -1,0 +1,1 @@
+ALTER TABLE `studentAccounts` MODIFY COLUMN `memberId` int;

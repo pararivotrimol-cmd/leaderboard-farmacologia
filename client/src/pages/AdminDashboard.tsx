@@ -37,17 +37,28 @@ export default function AdminDashboard() {
   const [teacherToken, setTeacherToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("teacherSessionToken");
-    if (!token) {
+    // Check for super admin session first, then teacher session
+    const adminRole = localStorage.getItem("adminRole");
+    const adminToken = localStorage.getItem("sessionToken");
+    const teacherToken = localStorage.getItem("teacherSessionToken");
+    
+    if (adminRole === "super_admin" && adminToken) {
+      setTeacherToken(adminToken);
+    } else if (teacherToken) {
+      setTeacherToken(teacherToken);
+    } else {
       setLocation("/professor/login");
       return;
     }
-    setTeacherToken(token);
   }, [setLocation]);
 
   const handleLogout = () => {
     localStorage.removeItem("teacherSessionToken");
-    setLocation("/professor/login");
+    localStorage.removeItem("sessionToken");
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminRole");
+    localStorage.removeItem("adminLoginTime");
+    setLocation("/");
   };
 
   if (!teacherToken) return null;

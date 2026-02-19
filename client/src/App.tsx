@@ -33,7 +33,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Landing} />
       <Route path={"/leaderboard"} component={Home} />
-      <Route path={"/admin"} component={Admin} />
+      <Route path={"/admin"} component={AdminDashboard} />
+      <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />
@@ -42,7 +43,6 @@ function Router() {
       <Route path={"/presenca"} component={Presenca} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/performance"} component={PerformanceReport} />
-      <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
