@@ -85,7 +85,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: rank * 0.05 }}
     >
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-white/[0.02] transition-colors">
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left hover:bg-white/[0.02] transition-colors min-h-[72px]">
         <RankBadge rank={rank} />
         <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{team.emoji}</div>
         <div className="flex-1 min-w-0">

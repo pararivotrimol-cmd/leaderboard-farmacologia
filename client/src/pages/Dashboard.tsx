@@ -93,7 +93,7 @@ export default function Dashboard() {
 
       <div className="container py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total PF */}
           <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">

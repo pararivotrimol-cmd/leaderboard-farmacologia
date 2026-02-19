@@ -603,7 +603,7 @@ export default function Landing() {
                   ) : (
                     <button
                       onClick={() => setLocation("/login-aluno")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
                       style={{ backgroundColor: "#F7941D", color: "#fff" }}
                     >
                       <LogIn size={18} />
@@ -652,7 +652,7 @@ export default function Landing() {
                   ) : (
                     <button
                       onClick={() => setLocation("/professor/login")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
                       style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
                     >
                       <LogIn size={18} />

@@ -2121,12 +2121,12 @@ export default function Admin() {
 
       {/* Nav */}
       <div className="container py-4">
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit flex-wrap">
+        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {sections.map(s => (
             <button
               key={s.key}
               onClick={() => setActiveSection(s.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
                 activeSection === s.key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
