@@ -275,6 +275,7 @@
 - [x] Criar schema para funções dentro dos grupos (coordenador, relator, etc.)
 - [x] Criar schema para atribuição de alunos a funções
 - [x] Criar schema para artigos PubMed por seminário
+- [x] Criar helper functions no db.ts para seminários
 - [ ] Criar rotas tRPC para CRUD de grupos de seminário
 - [ ] Criar rotas tRPC para atribuir alunos a funções
 - [ ] Criar aba "Seminários" no painel admin

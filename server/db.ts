@@ -20,6 +20,10 @@ import {
   auditLog, InsertAuditLog,
   teacherTeams, InsertTeacherTeam,
   activityTemplates, InsertActivityTemplate,
+  seminars, InsertSeminar,
+  seminarRoles, InsertSeminarRole,
+  seminarParticipants, InsertSeminarParticipant,
+  seminarArticles, InsertSeminarArticle,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -988,4 +992,159 @@ export async function deleteActivityTemplate(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(activityTemplates).where(eq(activityTemplates.id, id));
+}
+
+// ============================================================================
+// Seminars & Jigsaw Groups
+// ============================================================================
+
+/**
+ * Get all seminars
+ */
+export async function getAllSeminars() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(seminars).orderBy(asc(seminars.week));
+}
+
+/**
+ * Get seminar by ID
+ */
+export async function getSeminarById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(seminars)
+    .where(eq(seminars.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Create seminar
+ */
+export async function createSeminar(data: InsertSeminar) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(seminars).values(data);
+  return Number(result[0].insertId);
+}
+
+/**
+ * Update seminar
+ */
+export async function updateSeminar(id: number, data: Partial<InsertSeminar>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(seminars).set(data).where(eq(seminars.id, id));
+}
+
+/**
+ * Delete seminar
+ */
+export async function deleteSeminar(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Delete related participants and articles first
+  await db.delete(seminarParticipants).where(eq(seminarParticipants.seminarId, id));
+  await db.delete(seminarArticles).where(eq(seminarArticles.seminarId, id));
+  await db.delete(seminars).where(eq(seminars.id, id));
+}
+
+/**
+ * Get all seminar roles
+ */
+export async function getAllSeminarRoles() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(seminarRoles).orderBy(asc(seminarRoles.id));
+}
+
+/**
+ * Create seminar role
+ */
+export async function createSeminarRole(data: InsertSeminarRole) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(seminarRoles).values(data);
+  return Number(result[0].insertId);
+}
+
+/**
+ * Get participants for a seminar
+ */
+export async function getSeminarParticipants(seminarId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(seminarParticipants)
+    .where(eq(seminarParticipants.seminarId, seminarId))
+    .orderBy(asc(seminarParticipants.roleId));
+}
+
+/**
+ * Create seminar participant
+ */
+export async function createSeminarParticipant(data: InsertSeminarParticipant) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(seminarParticipants).values(data);
+  return Number(result[0].insertId);
+}
+
+/**
+ * Update seminar participant
+ */
+export async function updateSeminarParticipant(id: number, data: Partial<InsertSeminarParticipant>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(seminarParticipants).set(data).where(eq(seminarParticipants.id, id));
+}
+
+/**
+ * Delete seminar participant
+ */
+export async function deleteSeminarParticipant(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(seminarParticipants).where(eq(seminarParticipants.id, id));
+}
+
+/**
+ * Get articles for a seminar
+ */
+export async function getSeminarArticles(seminarId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(seminarArticles)
+    .where(eq(seminarArticles.seminarId, seminarId))
+    .orderBy(desc(seminarArticles.year));
+}
+
+/**
+ * Create seminar article
+ */
+export async function createSeminarArticle(data: InsertSeminarArticle) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(seminarArticles).values(data);
+  return Number(result[0].insertId);
+}
+
+/**
+ * Delete seminar article
+ */
+export async function deleteSeminarArticle(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(seminarArticles).where(eq(seminarArticles.id, id));
+}
+
+/**
+ * Assign member to seminar participant role
+ */
+export async function assignMemberToSeminarRole(participantId: number, memberId: number, memberName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(seminarParticipants)
+    .set({ memberId, memberName })
+    .where(eq(seminarParticipants.id, participantId));
 }
