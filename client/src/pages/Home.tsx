@@ -345,6 +345,7 @@ export default function Home() {
         ref={vinhetaAudioRef}
         src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
         preload="auto"
+        autoPlay
       />
       {showIntro && (
         <motion.div
