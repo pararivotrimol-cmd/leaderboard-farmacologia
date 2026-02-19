@@ -251,6 +251,52 @@ export const appRouter = router({
         };
       }),
 
+    // Super Admin Login (direct access with specific credentials)
+    superAdminLogin: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const SUPER_ADMIN_EMAIL = "pedro.alexandre@unirio.br";
+        const SUPER_ADMIN_PASSWORD = "0702G@bi";
+
+        if (input.email !== SUPER_ADMIN_EMAIL) {
+          return { success: false, message: "Email ou senha incorretos" } as const;
+        }
+
+        if (input.password !== SUPER_ADMIN_PASSWORD) {
+          return { success: false, message: "Email ou senha incorretos" } as const;
+        }
+
+        let teacher = await db.getTeacherAccountByEmail(SUPER_ADMIN_EMAIL);
+        if (!teacher) {
+          const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+          const teacherId = await db.createTeacherAccount({
+            email: SUPER_ADMIN_EMAIL,
+            name: "Pedro Alexandre (Super Admin)",
+            passwordHash,
+            role: "super_admin",
+            isActive: 1,
+          });
+          teacher = await db.getTeacherAccountByEmail(SUPER_ADMIN_EMAIL);
+        }
+
+        if (!teacher) {
+          return { success: false, message: "Erro ao acessar super admin" } as const;
+        }
+
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        await db.updateTeacherSessionToken(teacher.id, sessionToken);
+
+        return {
+          success: true,
+          message: "Acesso de super admin concedido",
+          sessionToken,
+          teacher: { id: teacher.id, name: teacher.name, email: teacher.email, role: "super_admin" },
+        } as const;
+      }),
+
     // Request password reset
     requestPasswordReset: publicProcedure
       .input(z.object({

@@ -14,18 +14,40 @@ interface IntroVinhetaProps {
  */
 export default function IntroVinheta({ onComplete }: IntroVinhetaProps) {
   const [stage, setStage] = useState(0);
+  const [showSkipButton, setShowSkipButton] = useState(false);
 
+  // Check if user has seen intro before
   useEffect(() => {
+    const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+    if (hasSeenIntro) {
+      onComplete();
+      return;
+    }
+
+    // Show skip button after 1 second
+    const skipTimer = setTimeout(() => setShowSkipButton(true), 1000);
+
     const timers = [
       setTimeout(() => setStage(1), 500),   // Particles appear
       setTimeout(() => setStage(2), 1500),  // Logo appears
       setTimeout(() => setStage(3), 2500),  // Title appears
       setTimeout(() => setStage(4), 3500),  // Fade to main content
-      setTimeout(() => onComplete(), 4000), // Complete
+      setTimeout(() => {
+        localStorage.setItem("hasSeenIntro", "true");
+        onComplete();
+      }, 4000), // Complete
     ];
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      clearTimeout(skipTimer);
+      timers.forEach(clearTimeout);
+    };
   }, [onComplete]);
+
+  const handleSkip = () => {
+    localStorage.setItem("hasSeenIntro", "true");
+    onComplete();
+  };
 
   return (
     <AnimatePresence>
@@ -170,6 +192,20 @@ export default function IntroVinheta({ onComplete }: IntroVinhetaProps) {
               </motion.div>
             )}
           </div>
+
+          {/* Skip button */}
+          {showSkipButton && stage < 4 && (
+            <motion.button
+              onClick={handleSkip}
+              className="absolute top-6 right-6 px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 z-50"
+              style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              Pular
+            </motion.button>
+          )}
 
           {/* Expanding circles effect */}
           {stage >= 2 && (

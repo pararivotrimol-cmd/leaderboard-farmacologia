@@ -57,11 +57,18 @@ export default function ProfessorSignup() {
     setIsLoading(true);
 
     try {
-      await signupMutation.mutateAsync({
+      const result = await signupMutation.mutateAsync({
         name,
         email: email.toLowerCase(),
         password,
       });
+
+      // Check if signup was successful
+      if (!result.success) {
+        setError(result.message || "Erro ao criar conta. Tente novamente.");
+        setIsLoading(false);
+        return;
+      }
 
       setSuccess(true);
       setTimeout(() => {
@@ -69,7 +76,6 @@ export default function ProfessorSignup() {
       }, 2000);
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta. Tente novamente.");
-    } finally {
       setIsLoading(false);
     }
   };

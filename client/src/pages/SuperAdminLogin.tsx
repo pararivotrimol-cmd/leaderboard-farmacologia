@@ -18,7 +18,7 @@ export default function SuperAdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const loginMutation = trpc.teacherAuth.login.useMutation({
+  const loginMutation = trpc.teacherAuth.superAdminLogin.useMutation({
     onSuccess: (result) => {
       if (result.success) {
         localStorage.setItem("sessionToken", result.sessionToken || "");

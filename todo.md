@@ -183,6 +183,20 @@
 - [x] Integrar auditoria em rotas de XP (updateXP, bulkUpdateXP)
 - [ ] Integrar auditoria em rotas de equipes (create, update, delete)
 - [x] Integrar auditoria em rotas de membros (create, update, delete)
+
+## Correções Solicitadas (Feb 19, 2026)
+- [x] Corrigir erro de cadastro de professor (validação email/senha)
+- [x] Corrigir fluxo de cadastro de alunos
+- [x] Adicionar botão de pular vinheta para usuários recorrentes
+- [x] Implementar painel de super admin com login direto (pedro.alexandre@unirio.br / 0702G@bi)
+- [x] Corrigir número de alunos de 120 para 84 (Farmacologia 1 - Medicina 2026.1)
+- [x] Atualizar cronograma: Semana 1 - Farmacocinética 1 (Absorção e Distribuição)
+- [x] Atualizar cronograma: Semana 2 - Farmacocinética 2
+- [x] Atualizar cronograma: Semana 3 - Farmacodinâmica
+- [x] Atualizar cronograma: Semana 4 - Boas Práticas de Prescrição
+- [x] Atualizar cronograma: Semana 6 - Bloqueadores Colinérgicos e Neuromusculares
+- [x] Atualizar cronograma: Semana 7 - Primeiro dia de Seminários
+- [x] Adicionar identificação da turma no cronograma (Medicina Farmacologia 1 - 2026.1)
 - [ ] Integrar auditoria em rotas de avisos e materiais
 - [ ] Criar rota tRPC para buscar logs de auditoria
 - [ ] Criar aba "Auditoria" no painel admin para visualizar logs

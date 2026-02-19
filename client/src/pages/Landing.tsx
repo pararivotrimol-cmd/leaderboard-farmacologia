@@ -227,13 +227,13 @@ export default function Landing() {
   ];
 
   const timeline = [
-    { week: "Semana 1", title: "Introdução à Farmacologia & Formação de Equipes", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes e TBL diagnóstico.", icon: <GraduationCap size={18} /> },
-    { week: "Semana 2", title: "Farmacocinética I — Absorção e Distribuição", detail: "Vias de administração, biodisponibilidade, volume de distribuição. TBL 1.", icon: <Pill size={18} /> },
-    { week: "Semana 3", title: "Farmacocinética II — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. Caso Clínico 1.", icon: <Pill size={18} /> },
-    { week: "Semana 4", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. TBL 2.", icon: <Brain size={18} /> },
+    { week: "Semana 1", title: "Introdução à Farmacologia & Farmacocinética 1", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes. Absorção e Distribuição — vias de administração, biodisponibilidade, volume de distribuição.", icon: <GraduationCap size={18} /> },
+    { week: "Semana 2", title: "Farmacocinética 2 — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. TBL 1.", icon: <Pill size={18} /> },
+    { week: "Semana 3", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. Caso Clínico 1.", icon: <Brain size={18} /> },
+    { week: "Semana 4", title: "Boas Práticas de Prescrição", detail: "Prescrição racional, farmacovigilância, interações medicamentosas. TBL 2.", icon: <Activity size={18} /> },
     { week: "Semana 5", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", icon: <Activity size={18} /> },
-    { week: "Semana 6", title: "SNA — Bloqueadores Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", icon: <Activity size={18} /> },
-    { week: "Semana 7", title: "Seminários Jigsaw 2 e 3", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", icon: <Target size={18} /> },
+    { week: "Semana 6", title: "Bloqueadores Colinérgicos e Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", icon: <Activity size={18} /> },
+    { week: "Semana 7", title: "Primeiro Dia de Seminários Jigsaw", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", icon: <Target size={18} /> },
     { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático.", icon: <Zap size={18} />, highlight: true },
     { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} /> },
@@ -555,10 +555,10 @@ export default function Landing() {
       </div>
 
       {/* ═══════ TIMELINE SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
-        <div className="max-w-3xl mx-auto">
+      <div className="relative py-16 sm:py-20" style={{ backgroundColor: "#0D1B2A" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-12 sm:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -566,7 +566,10 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
               Jornada do Semestre
             </h2>
-            <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="mt-1 text-sm" style={{ color: "rgba(247,148,29,0.8)" }}>
+              Medicina — Farmacologia 1 — 2026.1
+            </p>
+            <p className="mt-2 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
               17 semanas de aprendizado intensivo e gamificado
             </p>
           </motion.div>
@@ -760,14 +763,24 @@ export default function Landing() {
                       <ArrowRight size={18} />
                     </button>
                   ) : (
-                    <button
-                      onClick={() => setLocation("/professor/login")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                    >
-                      <LogIn size={18} />
-                      Fazer Login
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setLocation("/professor/login")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
+                        style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                      >
+                        <LogIn size={18} />
+                        Professor
+                      </button>
+                      <button
+                        onClick={() => setLocation("/super-admin/login")}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] min-h-[44px]"
+                        style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "#F7941D", border: "1px solid rgba(247,148,29,0.3)" }}
+                      >
+                        <Shield size={16} />
+                        Super Admin
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
