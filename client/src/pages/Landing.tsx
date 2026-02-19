@@ -16,6 +16,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useStudentAuth } from "./StudentLogin";
+import IntroVinheta from "@/components/IntroVinheta";
+import BackgroundMusic from "@/components/BackgroundMusic";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
@@ -252,11 +254,27 @@ export default function Landing() {
 
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
 
+  const [showVinheta, setShowVinheta] = useState(true);
+  const [vinhetaComplete, setVinhetaComplete] = useState(false);
+
+  const handleVinhetaComplete = () => {
+    setVinhetaComplete(true);
+    setTimeout(() => setShowVinheta(false), 500);
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
+      {/* ═══════ ANIMATED INTRO VINHETA ═══════ */}
+      {showVinheta && !vinhetaComplete && (
+        <IntroVinheta onComplete={handleVinhetaComplete} />
+      )}
+
+      {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}
+      {vinhetaComplete && <BackgroundMusic />}
+
       {/* ═══════ INTRO VIDEO OVERLAY (auto-play, muted) ═══════ */}
       <AnimatePresence>
-        {showIntro && (
+        {vinhetaComplete && showIntro && (
           <motion.div
             className="fixed inset-0 z-[100] flex items-center justify-center"
             style={{ backgroundColor: "#000" }}
@@ -335,9 +353,13 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.6 }}
             >
-              <img src="/logos/unirio.png" alt="UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <div className="bg-white rounded-full p-2 shadow-lg">
+                <img src="/logos/unirio.png" alt="UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
+              </div>
               <img src="/logos/medicina.png" alt="Escola de Medicina e Cirurgia UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <img src="/logos/ibio.png" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <div className="bg-white rounded-full p-2 shadow-lg">
+                <img src="/logos/ibio.png" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
+              </div>
               <img src="/logos/nutricao.png" alt="Escola de Nutrição UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
               <img src="/logos/enfermagem.png" alt="Escola de Enfermagem Alfredo Pinto UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
             </motion.div>

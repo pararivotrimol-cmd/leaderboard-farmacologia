@@ -453,3 +453,14 @@
 - [ ] Criar interface para visualizar artigos sugeridos
 - [ ] Integrar ao painel de Seminários Jigsaw
 - [ ] Testar integração com PubMed
+
+## Reformulação da Tela de Apresentação (Landing Page)
+- [x] Adicionar fundo branco circular aos logos IB e UNIRIO
+- [x] Criar vinheta de abertura animada (estilo Armação Ilimitada)
+- [x] Implementar sistema de música de fundo lounge
+- [x] Adicionar controles de play/pause/volume para música
+- [x] Criar animações dinâmicas no hero section
+- [x] Implementar transições suaves entre seções
+- [x] Adicionar efeitos de partículas ou movimento
+- [x] Testar responsividade com novas animações
+- [x] Validar performance e carregamento
