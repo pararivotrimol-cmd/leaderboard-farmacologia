@@ -22,8 +22,13 @@ export default function SuperAdminLogin() {
     onSuccess: (result) => {
       if (result.success) {
         localStorage.setItem("sessionToken", result.sessionToken || "");
+        localStorage.setItem("adminEmail", email);
+        localStorage.setItem("adminRole", "super_admin");
+        localStorage.setItem("adminLoginTime", new Date().toISOString());
         toast.success("Acesso de super admin concedido!");
-        navigate("/admin");
+        setTimeout(() => {
+          navigate("/admin");
+        }, 500);
       } else {
         setError("Email ou senha incorretos");
       }

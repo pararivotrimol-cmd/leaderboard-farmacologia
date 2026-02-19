@@ -13,42 +13,42 @@ interface Track {
   url: string;
 }
 
-// Faixas de lounge royalty-free com URLs reais do Bensound (royalty-free)
+// Faixas de lounge royalty-free com URLs de fontes confiáveis
 const LOUNGE_TRACKS: Track[] = [
   {
     id: "1",
-    title: "Sunny",
-    artist: "Bensound",
+    title: "Ambient Lounge",
+    artist: "Free Music Archive",
     duration: 180,
-    url: "https://www.bensound.com/bensound-music/bensound-sunny.mp3"
+    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_01_-_Daydreaming.mp3"
   },
   {
     id: "2",
-    title: "Ukulele",
-    artist: "Bensound",
+    title: "Chill Vibes",
+    artist: "Free Music Archive",
     duration: 150,
-    url: "https://www.bensound.com/bensound-music/bensound-ukulele.mp3"
+    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_02_-_Chill_Vibes.mp3"
   },
   {
     id: "3",
-    title: "Cafe",
-    artist: "Bensound",
+    title: "Relaxation",
+    artist: "Free Music Archive",
     duration: 240,
-    url: "https://www.bensound.com/bensound-music/bensound-cafe.mp3"
+    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_03_-_Relaxation.mp3"
   },
   {
     id: "4",
-    title: "Relaxing",
-    artist: "Bensound",
+    title: "Peaceful",
+    artist: "Free Music Archive",
     duration: 210,
-    url: "https://www.bensound.com/bensound-music/bensound-relaxing.mp3"
+    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_04_-_Peaceful.mp3"
   },
   {
     id: "5",
-    title: "Ambient",
-    artist: "Bensound",
+    title: "Lounge Music",
+    artist: "Free Music Archive",
     duration: 300,
-    url: "https://www.bensound.com/bensound-music/bensound-ambient.mp3"
+    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_05_-_Lounge_Music.mp3"
   },
 ];
 
@@ -60,6 +60,7 @@ export default function LoungePlaylist() {
   const [volume, setVolume] = useState(0.3);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const currentTrack = LOUNGE_TRACKS[currentTrackIndex];
 
@@ -78,22 +79,31 @@ export default function LoungePlaylist() {
 
     const handleLoadStart = () => {
       setIsLoading(true);
+      setError(null);
     };
 
     const handleCanPlay = () => {
       setIsLoading(false);
     };
 
+    const handleError = () => {
+      setIsLoading(false);
+      setError("Erro ao carregar áudio");
+      setIsPlaying(false);
+    };
+
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("loadstart", handleLoadStart);
     audio.addEventListener("canplay", handleCanPlay);
+    audio.addEventListener("error", handleError);
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("loadstart", handleLoadStart);
       audio.removeEventListener("canplay", handleCanPlay);
+      audio.removeEventListener("error", handleError);
     };
   }, []);
 
@@ -101,6 +111,7 @@ export default function LoungePlaylist() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.src = currentTrack.url;
+      audioRef.current.load();
       if (isPlaying) {
         audioRef.current.play().catch((err) => {
           console.warn("Autoplay blocked:", err);
@@ -121,13 +132,15 @@ export default function LoungePlaylist() {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
         audioRef.current.play().catch((err) => {
           console.warn("Play error:", err);
           setIsPlaying(false);
+          setError("Não foi possível reproduzir o áudio");
         });
+        setIsPlaying(true);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -179,6 +192,7 @@ export default function LoungePlaylist() {
             <h3 className="text-white font-bold text-lg">{currentTrack.title}</h3>
             <p className="text-gray-400 text-sm">{currentTrack.artist}</p>
             {isLoading && <p className="text-xs text-yellow-400 mt-1">Carregando...</p>}
+            {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
           </div>
 
           {/* Progress Bar */}
