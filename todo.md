@@ -652,3 +652,14 @@
 - [x] Redirecionamento do admin para painel professor (sem login)
 - [x] Acesso direto do admin às seções de alunos e professores
 - [x] Aba Alunos com subdivisão por turmas e ordenação alfabética
+
+
+## Correções Finais (Feb 19, 2026 - Fase 10)
+- [x] Corrigir erro de acesso ao portal do aluno pelo admin geral
+- [x] Apagar todas as equipes cadastradas
+- [x] Apagar todos os nomes de alunos cadastrados
+- [ ] Implementar interface de criação de grupos para seminários (Jigsaw)
+- [ ] Implementar interface de criação de grupos para casos clínicos
+- [ ] Implementar interface de criação de grupos para Kahoots
+- [ ] Limitar criação de grupos apenas para turma de Farmacologia 1 Medicina
+- [ ] Permitir alunos visualizar e gerenciar seus grupos
