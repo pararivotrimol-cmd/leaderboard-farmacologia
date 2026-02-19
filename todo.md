@@ -511,3 +511,18 @@
 - [x] Adequar layout para tablets (iPad, Android tablets)
 - [x] Adequar layout para TVs 4K (telas grandes, legibilidade)
 - [x] Testar responsividade em múltiplos breakpoints
+
+## Novas Correções (Feb 19, 2026 - Fase 2)
+- [x] Aumentar botão de pular vinheta com mais destaque visual
+- [x] Adicionar 3-5 músicas lounge royalty-free à playlist
+- [x] Fazer upload de faixas para rotação automática
+- [x] Corrigir cronograma: Semana 11 - AINEs e Corticoides
+- [x] Remover Analésicos Opióides do cronograma
+- [x] Corrigir cronograma: Semana 12 - Anestésicos Locais
+- [x] Corrigir cronograma: Semana 13 - Anti-histamínicos
+- [x] Corrigir cronograma: Semana 14 - Seminários Jigsaw 2
+- [x] Corrigir cronograma: Semana 15 - P2
+- [x] Corrigir cronograma: Semana 16 - Segunda Chamada
+- [x] Corrigir cronograma: Semana 17 - Prova Final
+- [x] Verificar por que botão de acesso admin não está sendo postado
+- [x] Botão de acesso admin verificado e funcional

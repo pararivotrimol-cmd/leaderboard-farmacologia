@@ -24,6 +24,7 @@ import ProfessorLogin from "./pages/ProfessorLogin";
 import ProfessorSignup from "./pages/ProfessorSignup";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import PerformanceReport from "./pages/PerformanceReport";
+import LoungePlaylist from "./components/LoungePlaylist";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -61,6 +62,7 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
+          <LoungePlaylist />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

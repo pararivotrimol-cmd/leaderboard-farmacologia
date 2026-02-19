@@ -237,13 +237,13 @@ export default function Landing() {
     { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático.", icon: <Zap size={18} />, highlight: true },
     { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} /> },
     { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} /> },
-    { week: "Semana 11", title: "Seminários Jigsaw 4 e 5", detail: "Apresentações dos grupos especialistas sobre SNA adrenérgico.", icon: <Target size={18} /> },
-    { week: "Semana 12", title: "Anti-inflamatórios Não Esteroidais (AINEs)", detail: "Inibidores de COX, seletividade, efeitos adversos. TBL 4.", icon: <Brain size={18} /> },
-    { week: "Semana 13", title: "Corticosteroides & Analgésicos Opioides", detail: "Mecanismo anti-inflamatório, receptores opioides, escala analgésica. Caso Clínico 4.", icon: <Brain size={18} /> },
-    { week: "Semana 14", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Seminário Jigsaw 6.", icon: <Pill size={18} /> },
-    { week: "Semana 15", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias.", icon: <Pill size={18} /> },
-    { week: "Semana 16", title: "Seminários Jigsaw 7 e 8 (2º dia)", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa.", icon: <Target size={18} /> },
-    { week: "Semana 17", title: "Prova P2 + Premiação", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
+    { week: "Semana 11", title: "AINEs e Corticoides", detail: "Anti-inflamatórios Não Esteroidais (inibidores de COX), corticosteroides, mecanismo anti-inflamatório, efeitos adversos. TBL 4.", icon: <Brain size={18} /> },
+    { week: "Semana 12", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Bloqueio nervoso, aplicações em odontologia e cirurgia.", icon: <Pill size={18} /> },
+    { week: "Semana 13", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias e gastrite. Caso Clínico 4.", icon: <Pill size={18} /> },
+    { week: "Semana 14", title: "Seminários Jigsaw 2", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa dos temas anteriores.", icon: <Target size={18} /> },
+    { week: "Semana 15", title: "P2 — Prova Individual", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Avaliação de aprendizado.", icon: <Zap size={18} />, highlight: true },
+    { week: "Semana 16", title: "Segunda Chamada", detail: "Oportunidade para alunos que faltaram na P1 ou P2 realizarem a avaliação. Revisão de conteúdo.", icon: <Target size={18} /> },
+    { week: "Semana 17", title: "Prova Final + Premiação", detail: "Prova final integrativa (PF): conteúdo completo do semestre. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, highlight: true },
   ];
 
   // Feriados que caem em terça-feira no 1º semestre 2026
@@ -285,13 +285,20 @@ export default function Landing() {
           {/* Skip button */}
           <motion.button
             onClick={handleVinhetaComplete}
-            className="absolute top-6 right-6 px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 z-50"
-            style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 1 }}
+            className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
+            style={{ 
+              backgroundColor: "#F7941D", 
+              color: "#fff", 
+              border: "2px solid #fff",
+              boxShadow: "0 0 20px rgba(247, 148, 29, 0.6)"
+            }}
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, delay: 1 }}
+            whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(247, 148, 29, 0.8)" }}
+            whileTap={{ scale: 0.95 }}
           >
-            Pular
+            ⏭️ Pular
           </motion.button>
         </motion.div>
       )}
