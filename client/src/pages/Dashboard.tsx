@@ -79,86 +79,86 @@ export default function Dashboard() {
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
       {/* Header */}
       <div className="border-b" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
-        <div className="container py-6">
+        <div className="container px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Link href="/leaderboard">
-            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium mb-4 transition-colors" style={{ color: "rgba(255,255,255,0.6)", backgroundColor: "rgba(255,255,255,0.05)" }}>
+            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium mb-3 sm:mb-4 transition-colors" style={{ color: "rgba(255,255,255,0.6)", backgroundColor: "rgba(255,255,255,0.05)" }}>
               <ArrowLeft size={16} />
               Voltar ao Leaderboard
             </button>
           </Link>
-          <h1 className="text-3xl font-bold text-white">Meu Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Meu Dashboard</h1>
           <p style={{ color: "rgba(255,255,255,0.6)" }} className="mt-1">Olá, {stats.studentName}! Acompanhe seu desempenho.</p>
         </div>
       </div>
 
-      <div className="container py-8">
+      <div className="container px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-10 lg:py-12">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 mb-8">
           {/* Total PF */}
-          <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
                 <TrendingUp size={24} style={{ color: ORANGE }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>PF Acumulados</p>
-                <p className="text-2xl font-bold" style={{ color: ORANGE }}>{Number(stats.totalPF).toFixed(1)}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: ORANGE }}>{Number(stats.totalPF).toFixed(1)}</p>
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>de 45 possíveis</p>
           </div>
 
           {/* Ranking */}
-          <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
                 <Trophy size={24} style={{ color: ORANGE }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Ranking</p>
-                <p className="text-2xl font-bold text-white">#{stats.rank}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white">#{stats.rank}</p>
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Top {percentile}% da turma</p>
           </div>
 
           {/* Badges */}
-          <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
                 <Award size={24} style={{ color: ORANGE }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Badges</p>
-                <p className="text-2xl font-bold text-white">{stats.badgesCount}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stats.badgesCount}</p>
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>conquistas desbloqueadas</p>
           </div>
 
           {/* Attendance */}
-          <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
                 <MapPin size={24} style={{ color: ORANGE }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Presenças</p>
-                <p className="text-2xl font-bold text-white">{stats.attendanceCount}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stats.attendanceCount}</p>
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>de 17 aulas</p>
           </div>
 
           {/* Team */}
-          <div className="p-6 rounded-lg border sm:col-span-2" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border sm:col-span-2" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center" style={{ backgroundColor: ORANGE + "20" }}>
                 <Users size={24} style={{ color: ORANGE }} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Equipe</p>
-                <p className="text-2xl font-bold text-white">{stats.teamName}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stats.teamName}</p>
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Trabalhe em equipe para conquistar mais PF!</p>
@@ -166,7 +166,7 @@ export default function Dashboard() {
         </div>
 
         {/* Evolution Chart */}
-        <div className="p-6 rounded-lg border mb-8" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border mb-8" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
           <h2 className="text-xl font-bold text-white mb-4">Evolução de PF</h2>
           {evolution && evolution.length > 0 ? (
             <div style={{ height: "300px" }}>
@@ -233,7 +233,7 @@ export default function Dashboard() {
         </div>
 
         {/* Badges History */}
-        <div className="p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
           <h2 className="text-xl font-bold text-white mb-4">Histórico de Badges</h2>
           {badges && badges.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -246,7 +246,7 @@ export default function Dashboard() {
                   <div className="flex items-start gap-3">
                     <div className="text-3xl flex-shrink-0">
                       {badge.badgeIconUrl ? (
-                        <img src={badge.badgeIconUrl} alt={badge.badgeName || "Badge"} className="w-12 h-12 object-contain" />
+                        <img src={badge.badgeIconUrl} alt={badge.badgeName || "Badge"} className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain" />
                       ) : (
                         "🏆"
                       )}

@@ -501,3 +501,13 @@
 - [x] Substituir vinheta atual pela versão com animação do professor Pedro
 - [x] Gerar música lounge de qualidade (sem zumbido)
 - [x] Testar fluxo completo de autenticação
+
+## Novas Correções (Feb 19, 2026 - Continuação)
+- [x] Corrigir botão de pular vinheta (não está aparecendo)
+- [x] Validar fluxo de cadastro de professores com tratamento de erros
+- [x] Implementar notificações automáticas de presença para alunos
+- [x] Criar relatório de performance por semana (evolução PF vs cronograma)
+- [x] Adequar layout para dispositivos móveis (responsividade)
+- [x] Adequar layout para tablets (iPad, Android tablets)
+- [x] Adequar layout para TVs 4K (telas grandes, legibilidade)
+- [x] Testar responsividade em múltiplos breakpoints

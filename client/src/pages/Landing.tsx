@@ -282,6 +282,17 @@ export default function Landing() {
           >
             <source src={INTRO_VIDEO_URL} type="video/mp4" />
           </video>
+          {/* Skip button */}
+          <motion.button
+            onClick={handleVinhetaComplete}
+            className="absolute top-6 right-6 px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 z-50"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1 }}
+          >
+            Pular
+          </motion.button>
         </motion.div>
       )}
 

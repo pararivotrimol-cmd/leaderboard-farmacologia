@@ -85,7 +85,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: rank * 0.05 }}
     >
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left hover:bg-white/[0.02] transition-colors min-h-[72px]">
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 text-left hover:bg-white/[0.02] transition-colors min-h-[72px]">
         <RankBadge rank={rank} />
         <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{team.emoji}</div>
         <div className="flex-1 min-w-0">
@@ -412,7 +412,7 @@ export default function Home() {
           </div>
 
           {/* Stats Row */}
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {[
               { icon: <Users size={18} />, label: "Equipes", value: teamsData.length.toString(), sub: `${totalStudents} alunos` },
               { icon: <Zap size={18} />, label: "PF Total Turma", value: totalPFEarned.toFixed(0), sub: `de ${MAX_PF_SEMESTER * totalStudents}` },
@@ -497,7 +497,7 @@ export default function Home() {
           {activeTab === "teams" && (
             <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               {rankedTeams.length >= 3 && totalPFEarned > 0 && (
-                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-8">
                   {[rankedTeams[1], rankedTeams[0], rankedTeams[2]].map((team, idx) => {
                     const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
                     const isFirst = actualRank === 1;
@@ -571,7 +571,7 @@ export default function Home() {
                     {topStudents.map((student, idx) => (
                       <motion.div
                         key={student.name}
-                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
+                        className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 p-3 sm:p-4"
                         style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}

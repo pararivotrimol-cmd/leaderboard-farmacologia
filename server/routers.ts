@@ -150,11 +150,11 @@ export const appRouter = router({
     // Register new teacher account (first access)
     register: publicProcedure
       .input(z.object({
-        email: z.string().email().refine(email => email.endsWith("@unirio.br"), {
-          message: "Email deve ser institucional @unirio.br"
+        email: z.string().email("Email inválido").refine(email => email.toLowerCase().endsWith("@unirio.br") || email.toLowerCase().endsWith("@edu.unirio.br"), {
+          message: "Email deve ser institucional (@unirio.br ou @edu.unirio.br)"
         }),
-        name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
-        password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+        name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(200, "Nome muito longo"),
+        password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres").max(255, "Senha muito longa"),
       }))
       .mutation(async ({ input }) => {
         // Check if email already exists
@@ -1738,11 +1738,19 @@ export const appRouter = router({
           return { success: false, message: "Você já registrou presença nesta semana." } as const;
         }
 
+        // Send notification to student
+        const successMessage = isWithinRange
+          ? `Presença registrada com sucesso! (${distance.toFixed(0)}m da sala)`
+          : `Presença registrada, mas você está a ${distance.toFixed(0)}m da sala (máximo: ${MAX_DISTANCE_METERS}m). O professor será notificado.`;
+
+        sendNotificationAsync(
+          "✅ Presença Registrada",
+          `${account.email} registrou presença na semana ${currentWeek}. ${isWithinRange ? "Dentro da sala." : "Fora do raio permitido."}`
+        );
+
         return {
           success: true,
-          message: isWithinRange
-            ? `Presença registrada com sucesso! (${distance.toFixed(0)}m da sala)`
-            : `Presença registrada, mas você está a ${distance.toFixed(0)}m da sala (máximo: ${MAX_DISTANCE_METERS}m). O professor será notificado.`,
+          message: successMessage,
           distance: Math.round(distance),
           isWithinRange,
           week: currentWeek,

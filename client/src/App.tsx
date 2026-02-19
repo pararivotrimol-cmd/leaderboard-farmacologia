@@ -23,6 +23,7 @@ import SuperAdminProfile from "./pages/SuperAdminProfile";
 import ProfessorLogin from "./pages/ProfessorLogin";
 import ProfessorSignup from "./pages/ProfessorSignup";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
+import PerformanceReport from "./pages/PerformanceReport";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -38,6 +39,7 @@ function Router() {
       <Route path={"/login-aluno"} component={StudentLogin} />
       <Route path={"/presenca"} component={Presenca} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/performance"} component={PerformanceReport} />
       <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
