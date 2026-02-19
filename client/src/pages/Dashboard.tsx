@@ -37,10 +37,20 @@ const CARD_BG = "#0D1B2A";
 
 export default function Dashboard() {
   const [sessionToken, setSessionToken] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
-    const token = localStorage.getItem("studentSessionToken") || "";
-    setSessionToken(token);
+    // Tentar obter token de aluno primeiro, depois token de admin
+    const studentToken = localStorage.getItem("studentSessionToken");
+    const adminToken = localStorage.getItem("sessionToken");
+    
+    if (studentToken) {
+      setSessionToken(studentToken);
+      setIsAdmin(false);
+    } else if (adminToken) {
+      setSessionToken(adminToken);
+      setIsAdmin(true);
+    }
   }, []);
   
   const { data: stats, isLoading: statsLoading } = trpc.studentDashboard.getMyStats.useQuery({ sessionToken }, { enabled: !!sessionToken });
