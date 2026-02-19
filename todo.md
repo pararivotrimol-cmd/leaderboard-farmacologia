@@ -547,3 +547,9 @@
 - [x] Botão "Acessar Admin" com estilo laranja
 - [x] Música lounge com URLs reais do Bensound
 - [x] Dev server rodando sem erros TypeScript
+
+## Correções (Feb 19, 2026 - Fase 4)
+- [x] Integrar música autoral (5317-Mix.mp3) como trilha sonora com loop na vinheta
+- [x] Corrigir login admin: pedro.alexandre@unirio.br / 0702G@bi (sem mostrar email no placeholder)
+- [x] Corrigir números: 84 alunos e 16 equipes (não 122/54)
+- [x] Propor layout mais dinâmico e refinado para seção inicial com logotipos

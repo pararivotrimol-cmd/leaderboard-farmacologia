@@ -144,8 +144,9 @@ export default function Landing() {
     setTeacherLoggedIn(!!token);
   }, []);
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
-  const totalStudents = leaderboard?.teams?.reduce((s: number, t: any) => s + t.members.length, 0) ?? 0;
-  const totalTeams = leaderboard?.teams?.length ?? 0;
+  // Valores fixos da turma de Medicina Farmacologia 1 - 2026.1
+  const totalStudents = 84;
+  const totalTeams = 16;
   const maxPF = 45;
 
   const { scrollYProgress } = useScroll({
@@ -431,42 +432,90 @@ export default function Landing() {
               transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
             />
 
-            {/* Logos das Escolas UNIRIO */}
+            {/* Logos das Escolas UNIRIO — Layout Dinâmico com Orbital */}
             <motion.div
-              className="mt-8 flex items-center justify-center gap-4 flex-wrap"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.2, duration: 0.6 }}
+              className="mt-10 relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.2, duration: 0.8 }}
             >
+              {/* Linha decorativa superior */}
               <motion.div
-                className="bg-white rounded-full p-2 shadow-lg"
-                whileHover={{ scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                className="flex items-center justify-center gap-3 mb-4"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 2.4, duration: 0.6 }}
               >
-                <img src="/logos/unirio.png" alt="UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
+                <div className="h-px flex-1 max-w-16" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.4))" }} />
+                <span className="text-xs tracking-[0.3em] uppercase" style={{ color: "rgba(247,148,29,0.6)", fontFamily: "'JetBrains Mono', monospace" }}>Parceiros Acadêmicos</span>
+                <div className="h-px flex-1 max-w-16" style={{ background: "linear-gradient(to left, transparent, rgba(247,148,29,0.4))" }} />
               </motion.div>
-              <motion.img
-                src="/logos/medicina.png" alt="Escola de Medicina e Cirurgia UNIRIO"
-                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
-                whileHover={{ scale: 1.1 }}
-              />
+
+              {/* Container de logos com glassmorphism */}
               <motion.div
-                className="bg-white rounded-full p-2 shadow-lg"
-                whileHover={{ scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap px-6 py-4 rounded-2xl mx-auto max-w-2xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(247,148,29,0.04) 50%, rgba(255,255,255,0.02) 100%)",
+                  border: "1px solid rgba(247,148,29,0.12)",
+                  backdropFilter: "blur(12px)",
+                }}
+                whileHover={{ borderColor: "rgba(247,148,29,0.3)" }}
+                transition={{ duration: 0.3 }}
               >
-                <img src="/logos/ibio.png" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain" />
+                {[
+                  { src: "/logos/unirio.png", alt: "UNIRIO", bg: true },
+                  { src: "/logos/medicina.png", alt: "Escola de Medicina e Cirurgia UNIRIO", bg: false },
+                  { src: "/logos/ibio.png", alt: "Instituto Biomédico UNIRIO", bg: true },
+                  { src: "/logos/nutricao.png", alt: "Escola de Nutrição UNIRIO", bg: false },
+                  { src: "/logos/enfermagem.png", alt: "Escola de Enfermagem Alfredo Pinto UNIRIO", bg: false },
+                ].map((logo, i) => (
+                  <motion.div
+                    key={logo.alt}
+                    className={`relative group cursor-pointer ${
+                      logo.bg ? "bg-white/90 rounded-full p-1.5 sm:p-2 shadow-lg" : ""
+                    }`}
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      delay: 2.4 + i * 0.12,
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 15,
+                    }}
+                    whileHover={{
+                      scale: 1.15,
+                      y: -4,
+                      transition: { type: "spring", stiffness: 400, damping: 10 },
+                    }}
+                  >
+                    <img
+                      src={logo.src}
+                      alt={logo.alt}
+                      className={`h-10 sm:h-14 w-auto object-contain ${
+                        logo.bg ? "" : "opacity-75 group-hover:opacity-100 transition-opacity duration-300"
+                      }`}
+                    />
+                    {/* Tooltip com nome */}
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                      <span className="text-[10px] px-2 py-1 rounded-md" style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "rgba(247,148,29,0.8)" }}>
+                        {logo.alt.replace(" UNIRIO", "")}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
-              <motion.img
-                src="/logos/nutricao.png" alt="Escola de Nutrição UNIRIO"
-                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
-                whileHover={{ scale: 1.1 }}
-              />
-              <motion.img
-                src="/logos/enfermagem.png" alt="Escola de Enfermagem Alfredo Pinto UNIRIO"
-                className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
-                whileHover={{ scale: 1.1 }}
-              />
+
+              {/* Linha decorativa inferior */}
+              <motion.div
+                className="flex items-center justify-center gap-3 mt-4"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 2.8, duration: 0.6 }}
+              >
+                <div className="h-px flex-1 max-w-24" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.2))" }} />
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "rgba(247,148,29,0.4)" }} />
+                <div className="h-px flex-1 max-w-24" style={{ background: "linear-gradient(to left, transparent, rgba(247,148,29,0.2))" }} />
+              </motion.div>
             </motion.div>
 
             <motion.p

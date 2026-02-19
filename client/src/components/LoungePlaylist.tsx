@@ -13,42 +13,14 @@ interface Track {
   url: string;
 }
 
-// Faixas de lounge royalty-free com URLs de fontes confiáveis
+// Música autoral do projeto Conexão em Farmacologia
 const LOUNGE_TRACKS: Track[] = [
   {
     id: "1",
-    title: "Ambient Lounge",
-    artist: "Free Music Archive",
-    duration: 180,
-    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_01_-_Daydreaming.mp3"
-  },
-  {
-    id: "2",
-    title: "Chill Vibes",
-    artist: "Free Music Archive",
-    duration: 150,
-    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_02_-_Chill_Vibes.mp3"
-  },
-  {
-    id: "3",
-    title: "Relaxation",
-    artist: "Free Music Archive",
+    title: "Conexão em Farmacologia - Mix",
+    artist: "Trilha Autoral",
     duration: 240,
-    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_03_-_Relaxation.mp3"
-  },
-  {
-    id: "4",
-    title: "Peaceful",
-    artist: "Free Music Archive",
-    duration: 210,
-    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_04_-_Peaceful.mp3"
-  },
-  {
-    id: "5",
-    title: "Lounge Music",
-    artist: "Free Music Archive",
-    duration: 300,
-    url: "https://files.freemusicarchive.org/music/Podington_Bear/Daydreaming/Podington_Bear_-_05_-_Lounge_Music.mp3"
+    url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
   },
 ];
 
@@ -70,7 +42,11 @@ export default function LoungePlaylist() {
     if (!audio) return;
 
     const handleEnded = () => {
-      setCurrentTrackIndex((prev) => (prev + 1) % LOUNGE_TRACKS.length);
+      // Loop na mesma faixa (música autoral em loop contínuo)
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
     };
 
     const handleTimeUpdate = () => {

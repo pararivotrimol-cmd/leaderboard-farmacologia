@@ -100,7 +100,7 @@ export default function SuperAdminLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="pedro.alexandre@unirio.br"
+                  placeholder="Digite seu email institucional"
                   className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
                   disabled={isLoading}
                 />
