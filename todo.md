@@ -663,3 +663,16 @@
 - [ ] Implementar interface de criação de grupos para Kahoots
 - [ ] Limitar criação de grupos apenas para turma de Farmacologia 1 Medicina
 - [ ] Permitir alunos visualizar e gerenciar seus grupos
+
+
+## Importação de Alunos do Portal UNIRIO (Feb 19, 2026 - Fase 11)
+- [ ] Criar rota tRPC para autenticação no portal UNIRIO
+- [ ] Implementar web scraping do portal UNIRIO
+- [ ] Extrair lista de alunos por turma
+- [ ] Validar dados dos alunos (nome, email, matrícula)
+- [ ] Cadastrar alunos automaticamente no banco
+- [ ] Criar interface no painel do professor
+- [ ] Adicionar botão "Importar do Portal UNIRIO"
+- [ ] Exibir preview dos alunos antes de importar
+- [ ] Tratamento de erros e exceções
+- [ ] Testar com turmas reais
