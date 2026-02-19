@@ -31,6 +31,7 @@ const ADMIN_TABS: AdminTab[] = [
 ];
 
 export default function AdminDashboard() {
+  const [, navigate] = useLocation();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [teacherToken, setTeacherToken] = useState<string | null>(null);
