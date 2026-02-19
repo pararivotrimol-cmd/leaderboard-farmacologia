@@ -359,7 +359,7 @@ export default function Home() {
       />
       {showIntro && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8"
           style={{ backgroundColor: DARK_BG }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -372,10 +372,26 @@ export default function Home() {
           >
             <img
               src={LOGO_URL}
-              alt="Conexão em Farmacologia"
+              alt="Conexao em Farmacologia"
               className="w-40 h-40 object-contain"
             />
           </motion.div>
+          <div className="flex items-center gap-4 px-8">
+            <span className="text-white text-sm font-medium">Volume:</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={vinhetaVolume}
+              onChange={handleVolumeChange}
+              className="w-32 cursor-pointer"
+              style={{
+                accentColor: "#F7941D",
+              }}
+            />
+            <span className="text-white text-sm font-medium w-8 text-right">{Math.round(vinhetaVolume * 100)}%</span>
+          </div>
         </motion.div>
       )}
 
