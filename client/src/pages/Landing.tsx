@@ -337,10 +337,11 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.6 }}
             >
-              <img src="/logos/medicina.jpg" alt="Escola de Medicina UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <img src="/logos/ibio.jpg" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <img src="/logos/nutricao.jpg" alt="Escola de Nutrição UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
-              <img src="/logos/enfermagem.png" alt="Escola de Enfermagem UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/unirio.png" alt="UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/medicina.png" alt="Escola de Medicina e Cirurgia UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/ibio.png" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/nutricao.png" alt="Escola de Nutrição UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/enfermagem.png" alt="Escola de Enfermagem Alfredo Pinto UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
             </motion.div>
             <motion.p
               className="mt-2 text-sm sm:text-base max-w-xl mx-auto"
@@ -458,7 +459,7 @@ export default function Landing() {
               Jornada do Semestre
             </h2>
             <p className="mt-3 text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-              19 semanas de aprendizado intensivo e gamificado
+              17 semanas de aprendizado intensivo e gamificado
             </p>
           </motion.div>
 

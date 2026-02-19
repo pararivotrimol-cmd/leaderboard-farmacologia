@@ -331,3 +331,11 @@
 - [x] Testar visualização da Landing page
 - [x] Verificar logos das escolas UNIRIO exibidos corretamente
 - [x] Confirmar remoção do texto "Farmacologia I — UNIRIO — Semestre 2026.1"
+
+## Correção de Logos e Cronograma
+- [x] Copiar logos corretos fornecidos pelo usuário para client/public/logos/
+- [x] Atualizar Landing.tsx com os logos corretos (UNIRIO, Enfermagem, Nutrição, Medicina, Instituto Biomédico)
+- [x] Verificar Landing.tsx - seção "Jornada do Semestre" mostrando 19 semanas
+- [x] Corrigir para exatamente 17 semanas na interface visual
+- [x] Testar visualização da Landing page
+- [x] Confirmar 17 semanas exibidas corretamente
