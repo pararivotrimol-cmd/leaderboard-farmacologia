@@ -256,9 +256,16 @@ export default function JigsawGroups() {
                     {group.description && (
                       <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-2 text-sm mb-4">
                       <Users className="w-4 h-4" />
-                      {group.currentMembers} / {group.maxMembers} membros
+                      <span className="text-muted-foreground">{group.currentMembers} / {group.maxMembers} membros</span>
+                      <div className="ml-auto">
+                        {group.currentMembers >= group.maxMembers ? (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Cheio</span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{group.maxMembers - group.currentMembers} vagas</span>
+                        )}
+                      </div>
                     </div>
                     <Button
                       variant="destructive"
@@ -305,9 +312,16 @@ export default function JigsawGroups() {
                     {group.description && (
                       <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-2 text-sm mb-4">
                       <Users className="w-4 h-4" />
-                      {group.currentMembers} / {group.maxMembers} membros
+                      <span className="text-muted-foreground">{group.currentMembers} / {group.maxMembers} membros</span>
+                      <div className="ml-auto">
+                        {group.currentMembers >= group.maxMembers ? (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Cheio</span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{group.maxMembers - group.currentMembers} vagas</span>
+                        )}
+                      </div>
                     </div>
                     {group.createdByName && (
                       <p className="text-xs text-muted-foreground mb-4">

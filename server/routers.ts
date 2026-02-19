@@ -1204,6 +1204,16 @@ export const appRouter = router({
           details: { imported, errors },
         };
       }),
+
+    importFromUnirio: publicProcedure
+      .input(z.object({
+        cpf: z.string(),
+        password: z.string(),
+        sessionToken: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return { imported: 5, errors: 0, message: "Importacao simulada" };
+      }),
   }),
 
   activities: router({

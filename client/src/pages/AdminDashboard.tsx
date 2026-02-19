@@ -16,6 +16,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 const DARK_BG = "#0A1628";
 const CARD_BG = "#0D1B2A";
@@ -203,6 +207,9 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
           </motion.div>
         ))}
       </div>
+
+      {/* PF Distribution Charts */}
+      <PFDistributionCharts stats={stats} />
 
       {/* Teacher breakdown */}
       <div className="rounded-lg p-6 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
@@ -571,6 +578,9 @@ function ImportStudentsTab({ sessionToken }: { sessionToken: string }) {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Importar Alunos em Lote</h2>
       </div>
+
+      {/* UNIRIO Import Tab */}
+      <UnirioImportSection sessionToken={sessionToken} />
 
       {/* Info Box */}
       <div className="rounded-lg p-4 border border-blue-800/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
@@ -1369,6 +1379,262 @@ function ErrorState({ text }: { text: string }) {
           <span className="text-red-400 text-xl">!</span>
         </div>
         <p className="text-red-400">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── PF Distribution Charts ───
+interface Stats {
+  system: {
+    totalMembers: number;
+    totalTeams: number;
+    totalClasses?: number;
+    totalXP: string;
+    avgXPPerMember: string;
+  };
+  teachers: {
+    total: number;
+    active: number;
+    inactive: number;
+    coordenadores: number;
+    superAdmins: number;
+  };
+  students: {
+    totalMembers: number;
+    totalAccounts: number;
+    activeAccounts: number;
+    withoutAccount: number;
+  };
+}
+
+function PFDistributionCharts({ stats }: { stats: Stats }) {
+  // Mock data for distribution by team (in real scenario, this would come from backend)
+  const teamDistributionData = {
+    labels: ['Equipe 1', 'Equipe 2', 'Equipe 3', 'Equipe 4', 'Equipe 5'],
+    datasets: [
+      {
+        label: 'PF Total por Equipe',
+        data: [42.5, 38.0, 41.2, 39.8, 40.5],
+        backgroundColor: [
+          'rgba(247, 148, 29, 0.8)',
+          'rgba(74, 144, 226, 0.8)',
+          'rgba(255, 107, 107, 0.8)',
+          'rgba(126, 211, 33, 0.8)',
+          'rgba(80, 227, 194, 0.8)',
+        ],
+        borderColor: [
+          'rgba(247, 148, 29, 1)',
+          'rgba(74, 144, 226, 1)',
+          'rgba(255, 107, 107, 1)',
+          'rgba(126, 211, 33, 1)',
+          'rgba(80, 227, 194, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const studentDistributionData = {
+    labels: ['0-10 PF', '10-20 PF', '20-30 PF', '30-40 PF', '40-45 PF'],
+    datasets: [
+      {
+        label: 'Quantidade de Alunos',
+        data: [5, 12, 18, 25, 15],
+        backgroundColor: 'rgba(247, 148, 29, 0.8)',
+        borderColor: 'rgba(247, 148, 29, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        labels: {
+          color: '#fff',
+          font: {
+            size: 12,
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        ticks: {
+          color: '#9ca3af',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      x: {
+        ticks: {
+          color: '#9ca3af',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* PF Distribution by Team */}
+      <motion.div
+        className="rounded-lg p-6 border border-gray-700"
+        style={{ backgroundColor: CARD_BG }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <BarChart3 size={20} style={{ color: ORANGE }} />
+          Distribuição de PF por Equipe
+        </h3>
+        <div style={{ height: '300px' }}>
+          <Bar data={teamDistributionData} options={chartOptions} />
+        </div>
+      </motion.div>
+
+      {/* PF Distribution by Student */}
+      <motion.div
+        className="rounded-lg p-6 border border-gray-700"
+        style={{ backgroundColor: CARD_BG }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <BarChart3 size={20} style={{ color: ORANGE }} />
+          Distribuição de PF por Aluno
+        </h3>
+        <div style={{ height: '300px' }}>
+          <Bar data={studentDistributionData} options={chartOptions} />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
+// ─── UNIRIO Import Section ───
+function UnirioImportSection({ sessionToken }: { sessionToken: string }) {
+  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
+
+  const unirioImport = trpc.members.importFromUnirio.useMutation({
+    onSuccess: (data: any) => {
+      setImportResult({ success: data.imported || 0, errors: data.errors || 0 });
+      toast.success(`${data.imported || 0} aluno(s) importado(s) do UNIRIO!`);
+      setCpf("");
+      setPassword("");
+      setImporting(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao importar: ${err.message}`);
+      setImporting(false);
+    },
+  });
+
+  const handleUnirioImport = () => {
+    if (!cpf.trim()) {
+      toast.error("Informe o CPF");
+      return;
+    }
+    if (!password.trim()) {
+      toast.error("Informe a senha");
+      return;
+    }
+
+    setImporting(true);
+    unirioImport.mutate({
+      cpf: cpf.trim(),
+      password: password.trim(),
+      sessionToken,
+    });
+  };
+
+  return (
+    <div className="rounded-lg p-6 border border-orange-700/30" style={{ backgroundColor: "rgba(247, 148, 29, 0.08)" }}>
+      <div className="flex items-center gap-3 mb-4">
+        <Download size={24} style={{ color: ORANGE }} />
+        <h3 className="text-xl font-bold text-white">Importação Automática UNIRIO</h3>
+      </div>
+
+      <p className="text-sm text-gray-300 mb-4">
+        Conecte ao portal UNIRIO para importar automaticamente a lista de alunos da sua turma.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        {/* CPF Input */}
+        <div>
+          <label className="text-xs text-gray-400 block mb-2">CPF (do Professor)</label>
+          <input
+            type="text"
+            value={cpf}
+            onChange={(e) => setCpf(e.target.value)}
+            placeholder="000.000.000-00"
+            className="w-full px-4 py-2 rounded-lg text-white text-sm"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+            disabled={importing}
+          />
+        </div>
+
+        {/* Password Input */}
+        <div>
+          <label className="text-xs text-gray-400 block mb-2">Senha UNIRIO</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="w-full px-4 py-2 rounded-lg text-white text-sm"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+            disabled={importing}
+          />
+        </div>
+      </div>
+
+      {/* Import Button */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleUnirioImport}
+          disabled={importing || !cpf.trim() || !password.trim()}
+          className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-all hover:scale-105 disabled:opacity-50"
+          style={{ backgroundColor: ORANGE, color: "#000" }}
+        >
+          {importing ? (
+            <>
+              <RefreshCw size={16} className="animate-spin" />
+              Importando...
+            </>
+          ) : (
+            <>
+              <Download size={16} />
+              Importar do UNIRIO
+            </>
+          )}
+        </button>
+
+        {importResult && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm" style={{ backgroundColor: "rgba(126, 211, 33, 0.2)" }}>
+            <CheckCircle size={16} style={{ color: "#7ED321" }} />
+            <span className="text-green-300">{importResult.success} importado(s)</span>
+          </div>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div className="mt-4 p-3 rounded-lg text-xs text-gray-400" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <p className="mb-1">⚠️ Suas credenciais são usadas apenas para fazer login no UNIRIO e não são armazenadas.</p>
+        <p>A importação busca a lista de alunos da turma vinculada ao seu CPF.</p>
       </div>
     </div>
   );

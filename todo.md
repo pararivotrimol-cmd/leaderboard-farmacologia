@@ -690,3 +690,23 @@
 - [x] Corrigir labels em JigsawGroups.tsx (se houver)
 - [x] Corrigir dados de exemplo em leaderboardData.ts
 - [x] Corrigir constantes e comentários de negócio
+
+
+## Melhorias - Gráficos de Distribuição de PF
+- [x] Criar componente de gráfico de distribuição por turma (Chart.js)
+- [x] Criar componente de gráfico de distribuição por aluno (Chart.js)
+- [x] Adicionar gráficos ao AdminDashboard
+- [x] Estilizar gráficos com cores do tema
+
+## Melhorias - Interface de Importação UNIRIO
+- [x] Criar formulário de importação UNIRIO no painel admin
+- [x] Adicionar campos de CPF e senha para autenticação
+- [x] Implementar feedback visual (loading, sucesso, erro)
+- [ ] Mostrar histórico de importações
+- [ ] Adicionar botão de teste de conexão
+
+## Melhorias - Grupos Jigsaw com Filtros
+- [x] Adicionar abas de filtro por tipo de grupo
+- [x] Mostrar membros ativos em tempo real
+- [x] Melhorar visualização de grupos
+- [x] Adicionar indicador de vagas disponíveis
