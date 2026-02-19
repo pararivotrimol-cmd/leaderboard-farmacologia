@@ -457,3 +457,23 @@ export const seminarArticles = mysqlTable("seminarArticles", {
 
 export type SeminarArticle = typeof seminarArticles.$inferSelect;
 export type InsertSeminarArticle = typeof seminarArticles.$inferInsert;
+
+/**
+ * Email log - track emails sent to seminar groups
+ */
+export const emailLog = mysqlTable("emailLog", {
+  id: int("id").autoincrement().primaryKey(),
+  teacherAccountId: int("teacherAccountId").notNull(),
+  teacherName: varchar("teacherName", { length: 200 }).notNull(),
+  teacherEmail: varchar("teacherEmail", { length: 200 }).notNull(),
+  seminarId: int("seminarId"), // NULL if email not related to a specific seminar
+  subject: varchar("subject", { length: 300 }).notNull(),
+  body: text("body").notNull(),
+  recipientCount: int("recipientCount").notNull().default(0),
+  recipients: text("recipients"), // JSON array of recipient emails
+  status: varchar("status", { length: 50 }).notNull().default("sent"), // sent, failed, pending
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+});
+
+export type EmailLog = typeof emailLog.$inferSelect;
+export type InsertEmailLog = typeof emailLog.$inferInsert;

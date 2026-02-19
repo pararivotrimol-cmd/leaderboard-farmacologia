@@ -85,6 +85,13 @@
       "when": 1771458352225,
       "tag": "0011_mushy_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1771462692050,
+      "tag": "0012_right_vulcan",
+      "breakpoints": true
     }
   ]
 }

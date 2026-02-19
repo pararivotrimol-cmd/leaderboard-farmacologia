@@ -305,3 +305,15 @@
 - [ ] Adicionar 10 perguntas por Kahoot (preparar conteúdo)
 - [ ] Integrar com conta pedro.alexandre@unirio.br
 - [ ] Exibir Kahoots na página de atividades
+
+## Notificações por Email (Seminários)
+- [x] Criar schema emailLog no banco de dados
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar helper functions no db.ts para email log
+- [ ] Criar rota tRPC para enviar email a grupo de seminário
+- [ ] Criar rota tRPC para buscar histórico de emails enviados
+- [ ] Criar interface no painel admin (modal de envio de email)
+- [ ] Adicionar botão "Enviar Email" em cada grupo de seminário
+- [ ] Integrar com notifyOwner para simular envio de email
+- [ ] Adicionar validação de emails institucionais dos alunos
+- [ ] Escrever testes para sistema de emails

@@ -24,6 +24,7 @@ import {
   seminarRoles, InsertSeminarRole,
   seminarParticipants, InsertSeminarParticipant,
   seminarArticles, InsertSeminarArticle,
+  emailLog, InsertEmailLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1147,4 +1148,47 @@ export async function assignMemberToSeminarRole(participantId: number, memberId:
   await db.update(seminarParticipants)
     .set({ memberId, memberName })
     .where(eq(seminarParticipants.id, participantId));
+}
+
+
+// ─── Email Log Helpers ───
+
+/**
+ * Create email log entry
+ */
+export async function createEmailLog(data: InsertEmailLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(emailLog).values(data);
+  return Number(result[0].insertId);
+}
+
+/**
+ * Get all email logs (optionally filtered by teacher or seminar)
+ */
+export async function getEmailLogs(filters?: { teacherAccountId?: number; seminarId?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  let query = db.select().from(emailLog);
+  
+  if (filters?.teacherAccountId) {
+    query = query.where(eq(emailLog.teacherAccountId, filters.teacherAccountId)) as any;
+  }
+  
+  if (filters?.seminarId) {
+    query = query.where(eq(emailLog.seminarId, filters.seminarId)) as any;
+  }
+  
+  return query.orderBy(desc(emailLog.sentAt));
+}
+
+/**
+ * Get email log by ID
+ */
+export async function getEmailLogById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const results = await db.select().from(emailLog).where(eq(emailLog.id, id));
+  return results[0] || null;
 }
