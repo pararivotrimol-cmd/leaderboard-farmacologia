@@ -330,15 +330,18 @@ export default function Landing() {
               <span className="text-white/60 text-2xl sm:text-3xl md:text-4xl mx-2">em</span>
               <span className="text-white">Farmacologia</span>
             </h1>
-            <motion.p
-              className="mt-4 text-lg sm:text-xl max-w-2xl mx-auto"
-              style={{ color: "rgba(255,255,255,0.6)" }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+            {/* Logos das Escolas UNIRIO */}
+            <motion.div
+              className="mt-6 flex items-center justify-center gap-4 flex-wrap"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.6 }}
             >
-              Farmacologia I — UNIRIO — Semestre 2026.1
-            </motion.p>
+              <img src="/logos/medicina.jpg" alt="Escola de Medicina UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/ibio.jpg" alt="Instituto Biomédico UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/nutricao.jpg" alt="Escola de Nutrição UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <img src="/logos/enfermagem.png" alt="Escola de Enfermagem UNIRIO" className="h-12 sm:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+            </motion.div>
             <motion.p
               className="mt-2 text-sm sm:text-base max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.4)" }}

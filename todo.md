@@ -317,3 +317,17 @@
 - [ ] Integrar com notifyOwner para simular envio de email
 - [ ] Adicionar validação de emails institucionais dos alunos
 - [ ] Escrever testes para sistema de emails
+
+## Correções Landing Page e Cronograma
+- [x] Verificar cronograma em leaderboardData.ts (deve ter exatamente 17 semanas)
+- [x] Cronograma correto: 17 semanas (03/03 a 30/06/2026)
+- [x] Remover texto "Farmacologia I — UNIRIO — Semestre 2026.1" da Landing page
+- [x] Buscar logos oficiais: Escola de Medicina UNIRIO
+- [x] Buscar logos oficiais: Instituto Biomédico UNIRIO
+- [x] Buscar logos oficiais: Escola de Nutrição UNIRIO
+- [x] Buscar logos oficiais: Escola de Enfermagem UNIRIO
+- [x] Copiar logos para client/public/logos/
+- [x] Adicionar logos das escolas abaixo do título na Landing page
+- [x] Testar visualização da Landing page
+- [x] Verificar logos das escolas UNIRIO exibidos corretamente
+- [x] Confirmar remoção do texto "Farmacologia I — UNIRIO — Semestre 2026.1"
