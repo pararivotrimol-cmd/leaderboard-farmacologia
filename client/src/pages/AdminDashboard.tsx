@@ -87,7 +87,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => window.location.href = "/admin"}
+              onClick={() => window.location.href = "/admin/professor"}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
               style={{ backgroundColor: `${ORANGE}30`, color: ORANGE, border: `1px solid ${ORANGE}50` }}
               title="Acessar Painel do Professor"
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
               <span className="hidden sm:inline">Painel Professor</span>
             </button>
             <button
-              onClick={() => window.location.href = "/student"}
+              onClick={() => window.location.href = "/dashboard"}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
               style={{ backgroundColor: `rgba(100,200,255,0.15)`, color: "#64C8FF", border: "1px solid rgba(100,200,255,0.3)" }}
               title="Acessar Portal do Aluno"
