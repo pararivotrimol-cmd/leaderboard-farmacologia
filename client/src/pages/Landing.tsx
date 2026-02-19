@@ -16,7 +16,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useStudentAuth } from "./StudentLogin";
-import IntroVinheta from "@/components/IntroVinheta";
+import ProfessorPedroVinheta from "@/components/ProfessorPedroVinheta";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
@@ -266,7 +266,7 @@ export default function Landing() {
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
       {/* ═══════ ANIMATED INTRO VINHETA ═══════ */}
       {showVinheta && !vinhetaComplete && (
-        <IntroVinheta onComplete={handleVinhetaComplete} />
+        <ProfessorPedroVinheta onComplete={handleVinhetaComplete} />
       )}
 
       {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}

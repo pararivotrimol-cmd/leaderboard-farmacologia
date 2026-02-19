@@ -477,3 +477,13 @@
 - [ ] Implementar música lounge funcional com URLs reais
 - [ ] Testar música tocando corretamente
 - [ ] Verificar demais erros na dinâmica da plataforma
+
+## Correções Críticas de Autenticação e Mídia
+- [x] Recriar fluxo de login/cadastro do professor (primeiro acesso = cadastro)
+- [x] Validar email institucional @unirio.br no cadastro
+- [x] Criar página de cadastro do professor (/professor/signup)
+- [x] Criar página de login do professor (/professor/login) sem erro 404
+- [x] Criar login exclusivo para super admin (/super-admin/login)
+- [x] Substituir vinheta atual pela versão com animação do professor Pedro
+- [x] Gerar música lounge de qualidade (sem zumbido)
+- [x] Testar fluxo completo de autenticação

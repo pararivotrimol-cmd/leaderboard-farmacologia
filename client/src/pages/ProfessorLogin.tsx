@@ -194,6 +194,17 @@ export default function ProfessorLogin() {
 
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-gray-700">
+              <p className="text-xs text-center mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Não tem uma conta?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/professor/signup")}
+                  className="hover:underline font-semibold"
+                  style={{ color: ORANGE }}
+                >
+                  Criar conta
+                </button>
+              </p>
               <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Problemas para fazer login?{" "}
                 <a href="/" className="hover:underline" style={{ color: ORANGE }}>
