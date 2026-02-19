@@ -79,7 +79,7 @@ function LoginScreen({ onLogin }: { onLogin: (pw: string) => void }) {
 }
 
 // ─── Team Management ───
-function TeamManager({ password }: { password: string }) {
+function TeamManager({ password }: { password: string | null }) {
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamEmoji, setNewTeamEmoji] = useState("🧪");
   const [newTeamColor, setNewTeamColor] = useState("#10b981");
@@ -269,7 +269,7 @@ function MemberList({ teamId, members, password, teamColor }: {
 }
 
 // ─── Bulk XP Update ───
-function BulkXPManager({ password }: { password: string }) {
+function BulkXPManager({ password }: { password: string | null }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [xpUpdates, setXpUpdates] = useState<Record<number, string>>({});
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
@@ -352,7 +352,7 @@ function BulkXPManager({ password }: { password: string }) {
 }
 
 // ─── Activities Manager ───
-function ActivitiesManager({ password }: { password: string }) {
+function ActivitiesManager({ password }: { password: string | null }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("🎯");
@@ -399,7 +399,7 @@ function ActivitiesManager({ password }: { password: string }) {
 }
 
 // ─── Highlights Manager ───
-function HighlightsManager({ password }: { password: string }) {
+function HighlightsManager({ password }: { password: string | null }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [week, setWeek] = useState("");
   const [date, setDate] = useState("");
@@ -462,7 +462,7 @@ function HighlightsManager({ password }: { password: string }) {
 }
 
 // ─── Professores Manager (Coordenador only) ───
-function ProfessoresManager({ teacherToken }: { teacherToken: string }) {
+function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(true);
 
@@ -702,7 +702,7 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string }) {
 }
 
 // ─── Settings ───
-function SettingsManager({ password }: { password: string }) {
+function SettingsManager({ password }: { password: string | null }) {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
 
@@ -747,7 +747,7 @@ function SettingsManager({ password }: { password: string }) {
 }
 
 // ─── Notifications Manager ───
-function NotificationsManager({ password }: { password: string }) {
+function NotificationsManager({ password }: { password: string | null }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<"normal" | "important" | "urgent">("normal");
@@ -929,7 +929,7 @@ const MODULES = [
   "Anti-inflamatórios", "Seminários Jigsaw", "Casos Clínicos",
 ];
 
-function MaterialsManager({ password }: { password: string }) {
+function MaterialsManager({ password }: { password: string | null }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [materialType, setMaterialType] = useState<"file" | "link" | "comment">("file");
@@ -1227,7 +1227,7 @@ function MaterialsManager({ password }: { password: string }) {
 }
 
 // ─── Badges Manager ───
-function BadgesManager({ password }: { password: string }) {
+function BadgesManager({ password }: { password: string | null }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newBadge, setNewBadge] = useState({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" });
   const [assignBadgeId, setAssignBadgeId] = useState<number | null>(null);
@@ -1417,7 +1417,7 @@ function BadgesManager({ password }: { password: string }) {
 }
 
 // ─── Attendance Manager ───
-function AttendanceManager({ password }: { password: string }) {
+function AttendanceManager({ password }: { password: string | null }) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [viewMode, setViewMode] = useState<"summary" | "weekly" | "accounts">("summary");
   const [manualMemberId, setManualMemberId] = useState("");
@@ -1756,7 +1756,7 @@ function AttendanceManager({ password }: { password: string }) {
 }
 
 // ─── YouTube Playlists Manager ───
-function YouTubePlaylistsManager({ password }: { password: string }) {
+function YouTubePlaylistsManager({ password }: { password: string | null }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -2473,7 +2473,7 @@ function JigsawSeminarsManager({ teacherToken }: { teacherToken: string | null }
 }
 
 // ─── Turmas Manager ───
-function TurmasManager({ teacherToken }: { teacherToken: string }) {
+function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCourse, setNewCourse] = useState("");
@@ -2885,8 +2885,8 @@ export default function Admin() {
   const [teacherName, setTeacherName] = useState<string>("");
   
   useEffect(() => {
-    const token = localStorage.getItem("teacherSessionToken");
-    const name = localStorage.getItem("teacherName") || "";
+    const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
+    const name = localStorage.getItem("teacherName") || localStorage.getItem("adminEmail") || "";
     if (token) {
       setTeacherToken(token);
       setTeacherName(name);
@@ -2908,10 +2908,13 @@ export default function Admin() {
     window.location.href = "/";
   };
   
-  // If not authenticated with teacher token, redirect to login
+  // If not authenticated with teacher token or admin token, redirect to login
   if (!teacherToken || !password) {
-    window.location.href = "/professor/login";
-    return null;
+    const adminToken = localStorage.getItem("sessionToken");
+    if (!adminToken) {
+      window.location.href = "/professor/login";
+      return null;
+    }
   }
 
   const sections = [
@@ -2969,7 +2972,7 @@ export default function Admin() {
 
       {/* Content */}
       <div className="container pb-16">
-        {activeSection === "turmas" && <TurmasManager teacherToken={teacherToken} />}
+        {activeSection === "turmas" && <TurmasManager teacherToken={teacherToken || ""} />}
         {activeSection === "teams" && <TeamManager password={password} />}
         {activeSection === "xp" && <BulkXPManager password={password} />}
         {activeSection === "activities" && <ActivitiesManager password={password} />}
