@@ -11,7 +11,7 @@ import {
   BarChart3, CheckCircle, Clock, Shield,
   Plus, Trash2, Eye, RefreshCw, Ticket,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
-  Copy, ExternalLink
+  Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ interface AdminTab {
 
 const ADMIN_TABS: AdminTab[] = [
   { id: "overview", label: "Visão Geral", icon: <BarChart3 size={20} /> },
+  { id: "turmas", label: "Turmas", icon: <FlaskConical size={20} /> },
   { id: "students", label: "Alunos", icon: <GraduationCap size={20} /> },
   { id: "teams", label: "Equipes", icon: <Users size={20} /> },
   { id: "professors", label: "Professores", icon: <BookOpen size={20} /> },
@@ -129,6 +130,7 @@ export default function AdminDashboard() {
       {/* Content Area */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {activeTab === "overview" && <OverviewTab sessionToken={sessionToken} />}
+        {activeTab === "turmas" && <TurmasAdminTab sessionToken={sessionToken} />}
         {activeTab === "students" && <StudentsTab sessionToken={sessionToken} />}
         {activeTab === "teams" && <TeamsTab sessionToken={sessionToken} />}
         {activeTab === "professors" && <ProfessorsTab sessionToken={sessionToken} />}
@@ -240,6 +242,239 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Turmas Admin Tab ───
+function TurmasAdminTab({ sessionToken }: { sessionToken: string }) {
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
+
+  const classesList = trpc.classes.list.useQuery({ sessionToken });
+  const classDetail = trpc.classes.getById.useQuery(
+    { sessionToken, classId: selectedClass! },
+    { enabled: !!selectedClass }
+  );
+
+  if (classesList.isLoading) return <LoadingState text="Carregando turmas..." />;
+
+  // Detail view
+  if (selectedClass && classDetail.data) {
+    const cls = classDetail.data;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setSelectedClass(null)} className="p-2 rounded-lg hover:bg-gray-700 text-gray-400">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-white">{cls.name}</h2>
+            <p className="text-sm text-gray-400">
+              {cls.discipline} — {cls.course} — {cls.semester}
+              {cls.teacherName && <span> — Prof. {cls.teacherName}</span>}
+            </p>
+          </div>
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: cls.color }} />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+            <p className="text-xs text-gray-400 uppercase">Equipes</p>
+            <p className="text-3xl font-bold text-white mt-1">{cls.teams.length}</p>
+          </div>
+          <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+            <p className="text-xs text-gray-400 uppercase">Alunos</p>
+            <p className="text-3xl font-bold text-white mt-1">{cls.members.length}</p>
+          </div>
+          <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+            <p className="text-xs text-gray-400 uppercase">PF Total</p>
+            <p className="text-3xl font-bold mt-1" style={{ color: ORANGE }}>
+              {cls.members.reduce((s: number, m: any) => s + parseFloat(m.xp || "0"), 0).toFixed(1)}
+            </p>
+          </div>
+        </div>
+
+        {/* Teams */}
+        <div className="rounded-lg border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+          <div className="p-4 border-b border-gray-700">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Users size={18} style={{ color: ORANGE }} /> Equipes da Turma
+            </h3>
+          </div>
+          {cls.teams.length === 0 ? (
+            <div className="p-6 text-center text-gray-400">Nenhuma equipe nesta turma.</div>
+          ) : (
+            <div>
+              {cls.teams.map((team: any) => {
+                const teamMembers = cls.members.filter((m: any) => m.teamId === team.id);
+                const totalPF = teamMembers.reduce((s: number, m: any) => s + parseFloat(m.xp || "0"), 0);
+                return (
+                  <div key={team.id} className="border-b border-gray-700/50 last:border-0">
+                    <button
+                      onClick={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
+                      className="w-full p-4 flex items-center justify-between text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{team.emoji}</span>
+                        <span className="font-bold text-white">{team.name}</span>
+                        <span className="text-xs text-gray-400 px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
+                          {teamMembers.length} alunos
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-sm" style={{ color: team.color || ORANGE }}>{totalPF.toFixed(1)} PF</span>
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: team.color || ORANGE }} />
+                        {expandedTeam === team.id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                      </div>
+                    </button>
+                    <AnimatePresence>
+                      {expandedTeam === team.id && teamMembers.length > 0 && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr>
+                                  <th className="px-3 py-2 text-left text-gray-500 text-xs">#</th>
+                                  <th className="px-3 py-2 text-left text-gray-500 text-xs">Nome</th>
+                                  <th className="px-3 py-2 text-right text-gray-500 text-xs">PF</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {teamMembers
+                                  .sort((a: any, b: any) => parseFloat(b.xp || "0") - parseFloat(a.xp || "0"))
+                                  .map((m: any, idx: number) => (
+                                    <tr key={m.id} className="border-t border-gray-700/30">
+                                      <td className="px-3 py-2 text-gray-500 text-xs">{idx + 1}</td>
+                                      <td className="px-3 py-2 text-white">{m.name}</td>
+                                      <td className="px-3 py-2 text-right font-mono" style={{ color: team.color || ORANGE }}>
+                                        {parseFloat(m.xp || "0").toFixed(1)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* All members list */}
+        <div className="rounded-lg border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+          <div className="p-4 border-b border-gray-700">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <GraduationCap size={18} style={{ color: ORANGE }} /> Todos os Alunos ({cls.members.length})
+            </h3>
+          </div>
+          {cls.members.length === 0 ? (
+            <div className="p-6 text-center text-gray-400">Nenhum aluno nesta turma.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-gray-400 text-xs">#</th>
+                    <th className="px-4 py-2 text-left text-gray-400 text-xs">Nome</th>
+                    <th className="px-4 py-2 text-left text-gray-400 text-xs">Equipe</th>
+                    <th className="px-4 py-2 text-right text-gray-400 text-xs">PF</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cls.members
+                    .sort((a: any, b: any) => parseFloat(b.xp || "0") - parseFloat(a.xp || "0"))
+                    .map((m: any, idx: number) => {
+                      const team = cls.teams.find((t: any) => t.id === m.teamId);
+                      return (
+                        <tr key={m.id} className="border-t border-gray-700/50">
+                          <td className="px-4 py-3 text-gray-500 text-xs">{idx + 1}</td>
+                          <td className="px-4 py-3 text-white">{m.name}</td>
+                          <td className="px-4 py-3">
+                            {team ? (
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${team.color}22`, color: team.color }}>
+                                {team.emoji} {team.name}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-500">Sem equipe</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono" style={{ color: ORANGE }}>
+                            {parseFloat(m.xp || "0").toFixed(1)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // List view
+  const classes = classesList.data || [];
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">
+          Turmas
+          <span className="text-sm font-normal text-gray-400 ml-3">({classes.length} turmas)</span>
+        </h2>
+        <button
+          onClick={() => classesList.refetch()}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all hover:scale-105"
+          style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff" }}
+        >
+          <RefreshCw size={16} />
+          Atualizar
+        </button>
+      </div>
+
+      {classes.length === 0 ? (
+        <div className="rounded-lg p-8 border border-gray-700 text-center" style={{ backgroundColor: CARD_BG }}>
+          <FlaskConical size={48} className="mx-auto mb-3 text-gray-600" />
+          <p className="text-gray-400">Nenhuma turma cadastrada ainda.</p>
+          <p className="text-gray-500 text-sm mt-1">As turmas são criadas pelos professores no painel de administração.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {classes.map((cls: any, i: number) => (
+            <motion.button
+              key={cls.id}
+              onClick={() => setSelectedClass(cls.id)}
+              className="rounded-lg p-5 border border-gray-700 text-left hover:border-gray-500 transition-all"
+              style={{ backgroundColor: CARD_BG }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cls.color }} />
+                <h3 className="text-lg font-bold text-white">{cls.name}</h3>
+              </div>
+              <div className="space-y-1 text-sm text-gray-400">
+                <p>📚 {cls.discipline}</p>
+                <p>🏫 {cls.course}</p>
+                <p>📅 {cls.semester}</p>
+                {cls.teacherName && <p>👨‍🏫 Prof. {cls.teacherName}</p>}
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

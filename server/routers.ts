@@ -823,6 +823,7 @@ export const appRouter = router({
         name: z.string().min(1),
         emoji: z.string().default("🧪"),
         color: z.string().default("#10b981"),
+        classId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
@@ -891,6 +892,7 @@ export const appRouter = router({
         teamId: z.number(),
         name: z.string().min(1),
         xp: z.string().default("0"),
+        classId: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
@@ -2393,6 +2395,122 @@ export const appRouter = router({
         if (!teacher) throw new Error("Não autorizado");
         
         await db.deleteSeminarArticle(input.articleId);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Classes (Turmas) ───
+  classes: router({
+    // List all classes (admin) or classes by teacher
+    list: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        // Try super admin first
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (admin && (admin.role === "super_admin" || admin.role === "coordenador")) {
+          return db.getAllClasses();
+        }
+        if (admin) {
+          return db.getClassesByTeacher(admin.id);
+        }
+        throw new Error("Não autorizado");
+      }),
+
+    // Get a single class with its teams and members
+    getById: publicProcedure
+      .input(z.object({ sessionToken: z.string(), classId: z.number() }))
+      .query(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        const cls = await db.getClassById(input.classId);
+        if (!cls) throw new Error("Turma não encontrada");
+        // Check permission: admin/coordenador can see all, professor only their own
+        if (admin.role !== "super_admin" && admin.role !== "coordenador" && cls.teacherAccountId !== admin.id) {
+          throw new Error("Sem permissão para acessar esta turma");
+        }
+        const classTeams = await db.getTeamsByClass(input.classId);
+        const classMembers = await db.getMembersByClass(input.classId);
+        return { ...cls, teams: classTeams, members: classMembers };
+      }),
+
+    // Create a new class
+    create: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        name: z.string().min(1),
+        course: z.string().min(1),
+        discipline: z.string().min(1),
+        semester: z.string().optional(),
+        teacherAccountId: z.number().optional(),
+        teacherName: z.string().optional(),
+        color: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        const { sessionToken, ...data } = input;
+        // If no teacherAccountId specified, assign to current teacher
+        if (!data.teacherAccountId) {
+          data.teacherAccountId = admin.id;
+          data.teacherName = admin.name;
+        }
+        const id = await db.createClass(data as any);
+        return { id };
+      }),
+
+    // Update a class
+    update: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        id: z.number(),
+        name: z.string().optional(),
+        course: z.string().optional(),
+        discipline: z.string().optional(),
+        teacherAccountId: z.number().nullable().optional(),
+        teacherName: z.string().nullable().optional(),
+        color: z.string().optional(),
+        isActive: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        const { sessionToken, id, ...data } = input;
+        await db.updateClass(id, data as any);
+        return { success: true };
+      }),
+
+    // Delete a class
+    delete: publicProcedure
+      .input(z.object({ sessionToken: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        if (admin.role !== "super_admin" && admin.role !== "coordenador") {
+          // Check if teacher owns this class
+          const cls = await db.getClassById(input.id);
+          if (!cls || cls.teacherAccountId !== admin.id) throw new Error("Sem permissão");
+        }
+        await db.deleteClass(input.id);
+        return { success: true };
+      }),
+
+    // Assign a team to a class
+    assignTeam: publicProcedure
+      .input(z.object({ sessionToken: z.string(), teamId: z.number(), classId: z.number() }))
+      .mutation(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        await db.updateTeam(input.teamId, { classId: input.classId });
+        return { success: true };
+      }),
+
+    // Assign a member to a class
+    assignMember: publicProcedure
+      .input(z.object({ sessionToken: z.string(), memberId: z.number(), classId: z.number() }))
+      .mutation(async ({ input }) => {
+        const admin = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!admin) throw new Error("Não autorizado");
+        await db.updateMember(input.memberId, { classId: input.classId });
         return { success: true };
       }),
   }),

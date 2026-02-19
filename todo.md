@@ -579,3 +579,34 @@
 - [x] Corrigir botão Sair para redirecionar à página inicial (/)
 - [x] Adicionar interface de geração/gerenciamento de códigos de convite no painel admin
 - [x] Substituir dados mockados por dados reais do banco de dados (alunos e equipes)
+
+## Reestruturação de Turmas e Alunos (Feb 19, 2026 - Fase 7)
+- [ ] Acessar Portal do Professor UNIRIO e coletar turmas de Farmacologia 2026.1
+- [ ] Coletar lista de alunos de cada turma do portal
+- [x] Atualizar schema do banco para suportar turmas com professor responsável
+- [x] Criar rotas tRPC para CRUD de turmas (classes) e associação professor-turma
+- [x] Reestruturar aba Alunos no AdminDashboard com divisão por turmas
+- [x] Criar subpáginas para cada turma com lista de alunos
+- [x] Cadastrar turmas no banco: Farmacologia Nutrição Integral (Guilherme Raposeiro)
+- [x] Cadastrar turmas no banco: Farmacologia 2 Biomedicina (Guilherme Raposeiro)
+- [x] Cadastrar turmas no banco: Farmacologia 1 Biomedicina (Thaiana)
+- [x] Cadastrar turmas no banco: Farmacologia Enfermagem (Thaiana)
+- [x] Cadastrar turmas no banco: Farmacologia 2 Medicina (Monique Bandeira Moss)
+- [x] Cadastrar turmas no banco: Farmacologia Nutrição Noturno (Beatriz de Carvalho Patricio)
+- [ ] Cadastrar alunos de cada turma coletados do portal UNIRIO
+- [x] Atribuir professores responsáveis por cada turma
+
+## Reestruturação Turmas por Professor (Feb 19, 2026 - Fase 8)
+- [x] Criar tabela classes (turmas) no schema com campo teacherId (professor responsável)
+- [x] Vincular teams e members a uma turma (classId)
+- [x] Criar rotas tRPC para CRUD de turmas por professor
+- [x] Incluir função de incluir/excluir turma, alunos e equipes para cada professor
+- [x] Atualizar painel do professor para gerenciar suas turmas
+- [x] Atualizar AdminDashboard com divisão por turmas e subpáginas
+- [x] Admin geral tem acesso a todas as turmas
+- [x] Professor Pedro: Farmacologia 1 Medicina
+- [x] Professor Guilherme Raposeiro: Farmacologia Nutrição Integral + Farmacologia 2 Biomedicina
+- [x] Professora Thaiana: Farmacologia 1 Biomedicina + Farmacologia Enfermagem
+- [x] Professora Monique Bandeira Moss: Farmacologia 2 Medicina
+- [x] Professora Beatriz de Carvalho Patricio: Farmacologia Nutrição Noturno
+- [x] Possibilitar admin logado acessar página da turma de Farmacologia 1

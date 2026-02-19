@@ -470,7 +470,7 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string }) {
   
   // Get current teacher info to check if coordenador
   const { data: currentTeacher } = trpc.teacherAuth.me.useQuery({ sessionToken: teacherToken });
-  const isCoordinator = currentTeacher?.role === "coordenador";
+  const isCoordinator = currentTeacher?.role === "coordenador" || currentTeacher?.role === "super_admin";
 
   // Get all teachers (only works if coordenador)
   const { data: teachers, isLoading } = trpc.teacherManagement.listAll.useQuery(
@@ -2308,10 +2308,412 @@ function JigsawSeminarsManager({ teacherToken }: { teacherToken: string | null }
   );
 }
 
+// ─── Turmas Manager ───
+function TurmasManager({ teacherToken }: { teacherToken: string }) {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newCourse, setNewCourse] = useState("");
+  const [newDiscipline, setNewDiscipline] = useState("");
+  const [newColor, setNewColor] = useState("#F7941D");
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentTeamId, setNewStudentTeamId] = useState<number | null>(null);
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [newTeamEmoji, setNewTeamEmoji] = useState("🧪");
+  const [newTeamColor, setNewTeamColor] = useState("#10b981");
+
+  const utils = trpc.useUtils();
+
+  const { data: classesList, isLoading } = trpc.classes.list.useQuery({ sessionToken: teacherToken });
+  const { data: classDetail } = trpc.classes.getById.useQuery(
+    { sessionToken: teacherToken, classId: selectedClass! },
+    { enabled: !!selectedClass }
+  );
+  const { data: allTeams } = trpc.leaderboard.getData.useQuery();
+
+  const createClass = trpc.classes.create.useMutation({
+    onSuccess: () => {
+      utils.classes.list.invalidate();
+      toast.success("Turma criada!");
+      setShowCreateForm(false);
+      setNewName(""); setNewCourse(""); setNewDiscipline("");
+    },
+    onError: () => toast.error("Erro ao criar turma"),
+  });
+
+  const deleteClass = trpc.classes.delete.useMutation({
+    onSuccess: () => {
+      utils.classes.list.invalidate();
+      toast.success("Turma removida!");
+      setSelectedClass(null);
+    },
+    onError: () => toast.error("Erro ao remover turma"),
+  });
+
+  const assignTeam = trpc.classes.assignTeam.useMutation({
+    onSuccess: () => {
+      utils.classes.getById.invalidate();
+      toast.success("Equipe vinculada!");
+    },
+    onError: () => toast.error("Erro ao vincular equipe"),
+  });
+
+  const assignMember = trpc.classes.assignMember.useMutation({
+    onSuccess: () => {
+      utils.classes.getById.invalidate();
+      toast.success("Aluno vinculado!");
+    },
+    onError: () => toast.error("Erro ao vincular aluno"),
+  });
+
+  const createTeamMut = trpc.teams.create.useMutation({
+    onSuccess: (data) => {
+      utils.leaderboard.getData.invalidate();
+      utils.classes.getById.invalidate();
+      toast.success("Equipe criada e vinculada!");
+      setShowAddTeam(false);
+      setNewTeamName("");
+    },
+    onError: () => toast.error("Erro ao criar equipe"),
+  });
+
+  const createMemberMut = trpc.members.create.useMutation({
+    onSuccess: () => {
+      utils.leaderboard.getData.invalidate();
+      utils.classes.getById.invalidate();
+      toast.success("Aluno adicionado!");
+      setShowAddStudent(false);
+      setNewStudentName("");
+    },
+    onError: () => toast.error("Erro ao adicionar aluno"),
+  });
+
+  const deleteMemberMut = trpc.members.delete.useMutation({
+    onSuccess: () => {
+      utils.classes.getById.invalidate();
+      utils.leaderboard.getData.invalidate();
+      toast.success("Aluno removido!");
+    },
+    onError: () => toast.error("Erro ao remover aluno"),
+  });
+
+  const deleteTeamMut = trpc.teams.delete.useMutation({
+    onSuccess: () => {
+      utils.classes.getById.invalidate();
+      utils.leaderboard.getData.invalidate();
+      toast.success("Equipe removida!");
+    },
+    onError: () => toast.error("Erro ao remover equipe"),
+  });
+
+  if (isLoading) return <div className="text-center text-muted-foreground py-8">Carregando turmas...</div>;
+
+  // Detail view for a selected class
+  if (selectedClass && classDetail) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => setSelectedClass(null)} className="p-2 rounded-md hover:bg-secondary text-muted-foreground">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex-1">
+            <h2 className="font-display font-bold text-xl text-foreground">{classDetail.name}</h2>
+            <p className="text-sm text-muted-foreground">
+              {classDetail.discipline} — {classDetail.course} — {classDetail.semester}
+              {classDetail.teacherName && <span> — Prof. {classDetail.teacherName}</span>}
+            </p>
+          </div>
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: classDetail.color }} />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="text-xs text-muted-foreground uppercase">Equipes</div>
+            <div className="font-mono font-bold text-2xl text-foreground">{classDetail.teams.length}</div>
+          </div>
+          <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="text-xs text-muted-foreground uppercase">Alunos</div>
+            <div className="font-mono font-bold text-2xl text-foreground">{classDetail.members.length}</div>
+          </div>
+          <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="text-xs text-muted-foreground uppercase">PF Total</div>
+            <div className="font-mono font-bold text-2xl text-primary">
+              {classDetail.members.reduce((s: number, m: any) => s + parseFloat(m.xp || "0"), 0).toFixed(1)}
+            </div>
+          </div>
+        </div>
+
+        {/* Teams in this class */}
+        <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-semibold text-sm text-foreground flex items-center gap-2">
+              <Users size={16} className="text-primary" /> Equipes da Turma
+            </h3>
+            <button onClick={() => setShowAddTeam(!showAddTeam)} className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+              <Plus size={12} /> Nova Equipe
+            </button>
+          </div>
+
+          {showAddTeam && (
+            <div className="flex gap-2 flex-wrap mb-4 p-3 rounded-lg border border-border bg-background">
+              <input value={newTeamEmoji} onChange={e => setNewTeamEmoji(e.target.value)} className="w-12 px-2 py-2 rounded-md bg-secondary border border-border text-foreground text-center text-sm" placeholder="🧪" />
+              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} className="flex-1 min-w-[150px] px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Nome da equipe..." />
+              <input type="color" value={newTeamColor} onChange={e => setNewTeamColor(e.target.value)} className="w-10 h-10 rounded-md border border-border cursor-pointer" />
+              <button
+                onClick={() => {
+                  createTeamMut.mutate({ password: "authenticated", name: newTeamName, emoji: newTeamEmoji, color: newTeamColor, classId: selectedClass });
+                }}
+                disabled={!newTeamName || createTeamMut.isPending}
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+              >
+                Criar
+              </button>
+            </div>
+          )}
+
+          {classDetail.teams.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma equipe vinculada a esta turma.</p>
+          ) : (
+            <div className="space-y-2">
+              {classDetail.teams.map((team: any) => {
+                const teamMembers = classDetail.members.filter((m: any) => m.teamId === team.id);
+                return (
+                  <div key={team.id} className="border border-border rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{team.emoji}</span>
+                      <span className="font-medium text-sm text-foreground flex-1">{team.name}</span>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: team.color }} />
+                      <span className="text-xs text-muted-foreground font-mono">{teamMembers.length} alunos</span>
+                      <button
+                        onClick={() => { if (confirm(`Remover equipe "${team.name}"?`)) deleteTeamMut.mutate({ password: "authenticated", id: team.id }); }}
+                        className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    {teamMembers.length > 0 && (
+                      <div className="mt-2 pl-8 space-y-1">
+                        {teamMembers.map((m: any) => (
+                          <div key={m.id} className="flex items-center gap-2 text-sm">
+                            <span className="text-foreground">{m.name}</span>
+                            <span className="text-xs font-mono text-primary">{parseFloat(m.xp || "0").toFixed(1)} PF</span>
+                            <button
+                              onClick={() => { if (confirm(`Remover aluno "${m.name}"?`)) deleteMemberMut.mutate({ password: "authenticated", id: m.id }); }}
+                              className="p-0.5 rounded hover:bg-destructive/20 text-destructive ml-auto"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Link existing teams */}
+          {allTeams && allTeams.teams.filter(t => !classDetail.teams.find((ct: any) => ct.id === t.id)).length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2">Vincular equipe existente:</p>
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 px-3 py-2 rounded-md bg-secondary border border-border text-sm text-foreground"
+                  onChange={(e) => {
+                    const teamId = parseInt(e.target.value);
+                    if (teamId) assignTeam.mutate({ sessionToken: teacherToken, teamId, classId: selectedClass });
+                  }}
+                >
+                  <option value="">Selecionar equipe...</option>
+                  {allTeams.teams.filter(t => !classDetail.teams.find((ct: any) => ct.id === t.id)).map(t => (
+                    <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Members in this class */}
+        <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-semibold text-sm text-foreground flex items-center gap-2">
+              <UserPlus size={16} className="text-primary" /> Alunos da Turma ({classDetail.members.length})
+            </h3>
+            <button onClick={() => setShowAddStudent(!showAddStudent)} className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+              <Plus size={12} /> Adicionar Aluno
+            </button>
+          </div>
+
+          {showAddStudent && (
+            <div className="flex gap-2 flex-wrap mb-4 p-3 rounded-lg border border-border bg-background">
+              <input
+                value={newStudentName}
+                onChange={e => setNewStudentName(e.target.value)}
+                className="flex-1 min-w-[200px] px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm"
+                placeholder="Nome do aluno..."
+              />
+              <select
+                value={newStudentTeamId || ""}
+                onChange={e => setNewStudentTeamId(parseInt(e.target.value) || null)}
+                className="px-3 py-2 rounded-md bg-secondary border border-border text-sm text-foreground"
+              >
+                <option value="">Selecionar equipe...</option>
+                {classDetail.teams.map((t: any) => (
+                  <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  if (newStudentName && newStudentTeamId) {
+                    createMemberMut.mutate({ password: "authenticated", teamId: newStudentTeamId, name: newStudentName, classId: selectedClass });
+                  }
+                }}
+                disabled={!newStudentName || !newStudentTeamId || createMemberMut.isPending}
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+              >
+                Adicionar
+              </button>
+            </div>
+          )}
+
+          {classDetail.members.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
+          ) : (
+            <div className="space-y-1">
+              {classDetail.members.map((m: any, idx: number) => {
+                const team = classDetail.teams.find((t: any) => t.id === m.teamId);
+                return (
+                  <div key={m.id} className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary/50">
+                    <span className="w-6 text-center text-xs text-muted-foreground font-mono">{idx + 1}</span>
+                    <span className="text-sm text-foreground flex-1">{m.name}</span>
+                    {team && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: team.color + "22", color: team.color }}>
+                        {team.emoji} {team.name}
+                      </span>
+                    )}
+                    <span className="text-xs font-mono font-bold text-primary">{parseFloat(m.xp || "0").toFixed(1)} PF</span>
+                    <button
+                      onClick={() => { if (confirm(`Remover aluno "${m.name}"?`)) deleteMemberMut.mutate({ password: "authenticated", id: m.id }); }}
+                      className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Delete class */}
+        <div className="border border-destructive/30 rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <h3 className="font-display font-semibold text-sm text-destructive mb-2 flex items-center gap-2">
+            <AlertTriangle size={16} /> Zona de Perigo
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">Excluir esta turma irá desvincular todas as equipes e alunos associados.</p>
+          <button
+            onClick={() => { if (confirm(`Tem certeza que deseja excluir a turma "${classDetail.name}"?`)) deleteClass.mutate({ sessionToken: teacherToken, id: selectedClass }); }}
+            className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-medium"
+          >
+            Excluir Turma
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // List view
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-bold text-xl text-foreground">Minhas Turmas</h2>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium"
+        >
+          <Plus size={14} /> Nova Turma
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <h3 className="font-display font-semibold text-sm text-foreground mb-3">Criar Nova Turma</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Disciplina</label>
+              <input value={newDiscipline} onChange={e => setNewDiscipline(e.target.value)} className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Ex: Farmacologia 1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Curso</label>
+              <input value={newCourse} onChange={e => setNewCourse(e.target.value)} className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Ex: Medicina" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Nome Completo</label>
+              <input value={newName} onChange={e => setNewName(e.target.value)} className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Ex: Farmacologia 1 - Medicina" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Cor</label>
+              <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} className="w-10 h-10 rounded-md border border-border cursor-pointer" />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => createClass.mutate({ sessionToken: teacherToken, name: newName || `${newDiscipline} - ${newCourse}`, course: newCourse, discipline: newDiscipline, color: newColor })}
+              disabled={!newDiscipline || !newCourse || createClass.isPending}
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+            >
+              Criar Turma
+            </button>
+            <button onClick={() => setShowCreateForm(false)} className="px-4 py-2 rounded-md bg-secondary text-foreground text-sm">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Classes list */}
+      {(!classesList || classesList.length === 0) ? (
+        <div className="border border-border rounded-lg p-8 text-center" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <FlaskConical size={48} className="mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-display font-bold text-lg text-foreground mb-2">Nenhuma turma cadastrada</h3>
+          <p className="text-sm text-muted-foreground">Crie sua primeira turma para começar a organizar alunos e equipes.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {classesList.map((cls: any) => (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClass(cls.id)}
+              className="border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-colors"
+              style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cls.color }} />
+                <span className="font-display font-semibold text-sm text-foreground">{cls.name}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <p>{cls.discipline} — {cls.course}</p>
+                <p className="mt-1">Semestre: {cls.semester}</p>
+                {cls.teacherName && <p className="mt-1">Prof. {cls.teacherName}</p>}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings">("teams");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -2349,6 +2751,7 @@ export default function Admin() {
   }
 
   const sections = [
+    { key: "turmas" as const, label: "Turmas", icon: <FlaskConical size={16} /> },
     { key: "teams" as const, label: "Equipes", icon: <Users size={16} /> },
     { key: "xp" as const, label: "Atualizar PF", icon: <Zap size={16} /> },
     { key: "activities" as const, label: "Atividades", icon: <Trophy size={16} /> },
@@ -2401,6 +2804,7 @@ export default function Admin() {
 
       {/* Content */}
       <div className="container pb-16">
+        {activeSection === "turmas" && <TurmasManager teacherToken={teacherToken} />}
         {activeSection === "teams" && <TeamManager password={password} />}
         {activeSection === "xp" && <BulkXPManager password={password} />}
         {activeSection === "activities" && <ActivitiesManager password={password} />}

@@ -26,6 +26,7 @@ import {
   seminarArticles, InsertSeminarArticle,
   emailLog, InsertEmailLog,
   inviteCodes, InsertInviteCode,
+  classes, InsertClass,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1253,4 +1254,84 @@ export async function toggleInviteCode(id: number, isActive: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(inviteCodes).set({ isActive }).where(eq(inviteCodes.id, id));
+}
+
+// ─── Classes (Turmas) ───
+
+
+/**
+ * Get all classes
+ */
+export async function getAllClasses() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(classes).orderBy(asc(classes.name));
+}
+
+/**
+ * Get classes by teacher account ID
+ */
+export async function getClassesByTeacher(teacherAccountId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(classes).where(eq(classes.teacherAccountId, teacherAccountId)).orderBy(asc(classes.name));
+}
+
+/**
+ * Get a single class by ID
+ */
+export async function getClassById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const results = await db.select().from(classes).where(eq(classes.id, id));
+  return results[0] || null;
+}
+
+/**
+ * Create a class
+ */
+export async function createClass(data: InsertClass) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(classes).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Update a class
+ */
+export async function updateClass(id: number, data: Partial<InsertClass>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(classes).set(data).where(eq(classes.id, id));
+}
+
+/**
+ * Delete a class and unlink its teams/members
+ */
+export async function deleteClass(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Unlink teams and members from this class
+  await db.update(teams).set({ classId: null }).where(eq(teams.classId, id));
+  await db.update(members).set({ classId: null }).where(eq(members.classId, id));
+  await db.delete(classes).where(eq(classes.id, id));
+}
+
+/**
+ * Get teams by class ID
+ */
+export async function getTeamsByClass(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(teams).where(eq(teams.classId, classId)).orderBy(asc(teams.name));
+}
+
+/**
+ * Get members by class ID
+ */
+export async function getMembersByClass(classId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(members).where(eq(members.classId, classId)).orderBy(asc(members.name));
 }
