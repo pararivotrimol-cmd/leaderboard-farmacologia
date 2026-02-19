@@ -178,6 +178,25 @@ export const appRouter = router({
         const sessionToken = crypto.randomBytes(32).toString("hex");
         await db.updateTeacherSessionToken(teacherId, sessionToken);
 
+        // Auto-link professor to their classes
+        const autoLinkMap: { [key: string]: number } = {
+          "monique": 6,
+          "beatriz": 7,
+        };
+        
+        for (const [keyword, classId] of Object.entries(autoLinkMap)) {
+          if (input.name.toLowerCase().includes(keyword)) {
+            try {
+              await db.updateClass(classId, {
+                teacherAccountId: teacherId,
+                teacherName: input.name,
+              });
+            } catch (err) {
+              console.warn(`[Auto-link] Failed to link class ${classId}:`, err);
+            }
+          }
+        }
+
         // Notify owner
         sendNotificationAsync(
           "👨‍🏫 Novo Professor Cadastrado",
@@ -1096,6 +1115,65 @@ export const appRouter = router({
         }
         
         return { success: true };
+      }),
+
+    importBulk: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        classId: z.number(),
+        students: z.array(z.object({
+          name: z.string().min(1),
+          email: z.string().email().optional(),
+          teamId: z.number().optional(),
+          xp: z.string().default("0"),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) throw new Error("Nao autorizado");
+        
+        const classData = await db.getClassById(input.classId);
+        if (!classData) throw new Error("Turma nao encontrada");
+        if (teacher.role !== "super_admin" && classData.teacherAccountId !== teacher.id) {
+          throw new Error("Voce nao tem permissao para importar alunos nesta turma");
+        }
+        
+        const imported = [];
+        const errors = [];
+        
+        for (const student of input.students) {
+          try {
+            const id = await db.createMember({
+              name: student.name,
+              teamId: student.teamId || 0,
+              xp: student.xp,
+              classId: input.classId,
+            });
+            imported.push({ id, name: student.name });
+          } catch (err: any) {
+            errors.push({ name: student.name, error: err.message });
+          }
+        }
+        
+        await logAudit({
+          teacherToken: input.sessionToken,
+          action: "Importar Alunos em Massa",
+          entityType: "member",
+          details: `Turma ${classData.name}: ${imported.length} aluno(s) importado(s), ${errors.length} erro(s)`,
+          req: ctx.req,
+        });
+        
+        sendNotificationAsync(
+          "Importacao de Alunos",
+          `${imported.length} aluno(s) importado(s) para ${classData.name}${errors.length > 0 ? ` (${errors.length} erro(s))` : ''}`
+        );
+        
+        return {
+          success: true,
+          imported: imported.length,
+          errors: errors.length,
+          details: { imported, errors },
+        };
       }),
   }),
 

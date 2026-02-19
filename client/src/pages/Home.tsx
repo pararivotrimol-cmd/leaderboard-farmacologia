@@ -269,7 +269,9 @@ function GradeCalculator() {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules" | "calculator">("teams");
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
+  const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
   const { logout } = useAuth();
 
   const handleLogout = useCallback(async () => {
@@ -277,7 +279,13 @@ export default function Home() {
     window.location.href = "/";
   }, [logout]);
 
-  const teamsData: TeamData[] = useMemo(() => leaderboard?.teams ?? [], [leaderboard]);
+  const teamsData: TeamData[] = useMemo(() => {
+    let teams = leaderboard?.teams ?? [];
+    if (selectedClassId) {
+      teams = teams.filter(t => (t as any).classId === selectedClassId);
+    }
+    return teams;
+  }, [leaderboard, selectedClassId]);
   const rankedTeams = useMemo(() => [...teamsData].sort((a, b) => getTeamPF(b) - getTeamPF(a)), [teamsData]);
 
   const topStudents = useMemo(() => {
@@ -463,6 +471,28 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Class Filter */}
+      {classes && classes.length > 1 && (
+        <div className="container mb-4">
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-white">Filtrar por Turma:</label>
+            <select
+              value={selectedClassId || ""}
+              onChange={(e) => setSelectedClassId(e.target.value ? parseInt(e.target.value) : null)}
+              className="px-3 py-2 rounded-lg text-sm text-white"
+              style={{ backgroundColor: "rgba(255,255,255,0.1)", border: `1px solid ${ORANGE}33` }}
+            >
+              <option value="">Todas as Turmas</option>
+              {classes.map(cls => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 

@@ -610,3 +610,27 @@
 - [x] Professora Monique Bandeira Moss: Farmacologia 2 Medicina
 - [x] Professora Beatriz de Carvalho Patricio: Farmacologia Nutrição Noturno
 - [x] Possibilitar admin logado acessar página da turma de Farmacologia 1
+
+
+## Importação em Lote de Alunos (Feb 19, 2026 - Fase 9)
+- [x] Criar rota tRPC para importar alunos via CSV
+- [x] Validar formato CSV (nome, email, turma, equipe)
+- [x] Criar interface de upload no painel admin
+- [x] Adicionar preview dos alunos antes de importar
+- [x] Registrar log de importação (quantos alunos, erros)
+- [x] Testar importação com arquivo de exemplo
+
+## Auto-Vinculação de Professoras (Feb 19, 2026 - Fase 9)
+- [x] Atualizar rota de cadastro de professor para verificar turmas
+- [x] Quando Monique se cadastrar → vincular a Farmacologia 2 Medicina
+- [x] Quando Beatriz se cadastrar → vincular a Farmacologia Nutrição Noturno
+- [x] Exibir notificação ao professor sobre suas turmas
+- [x] Testar fluxo de cadastro de Monique e Beatriz
+
+## Filtro de Leaderboard por Turma (Feb 19, 2026 - Fase 9)
+- [x] Adicionar seletor de turma na página Home/Leaderboard
+- [x] Filtrar equipes por turma selecionada
+- [x] Filtrar alunos por turma selecionada
+- [x] Atualizar gráficos e estatísticas por turma
+- [x] Salvar turma selecionada em localStorage
+- [x] Testar filtro com múltiplas turmas

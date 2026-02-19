@@ -11,7 +11,8 @@ import {
   BarChart3, CheckCircle, Clock, Shield,
   Plus, Trash2, Eye, RefreshCw, Ticket,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
-  Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus
+  Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus,
+  Upload, Download, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ interface AdminTab {
 const ADMIN_TABS: AdminTab[] = [
   { id: "overview", label: "Visão Geral", icon: <BarChart3 size={20} /> },
   { id: "turmas", label: "Turmas", icon: <FlaskConical size={20} /> },
+  { id: "import", label: "Importar Alunos", icon: <Upload size={20} /> },
   { id: "students", label: "Alunos", icon: <GraduationCap size={20} /> },
   { id: "teams", label: "Equipes", icon: <Users size={20} /> },
   { id: "professors", label: "Professores", icon: <BookOpen size={20} /> },
@@ -131,6 +133,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {activeTab === "overview" && <OverviewTab sessionToken={sessionToken} />}
         {activeTab === "turmas" && <TurmasAdminTab sessionToken={sessionToken} />}
+        {activeTab === "import" && <ImportStudentsTab sessionToken={sessionToken} />}
         {activeTab === "students" && <StudentsTab sessionToken={sessionToken} />}
         {activeTab === "teams" && <TeamsTab sessionToken={sessionToken} />}
         {activeTab === "professors" && <ProfessorsTab sessionToken={sessionToken} />}
@@ -475,6 +478,194 @@ function TurmasAdminTab({ sessionToken }: { sessionToken: string }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Import Students Tab ───
+function ImportStudentsTab({ sessionToken }: { sessionToken: string }) {
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [csvText, setCsvText] = useState("");
+  const [importing, setImporting] = useState(false);
+
+  const classesList = trpc.classes.list.useQuery({ sessionToken });
+  const importStudents = trpc.members.importBulk.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.imported} aluno(s) importado(s)${data.errors > 0 ? ` (${data.errors} erro(s))` : ''}`);
+      setCsvText("");
+      setSelectedClass(null);
+      setImporting(false);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setImporting(false);
+    },
+  });
+
+  const handleImport = () => {
+    if (!selectedClass) {
+      toast.error("Selecione uma turma");
+      return;
+    }
+    if (!csvText.trim()) {
+      toast.error("Cole os dados dos alunos");
+      return;
+    }
+
+    // Parse CSV: cada linha = nome,email,teamId,xp
+    const lines = csvText.trim().split("\n");
+    const students = [];
+    const errors = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const parts = line.split(",").map(p => p.trim());
+      if (parts.length < 1) {
+        errors.push(`Linha ${i + 1}: formato inválido`);
+        continue;
+      }
+
+      students.push({
+        name: parts[0],
+        email: parts[1] || undefined,
+        teamId: parts[2] ? parseInt(parts[2]) : undefined,
+        xp: parts[3] || "0",
+      });
+    }
+
+    if (errors.length > 0) {
+      toast.error(`${errors.length} erro(s) encontrado(s)`);
+      return;
+    }
+
+    if (students.length === 0) {
+      toast.error("Nenhum aluno para importar");
+      return;
+    }
+
+    setImporting(true);
+    importStudents.mutate({
+      sessionToken,
+      classId: selectedClass,
+      students,
+    });
+  };
+
+  const classes = classesList.data || [];
+  const selectedClassData = classes.find(c => c.id === selectedClass);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Importar Alunos em Lote</h2>
+      </div>
+
+      {/* Info Box */}
+      <div className="rounded-lg p-4 border border-blue-800/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
+        <div className="flex gap-3">
+          <AlertCircle size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-300">
+            <p className="font-semibold mb-1">Como usar:</p>
+            <p>Cole uma lista de alunos no formato: <code className="bg-black/30 px-2 py-1 rounded text-xs">Nome, Email (opt), Equipe ID (opt), PF (opt)</code></p>
+            <p className="mt-1 text-xs text-blue-400">Exemplo: João Silva, joao@edu.unirio.br, 1, 0</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Class Selector */}
+      <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+        <label className="text-sm text-gray-400 block mb-2">Selecione a Turma</label>
+        <select
+          value={selectedClass || ""}
+          onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value) : null)}
+          className="w-full px-4 py-2 rounded-lg text-white text-sm"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+        >
+          <option value="">-- Selecione uma turma --</option>
+          {classes.map(cls => (
+            <option key={cls.id} value={cls.id}>
+              {cls.name} ({cls.discipline})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* CSV Input */}
+      <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+        <label className="text-sm text-gray-400 block mb-2">Cole os dados dos alunos (um por linha)</label>
+        <textarea
+          value={csvText}
+          onChange={(e) => setCsvText(e.target.value)}
+          placeholder="João Silva, joao@edu.unirio.br, 1, 0\nMaria Santos, maria@edu.unirio.br, 2, 0\nPedro Costa, pedro@edu.unirio.br, 1, 0"
+          className="w-full px-4 py-3 rounded-lg text-white text-sm font-mono"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+          rows={8}
+        />
+      </div>
+
+      {/* Preview */}
+      {csvText.trim() && (
+        <div className="rounded-lg p-5 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
+          <h3 className="text-sm font-bold text-white mb-3">Preview ({csvText.trim().split("\n").length} alunos)</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {csvText.trim().split("\n").map((line, i) => {
+              const parts = line.split(",").map(p => p.trim());
+              return (
+                <div key={i} className="text-xs text-gray-300 px-3 py-2 rounded" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                  <span className="text-gray-500">#{i + 1}</span> {parts[0]}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleImport}
+          disabled={importing || !selectedClass || !csvText.trim()}
+          className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-all hover:scale-105 disabled:opacity-50"
+          style={{ backgroundColor: ORANGE, color: "#000" }}
+        >
+          <Upload size={16} />
+          {importing ? "Importando..." : "Importar Alunos"}
+        </button>
+        <button
+          onClick={() => {
+            setCsvText("");
+            setSelectedClass(null);
+          }}
+          className="px-6 py-2 rounded-lg transition-all hover:scale-105"
+          style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff" }}
+        >
+          Limpar
+        </button>
+      </div>
+
+      {/* Download Template */}
+      <div className="rounded-lg p-5 border border-gray-700/50" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+        <p className="text-sm text-gray-400 mb-3">Precisa de um modelo? Clique para baixar um arquivo CSV de exemplo:</p>
+        <button
+          onClick={() => {
+            const template = "Nome,Email,Equipe ID,PF\nJoão Silva,joao@edu.unirio.br,1,0\nMaria Santos,maria@edu.unirio.br,2,0\nPedro Costa,pedro@edu.unirio.br,1,0";
+            const blob = new Blob([template], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "template-alunos.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all hover:scale-105"
+          style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff" }}
+        >
+          <Download size={14} />
+          Baixar Template CSV
+        </button>
+      </div>
     </div>
   );
 }
