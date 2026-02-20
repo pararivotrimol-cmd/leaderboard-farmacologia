@@ -29,6 +29,7 @@ import {
   classes, InsertClass,
   jigsawGroups, InsertJigsawGroup,
   jigsawMembers, InsertJigsawMember,
+  importHistory, InsertImportHistory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 

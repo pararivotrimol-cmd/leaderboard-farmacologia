@@ -710,3 +710,27 @@
 - [x] Mostrar membros ativos em tempo real
 - [x] Melhorar visualização de grupos
 - [x] Adicionar indicador de vagas disponíveis
+
+
+## Seminários Jigsaw - Produção de Materiais
+- [x] Buscar 6 artigos PubMed (últimos 4 anos) sobre os 6 tópicos
+- [x] Criar roteiros detalhados de apresentação para cada grupo
+- [x] Organizar cronograma de apresentações (6 semanas)
+- [x] Criar guia de avaliação com critérios (100 pontos)
+- [ ] Integrar materiais na plataforma (upload de documentos)
+- [ ] Criar seção de seminários no painel de professores
+- [ ] Disponibilizar artigos em PDF para download
+- [ ] Criar formulário de feedback para apresentações
+
+
+## Funcionalidades Avançadas
+- [ ] Conectar scraper UNIRIO à rota tRPC (importStudentsFromUnirio)
+- [ ] Testar integração com portal UNIRIO real
+- [ ] Criar tabela importHistory no banco de dados
+- [ ] Adicionar rota tRPC para listar histórico de importações
+- [ ] Exibir histórico no painel admin com timestamps
+- [ ] Implementar WebSockets para notificações em tempo real
+- [ ] Implementar polling como fallback para WebSockets
+- [ ] Atualizar lista de membros Jigsaw em tempo real
+- [ ] Adicionar indicadores visuais de membros online/offline
+- [ ] Testar notificações em tempo real

@@ -268,7 +268,9 @@ function GradeCalculator() {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "rules" | "calculator">("teams");
+  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "calculator" | "rules">("teams");
+  const [currentPage, setCurrentPage] = useState(1);
+  const TEAMS_PER_PAGE = 5;
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [showIntro, setShowIntro] = useState(true);
   const [vinhetaVolume, setVinhetaVolume] = useState(0.7);
@@ -315,6 +317,11 @@ export default function Home() {
     return teams;
   }, [leaderboard, selectedClassId]);
   const rankedTeams = useMemo(() => [...teamsData].sort((a, b) => getTeamPF(b) - getTeamPF(a)), [teamsData]);
+  const totalPages = Math.ceil(rankedTeams.length / TEAMS_PER_PAGE);
+  const paginatedTeams = useMemo(() => {
+    const start = (currentPage - 1) * TEAMS_PER_PAGE;
+    return rankedTeams.slice(start, start + TEAMS_PER_PAGE);
+  }, [rankedTeams, currentPage]);
 
   const topStudents = useMemo(() => {
     const all = teamsData.flatMap(t => t.members.map(m => ({ ...m, teamName: t.name, teamColor: t.color, teamEmoji: t.emoji })));
@@ -631,7 +638,33 @@ export default function Home() {
                 <Trophy size={20} style={{ color: ORANGE }} />
                 Ranking Completo das Equipes
               </h2>
-              <div className="grid gap-2">{rankedTeams.map((team, idx) => <TeamCard key={team.id} team={team} rank={idx + 1} />)}</div>
+              <div className="grid gap-2">{paginatedTeams.map((team, idx) => {
+                const actualRank = (currentPage - 1) * TEAMS_PER_PAGE + idx + 1;
+                return <TeamCard key={team.id} team={team} rank={actualRank} />;
+              })}</div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 hover:opacity-80"
+                    style={{ backgroundColor: ORANGE, color: "white" }}
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 hover:opacity-80"
+                    style={{ backgroundColor: ORANGE, color: "white" }}
+                  >
+                    Próximo →
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 

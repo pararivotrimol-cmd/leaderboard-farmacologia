@@ -79,7 +79,7 @@ function LoginScreen({ onLogin }: { onLogin: (pw: string) => void }) {
 }
 
 // ─── Team Management ───
-function TeamManager({ password }: { password: string | null }) {
+function TeamManager({ password }: { password: string }) {
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamEmoji, setNewTeamEmoji] = useState("🧪");
   const [newTeamColor, setNewTeamColor] = useState("#10b981");
@@ -269,7 +269,7 @@ function MemberList({ teamId, members, password, teamColor }: {
 }
 
 // ─── Bulk PF Update ───
-function BulkXPManager({ password }: { password: string | null }) {
+function BulkXPManager({ password }: { password: string }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [xpUpdates, setXpUpdates] = useState<Record<number, string>>({});
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
@@ -352,7 +352,7 @@ function BulkXPManager({ password }: { password: string | null }) {
 }
 
 // ─── Activities Manager ───
-function ActivitiesManager({ password }: { password: string | null }) {
+function ActivitiesManager({ password }: { password: string }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("🎯");
@@ -399,7 +399,7 @@ function ActivitiesManager({ password }: { password: string | null }) {
 }
 
 // ─── Highlights Manager ───
-function HighlightsManager({ password }: { password: string | null }) {
+function HighlightsManager({ password }: { password: string }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [week, setWeek] = useState("");
   const [date, setDate] = useState("");
@@ -469,13 +469,16 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
   const utils = trpc.useUtils();
   
   // Get current teacher info to check if coordenador
-  const { data: currentTeacher } = trpc.teacherAuth.me.useQuery({ sessionToken: teacherToken });
+  const { data: currentTeacher } = trpc.teacherAuth.me.useQuery(
+    { sessionToken: teacherToken || "" },
+    { enabled: !!teacherToken }
+  );
   const isCoordinator = currentTeacher?.role === "coordenador" || currentTeacher?.role === "super_admin";
 
   // Get all teachers (only works if coordenador)
   const { data: teachers, isLoading } = trpc.teacherManagement.listAll.useQuery(
-    { sessionToken: teacherToken },
-    { enabled: isCoordinator }
+    { sessionToken: teacherToken || "" },
+    { enabled: isCoordinator && !!teacherToken }
   );
 
   const toggleActiveMutation = trpc.teacherManagement.toggleActive.useMutation({
@@ -624,11 +627,11 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
                 <div className="flex gap-2 shrink-0 flex-wrap">
                   {/* Toggle Active/Inactive */}
                   <button
-                    onClick={() => toggleActiveMutation.mutate({
+                    onClick={() => { if (teacherToken) toggleActiveMutation.mutate({
                       sessionToken: teacherToken,
                       teacherId: teacher.id,
                       isActive: teacher.isActive === 1 ? 0 : 1,
-                    })}
+                    }); }}
                     disabled={toggleActiveMutation.isPending || teacher.id === currentTeacher?.id}
                     className="px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-foreground text-xs font-medium disabled:opacity-50 flex items-center gap-1"
                     title={teacher.isActive === 1 ? "Desativar" : "Ativar"}
@@ -643,10 +646,10 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
                   {/* Promote/Demote */}
                   {teacher.role === "professor" ? (
                     <button
-                      onClick={() => promoteMutation.mutate({
+                      onClick={() => { if (teacherToken) promoteMutation.mutate({
                         sessionToken: teacherToken,
                         teacherId: teacher.id,
-                      })}
+                      }); }}
                       disabled={promoteMutation.isPending}
                       className="px-3 py-1.5 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 text-xs font-medium flex items-center gap-1"
                       title="Promover a Coordenador"
@@ -655,10 +658,10 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
                     </button>
                   ) : (
                     <button
-                      onClick={() => demoteMutation.mutate({
+                      onClick={() => { if (teacherToken) demoteMutation.mutate({
                         sessionToken: teacherToken,
                         teacherId: teacher.id,
-                      })}
+                      }); }}
                       disabled={demoteMutation.isPending || teacher.id === currentTeacher?.id}
                       className="px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-foreground text-xs font-medium disabled:opacity-50 flex items-center gap-1"
                       title="Rebaixar a Professor"
@@ -671,7 +674,7 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
                   <button
                     onClick={() => {
                       if (confirm(`Tem certeza que deseja remover ${teacher.name}?`)) {
-                        deleteMutation.mutate({
+                        if (teacherToken) deleteMutation.mutate({
                           sessionToken: teacherToken,
                           teacherId: teacher.id,
                         });
@@ -702,7 +705,7 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
 }
 
 // ─── Settings ───
-function SettingsManager({ password }: { password: string | null }) {
+function SettingsManager({ password }: { password: string }) {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
 
@@ -747,7 +750,7 @@ function SettingsManager({ password }: { password: string | null }) {
 }
 
 // ─── Notifications Manager ───
-function NotificationsManager({ password }: { password: string | null }) {
+function NotificationsManager({ password }: { password: string }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<"normal" | "important" | "urgent">("normal");
@@ -929,7 +932,7 @@ const MODULES = [
   "Anti-inflamatórios", "Seminários Jigsaw", "Casos Clínicos",
 ];
 
-function MaterialsManager({ password }: { password: string | null }) {
+function MaterialsManager({ password }: { password: string }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [materialType, setMaterialType] = useState<"file" | "link" | "comment">("file");
@@ -1227,7 +1230,7 @@ function MaterialsManager({ password }: { password: string | null }) {
 }
 
 // ─── Badges Manager ───
-function BadgesManager({ password }: { password: string | null }) {
+function BadgesManager({ password }: { password: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newBadge, setNewBadge] = useState({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" });
   const [assignBadgeId, setAssignBadgeId] = useState<number | null>(null);
@@ -1417,7 +1420,7 @@ function BadgesManager({ password }: { password: string | null }) {
 }
 
 // ─── Attendance Manager ───
-function AttendanceManager({ password }: { password: string | null }) {
+function AttendanceManager({ password }: { password: string }) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [viewMode, setViewMode] = useState<"summary" | "weekly" | "accounts">("summary");
   const [manualMemberId, setManualMemberId] = useState("");
@@ -1756,7 +1759,7 @@ function AttendanceManager({ password }: { password: string | null }) {
 }
 
 // ─── YouTube Playlists Manager ───
-function YouTubePlaylistsManager({ password }: { password: string | null }) {
+function YouTubePlaylistsManager({ password }: { password: string }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -2490,10 +2493,13 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 
   const utils = trpc.useUtils();
 
-  const { data: classesList, isLoading } = trpc.classes.list.useQuery({ sessionToken: teacherToken });
+  const { data: classesList, isLoading } = trpc.classes.list.useQuery(
+    { sessionToken: teacherToken || "" },
+    { enabled: !!teacherToken }
+  );
   const { data: classDetail } = trpc.classes.getById.useQuery(
-    { sessionToken: teacherToken, classId: selectedClass! },
-    { enabled: !!selectedClass }
+    { sessionToken: teacherToken || "", classId: selectedClass! },
+    { enabled: !!selectedClass && !!teacherToken }
   );
   const { data: allTeams } = trpc.leaderboard.getData.useQuery();
 
@@ -2690,7 +2696,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
                   className="flex-1 px-3 py-2 rounded-md bg-secondary border border-border text-sm text-foreground"
                   onChange={(e) => {
                     const teamId = parseInt(e.target.value);
-                    if (teamId) assignTeam.mutate({ sessionToken: teacherToken, teamId, classId: selectedClass });
+                    if (teamId && teacherToken) assignTeam.mutate({ sessionToken: teacherToken, teamId, classId: selectedClass });
                   }}
                 >
                   <option value="">Selecionar equipe...</option>
@@ -2782,7 +2788,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
           </h3>
           <p className="text-xs text-muted-foreground mb-3">Excluir esta turma irá desvincular todas as equipes e alunos associados.</p>
           <button
-            onClick={() => { if (confirm(`Tem certeza que deseja excluir a turma "${classDetail.name}"?`)) deleteClass.mutate({ sessionToken: teacherToken, id: selectedClass }); }}
+            onClick={() => { if (confirm(`Tem certeza que deseja excluir a turma "${classDetail.name}"?`) && teacherToken) deleteClass.mutate({ sessionToken: teacherToken, id: selectedClass }); }}
             className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-medium"
           >
             Excluir Turma
@@ -2828,7 +2834,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
           </div>
           <div className="flex gap-2 mt-4">
             <button
-              onClick={() => createClass.mutate({ sessionToken: teacherToken, name: newName || `${newDiscipline} - ${newCourse}`, course: newCourse, discipline: newDiscipline, color: newColor })}
+              onClick={() => { if (teacherToken) createClass.mutate({ sessionToken: teacherToken, name: newName || `${newDiscipline} - ${newCourse}`, course: newCourse, discipline: newDiscipline, color: newColor }); }}
               disabled={!newDiscipline || !newCourse || createClass.isPending}
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
             >
@@ -2973,19 +2979,19 @@ export default function Admin() {
       {/* Content */}
       <div className="container pb-16">
         {activeSection === "turmas" && <TurmasManager teacherToken={teacherToken || ""} />}
-        {activeSection === "teams" && <TeamManager password={password} />}
-        {activeSection === "xp" && <BulkXPManager password={password} />}
-        {activeSection === "activities" && <ActivitiesManager password={password} />}
-        {activeSection === "highlights" && <HighlightsManager password={password} />}
-        {activeSection === "notifications" && <NotificationsManager password={password} />}
-        {activeSection === "materials" && <MaterialsManager password={password} />}
-        {activeSection === "badges" && <BadgesManager password={password} />}
-        {activeSection === "attendance" && <AttendanceManager password={password} />}
-        {activeSection === "youtube" && <YouTubePlaylistsManager password={password} />}
-        {activeSection === "jigsaw" && <JigsawSeminarsManager teacherToken={teacherToken} />}
-        {activeSection === "importar-alunos" && <ImportarAlunosManager teacherToken={teacherToken} />}
-        {activeSection === "professores" && <ProfessoresManager teacherToken={teacherToken} />}
-        {activeSection === "settings" && <SettingsManager password={password} />}
+        {activeSection === "teams" && password && <TeamManager password={password} />}
+        {activeSection === "xp" && password && <BulkXPManager password={password} />}
+        {activeSection === "activities" && password && <ActivitiesManager password={password} />}
+        {activeSection === "highlights" && password && <HighlightsManager password={password} />}
+        {activeSection === "notifications" && password && <NotificationsManager password={password} />}
+        {activeSection === "materials" && password && <MaterialsManager password={password} />}
+        {activeSection === "badges" && password && <BadgesManager password={password} />}
+        {activeSection === "attendance" && password && <AttendanceManager password={password} />}
+        {activeSection === "youtube" && password && <YouTubePlaylistsManager password={password} />}
+        {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
+        {activeSection === "importar-alunos" && teacherToken && <ImportarAlunosManager teacherToken={teacherToken} />}
+        {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
+        {activeSection === "settings" && password && <SettingsManager password={password} />}
       </div>
     </div>
   );

@@ -556,3 +556,28 @@ export const jigsawMembers = mysqlTable("jigsawMembers", {
 
 export type JigsawMember = typeof jigsawMembers.$inferSelect;
 export type InsertJigsawMember = typeof jigsawMembers.$inferInsert;
+
+
+/**
+ * Import History - records of UNIRIO imports with timestamps and details
+ * Tracks each import operation for audit and monitoring purposes
+ */
+export const importHistory = mysqlTable("importHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(), // Link to the class (turma)
+  importedBy: int("importedBy"), // userId of admin who triggered import
+  importedByName: varchar("importedByName", { length: 200 }),
+  totalStudents: int("totalStudents").notNull().default(0), // Total students imported
+  successCount: int("successCount").notNull().default(0), // Successfully imported
+  errorCount: int("errorCount").notNull().default(0), // Failed to import
+  errors: text("errors"), // JSON array of error messages
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "failed"]).default("pending").notNull(),
+  source: varchar("source", { length: 50 }).default("unirio").notNull(), // e.g., "unirio", "manual", "csv"
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  notes: text("notes"), // Additional notes about the import
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ImportHistory = typeof importHistory.$inferSelect;
+export type InsertImportHistory = typeof importHistory.$inferInsert;
