@@ -906,3 +906,16 @@
 - [ ] Criar página de relatórios para admin
 - [ ] Testar notificações
 - [ ] Testar geração de relatórios
+
+
+## Scraping UNIRIO com Puppeteer
+
+- [x] Implementar scraper com captura de turmas disponíveis
+- [x] Implementar scraper com captura de alunos por turma
+- [x] Implementar tratamento robusto de erros e retry automático
+- [x] Integrar scraping real nas rotas tRPC (validateCredentials, fetchClasses, previewStudents, importStudents)
+- [x] Escrever testes para funcionalidades de scraping (15 testes passando)
+- [ ] Testar scraper com credenciais reais do portal UNIRIO
+- [ ] Implementar logging detalhado de importação
+- [ ] Adicionar notificações por email para alunos importados
+- [ ] Criar página de histórico de importações com auditoria

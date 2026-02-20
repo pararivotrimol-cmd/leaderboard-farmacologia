@@ -1,7 +1,12 @@
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import * as db from "../db";
-import { scrapeUnirioStudents, validateUnirioCredentials } from "../unirio-scraper";
+import {
+  scrapeUnirioStudents,
+  scrapeUnirioClasses,
+  scrapeUnirioAllStudents,
+  validateUnirioCredentials,
+} from "../unirio-scraper";
 
 export const unirioRouter = router({
   // Validate UNIRIO credentials
@@ -34,13 +39,22 @@ export const unirioRouter = router({
         throw new Error("Nao autorizado");
       }
 
-      return {
-        success: true,
-        classes: [
-          { id: "FARM001", name: "Farmacologia I - Turma A", period: "2026.1" },
-          { id: "FARM002", name: "Farmacologia I - Turma B", period: "2026.1" },
-        ],
-      };
+      try {
+        const classes = await scrapeUnirioClasses(input.cpf, input.password);
+        return {
+          success: true,
+          classes: classes.map(c => ({
+            id: c.code,
+            code: c.code,
+            name: c.name,
+            professor: c.professor,
+            period: c.period,
+          })),
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro desconhecido";
+        throw new Error(`Erro ao buscar turmas: ${message}`);
+      }
     }),
 
   // Preview students from UNIRIO (before importing)
@@ -56,31 +70,34 @@ export const unirioRouter = router({
         throw new Error("Nao autorizado");
       }
 
-      // Scrape students from UNIRIO
-      const students = await scrapeUnirioStudents(input.cpf, input.password);
-      
-      if (students.length === 0) {
-        throw new Error("Nenhum aluno encontrado no portal UNIRIO");
+      try {
+        const students = await scrapeUnirioAllStudents(input.cpf, input.password);
+        
+        if (students.length === 0) {
+          throw new Error("Nenhum aluno encontrado no portal UNIRIO");
+        }
+
+        const preview = await Promise.all(
+          students.map(async (student) => {
+            const existing = await db.getStudentAccountByEmail(student.email);
+            return {
+              name: student.name,
+              email: student.email,
+              matricula: student.matricula || "",
+              status: existing ? "ja_cadastrado" : "novo",
+            };
+          })
+        );
+
+        return {
+          success: true,
+          totalCount: students.length,
+          preview,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro desconhecido";
+        throw new Error(`Erro ao buscar alunos: ${message}`);
       }
-
-      // Check which students already exist
-      const preview = await Promise.all(
-        students.map(async (student) => {
-          const existing = await db.getStudentAccountByEmail(student.email);
-          return {
-            name: student.name,
-            email: student.email,
-            matricula: student.matricula || "",
-            status: existing ? "ja_cadastrado" : "novo",
-          };
-        })
-      );
-
-      return {
-        success: true,
-        totalCount: students.length,
-        preview,
-      };
     }),
 
   // Import students from UNIRIO
@@ -97,59 +114,59 @@ export const unirioRouter = router({
         throw new Error("Nao autorizado");
       }
 
-      // Scrape students from UNIRIO
-      const students = await scrapeUnirioStudents(input.cpf, input.password);
-      
-      if (students.length === 0) {
-        throw new Error("Nenhum aluno encontrado no portal UNIRIO");
-      }
-
-      // Import students to database
-      let importedCount = 0;
-      const errors: string[] = [];
-
-      for (const student of students) {
-        try {
-          // Validate email format
-          if (!student.email.includes("@edu.unirio.br")) {
-            errors.push(`${student.name}: Email invalido (${student.email})`);
-            continue;
-          }
-
-          // Check if student already exists
-          const existing = await db.getStudentAccountByEmail(student.email);
-          if (existing) {
-            continue; // Skip if already imported
-          }
-
-          // Create member first
-          const memberId = await db.createMember({
-            teamId: 0, // Will be assigned later
-            classId: input.classId,
-            name: student.name,
-            xp: "0",
-          });
-
-          // Create student account
-          await db.createStudentAccount({
-            memberId,
-            email: student.email,
-            matricula: student.matricula || "",
-            passwordHash: "", // Will be set on first login
-            isActive: 1,
-          });
-
-          importedCount++;
-        } catch (err) {
-          errors.push(`${student.name}: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
+      try {
+        const students = await scrapeUnirioAllStudents(input.cpf, input.password);
+        
+        if (students.length === 0) {
+          throw new Error("Nenhum aluno encontrado no portal UNIRIO");
         }
-      }
 
-      return {
-        success: true,
-        importedCount,
-        totalCount: students.length,
-        errors,
-      };
+        let importedCount = 0;
+        const errors: string[] = [];
+
+        for (const student of students) {
+          try {
+            if (!student.email.includes("@edu.unirio.br")) {
+              errors.push(`${student.name}: Email invalido (${student.email})`);
+              continue;
+            }
+
+            const existing = await db.getStudentAccountByEmail(student.email);
+            if (existing) {
+              continue;
+            }
+
+            const memberId = await db.createMember({
+              teamId: 0,
+              classId: input.classId,
+              name: student.name,
+              xp: "0",
+            });
+
+            await db.createStudentAccount({
+              memberId,
+              email: student.email,
+              matricula: student.matricula || "",
+              passwordHash: "",
+              isActive: 1,
+            });
+
+            importedCount++;
+          } catch (err) {
+            const errMsg = err instanceof Error ? err.message : "Erro desconhecido";
+            errors.push(`${student.name}: ${errMsg}`);
+          }
+        }
+
+        return {
+          success: true,
+          importedCount,
+          totalCount: students.length,
+          errors,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro desconhecido";
+        throw new Error(`Erro ao importar alunos: ${message}`);
+      }
     }),
 });
