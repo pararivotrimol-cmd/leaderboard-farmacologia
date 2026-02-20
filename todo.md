@@ -936,3 +936,18 @@
 - [ ] Ajustar seletores CSS conforme necessário baseado em testes reais
 - [ ] Implementar notificações por email para alunos importados
 - [ ] Criar página de histórico de importações com auditoria
+
+
+## Script Interativo de Teste de Seletores CSS
+
+- [x] Criar script `test-selectors.mjs` com 9 opções de menu
+- [x] Implementar navegação entre URLs
+- [x] Implementar teste de seletores CSS em tempo real
+- [x] Implementar extração de dados (texto, HTML, atributos, tabelas)
+- [x] Implementar listagem de inputs, botões e tabelas
+- [x] Implementar salvamento de página HTML para análise
+- [x] Implementar salvamento de seletores que funcionaram em JSON
+- [x] Criar documentação completa (GUIA_TESTE_SELETORES.md)
+- [ ] Testar script com credenciais reais do portal UNIRIO
+- [ ] Ajustar seletores em `server/unirio-scraper.ts` baseado em resultados
+- [ ] Validar importação completa com seletores ajustados
