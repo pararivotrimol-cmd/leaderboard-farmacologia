@@ -141,6 +141,13 @@
       "when": 1771592312714,
       "tag": "0019_keen_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1771607671180,
+      "tag": "0020_nosy_hercules",
+      "breakpoints": true
     }
   ]
 }

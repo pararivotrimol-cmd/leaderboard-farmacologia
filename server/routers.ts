@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { notifyOwner } from "./_core/notification";
 import { analyticsRouter } from "./routers/analytics";
 import { jigsawRouter } from "./routers/jigsaw";
+import { jigsawCompleteRouter } from "./routers/jigsaw-complete";
 import { unirioRouter } from "./routers/unirio";
 import { settingsRouter } from "./routers/settings";
 
@@ -116,6 +117,7 @@ function extractYoutubeId(url: string, type: string): string | null {
 export const appRouter = router({
   system: systemRouter,
   analytics: analyticsRouter,
+  jigsawComplete: jigsawCompleteRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

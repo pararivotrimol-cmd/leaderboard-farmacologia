@@ -653,3 +653,123 @@ export const restoreHistory = mysqlTable("restoreHistory", {
 });
 export type RestoreHistory = typeof restoreHistory.$inferSelect;
 export type InsertRestoreHistory = typeof restoreHistory.$inferInsert;
+
+
+/**
+ * ========================================
+ * JIGSAW METHOD - COOPERATIVE LEARNING
+ * ========================================
+ * Tables for implementing the complete Jigsaw method:
+ * - Expert Groups: Students study one topic in depth
+ * - Home Groups (Jigsaw): Students teach each other all topics
+ * - Scoring: Individual and group evaluation
+ */
+
+/**
+ * Jigsaw Topics - The 6 topics for expert groups
+ */
+export const jigsawTopics = mysqlTable("jigsawTopics", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  articleUrl: varchar("articleUrl", { length: 500 }),
+  articleTitle: varchar("articleTitle", { length: 300 }),
+  articleAuthors: varchar("articleAuthors", { length: 300 }),
+  articleYear: int("articleYear"),
+  keyPoints: text("keyPoints"), // JSON array of key points
+  studyDuration: int("studyDuration").notNull().default(5), // hours
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawTopic = typeof jigsawTopics.$inferSelect;
+export type InsertJigsawTopic = typeof jigsawTopics.$inferInsert;
+
+/**
+ * Jigsaw Expert Groups - Groups of students studying one topic
+ */
+export const jigsawExpertGroups = mysqlTable("jigsawExpertGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(),
+  topicId: int("topicId").notNull().references(() => jigsawTopics.id),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  maxMembers: int("maxMembers").notNull().default(14),
+  status: mysqlEnum("status", ["forming", "active", "presenting", "completed"]).default("forming").notNull(),
+  presentationDate: timestamp("presentationDate"),
+  presentationNotes: text("presentationNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawExpertGroup = typeof jigsawExpertGroups.$inferSelect;
+export type InsertJigsawExpertGroup = typeof jigsawExpertGroups.$inferInsert;
+
+/**
+ * Jigsaw Expert Members - Students in expert groups
+ */
+export const jigsawExpertMembers = mysqlTable("jigsawExpertMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  expertGroupId: int("expertGroupId").notNull().references(() => jigsawExpertGroups.id, { onDelete: "cascade" }),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  role: mysqlEnum("role", ["member", "coordinator", "presenter"]).default("member").notNull(),
+  presentationScore: decimal("presentationScore", { precision: 3, scale: 1 }).default("0"), // 0-5
+  participationScore: decimal("participationScore", { precision: 3, scale: 1 }).default("0"), // 0-2
+  readingProgress: int("readingProgress").default(0), // 0-100%
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawExpertMember = typeof jigsawExpertMembers.$inferSelect;
+export type InsertJigsawExpertMember = typeof jigsawExpertMembers.$inferInsert;
+
+/**
+ * Jigsaw Home Groups - Groups where students teach each other (Jigsaw groups)
+ */
+export const jigsawHomeGroups = mysqlTable("jigsawHomeGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  meetingNumber: int("meetingNumber").notNull(), // 1st, 2nd, 3rd, 4th, 5th Jigsaw meeting
+  meetingDate: timestamp("meetingDate"),
+  status: mysqlEnum("status", ["forming", "active", "completed"]).default("forming").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawHomeGroup = typeof jigsawHomeGroups.$inferSelect;
+export type InsertJigsawHomeGroup = typeof jigsawHomeGroups.$inferInsert;
+
+/**
+ * Jigsaw Home Members - Students in home groups (Jigsaw groups)
+ * Each student brings expertise from one topic and learns from others
+ */
+export const jigsawHomeMembers = mysqlTable("jigsawHomeMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  homeGroupId: int("homeGroupId").notNull().references(() => jigsawHomeGroups.id, { onDelete: "cascade" }),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  topicId: int("topicId").notNull().references(() => jigsawTopics.id), // Topic this student teaches
+  presentationScore: decimal("presentationScore", { precision: 3, scale: 1 }).default("0"), // 0-5
+  participationScore: decimal("participationScore", { precision: 3, scale: 1 }).default("0"), // 0-2
+  peerRating: decimal("peerRating", { precision: 3, scale: 1 }).default("0"), // 0-5 (peer evaluation)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawHomeMember = typeof jigsawHomeMembers.$inferSelect;
+export type InsertJigsawHomeMember = typeof jigsawHomeMembers.$inferInsert;
+
+/**
+ * Jigsaw Scores - Aggregated scores for each student
+ */
+export const jigsawScores = mysqlTable("jigsawScores", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  classId: int("classId").notNull(),
+  expertGroupId: int("expertGroupId").references(() => jigsawExpertGroups.id), // Expert group they participated in
+  homeGroupIds: text("homeGroupIds"), // JSON array of home group IDs
+  totalPresentationScore: decimal("totalPresentationScore", { precision: 5, scale: 1 }).default("0"),
+  totalParticipationScore: decimal("totalParticipationScore", { precision: 5, scale: 1 }).default("0"),
+  totalPeerRating: decimal("totalPeerRating", { precision: 5, scale: 1 }).default("0"),
+  totalJigsawPF: decimal("totalJigsawPF", { precision: 6, scale: 1 }).default("0"), // Total PF from Jigsaw
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JigsawScore = typeof jigsawScores.$inferSelect;
+export type InsertJigsawScore = typeof jigsawScores.$inferInsert;

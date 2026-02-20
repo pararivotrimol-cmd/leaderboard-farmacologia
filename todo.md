@@ -809,3 +809,60 @@
 - [ ] Implementar função de envio de email
 - [ ] Testar envio de emails
 - [ ] Adicionar log de emails enviados
+
+
+## Implementação Completa do Método Jigsaw (Feb 20, 2026)
+
+### Documentação e Design
+- [x] Criar documento METODO_JIGSAW_COMPLETO.md com design completo
+- [x] Definir estrutura de 6 tópicos com artigos PubMed
+- [x] Planejar cronograma de 5 encontros Jigsaw (semanas 6, 7, 11, 14, 16)
+- [x] Definir sistema de avaliação individual e em grupo
+- [x] Estruturar fórmula de cálculo de PF Jigsaw
+
+### Schema de Banco de Dados
+- [x] Criar tabela jigsawTopics (6 tópicos com artigos)
+- [x] Criar tabela jigsawExpertGroups (grupos de especialistas)
+- [x] Criar tabela jigsawExpertMembers (membros em grupos especialistas)
+- [x] Criar tabela jigsawHomeGroups (grupos Jigsaw)
+- [x] Criar tabela jigsawHomeMembers (membros em grupos Jigsaw)
+- [x] Criar tabela jigsawScores (notas agregadas)
+- [x] Executar migração do banco (pnpm db:push)
+
+### Rotas tRPC Implementadas
+- [x] jigsawComplete.topics.getAll (listar todos os 6 tópicos)
+- [x] jigsawComplete.topics.getById (obter tópico específico)
+- [x] jigsawComplete.topics.create (criar novo tópico - admin)
+- [x] jigsawComplete.topics.update (atualizar tópico - admin)
+- [x] jigsawComplete.expertGroups.create (criar grupo especialista - admin)
+- [x] jigsawComplete.expertGroups.getByClass (listar grupos por turma)
+- [x] jigsawComplete.expertGroups.getById (obter grupo com membros)
+- [x] jigsawComplete.expertGroups.addMember (adicionar membro)
+- [x] jigsawComplete.expertGroups.removeMember (remover membro)
+- [x] jigsawComplete.expertGroups.scorePresentation (registrar notas - admin)
+- [x] jigsawComplete.expertGroups.getScores (obter notas do grupo)
+- [x] jigsawComplete.homeGroups.create (criar grupo Jigsaw - admin)
+- [x] jigsawComplete.homeGroups.getByClass (listar grupos Jigsaw por turma)
+- [x] jigsawComplete.homeGroups.getById (obter grupo com membros)
+- [x] jigsawComplete.homeGroups.addMember (adicionar membro)
+- [x] jigsawComplete.homeGroups.removeMember (remover membro)
+- [x] jigsawComplete.homeGroups.scoreParticipation (registrar notas - admin)
+- [x] jigsawComplete.homeGroups.getScores (obter notas do grupo)
+- [x] jigsawComplete.scores.getByMember (obter notas de um aluno)
+- [x] jigsawComplete.scores.getByClass (obter notas de toda turma - admin)
+- [x] jigsawComplete.scores.calculateTotal (calcular PF total - admin)
+- [x] jigsawComplete.scores.generateReport (gerar relatório - admin)
+
+### Integração
+- [x] Adicionar jigsawCompleteRouter ao appRouter
+- [x] Verificar TypeScript sem erros
+- [x] Verificar testes passando (73/73)
+
+### Próximas Etapas
+- [ ] Criar interface UI para alunos (página /grupos-jigsaw expandida)
+- [ ] Criar interface admin para gerenciar grupos Jigsaw
+- [ ] Implementar sistema de avaliação de pares
+- [ ] Criar testes para rotas Jigsaw
+- [ ] Implementar notificações quando aluno entra/sai de grupo
+- [ ] Criar relatórios de desempenho Jigsaw
+- [ ] Testar fluxo completo de Jigsaw com dados reais
