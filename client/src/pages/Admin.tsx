@@ -243,7 +243,7 @@ function MemberList({ teamId, members, password, teamColor }: {
         <p className="text-xs text-muted-foreground text-center py-2">Nenhum aluno nesta equipe</p>
       ) : (
         <div className="space-y-1">
-          {members.sort((a, b) => b.xp - a.xp).map(member => (
+          {members.sort((a, b) => a.name.localeCompare(b.name)).map(member => (
             <div key={member.id} className="flex items-center gap-2 py-1">
               {editingMember === member.id ? (
                 <>
@@ -2865,7 +2865,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
             <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
           ) : (
             <div className="space-y-1">
-              {classDetail.members.map((m: any, idx: number) => {
+              {[...classDetail.members].sort((a: any, b: any) => a.name.localeCompare(b.name)).map((m: any, idx: number) => {
                 const team = classDetail.teams.find((t: any) => t.id === m.teamId);
                 return (
                   <div key={m.id} className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary/50">

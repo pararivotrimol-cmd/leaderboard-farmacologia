@@ -951,3 +951,13 @@
 - [ ] Testar script com credenciais reais do portal UNIRIO
 - [ ] Ajustar seletores em `server/unirio-scraper.ts` baseado em resultados
 - [ ] Validar importação completa com seletores ajustados
+
+
+## Ordenação Alfabética de Alunos
+
+- [x] Atualizar Admin.tsx para ordenar membros alfabeticamente (linha 246)
+- [x] Atualizar Admin.tsx para ordenar alunos por turma alfabeticamente (linha 2868)
+- [x] Atualizar Home.tsx para ordenar membros alfabeticamente no leaderboard (linha 113)
+- [x] Atualizar rota leaderboard.getData para ordenar membros e atividades alfabeticamente
+- [x] Atualizar testes para refletir nova ordenação alfabética
+- [x] Verificar que todos os 88 testes passam

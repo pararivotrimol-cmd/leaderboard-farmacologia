@@ -110,7 +110,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
             <div className="px-4 pb-4 pt-0" style={{ borderTop: "1px solid rgba(247,148,29,0.08)" }}>
               <div className="grid gap-2 mt-3">
-                {[...team.members].sort((a, b) => b.xp - a.xp).map((member, idx) => (
+                {[...team.members].sort((a, b) => a.name.localeCompare(b.name)).map((member, idx) => (
                   <div key={member.id} className="flex items-center gap-3 py-1.5">
                     <span className="w-5 text-center text-xs font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>{idx + 1}</span>
                     <div className="flex-1 min-w-0">

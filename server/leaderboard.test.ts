@@ -89,10 +89,20 @@ describe("leaderboard.getData (public)", () => {
     expect(data.teams).toHaveLength(2);
     expect(data.teams[0].name).toBe("Acetilcolina");
     expect(data.teams[0].members).toHaveLength(2);
+    // Members are now sorted alphabetically by name
+    // "Ana Silva" comes before "Bruno Costa"
+    expect(data.teams[0].members[0].name).toBe("Ana Silva");
     expect(data.teams[0].members[0].xp).toBe(12.5);
+    expect(data.teams[0].members[1].name).toBe("Bruno Costa");
+    expect(data.teams[0].members[1].xp).toBe(11.0);
     expect(data.teams[1].members).toHaveLength(1);
     expect(data.activities).toHaveLength(2);
-    expect(data.activities[0].maxXP).toBe(0.5);
+    // Activities are now sorted alphabetically by name
+    // "Jigsaw em Sala" comes before "Quiz Relâmpago"
+    expect(data.activities[0].name).toBe("Jigsaw em Sala");
+    expect(data.activities[0].maxXP).toBe(2.0);
+    expect(data.activities[1].name).toBe("Quiz Relâmpago");
+    expect(data.activities[1].maxXP).toBe(0.5);
     expect(data.highlights).toHaveLength(1);
     expect(data.settings.currentWeek).toBe("5");
     // admin_password should NOT be exposed

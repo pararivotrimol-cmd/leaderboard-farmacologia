@@ -840,10 +840,11 @@ export const appRouter = router({
           ...t,
           members: membersData
             .filter(m => m.teamId === t.id)
-            .map(m => ({ ...m, xp: parseFloat(m.xp) })),
+            .map(m => ({ ...m, xp: parseFloat(m.xp) }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
         })),
-        activities: activitiesData.map(a => ({ ...a, maxXP: parseFloat(a.maxXP) })),
-        highlights: highlightsData,
+        activities: activitiesData.map(a => ({ ...a, maxXP: parseFloat(a.maxXP) })).sort((a, b) => a.name.localeCompare(b.name)),
+        highlights: highlightsData.sort((a, b) => b.week - a.week),
         settings: settingsMap,
       };
     }),
