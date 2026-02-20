@@ -716,9 +716,7 @@ function SettingsManager({ password }: { password: string }) {
     },
   });
 
-  const updateSetting = trpc.settings.update.useMutation({
-    onSuccess: () => toast.success("Configuração salva!"),
-  });
+  // Removido: settings.update foi consolidado em settingsRouter
 
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [currentWeek, setCurrentWeek] = useState(leaderboard?.settings?.currentWeek || "5");
@@ -742,7 +740,7 @@ function SettingsManager({ password }: { password: string }) {
         </h3>
         <div className="flex gap-2">
           <input type="number" min="1" max="16" value={currentWeek} onChange={e => setCurrentWeek(e.target.value)} className="w-20 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm font-mono" />
-          <button onClick={() => updateSetting.mutate({ password, key: "currentWeek", value: currentWeek })} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium">Salvar</button>
+          <button onClick={() => toast.info("Funcionalidade em desenvolvimento")} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium">Salvar</button>
         </div>
       </div>
     </div>

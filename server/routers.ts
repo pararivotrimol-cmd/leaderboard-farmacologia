@@ -10,6 +10,7 @@ import { notifyOwner } from "./_core/notification";
 import { analyticsRouter } from "./routers/analytics";
 import { jigsawRouter } from "./routers/jigsaw";
 import { unirioRouter } from "./routers/unirio";
+import { settingsRouter } from "./routers/settings";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -1302,21 +1303,6 @@ export const appRouter = router({
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
         await db.deleteHighlight(input.id);
-        return { success: true };
-      }),
-  }),
-
-  settings: router({
-    update: publicProcedure
-      .input(z.object({
-        password: z.string(),
-        key: z.string(),
-        value: z.string(),
-      }))
-      .mutation(async ({ input }) => {
-        const valid = await verifyAdminPassword(input.password);
-        if (!valid) throw new Error("Não autorizado");
-        await db.upsertSetting(input.key, input.value);
         return { success: true };
       }),
   }),
@@ -2633,6 +2619,7 @@ export const appRouter = router({
   }),
 
   jigsawGroups: jigsawRouter,
+  settings: settingsRouter,
 
 });
 

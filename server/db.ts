@@ -30,6 +30,9 @@ import {
   jigsawGroups, InsertJigsawGroup,
   jigsawMembers, InsertJigsawMember,
   importHistory, InsertImportHistory,
+  systemSettings,
+  backupRecords, InsertBackupRecord,
+  restoreHistory, InsertRestoreHistory, RestoreHistory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1451,4 +1454,58 @@ export async function getMemberById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(members).where(eq(members.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+
+// --- System Settings ---
+
+export async function getSystemSettings() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(systemSettings).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateSystemSettings(data: Partial<typeof systemSettings.$inferInsert>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  const existing = await getSystemSettings();
+  if (existing) {
+    await db.update(systemSettings).set(data).where(eq(systemSettings.id, existing.id));
+  } else {
+    await db.insert(systemSettings).values(data as any);
+  }
+}
+
+export async function getBackupRecords(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(backupRecords).orderBy(desc(backupRecords.createdAt)).limit(limit);
+}
+
+export async function createBackupRecord(data: InsertBackupRecord): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const result = await db.insert(backupRecords).values(data);
+  return result[0].insertId;
+}
+
+export async function updateBackupRecord(id: number, data: Partial<InsertBackupRecord>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.update(backupRecords).set(data).where(eq(backupRecords.id, id));
+}
+
+export async function getRestoreHistory(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(restoreHistory).orderBy(desc(restoreHistory.createdAt)).limit(limit);
+}
+
+export async function createRestoreRecord(data: InsertRestoreHistory): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const result = await db.insert(restoreHistory).values(data);
+  return result[0].insertId;
 }

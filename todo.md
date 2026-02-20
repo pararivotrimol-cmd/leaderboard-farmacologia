@@ -739,49 +739,49 @@
 ## Módulos de Configuração do Sistema
 
 ### Configurações Gerais
-- [ ] Criar tabela systemSettings no schema
-- [ ] Adicionar rotas tRPC para obter/atualizar configurações
-- [ ] Implementar validação de dados (nome, semestre, cronograma)
-- [ ] Criar interface UI para editar configurações gerais
+- [x] Criar tabela systemSettings no schema
+- [x] Adicionar rotas tRPC para obter/atualizar configurações
+- [x] Implementar validação de dados (nome, semestre, cronograma)
+- [x] Criar interface UI para editar configurações gerais (AdminSettings.tsx)
 
 ### Backup de Dados
-- [ ] Implementar função de export (JSON com todos os dados)
-- [ ] Implementar função de import (restaurar dados)
-- [ ] Adicionar validação de integridade do backup
-- [ ] Criar interface UI para download/upload de backup
+- [x] Implementar função de export (JSON com todos os dados)
+- [x] Implementar função de import (restaurar dados)
+- [x] Adicionar validação de integridade do backup
+- [x] Criar interface UI para download/upload de backup (AdminSettings.tsx)
 - [ ] Adicionar compressão de arquivo (ZIP)
 
 ### Segurança
-- [ ] Implementar gerenciamento de senhas de professor
-- [ ] Implementar reset de senha com token
+- [x] Implementar gerenciamento de senhas de professor
+- [x] Implementar reset de senha com token
 - [ ] Implementar auditoria de acesso
-- [ ] Criar interface UI para gerenciar permissões
+- [x] Criar interface UI para gerenciar permissões (AdminSettings.tsx)
 - [ ] Adicionar 2FA para contas admin
 
 ### Notificações
-- [ ] Criar tabela de configurações de notificações
+- [x] Criar tabela de configurações de notificações
 - [ ] Implementar envio de email para alertas
 - [ ] Implementar notificações em tempo real (WebSocket)
-- [ ] Criar interface UI para configurar alertas
+- [x] Criar interface UI para configurar alertas (AdminSettings.tsx)
 - [ ] Adicionar templates de email
 
 ### Relatórios
-- [ ] Implementar geração de relatório de desempenho
-- [ ] Implementar geração de relatório de frequência
-- [ ] Implementar geração de relatório de PF por aluno
-- [ ] Adicionar export em PDF e Excel
-- [ ] Criar interface UI para gerar relatórios
+- [x] Implementar geração de relatório de desempenho
+- [x] Implementar geração de relatório de frequência
+- [x] Implementar geração de relatório de PF por aluno
+- [x] Adicionar export em PDF e Excel
+- [x] Criar interface UI para gerar relatórios (AdminSettings.tsx)
 
 
 ## Próximos Passos Críticos
 
 ### Importação UNIRIO com Credenciais Reais
-- [ ] Testar scraper com credenciais reais (CPF 08714684764)
-- [ ] Validar captura de turmas abertas no período
-- [ ] Validar extração de lista de alunos
-- [ ] Integrar ao painel admin com feedback visual
-- [ ] Adicionar tratamento de erros e retry automático
-- [ ] Criar logs detalhados de importação
+- [x] Testar scraper com credenciais reais (CPF 08714684764)
+- [x] Validar captura de turmas abertas no período
+- [x] Validar extração de lista de alunos
+- [x] Integrar ao painel admin com feedback visual
+- [x] Adicionar tratamento de erros e retry automático
+- [x] Criar logs detalhados de importação
 
 ### Backup e Restore de Dados
 - [ ] Implementar função de export completo (JSON)

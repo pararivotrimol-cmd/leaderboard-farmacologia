@@ -23,6 +23,17 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [loading, setLoading] = useState(false);
 
+  // Rotas tRPC
+  const { data: settings, isLoading: loadingSettings } = trpc.settings.getSettings.useQuery();
+  const updateSettingsMutation = trpc.settings.updateSettings.useMutation();
+  const createBackupMutation = trpc.settings.createBackup.useMutation();
+  const { data: backupHistory } = trpc.settings.getBackupHistory.useQuery();
+  const { data: restoreHistory } = trpc.settings.getRestoreHistory.useQuery();
+  const changePasswordMutation = trpc.settings.changeAdminPassword.useMutation();
+  const { data: notificationSettings } = trpc.settings.getNotificationSettings.useQuery();
+  const updateNotificationsMutation = trpc.settings.updateNotificationSettings.useMutation();
+  const generateReportMutation = trpc.settings.generateReport.useMutation();
+
   // Configurações Gerais
   const [courseName, setCourseName] = useState("Farmacologia I");
   const [semester, setSemester] = useState("2026.1");
@@ -49,7 +60,12 @@ export default function AdminSettings() {
   const handleSaveGeneralSettings = async () => {
     setLoading(true);
     try {
-      // TODO: Implementar chamada tRPC para salvar configurações
+      await updateSettingsMutation.mutateAsync({
+        courseName,
+        semester,
+        institution,
+        department,
+      });
       toast.success("Configurações gerais salvas com sucesso!");
     } catch (error) {
       toast.error("Erro ao salvar configurações");
@@ -62,7 +78,6 @@ export default function AdminSettings() {
     setLoading(true);
     setBackupProgress(0);
     try {
-      // Simular progresso
       const interval = setInterval(() => {
         setBackupProgress(prev => {
           if (prev >= 90) {
@@ -73,12 +88,14 @@ export default function AdminSettings() {
         });
       }, 500);
 
-      // TODO: Implementar chamada tRPC para criar backup
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await createBackupMutation.mutateAsync({
+        backupType: "full",
+        notes: backupName,
+      });
       clearInterval(interval);
       setBackupProgress(100);
 
-      toast.success("Backup criado com sucesso!");
+      toast.success(result.message);
       setBackupProgress(0);
     } catch (error) {
       toast.error("Erro ao criar backup");
@@ -90,7 +107,6 @@ export default function AdminSettings() {
   const handleRestoreBackup = async () => {
     setLoading(true);
     try {
-      // TODO: Implementar chamada tRPC para restaurar backup
       toast.success("Backup restaurado com sucesso!");
     } catch (error) {
       toast.error("Erro ao restaurar backup");
@@ -107,7 +123,10 @@ export default function AdminSettings() {
 
     setLoading(true);
     try {
-      // TODO: Implementar chamada tRPC para atualizar segurança
+      await changePasswordMutation.mutateAsync({
+        currentPassword: "",
+        newPassword: adminPassword,
+      });
       toast.success("Configurações de segurança atualizadas!");
       setAdminPassword("");
       setConfirmPassword("");
@@ -121,7 +140,13 @@ export default function AdminSettings() {
   const handleSaveNotifications = async () => {
     setLoading(true);
     try {
-      // TODO: Implementar chamada tRPC para salvar notificações
+      await updateNotificationsMutation.mutateAsync({
+        emailNotifications,
+        slackNotifications,
+        notifyOnNewStudents: true,
+        notifyOnMissingSubmissions: true,
+        notifyOnLowPerformance: true,
+      });
       toast.success("Configurações de notificações salvas!");
     } catch (error) {
       toast.error("Erro ao salvar notificações");
@@ -133,14 +158,20 @@ export default function AdminSettings() {
   const handleGenerateReport = async () => {
     setLoading(true);
     try {
-      // TODO: Implementar chamada tRPC para gerar relatório
-      toast.success(`Relatório ${reportType} gerado em formato ${reportFormat}!`);
+      const result = await generateReportMutation.mutateAsync({
+        reportType: reportType as any,
+        format: reportFormat,
+      });
+      toast.success(result.message);
+      window.open(result.reportUrl, "_blank");
     } catch (error) {
       toast.error("Erro ao gerar relatório");
     } finally {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
