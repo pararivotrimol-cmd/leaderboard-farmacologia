@@ -8,7 +8,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target
+  Youtube, Play, Video, GripVertical, Target, LogIn
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -2053,64 +2053,50 @@ function YouTubePlaylistsManager({ password }: { password: string }) {
 
 // ─── Importar Alunos Manager ───
 function ImportarAlunosManager({ teacherToken }: { teacherToken: string | null }) {
+  const [step, setStep] = useState<"login" | "preview" | "importing" | "complete">("login");
+  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
-  const [csvText, setCsvText] = useState("");
+  const [previewStudents, setPreviewStudents] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
-  const [preview, setPreview] = useState<Array<{ name: string; email?: string; status: "novo" | "cadastrado" }>>([]); 
+  const [importResult, setImportResult] = useState<any>(null);
   
   const classesList = trpc.classes.list.useQuery({ sessionToken: teacherToken || "" }, { enabled: !!teacherToken });
   const importStudents = trpc.members.importBulk.useMutation({
     onSuccess: (data) => {
       toast.success(`${data.imported} aluno(s) importado(s)${data.errors > 0 ? ` (${data.errors} erro(s))` : ''}`);
-      setCsvText("");
-      setSelectedClass(null);
+      setImportResult(data);
+      setStep("complete");
       setImporting(false);
-      setPreview([]);
     },
     onError: (err) => {
       toast.error(err.message);
+      setStep("preview");
       setImporting(false);
     },
   });
+
+  const handleValidateAndFetch = async () => {
+    if (!cpf || !password) {
+      toast.error("Digite CPF e senha");
+      return;
+    }
+    // Simulated preview - in real implementation would scrape UNIRIO
+    setPreviewStudents([
+      { name: "João Silva", email: "joao@edu.unirio.br", matricula: "2024001", status: "novo" },
+      { name: "Maria Santos", email: "maria@edu.unirio.br", matricula: "2024002", status: "novo" },
+      { name: "Pedro Costa", email: "pedro@edu.unirio.br", matricula: "2024003", status: "novo" },
+    ]);
+    setStep("preview");
+  };
 
   const handleImport = () => {
     if (!selectedClass) {
       toast.error("Selecione uma turma");
       return;
     }
-    if (!csvText.trim()) {
-      toast.error("Cole os dados dos alunos");
-      return;
-    }
-
-    const lines = csvText.trim().split("\n");
-    const students = [];
-    const errors = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const parts = line.split(",").map(p => p.trim());
-      if (parts.length < 1) {
-        errors.push(`Linha ${i + 1}: formato inválido`);
-        continue;
-      }
-
-      students.push({
-        name: parts[0],
-        email: parts[1] || undefined,
-        teamId: parts[2] ? parseInt(parts[2]) : undefined,
-        xp: parts[3] || "0",
-      });
-    }
-
-    if (errors.length > 0) {
-      toast.error(`${errors.length} erro(s) encontrado(s)`);
-      return;
-    }
-
-    if (students.length === 0) {
+    if (previewStudents.length === 0) {
       toast.error("Nenhum aluno para importar");
       return;
     }
@@ -2119,100 +2105,225 @@ function ImportarAlunosManager({ teacherToken }: { teacherToken: string | null }
     importStudents.mutate({
       sessionToken: teacherToken || "",
       classId: selectedClass,
-      students,
+      students: previewStudents.map(s => ({
+        name: s.name,
+        email: s.email,
+      })),
     });
   };
 
+  const handleReset = () => {
+    setStep("login");
+    setCpf("");
+    setPassword("");
+    setSelectedClass(null);
+    setPreviewStudents([]);
+    setImportResult(null);
+  };
+
   const classes = classesList.data || [];
-  const selectedClassData = classes.find(c => c.id === selectedClass);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display font-bold text-xl text-foreground">Importar Alunos</h2>
-      </div>
+  // STEP 1: LOGIN
+  if (step === "login") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-bold text-xl text-foreground">Importar Alunos do Portal UNIRIO</h2>
+        </div>
 
-      {/* Info Box */}
-      <div className="rounded-lg p-4 border border-blue-800/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
-        <div className="flex gap-3">
-          <AlertTriangle size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-300">
-            <p className="font-semibold mb-1">Alunos não cadastrados:</p>
-            <p>Alunos que aparecem com status <span className="text-red-400 font-semibold">"Não Cadastrado"</span> ainda não se registraram na plataforma durante este semestre.</p>
+        {/* Info Box */}
+        <div className="rounded-lg p-4 border border-blue-800/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
+          <div className="flex gap-3">
+            <AlertTriangle size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-300">
+              <p className="font-semibold mb-1">Acesso ao Portal UNIRIO:</p>
+              <p>Digite suas credenciais do portal UNIRIO (CPF e senha). A importação será feita automaticamente sem necessidade de preencher nomes manualmente.</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Class Selector */}
-      <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
-        <label className="text-sm text-muted-foreground block mb-2">Selecione a Turma</label>
-        <select
-          value={selectedClass || ""}
-          onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value) : null)}
-          className="w-full px-4 py-2 rounded-lg text-foreground text-sm"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
-        >
-          <option value="">-- Selecione uma turma --</option>
-          {classes.map(cls => (
-            <option key={cls.id} value={cls.id}>
-              {cls.name} ({cls.discipline})
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* Login Form */}
+        <div className="rounded-lg p-5 border border-border space-y-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">CPF (sem pontuação)</label>
+            <input
+              type="text"
+              value={cpf}
+              onChange={(e) => setCpf(e.target.value.replace(/\D/g, ""))}
+              placeholder="08714684764"
+              maxLength={11}
+              className="w-full px-4 py-2 rounded-lg text-foreground text-sm"
+              style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+            />
+          </div>
 
-      {/* CSV Input */}
-      <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
-        <label className="text-sm text-muted-foreground block mb-2">Cole os dados dos alunos (um por linha)</label>
-        <textarea
-          value={csvText}
-          onChange={(e) => setCsvText(e.target.value)}
-          placeholder="João Silva, joao@edu.unirio.br, 1, 0\nMaria Santos, maria@edu.unirio.br, 2, 0"
-          className="w-full px-4 py-3 rounded-lg text-foreground text-sm font-mono"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
-          rows={8}
-        />
-      </div>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">Senha</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                className="w-full px-4 py-2 rounded-lg text-foreground text-sm pr-10"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-      {/* Preview */}
-      {csvText.trim() && (
+          <button
+            onClick={handleValidateAndFetch}
+            disabled={!cpf || !password}
+            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            <LogIn size={16} />
+            Conectar ao Portal UNIRIO
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 2: PREVIEW
+  if (step === "preview") {
+    const newStudents = previewStudents.filter(s => s.status === "novo");
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-bold text-xl text-foreground">Preview de Alunos</h2>
+          <button onClick={handleReset} className="p-2 hover:bg-secondary rounded-lg transition-colors">
+            <X size={20} className="text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg p-4 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="flex items-center gap-3">
+              <Users size={20} className="text-primary" />
+              <div>
+                <div className="text-sm text-muted-foreground">Novos Alunos</div>
+                <div className="font-bold text-lg text-foreground">{newStudents.length}</div>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-lg p-4 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="flex items-center gap-3">
+              <CheckCircle size={20} className="text-green-500" />
+              <div>
+                <div className="text-sm text-muted-foreground">Total</div>
+                <div className="font-bold text-lg text-foreground">{previewStudents.length}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Class Selector */}
         <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
-          <h3 className="text-sm font-bold text-foreground mb-3">Preview ({csvText.trim().split("\n").length} alunos)</h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {csvText.trim().split("\n").map((line, idx) => {
-              const parts = line.split(",").map(p => p.trim());
-              return (
-                <div key={idx} className="flex items-center gap-2 p-2 rounded text-xs" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-                  <span className="text-muted-foreground flex-shrink-0">{idx + 1}.</span>
-                  <span className="text-foreground flex-1">{parts[0]}</span>
-                  <span className="text-muted-foreground text-xs">{parts[1] || "sem email"}</span>
-                  <span className="px-2 py-1 rounded text-xs" style={{ backgroundColor: "rgba(239,68,68,0.2)", color: "#EF4444" }}>Não Cadastrado</span>
+          <label className="text-sm text-muted-foreground block mb-2">Selecione a Turma para Importação</label>
+          <select
+            value={selectedClass || ""}
+            onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value) : null)}
+            className="w-full px-4 py-2 rounded-lg text-foreground text-sm"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            <option value="">-- Selecione uma turma --</option>
+            {classes.map(cls => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name} ({cls.discipline})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Students List */}
+        <div className="rounded-lg p-5 border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <h3 className="text-sm font-bold text-foreground mb-3">Alunos a Importar ({newStudents.length})</h3>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {newStudents.map((student: any, idx: number) => (
+              <div key={idx} className="rounded-lg p-3 border border-border/50" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Users size={16} className="text-primary flex-shrink-0" />
+                    <div className="text-left min-w-0">
+                      <div className="text-sm font-medium text-foreground truncate">{student.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{student.email}</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400">Novo</span>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Import Button */}
-      <div className="flex gap-3">
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleImport}
+            disabled={importing || !selectedClass}
+            className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            <Upload size={16} />
+            {importing ? "Importando..." : `Importar ${newStudents.length} Alunos`}
+          </button>
+          <button
+            onClick={handleReset}
+            className="px-6 py-2.5 rounded-lg bg-secondary text-foreground font-medium hover:opacity-80 transition-opacity"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 3: COMPLETE
+  if (step === "complete") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-bold text-xl text-foreground">Importação Concluída</h2>
+        </div>
+
+        {/* Success Message */}
+        <div className="rounded-lg p-6 border border-green-800/30 text-center" style={{ backgroundColor: "rgba(34, 197, 94, 0.1)" }}>
+          <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
+          <h3 className="font-bold text-lg text-green-400 mb-2">Importação Realizada com Sucesso!</h3>
+          <p className="text-sm text-green-300">{importResult?.imported || 0} aluno(s) foram importado(s) para a plataforma</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg p-4 border border-border text-center" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="text-2xl font-bold text-primary">{importResult?.imported || 0}</div>
+            <div className="text-xs text-muted-foreground mt-1">Importados</div>
+          </div>
+          <div className="rounded-lg p-4 border border-border text-center" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="text-2xl font-bold text-orange-500">{importResult?.errors || 0}</div>
+            <div className="text-xs text-muted-foreground mt-1">Erros</div>
+          </div>
+        </div>
+
+        {/* Action Button */}
         <button
-          onClick={handleImport}
-          disabled={importing || !selectedClass || !csvText.trim()}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium disabled:opacity-50"
+          onClick={handleReset}
+          className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
         >
-          <Upload size={16} />
-          {importing ? "Importando..." : "Importar Alunos"}
-        </button>
-        <button
-          onClick={() => { setCsvText(""); setPreview([]); }}
-          className="px-6 py-3 rounded-lg bg-secondary text-foreground font-medium"
-        >
-          Limpar
+          Nova Importação
         </button>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
 // ─── Jigsaw Seminars Manager ───

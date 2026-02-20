@@ -866,3 +866,43 @@
 - [ ] Implementar notificações quando aluno entra/sai de grupo
 - [ ] Criar relatórios de desempenho Jigsaw
 - [ ] Testar fluxo completo de Jigsaw com dados reais
+
+
+## Interface UI para Alunos - Página /grupos-jigsaw
+
+- [ ] Criar componente JigsawTopicsView (listar 6 tópicos com artigos)
+- [ ] Criar componente ExpertGroupForm (formulário para criar/entrar em grupo especialista)
+- [ ] Criar componente ExpertGroupsList (listar grupos especialistas com membros)
+- [ ] Criar componente HomeGroupForm (formulário para criar/entrar em grupo Jigsaw)
+- [ ] Criar componente HomeGroupsList (listar grupos Jigsaw com membros)
+- [ ] Criar componente JigsawScoresView (visualizar notas pessoais)
+- [ ] Integrar rotas tRPC jigsawComplete.* na página
+- [ ] Adicionar validações e tratamento de erros
+- [ ] Testar fluxo de criação de grupos
+- [ ] Testar fluxo de entrada em grupos
+
+## Painel Admin para Monitoramento Jigsaw
+
+- [ ] Criar página AdminJigsawDashboard
+- [ ] Criar componente ExpertGroupsManagement (gerenciar grupos especialistas)
+- [ ] Criar componente HomeGroupsManagement (gerenciar grupos Jigsaw)
+- [ ] Criar componente ScoringInterface (registrar notas de apresentação/participação)
+- [ ] Criar componente PeerRatingInterface (registrar avaliação de pares)
+- [ ] Criar componente JigsawReportView (visualizar relatórios por turma)
+- [ ] Integrar rotas tRPC admin para scoring
+- [ ] Adicionar filtros por turma e tópico
+- [ ] Adicionar exportação de dados
+- [ ] Testar interface de scoring
+
+## Notificações e Relatórios
+
+- [ ] Criar função para notificar quando aluno entra em grupo
+- [ ] Criar função para notificar quando aluno sai de grupo
+- [ ] Criar função para enviar lembretes de encontros Jigsaw
+- [ ] Criar função para gerar relatório de desempenho
+- [ ] Criar função para gerar ranking de alunos por PF Jigsaw
+- [ ] Integrar notificações ao sistema existente
+- [ ] Criar página de relatórios para alunos
+- [ ] Criar página de relatórios para admin
+- [ ] Testar notificações
+- [ ] Testar geração de relatórios
