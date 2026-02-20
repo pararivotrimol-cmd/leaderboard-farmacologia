@@ -26,6 +26,7 @@ import SuperAdminLogin from "./pages/SuperAdminLogin";
 import PerformanceReport from "./pages/PerformanceReport";
 import AdminDashboard from "./pages/AdminDashboard";
 import JigsawGroups from "./pages/JigsawGroups";
+import AdminSettings from "./pages/AdminSettings";
 import LoungePlaylist from "./components/LoungePlaylist";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
       <Route path={"/"} component={Landing} />
       <Route path={"/leaderboard"} component={Home} />
       <Route path={"/admin"} component={AdminDashboard} />
+      <Route path={"/admin/configuracoes"} component={AdminSettings} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
