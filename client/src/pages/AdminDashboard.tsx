@@ -3,7 +3,7 @@
  * Acesso completo para gerenciar turmas, alunos, professores, códigos de convite e configurações
  * Dados reais do banco de dados via tRPC
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
@@ -209,7 +209,7 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
       </div>
 
       {/* PF Distribution Charts */}
-      <PFDistributionCharts stats={stats} />
+      <PFDistributionChartsComponent stats={stats} />
 
       {/* Teacher breakdown */}
       <div className="rounded-lg p-6 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
@@ -1409,7 +1409,7 @@ interface Stats {
   };
 }
 
-function PFDistributionCharts({ stats }: { stats: Stats }) {
+function PFDistributionChartsComponent({ stats }: { stats: Stats }) {
   // Mock data for distribution by team (in real scenario, this would come from backend)
   const teamDistributionData = {
     labels: ['Equipe 1', 'Equipe 2', 'Equipe 3', 'Equipe 4', 'Equipe 5'],
