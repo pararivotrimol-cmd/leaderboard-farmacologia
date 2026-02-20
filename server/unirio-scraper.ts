@@ -14,9 +14,10 @@ interface UnirioStudent {
  * Scrape students from UNIRIO portal
  * @param cpf - Professor CPF (e.g., "08714684764")
  * @param password - Professor password
- * @returns Array of students
+ * @returns Array of students with detailed logging
  */
 export async function scrapeUnirioStudents(cpf: string, password: string): Promise<UnirioStudent[]> {
+  console.log('[UNIRIO] Starting scrape for CPF:', cpf.substring(0, 3) + '***');
   let browser;
   try {
     browser = await puppeteer.launch({
@@ -29,10 +30,14 @@ export async function scrapeUnirioStudents(cpf: string, password: string): Promi
     page.setDefaultNavigationTimeout(30000);
 
     // Navigate to UNIRIO portal
+    console.log('[UNIRIO] Navigating to portal...');
     await page.goto('https://portal.unirio.br', { waitUntil: 'networkidle2' });
+    console.log('[UNIRIO] Portal loaded successfully');
 
     // Wait for login form
+    console.log('[UNIRIO] Waiting for login form...');
     await page.waitForSelector('input[name="cpf"], input[name="usuario"], input[name="login"]', { timeout: 10000 }).catch(() => null);
+    console.log('[UNIRIO] Login form found');
 
     // Try to find and fill CPF field
     const cpfInputs = await page.$$('input[type="text"], input[name*="cpf"], input[name*="usuario"], input[name*="login"]');
@@ -42,7 +47,9 @@ export async function scrapeUnirioStudents(cpf: string, password: string): Promi
     }
 
     // Fill CPF
+    console.log('[UNIRIO] Filling CPF field...');
     await cpfInputs[0].type(cpf);
+    console.log('[UNIRIO] CPF filled successfully');
 
     // Find and fill password field
     const passwordInputs = await page.$$('input[type="password"]');
@@ -51,20 +58,24 @@ export async function scrapeUnirioStudents(cpf: string, password: string): Promi
     }
 
     // Submit form
+    console.log('[UNIRIO] Submitting login form...');
     const submitButton = await page.$('button[type="submit"], input[type="submit"]');
     if (submitButton) {
       await submitButton.click();
       await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => null);
+      console.log('[UNIRIO] Login submitted and page navigated');
     }
 
     // Wait for page to load after login
     await page.waitForTimeout(2000);
 
     // Try to find students table or list
+    console.log('[UNIRIO] Looking for student data...');
     const students: UnirioStudent[] = [];
 
     // Look for table rows with student data
     const rows = await page.$$('table tbody tr, .student-row, [data-student]');
+    console.log('[UNIRIO] Found', rows.length, 'rows with student data');
     
     for (const row of rows) {
       try {
@@ -88,9 +99,10 @@ export async function scrapeUnirioStudents(cpf: string, password: string): Promi
       }
     }
 
+    console.log('[UNIRIO] Scraping completed. Found', students.length, 'students');
     return students;
   } catch (error) {
-    console.error('[UNIRIO] Scraping error:', error);
+    console.error('[UNIRIO] Scraping error:', error instanceof Error ? error.message : String(error));
     return [];
   } finally {
     if (browser) {

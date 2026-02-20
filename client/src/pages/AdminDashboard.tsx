@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
-import { PFDistributionCharts } from '@/components/PFDistributionCharts';
+const PFDistributionCharts = lazy(() => import('@/components/PFDistributionCharts').then(m => ({ default: m.PFDistributionCharts })));
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
