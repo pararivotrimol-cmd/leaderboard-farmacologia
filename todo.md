@@ -734,3 +734,78 @@
 - [ ] Atualizar lista de membros Jigsaw em tempo real
 - [ ] Adicionar indicadores visuais de membros online/offline
 - [ ] Testar notificações em tempo real
+
+
+## Módulos de Configuração do Sistema
+
+### Configurações Gerais
+- [ ] Criar tabela systemSettings no schema
+- [ ] Adicionar rotas tRPC para obter/atualizar configurações
+- [ ] Implementar validação de dados (nome, semestre, cronograma)
+- [ ] Criar interface UI para editar configurações gerais
+
+### Backup de Dados
+- [ ] Implementar função de export (JSON com todos os dados)
+- [ ] Implementar função de import (restaurar dados)
+- [ ] Adicionar validação de integridade do backup
+- [ ] Criar interface UI para download/upload de backup
+- [ ] Adicionar compressão de arquivo (ZIP)
+
+### Segurança
+- [ ] Implementar gerenciamento de senhas de professor
+- [ ] Implementar reset de senha com token
+- [ ] Implementar auditoria de acesso
+- [ ] Criar interface UI para gerenciar permissões
+- [ ] Adicionar 2FA para contas admin
+
+### Notificações
+- [ ] Criar tabela de configurações de notificações
+- [ ] Implementar envio de email para alertas
+- [ ] Implementar notificações em tempo real (WebSocket)
+- [ ] Criar interface UI para configurar alertas
+- [ ] Adicionar templates de email
+
+### Relatórios
+- [ ] Implementar geração de relatório de desempenho
+- [ ] Implementar geração de relatório de frequência
+- [ ] Implementar geração de relatório de PF por aluno
+- [ ] Adicionar export em PDF e Excel
+- [ ] Criar interface UI para gerar relatórios
+
+
+## Próximos Passos Críticos
+
+### Importação UNIRIO com Credenciais Reais
+- [ ] Testar scraper com credenciais reais (CPF 08714684764)
+- [ ] Validar captura de turmas abertas no período
+- [ ] Validar extração de lista de alunos
+- [ ] Integrar ao painel admin com feedback visual
+- [ ] Adicionar tratamento de erros e retry automático
+- [ ] Criar logs detalhados de importação
+
+### Backup e Restore de Dados
+- [ ] Implementar função de export completo (JSON)
+- [ ] Implementar função de import/restore
+- [ ] Adicionar compressão ZIP
+- [ ] Criar interface UI no admin para download/upload
+- [ ] Adicionar validação de integridade
+- [ ] Implementar agendamento automático de backups
+- [ ] Adicionar histórico de backups com timestamps
+
+### Notificações em Tempo Real
+- [ ] Instalar e configurar Socket.IO
+- [ ] Implementar WebSocket para Grupos Jigsaw
+- [ ] Atualizar membros em tempo real quando aluno entra/sai
+- [ ] Implementar notificações de PF atualizado
+- [ ] Implementar notificações de badges conquistados
+- [ ] Adicionar fallback com polling para navegadores sem WebSocket
+- [ ] Testar em múltiplos clientes simultâneos
+
+### Email para Alertas e Recuperação
+- [ ] Configurar SMTP (Gmail, SendGrid ou similar)
+- [ ] Criar template de email de recuperação de senha
+- [ ] Criar template de email de notificação de PF
+- [ ] Criar template de email de badge conquistado
+- [ ] Implementar função de envio de email
+- [ ] Testar envio de emails
+- [ ] Adicionar log de emails enviados

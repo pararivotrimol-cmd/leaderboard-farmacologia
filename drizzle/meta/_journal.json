@@ -134,6 +134,13 @@
       "when": 1771545462068,
       "tag": "0018_pale_random",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1771592312714,
+      "tag": "0019_keen_lethal_legion",
+      "breakpoints": true
     }
   ]
 }

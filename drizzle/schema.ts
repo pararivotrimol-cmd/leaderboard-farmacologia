@@ -581,3 +581,75 @@ export const importHistory = mysqlTable("importHistory", {
 
 export type ImportHistory = typeof importHistory.$inferSelect;
 export type InsertImportHistory = typeof importHistory.$inferInsert;
+
+
+/**
+ * System Settings - Global configuration for the platform
+ * Stores general settings like course name, semester, schedule, etc.
+ */
+export const systemSettings = mysqlTable("systemSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  courseName: varchar("courseName", { length: 255 }).notNull().default("Farmacologia I"),
+  semester: varchar("semester", { length: 50 }).notNull().default("2026.1"),
+  academicYear: varchar("academicYear", { length: 50 }).notNull().default("2026"),
+  institution: varchar("institution", { length: 255 }).notNull().default("UNIRIO"),
+  department: varchar("department", { length: 255 }).notNull().default("Farmacologia"),
+  startDate: varchar("startDate", { length: 20 }),
+  endDate: varchar("endDate", { length: 20 }),
+  totalWeeks: int("totalWeeks").notNull().default(17),
+  schedule: text("schedule"), // JSON with weekly schedule
+  description: text("description"),
+  logoUrl: varchar("logoUrl", { length: 500 }),
+  primaryColor: varchar("primaryColor", { length: 7 }).default("#FF9500"), // Hex color
+  secondaryColor: varchar("secondaryColor", { length: 7 }).default("#1A1A2E"),
+  updatedBy: int("updatedBy"),
+  updatedByName: varchar("updatedByName", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SystemSettings = typeof systemSettings.$inferSelect;
+export type InsertSystemSettings = typeof systemSettings.$inferInsert;
+
+/**
+ * Backup Records - Track all backups for recovery purposes
+ * Stores metadata about each backup operation
+ */
+export const backupRecords = mysqlTable("backupRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  backupName: varchar("backupName", { length: 255 }).notNull(),
+  backupType: mysqlEnum("backupType", ["full", "partial", "incremental"]).default("full").notNull(),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "failed"]).default("pending").notNull(),
+  fileSize: int("fileSize"), // Size in bytes
+  fileUrl: varchar("fileUrl", { length: 500 }), // URL to download backup
+  fileKey: varchar("fileKey", { length: 500 }), // S3 key for backup file
+  totalRecords: int("totalRecords").notNull().default(0),
+  recordsIncluded: text("recordsIncluded"), // JSON array of record types included
+  createdBy: int("createdBy").notNull(),
+  createdByName: varchar("createdByName", { length: 200 }),
+  notes: text("notes"),
+  errorMessage: text("errorMessage"),
+  expiresAt: timestamp("expiresAt"), // When backup will be deleted
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+export type BackupRecord = typeof backupRecords.$inferSelect;
+export type InsertBackupRecord = typeof backupRecords.$inferInsert;
+
+/**
+ * Restore History - Track all restore operations
+ */
+export const restoreHistory = mysqlTable("restoreHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  backupId: int("backupId").notNull().references(() => backupRecords.id),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "failed"]).default("pending").notNull(),
+  recordsRestored: int("recordsRestored").notNull().default(0),
+  recordsFailed: int("recordsFailed").notNull().default(0),
+  restoredBy: int("restoredBy").notNull(),
+  restoredByName: varchar("restoredByName", { length: 200 }),
+  notes: text("notes"),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+export type RestoreHistory = typeof restoreHistory.$inferSelect;
+export type InsertRestoreHistory = typeof restoreHistory.$inferInsert;

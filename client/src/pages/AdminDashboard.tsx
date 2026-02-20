@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import { PFDistributionCharts } from '@/components/PFDistributionCharts';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
@@ -209,7 +210,15 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
       </div>
 
       {/* PF Distribution Charts */}
-      <PFDistributionChartsComponent stats={stats} />
+      <Suspense fallback={<div className="text-gray-400">Carregando gráficos...</div>}>
+        <PFDistributionCharts stats={{
+          totalStudents: stats.students.totalMembers,
+          totalTeams: stats.system.totalTeams,
+          totalClasses: stats.system.totalClasses || 0,
+          totalPF: parseFloat(stats.system.totalXP),
+          averagePF: parseFloat(stats.system.avgXPPerMember),
+        }} />
+      </Suspense>
 
       {/* Teacher breakdown */}
       <div className="rounded-lg p-6 border border-gray-700" style={{ backgroundColor: CARD_BG }}>
@@ -1409,117 +1418,7 @@ interface Stats {
   };
 }
 
-function PFDistributionChartsComponent({ stats }: { stats: Stats }) {
-  // Mock data for distribution by team (in real scenario, this would come from backend)
-  const teamDistributionData = {
-    labels: ['Equipe 1', 'Equipe 2', 'Equipe 3', 'Equipe 4', 'Equipe 5'],
-    datasets: [
-      {
-        label: 'PF Total por Equipe',
-        data: [42.5, 38.0, 41.2, 39.8, 40.5],
-        backgroundColor: [
-          'rgba(247, 148, 29, 0.8)',
-          'rgba(74, 144, 226, 0.8)',
-          'rgba(255, 107, 107, 0.8)',
-          'rgba(126, 211, 33, 0.8)',
-          'rgba(80, 227, 194, 0.8)',
-        ],
-        borderColor: [
-          'rgba(247, 148, 29, 1)',
-          'rgba(74, 144, 226, 1)',
-          'rgba(255, 107, 107, 1)',
-          'rgba(126, 211, 33, 1)',
-          'rgba(80, 227, 194, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const studentDistributionData = {
-    labels: ['0-10 PF', '10-20 PF', '20-30 PF', '30-40 PF', '40-45 PF'],
-    datasets: [
-      {
-        label: 'Quantidade de Alunos',
-        data: [5, 12, 18, 25, 15],
-        backgroundColor: 'rgba(247, 148, 29, 0.8)',
-        borderColor: 'rgba(247, 148, 29, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        labels: {
-          color: '#fff',
-          font: {
-            size: 12,
-          },
-        },
-      },
-    },
-    scales: {
-      y: {
-        ticks: {
-          color: '#9ca3af',
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
-        },
-      },
-      x: {
-        ticks: {
-          color: '#9ca3af',
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
-        },
-      },
-    },
-  };
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* PF Distribution by Team */}
-      <motion.div
-        className="rounded-lg p-6 border border-gray-700"
-        style={{ backgroundColor: CARD_BG }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <BarChart3 size={20} style={{ color: ORANGE }} />
-          Distribuição de PF por Equipe
-        </h3>
-        <div style={{ height: '300px' }}>
-          <Bar data={teamDistributionData} options={chartOptions} />
-        </div>
-      </motion.div>
-
-      {/* PF Distribution by Student */}
-      <motion.div
-        className="rounded-lg p-6 border border-gray-700"
-        style={{ backgroundColor: CARD_BG }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <BarChart3 size={20} style={{ color: ORANGE }} />
-          Distribuição de PF por Aluno
-        </h3>
-        <div style={{ height: '300px' }}>
-          <Bar data={studentDistributionData} options={chartOptions} />
-        </div>
-      </motion.div>
-    </div>
-  );
-}
+// Componente PFDistributionCharts removido - usar versão lazy do arquivo separado
 
 
 // ─── UNIRIO Import Section ───
