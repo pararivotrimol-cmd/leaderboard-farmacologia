@@ -13,8 +13,23 @@ export function AuditLogManager({ teacherToken }: { teacherToken: string | null 
   const [filterTeacher, setFilterTeacher] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Query audit logs - conectar a rota tRPC real quando disponível
-  const auditLogs: any[] = [];
+  // Query audit logs from tRPC
+  const { data: auditLogs = [], isLoading } = trpc.audit.getLogs.useQuery({
+    action: filterAction !== "all" ? filterAction : undefined,
+    teacherEmail: filterTeacher !== "all" ? filterTeacher : undefined,
+    searchTerm: searchTerm || undefined,
+    limit: 100,
+    offset: 0,
+  });
+
+  // Get unique teachers for filter
+  const { data: teachers = [] } = trpc.audit.getTeachers.useQuery();
+
+  // Get unique actions for filter
+  const { data: actions = [] } = trpc.audit.getActions.useQuery();
+
+  // Get statistics
+  const { data: stats } = trpc.audit.getStats.useQuery();
 
   // Action labels
   const actionLabels: Record<string, { label: string; icon: any; color: string }> = {
@@ -28,16 +43,11 @@ export function AuditLogManager({ teacherToken }: { teacherToken: string | null 
     update_settings: { label: "Alteração de Configurações", icon: <Edit2 size={14} />, color: "text-amber-400" },
   };
 
-  // Filter logs
-  const filteredLogs = auditLogs.filter((log: any) => {
-    if (filterAction !== "all" && log.action !== filterAction) return false;
-    if (filterTeacher !== "all" && log.teacherEmail !== filterTeacher) return false;
-    if (searchTerm && !log.teacherName?.toLowerCase().includes(searchTerm.toLowerCase()) && !JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    return true;
-  });
+  // Logs are already filtered by the query, so we can use them directly
+  const filteredLogs = auditLogs;
 
-  // Get unique teachers
-  const uniqueTeachers = Array.from(new Set(auditLogs.map((log: any) => log.teacherEmail)));
+  // Map teachers for filter dropdown
+  const uniqueTeachers = teachers.map(t => t.email);
 
   return (
     <div className="container max-w-6xl py-8">
