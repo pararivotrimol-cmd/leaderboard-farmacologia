@@ -8,6 +8,7 @@ import { getDb } from "../db";
 import { attendance } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { notifyAttendanceCheckIn } from "../_core/attendanceNotifications";
 import {
   generateQRCodeToken,
   validateQRCodeToken,
@@ -135,7 +136,7 @@ export const attendanceRouter = router({
 
         // Registrar presença
         const week = getWeekNumber(new Date(input.classDate));
-        await db.insert(attendance).values({
+        const result = await db.insert(attendance).values({
           studentAccountId: ctx.user.id,
           memberId: 0,
           week,
@@ -146,6 +147,18 @@ export const attendanceRouter = router({
           status,
           note: status === "invalid" ? "Fora da sala de aula" : null,
         });
+
+        // Enviar notificação
+        try {
+          await notifyAttendanceCheckIn(
+            ctx.user.email || "Aluno",
+            "Farmacologia 1",
+            input.classDate,
+            status
+          );
+        } catch (notificationError) {
+          console.error("Erro ao enviar notificação:", notificationError);
+        }
 
         return {
           success: true,
