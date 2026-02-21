@@ -9,6 +9,7 @@ import { SortSelector, useSortStudents, type SortOption } from "@/components/Sor
 import { Pagination } from "@/components/Pagination";
 import { AuditLogManager } from "./AdminAuditLog";
 import { ResponsiveTabNav } from "@/components/ResponsiveTabNav";
+import { MaterialTypeBadge, MaterialTypeFilter, type MaterialType } from "@/components/MaterialTypeBadge";
 import JigsawRebalancingManager from "./AdminJigsawRebalancing";
 import AttendanceQRCodeManager from "./AdminAttendanceQRCode";
 import {
@@ -1001,6 +1002,7 @@ function MaterialsManager({ password }: { password: string }) {
   const [week, setWeek] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [filterTypes, setFilterTypes] = useState<MaterialType[]>(["file", "link", "comment"]);
 
   const utils = trpc.useUtils();
   const { data: materials, isLoading } = trpc.materials.getAll.useQuery({ password });
@@ -1220,7 +1222,13 @@ function MaterialsManager({ password }: { password: string }) {
 
       {/* Materials List */}
       <div>
-        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Materiais Publicados ({materials?.length || 0})</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-semibold text-sm text-foreground">Materiais Publicados ({materials?.length || 0})</h3>
+        </div>
+        <div className="mb-4">
+          <p className="text-xs text-muted-foreground mb-2">Filtrar por tipo:</p>
+          <MaterialTypeFilter selectedTypes={filterTypes} onTypeChange={setFilterTypes} />
+        </div>
         {isLoading ? (
           <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
         ) : !materials || materials.length === 0 ? (
@@ -1231,7 +1239,7 @@ function MaterialsManager({ password }: { password: string }) {
               <div key={mod}>
                 <h4 className="text-xs font-bold text-primary uppercase tracking-wide mb-2">{mod}</h4>
                 <div className="space-y-2">
-                  {items.map(mat => (
+                  {items.filter(mat => filterTypes.includes(mat.type as MaterialType)).map(mat => (
                     <div
                       key={mat.id}
                       className={`border rounded-lg p-3 ${mat.isVisible ? "border-border" : "border-border/30 opacity-50"}`}
@@ -1241,7 +1249,12 @@ function MaterialsManager({ password }: { password: string }) {
                         <div className="mt-0.5">{typeIcons[mat.type]}</div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{typeLabels[mat.type]}</span>
+                            <MaterialTypeBadge
+                              type={mat.type}
+                              fileName={mat.fileName}
+                              url={mat.url}
+                              variant="default"
+                            />
                             {mat.week && <span className="text-xs text-muted-foreground">Semana {mat.week}</span>}
                             {!mat.isVisible && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/20 text-destructive">Oculto</span>}
                           </div>

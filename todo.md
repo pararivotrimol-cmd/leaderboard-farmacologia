@@ -1301,3 +1301,13 @@
 - [x] Corrigir sobreposição de nomes de abas
 - [x] Validar responsividade em navegador (DevTools)
 - [ ] Salvar checkpoint com correções
+
+
+## Codificação Visual de Materiais - Aba de Recursos
+- [x] Analisar estrutura atual de MaterialsManager em Admin.tsx
+- [x] Implementar badges/cores para tipos: Word (azul), PDF (vermelho), YouTube (vermelho), Links (verde)
+- [x] Adicionar ícones específicos para cada tipo de arquivo
+- [x] Implementar filtro por tipo de material
+- [x] Adicionar indicador visual de tipo na listagem de materiais
+- [x] Testar em mobile, tablet e desktop
+- [ ] Salvar checkpoint com codificação visual
