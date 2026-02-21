@@ -136,6 +136,8 @@ export const materials = mysqlTable("materials", {
   week: int("week"),
   // Whether the material is visible to students
   isVisible: int("isVisible").notNull().default(1),
+  // JSON array of tags: [{id, name, color}]
+  tags: text("tags"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

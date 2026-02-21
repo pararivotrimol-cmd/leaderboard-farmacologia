@@ -10,6 +10,9 @@ import { Pagination } from "@/components/Pagination";
 import { AuditLogManager } from "./AdminAuditLog";
 import { ResponsiveTabNav } from "@/components/ResponsiveTabNav";
 import { MaterialTypeBadge, MaterialTypeFilter, type MaterialType } from "@/components/MaterialTypeBadge";
+import { FileDropZone } from "@/components/FileDropZone";
+import { PDFPreview, usePDFPreview } from "@/components/PDFPreview";
+import { TagInput, TagDisplay, type Tag } from "@/components/TagInput";
 import JigsawRebalancingManager from "./AdminJigsawRebalancing";
 import AttendanceQRCodeManager from "./AdminAttendanceQRCode";
 import {
@@ -1003,6 +1006,8 @@ function MaterialsManager({ password }: { password: string }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [filterTypes, setFilterTypes] = useState<MaterialType[]>(["file", "link", "comment"]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const pdfPreview = usePDFPreview();
 
   const utils = trpc.useUtils();
   const { data: materials, isLoading } = trpc.materials.getAll.useQuery({ password });
@@ -1130,6 +1135,26 @@ function MaterialsManager({ password }: { password: string }) {
           <Plus size={16} className="text-primary" /> Novo Material
         </h3>
 
+        {/* File Drop Zone */}
+        {materialType === "file" && (
+          <div className="mb-4">
+            <FileDropZone
+              onFilesSelected={(files) => {
+                if (files.length > 0) {
+                  setSelectedFile(files[0]);
+                  // Se for PDF, abrir preview
+                  if (files[0].type === "application/pdf") {
+                    pdfPreview.openPreview(files[0]);
+                  }
+                }
+              }}
+              acceptedTypes={[".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png"]}
+              maxSize={50 * 1024 * 1024}
+              multiple={false}
+            />
+          </div>
+        )}
+
         {/* Type selector */}
         <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit mb-4">
           {(["file", "link", "comment"] as const).map(t => (
@@ -1210,6 +1235,17 @@ function MaterialsManager({ password }: { password: string }) {
             />
           </div>
 
+          {/* Tags */}
+          <div>
+            <label className="text-xs font-medium text-foreground mb-2 block">Tags (opcional)</label>
+            <TagInput
+              tags={tags}
+              onTagsChange={setTags}
+              maxTags={5}
+              suggestions={["Importante", "Leitura Obrigatória", "Complementar", "Exercício", "Prova", "Discussão", "Caso Clínico", "Referência"]}
+            />
+          </div>
+
           <button
             onClick={handleSubmit}
             disabled={uploading || !title || (materialType === "file" && !selectedFile) || (materialType === "link" && !linkUrl)}
@@ -1258,6 +1294,11 @@ function MaterialsManager({ password }: { password: string }) {
                             {mat.week && <span className="text-xs text-muted-foreground">Semana {mat.week}</span>}
                             {!mat.isVisible && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/20 text-destructive">Oculto</span>}
                           </div>
+                          {mat.tags && (
+                            <div className="mt-1">
+                              <TagDisplay tags={JSON.parse(mat.tags || "[]")} maxDisplay={3} />
+                            </div>
+                          )}
                           <h4 className="font-medium text-sm text-foreground">{mat.title}</h4>
                           {mat.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>}
                           {mat.type === "file" && mat.fileName && (

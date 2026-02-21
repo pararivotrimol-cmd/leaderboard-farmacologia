@@ -1311,3 +1311,31 @@
 - [x] Adicionar indicador visual de tipo na listagem de materiais
 - [x] Testar em mobile, tablet e desktop
 - [ ] Salvar checkpoint com codificação visual
+
+
+## Drag-and-Drop para Upload de Materiais
+- [x] Criar componente FileDropZone.tsx com suporte a drag-and-drop
+- [x] Implementar validação de tipos de arquivo permitidos
+- [x] Adicionar feedback visual durante drag (highlight da zona)
+- [x] Suportar múltiplos arquivos simultâneos
+- [x] Integrar FileDropZone em MaterialsManager
+- [x] Testar em mobile, tablet e desktop
+- [ ] Salvar checkpoint com drag-and-drop
+
+## Pré-visualização de PDF
+- [x] Criar componente PDFPreview.tsx com iframe
+- [x] Implementar modal para exibir preview
+- [x] Adicionar botão para abrir em nova aba
+- [x] Integrar preview em MaterialsManager antes de publicar
+- [x] Testar com PDFs de diferentes tamanhos
+- [ ] Salvar checkpoint com PDF preview
+
+## Tags Customizáveis para Materiais
+- [x] Adicionar coluna 'tags' ao schema de materials
+- [x] Criar componente TagInput.tsx para adicionar/remover tags
+- [x] Implementar sugestões de tags frequentes
+- [x] Adicionar cores diferentes para cada tag
+- [x] Integrar tags em MaterialsManager
+- [x] Criar componente TagDisplay para exibir tags
+- [x] Executar migração do banco (pnpm db:push)
+- [ ] Salvar checkpoint com sistema de tags
