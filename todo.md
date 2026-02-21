@@ -1102,4 +1102,13 @@
 - [x] Substituir mock data por queries reais com tRPC
 - [x] Modificar rotas do servidor para incluir membros e tópicos automaticamente
 - [x] Adicionar classId e memberId ao retorno de getMyStats
-- [ ] Salvar checkpoint com integração completa
+- [x] Salvar checkpoint com integração completa
+
+## Verificação e Correção de Áudio em Dispositivos Móveis
+- [x] Identificar todos os componentes que reproduzem áudio
+- [x] Analisar código de reprodução de áudio e detectar sobreposição
+- [x] Implementar controle global de áudio para evitar sobreposição (AudioContext)
+- [x] Adicionar pause automático ao trocar de página/componente (visibilitychange)
+- [x] Integrar BackgroundMusic com AudioContext
+- [x] Integrar LoungePlaylist com AudioContext
+- [ ] Salvar checkpoint com correções

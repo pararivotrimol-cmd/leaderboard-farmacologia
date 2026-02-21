@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useAudioContext } from "@/contexts/AudioContext";
 import { Volume2, VolumeX, Play, Pause, Music, SkipForward, Shuffle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +29,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 export default function BackgroundMusic() {
+  const audioContext = useAudioContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.25);
   const [isMuted, setIsMuted] = useState(false);
@@ -37,6 +39,7 @@ export default function BackgroundMusic() {
   const [shuffledTracks, setShuffledTracks] = useState(() => shuffleArray(LOUNGE_TRACKS));
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasSetupRef = useRef(false);
+  const PLAYER_ID = "background-music";
 
   // Create audio element once
   useEffect(() => {
@@ -47,6 +50,9 @@ export default function BackgroundMusic() {
     audio.volume = 0.25;
     audio.preload = "auto";
     audioRef.current = audio;
+    
+    // Registrar player no contexto global
+    audioContext.registerPlayer(PLAYER_ID, audio);
 
     // Load first track
     const firstTrack = shuffledTracks[0];
@@ -85,6 +91,8 @@ export default function BackgroundMusic() {
       document.removeEventListener("click", startOnInteraction);
       document.removeEventListener("touchstart", startOnInteraction);
       document.removeEventListener("keydown", startOnInteraction);
+      // Cleanup: desregistrar player ao desmontar
+      audioContext.unregisterPlayer(PLAYER_ID);
     };
   }, []);
 
@@ -116,10 +124,11 @@ export default function BackgroundMusic() {
     if (!audio) return;
 
     if (isPlaying) {
-      audio.pause();
+      audioContext.pauseAudio(PLAYER_ID);
       setIsPlaying(false);
     } else {
-      audio.play().then(() => setIsPlaying(true)).catch(err => console.warn(err));
+      audioContext.playAudio(PLAYER_ID);
+      setIsPlaying(true);
     }
   };
 

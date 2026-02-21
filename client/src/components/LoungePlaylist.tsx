@@ -3,6 +3,7 @@
  * Reproduz músicas lounge royalty-free com rotação automática
  */
 import { useState, useEffect, useRef } from "react";
+import { useAudioContext } from "@/contexts/AudioContext";
 import { Music, Play, Pause, SkipForward, Volume2, Volume1 } from "lucide-react";
 
 interface Track {
@@ -25,6 +26,7 @@ const LOUNGE_TRACKS: Track[] = [
 ];
 
 export default function LoungePlaylist() {
+  const audioContext = useAudioContext();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -33,8 +35,21 @@ export default function LoungePlaylist() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const PLAYER_ID = "lounge-playlist";
 
   const currentTrack = LOUNGE_TRACKS[currentTrackIndex];
+
+  // Registrar player no contexto global
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    audioContext.registerPlayer(PLAYER_ID, audio);
+    
+    return () => {
+      audioContext.unregisterPlayer(PLAYER_ID);
+    };
+  }, []);
 
   // Auto-play next track when current ends
   useEffect(() => {
@@ -126,14 +141,10 @@ export default function LoungePlaylist() {
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.pause();
+        audioContext.pauseAudio(PLAYER_ID);
         setIsPlaying(false);
       } else {
-        audioRef.current.play().catch((err) => {
-          console.warn("Play error:", err);
-          setIsPlaying(false);
-          setError("Não foi possível reproduzir o áudio");
-        });
+        audioContext.playAudio(PLAYER_ID);
         setIsPlaying(true);
       }
     }
