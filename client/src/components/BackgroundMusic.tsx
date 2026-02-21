@@ -31,7 +31,13 @@ function shuffleArray<T>(arr: T[]): T[] {
 export default function BackgroundMusic() {
   const audioContext = useAudioContext();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.25);
+  const [volume, setVolume] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("audioVolume");
+      return saved ? parseFloat(saved) : 0.25;
+    }
+    return 0.25;
+  });
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -40,6 +46,12 @@ export default function BackgroundMusic() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasSetupRef = useRef(false);
   const PLAYER_ID = "background-music";
+  const [isSilentMode, setIsSilentMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("audioSilentMode") === "true";
+    }
+    return false;
+  });
 
   // Create audio element once
   useEffect(() => {
@@ -111,12 +123,21 @@ export default function BackgroundMusic() {
     }
   }, [currentTrackIndex]);
 
-  // Update volume
+  // Update volume and save to localStorage
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.volume = isMuted || isSilentMode ? 0 : volume;
     }
-  }, [volume, isMuted]);
+    localStorage.setItem("audioVolume", volume.toString());
+  }, [volume, isMuted, isSilentMode]);
+
+  // Sincronizar silent mode com AudioContext
+  useEffect(() => {
+    localStorage.setItem("audioSilentMode", isSilentMode.toString());
+    if (isSilentMode && audioRef.current && !audioRef.current.paused) {
+      audioContext.pauseAllExcept();
+    }
+  }, [isSilentMode]);
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -153,6 +174,11 @@ export default function BackgroundMusic() {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     if (newVolume > 0 && isMuted) setIsMuted(false);
+  };
+
+  const toggleSilentMode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSilentMode(!isSilentMode);
   };
 
   return (
@@ -235,26 +261,38 @@ export default function BackgroundMusic() {
                   </button>
                   <button
                     onClick={toggleMute}
-                    className="text-gray-300 hover:text-white transition-colors shrink-0 ml-auto"
+                    className="text-gray-300 hover:text-white transition-colors shrink-0"
                     title={isMuted ? "Ativar som" : "Silenciar"}
                   >
                     {isMuted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                  </button>
+                  <button
+                    onClick={toggleSilentMode}
+                    className={`text-sm px-2 py-1 rounded transition-colors ${
+                      isSilentMode
+                        ? "bg-red-500/30 text-red-400 hover:bg-red-500/40"
+                        : "bg-gray-700/30 text-gray-400 hover:bg-gray-700/40"
+                    }`}
+                    title="Modo silencioso"
+                  >
+                    {isSilentMode ? "🔇" : "🔊"}
                   </button>
                   <input
                     type="range"
                     min="0"
                     max="1"
                     step="0.01"
-                    value={isMuted ? 0 : volume}
+                    value={isMuted || isSilentMode ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="w-16 h-1 rounded-full appearance-none cursor-pointer"
+                    disabled={isSilentMode}
+                    className="w-16 h-1 rounded-full appearance-none cursor-pointer disabled:opacity-50"
                     style={{
-                      background: `linear-gradient(to right, ${ORANGE} 0%, ${ORANGE} ${(isMuted ? 0 : volume) * 100}%, #333 ${(isMuted ? 0 : volume) * 100}%, #333 100%)`,
+                      background: `linear-gradient(to right, ${ORANGE} 0%, ${ORANGE} ${(isMuted || isSilentMode ? 0 : volume) * 100}%, #333 ${(isMuted || isSilentMode ? 0 : volume) * 100}%, #333 100%)`,
                     }}
                     title="Volume"
                   />
                   <span className="text-[10px] text-gray-400 w-7 text-right shrink-0">
-                    {Math.round((isMuted ? 0 : volume) * 100)}%
+                    {Math.round((isMuted || isSilentMode ? 0 : volume) * 100)}%
                   </span>
                 </div>
               </motion.div>

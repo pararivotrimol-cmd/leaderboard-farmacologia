@@ -10,25 +10,28 @@ import {
 /**
  * Página de Grupos Jigsaw para alunos
  * Permite visualizar tópicos, grupos de especialistas e grupos Jigsaw
+ * Funcionalidades: visualizar, entrar em grupos, criar grupos
  */
 export default function GruposJigsaw() {
   const [activeTab, setActiveTab] = useState<"topicos" | "especialistas" | "jigsaw">("topicos");
   const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
   const [expandedExpertGroup, setExpandedExpertGroup] = useState<number | null>(null);
   const [expandedJigsawGroup, setExpandedJigsawGroup] = useState<number | null>(null);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [selectedGroupType, setSelectedGroupType] = useState<"expert" | "jigsaw" | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   const [sessionToken, setSessionToken] = useState<string>("");
   const [classId, setClassId] = useState<number | null>(null);
+  const [memberId, setMemberId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Obter token de aluno do localStorage
     const studentToken = localStorage.getItem("studentSessionToken");
     if (studentToken) {
       setSessionToken(studentToken);
     }
   }, []);
 
-  // Obter dados do aluno para pegar o classId
   const { data: myStats } = trpc.studentDashboard.getMyStats.useQuery(
     { sessionToken },
     { enabled: !!sessionToken }
@@ -38,12 +41,13 @@ export default function GruposJigsaw() {
     if (myStats?.classId) {
       setClassId(myStats.classId);
     }
+    if (myStats?.memberId) {
+      setMemberId(myStats.memberId);
+    }
   }, [myStats]);
 
-  // Queries usando rotas tRPC reais
   const { data: topics, isLoading: loadingTopics } = trpc.jigsawComplete.topics.getAll.useQuery();
   
-  // Buscar grupos de especialistas e grupos Jigsaw com classId real
   const { data: expertGroups = [], isLoading: loadingExperts } = trpc.jigsawComplete.expertGroups.getByClass.useQuery(
     { classId: classId! },
     { enabled: classId !== null }
@@ -54,6 +58,46 @@ export default function GruposJigsaw() {
     { enabled: classId !== null }
   );
 
+  const addExpertMember = trpc.jigsawComplete.expertGroups.addMember.useMutation({
+    onSuccess: () => {
+      toast.success("Você entrou no grupo de especialistas!");
+      setShowJoinModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao entrar no grupo");
+    },
+  });
+
+  const addJigsawMember = trpc.jigsawComplete.homeGroups.addMember.useMutation({
+    onSuccess: () => {
+      toast.success("Você entrou no grupo Jigsaw!");
+      setShowJoinModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao entrar no grupo");
+    },
+  });
+
+  const handleJoinGroup = async () => {
+    if (!memberId || !selectedGroupId) return;
+
+    if (selectedGroupType === "expert") {
+      await addExpertMember.mutateAsync({
+        expertGroupId: selectedGroupId,
+        memberId,
+        role: "member",
+      });
+    } else if (selectedGroupType === "jigsaw") {
+      const selectedGroup = jigsawGroups.find(g => g.id === selectedGroupId);
+      const topicId = selectedGroup?.members?.[0]?.topicId || 0;
+      await addJigsawMember.mutateAsync({
+        homeGroupId: selectedGroupId,
+        memberId,
+        topicId,
+      });
+    }
+  };
+
   const tabs = [
     { key: "topicos" as const, label: "Tópicos", icon: <BookOpen size={16} /> },
     { key: "especialistas" as const, label: "Grupos de Especialistas", icon: <Users size={16} /> },
@@ -62,7 +106,6 @@ export default function GruposJigsaw() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <div className="container py-4 flex items-center gap-3">
           <FlaskConical size={20} className="text-primary" />
@@ -73,7 +116,6 @@ export default function GruposJigsaw() {
         </div>
       </div>
 
-      {/* Intro */}
       <div className="container py-6">
         <div className="rounded-lg p-5 border border-primary/30" style={{ backgroundColor: "rgba(74, 144, 226, 0.1)" }}>
           <div className="flex items-start gap-3">
@@ -89,7 +131,6 @@ export default function GruposJigsaw() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="container mb-6">
         <div className="flex gap-1 p-1 rounded-lg bg-secondary/50">
           {tabs.map(tab => (
@@ -106,17 +147,90 @@ export default function GruposJigsaw() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="container pb-16">
         {activeTab === "topicos" && <TopicosView topics={topics || []} expandedTopic={expandedTopic} setExpandedTopic={setExpandedTopic} loading={loadingTopics} />}
-        {activeTab === "especialistas" && <ExpertGroupsView groups={expertGroups || []} expandedGroup={expandedExpertGroup} setExpandedGroup={setExpandedExpertGroup} loading={loadingExperts} />}
-        {activeTab === "jigsaw" && <JigsawGroupsView groups={jigsawGroups || []} expandedGroup={expandedJigsawGroup} setExpandedGroup={setExpandedJigsawGroup} loading={loadingJigsaw} />}
+        {activeTab === "especialistas" && (
+          <ExpertGroupsView 
+            groups={expertGroups || []} 
+            expandedGroup={expandedExpertGroup} 
+            setExpandedGroup={setExpandedExpertGroup} 
+            loading={loadingExperts}
+            onJoinClick={(groupId: number) => {
+              setSelectedGroupType("expert");
+              setSelectedGroupId(groupId);
+              setShowJoinModal(true);
+            }}
+          />
+        )}
+        {activeTab === "jigsaw" && (
+          <JigsawGroupsView 
+            groups={jigsawGroups || []} 
+            expandedGroup={expandedJigsawGroup} 
+            setExpandedGroup={setExpandedJigsawGroup} 
+            loading={loadingJigsaw}
+            onJoinClick={(groupId: number) => {
+              setSelectedGroupType("jigsaw");
+              setSelectedGroupId(groupId);
+              setShowJoinModal(true);
+            }}
+          />
+        )}
       </div>
+
+      <AnimatePresence>
+        {showJoinModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowJoinModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-background rounded-lg border border-border max-w-sm w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-bold text-foreground">Entrar no Grupo</h3>
+                <button
+                  onClick={() => setShowJoinModal(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Você está prestes a entrar em um grupo {selectedGroupType === "expert" ? "de especialistas" : "Jigsaw"}. Tem certeza?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowJoinModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-secondary transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleJoinGroup}
+                  disabled={addExpertMember.isPending || addJigsawMember.isPending}
+                  className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {(addExpertMember.isPending || addJigsawMember.isPending) && <Loader2 size={16} className="animate-spin" />}
+                  Entrar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ─── Tópicos View ───
 function TopicosView({ topics, expandedTopic, setExpandedTopic, loading }: any) {
   if (loading) return <div className="text-center text-muted-foreground py-8">Carregando tópicos...</div>;
   if (!topics || topics.length === 0) return <div className="text-center text-muted-foreground py-8">Nenhum tópico disponível.</div>;
@@ -190,8 +304,7 @@ function TopicosView({ topics, expandedTopic, setExpandedTopic, loading }: any) 
   );
 }
 
-// ─── Expert Groups View ───
-function ExpertGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: any) {
+function ExpertGroupsView({ groups, expandedGroup, setExpandedGroup, loading, onJoinClick }: any) {
   if (loading) return <div className="text-center text-muted-foreground py-8">Carregando grupos de especialistas...</div>;
   if (!groups || groups.length === 0) return <div className="text-center text-muted-foreground py-8">Nenhum grupo de especialista criado.</div>;
 
@@ -238,6 +351,12 @@ function ExpertGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: 
                   ) : (
                     <p className="text-xs text-muted-foreground">Nenhum membro neste grupo.</p>
                   )}
+                  <button
+                    onClick={() => onJoinClick(group.id)}
+                    className="mt-4 w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                  >
+                    <UserPlus size={16} /> Entrar neste Grupo
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -248,8 +367,7 @@ function ExpertGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: 
   );
 }
 
-// ─── Jigsaw Groups View ───
-function JigsawGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: any) {
+function JigsawGroupsView({ groups, expandedGroup, setExpandedGroup, loading, onJoinClick }: any) {
   if (loading) return <div className="text-center text-muted-foreground py-8">Carregando grupos Jigsaw...</div>;
   if (!groups || groups.length === 0) return <div className="text-center text-muted-foreground py-8">Nenhum grupo Jigsaw criado.</div>;
 
@@ -264,7 +382,7 @@ function JigsawGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: 
             <Target size={20} className="text-primary flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-semibold text-foreground">{group.name}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Grupo de compartilhamento de conhecimento</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Especialidades: {group.topicName || "N/A"}</p>
             </div>
             <span className="text-xs font-mono text-muted-foreground">{group.members?.length || 0} membros</span>
             {expandedGroup === group.id ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
@@ -280,20 +398,28 @@ function JigsawGroupsView({ groups, expandedGroup, setExpandedGroup, loading }: 
                 className="overflow-hidden border-t border-border/50"
               >
                 <div className="p-4">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Membros e Especialidades</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Membros do Grupo</h4>
                   {group.members && group.members.length > 0 ? (
                     <div className="space-y-1">
                       {group.members.map((member: any, idx: number) => (
                         <div key={idx} className="flex items-center gap-2 py-1.5 px-2 rounded bg-secondary/30">
                           <span className="w-6 text-center text-xs text-muted-foreground font-mono">{idx + 1}</span>
                           <span className="text-sm text-foreground flex-1">{member.name}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">{member.expertTopic}</span>
+                          {member.role === "coordinator" && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">Coordenador</span>
+                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="text-xs text-muted-foreground">Nenhum membro neste grupo.</p>
                   )}
+                  <button
+                    onClick={() => onJoinClick(group.id)}
+                    className="mt-4 w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                  >
+                    <UserPlus size={16} /> Entrar neste Grupo
+                  </button>
                 </div>
               </motion.div>
             )}

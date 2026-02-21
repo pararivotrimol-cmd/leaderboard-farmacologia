@@ -1111,4 +1111,43 @@
 - [x] Adicionar pause automático ao trocar de página/componente (visibilitychange)
 - [x] Integrar BackgroundMusic com AudioContext
 - [x] Integrar LoungePlaylist com AudioContext
-- [ ] Salvar checkpoint com correções
+- [x] Salvar checkpoint com correções
+
+## Funcionalidades de Jigsaw - Entrada e Criação de Grupos
+- [x] Adicionar formulário para criar novo grupo de especialistas
+- [x] Adicionar botão para solicitar entrada em grupo existente
+- [x] Implementar mutation expertGroups.addMember na UI
+- [x] Implementar mutation homeGroups.addMember na UI
+- [x] Adicionar validação de limite de membros por grupo
+- [x] Exibir confirmação visual após ação
+
+## Sistema de Pontuação Jigsaw no Admin
+- [ ] Criar interface para atribuir notas a grupos de especialistas
+- [ ] Criar interface para atribuir notas a grupos Jigsaw
+- [ ] Implementar mutation expertGroups.score
+- [ ] Implementar mutation homeGroups.score
+- [ ] Adicionar validação de notas (0-5 para apresentação, 0-2 para participação)
+- [ ] Exibir histórico de pontuações
+
+## Notificações Automáticas para Jigsaw
+- [ ] Enviar notificação ao adicionar aluno em grupo
+- [ ] Enviar notificação ao mudar coordenador
+- [ ] Enviar notificação ao atribuir pontuação
+- [ ] Integrar com sistema de notificações existente
+
+## Controle de Volume Persistente
+- [x] Salvar volume no localStorage
+- [x] Restaurar volume ao carregar página
+- [x] Sincronizar volume entre componentes de áudio
+
+## Modo Silencioso Global
+- [x] Adicionar toggle no header/menu
+- [x] Pausar todos os áudios ao ativar modo silencioso
+- [x] Salvar preferência no localStorage
+- [x] Restaurar estado ao carregar página
+
+## Lazy Loading de Áudio
+- [ ] Implementar carregamento sob demanda de faixas
+- [ ] Adicionar indicador de carregamento
+- [ ] Otimizar uso de memória
+- [ ] Testar em conexões lentas

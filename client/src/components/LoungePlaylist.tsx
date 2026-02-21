@@ -31,10 +31,22 @@ export default function LoungePlaylist() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(0.3);
+  const [volume, setVolume] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("audioVolume");
+      return saved ? parseFloat(saved) : 0.3;
+    }
+    return 0.3;
+  });
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSilentMode, setIsSilentMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("audioSilentMode") === "true";
+    }
+    return false;
+  });
   const PLAYER_ID = "lounge-playlist";
 
   const currentTrack = LOUNGE_TRACKS[currentTrackIndex];
@@ -131,12 +143,21 @@ export default function LoungePlaylist() {
     }
   }, [currentTrackIndex]);
 
-  // Update volume
+  // Update volume and save to localStorage
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume;
+      audioRef.current.volume = isSilentMode ? 0 : volume;
     }
-  }, [volume]);
+    localStorage.setItem("audioVolume", volume.toString());
+  }, [volume, isSilentMode]);
+
+  // Sincronizar silent mode
+  useEffect(() => {
+    localStorage.setItem("audioSilentMode", isSilentMode.toString());
+    if (isSilentMode && audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+  }, [isSilentMode]);
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -258,9 +279,10 @@ export default function LoungePlaylist() {
                 min="0"
                 max="1"
                 step="0.1"
-                value={volume}
+                value={isSilentMode ? 0 : volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-12"
+                disabled={isSilentMode}
+                className="w-12 disabled:opacity-50"
                 style={{
                   accentColor: "#F7941D",
                 }}
