@@ -1290,3 +1290,14 @@
 - [ ] Criar relatório exportável em PDF (em desenvolvimento)
 - [x] Implementar filtros por prova, turma e período
 - [ ] Escrever testes para dashboard de resultados (em desenvolvimento)
+
+
+## Correção de Responsividade - Portal Admin
+- [x] Analisar layout das abas em Admin.tsx para dispositivos móveis
+- [x] Implementar alternativa 1: Menu dropdown para abas em mobile
+- [x] Implementar alternativa 2: Abas em carrossel horizontal com scroll (tablet)
+- [x] Criar componente ResponsiveTabNav reutilizável
+- [x] Testar em breakpoints: sm (640px), md (768px), lg (1024px)
+- [x] Corrigir sobreposição de nomes de abas
+- [x] Validar responsividade em navegador (DevTools)
+- [ ] Salvar checkpoint com correções
