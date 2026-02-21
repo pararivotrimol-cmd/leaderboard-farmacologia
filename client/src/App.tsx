@@ -33,6 +33,7 @@ import Cronograma from "./pages/Cronograma";
 import LoungePlaylist from "./components/LoungePlaylist";
 import QuestionsManager from "./pages/QuestionsManager";
 import ResultsDashboard from "./pages/ResultsDashboard";
+import GamePortal from "./pages/GamePortal";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -46,6 +47,7 @@ function Router() {
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/professor/questoes"} component={QuestionsManager} />
       <Route path={"/professor/resultados"} component={ResultsDashboard} />
+      <Route path={"/jogo/:classId"} component={GamePortal} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />
