@@ -1441,3 +1441,38 @@
 - [ ] Filtrar conquistas por turma (em desenvolvimento)
 - [x] Implementar breadcrumb de navegação
 - [x] Testar isolamento de dados
+
+
+## Filtros de Turma em Conteúdo
+- [ ] Implementar filtro de leaderboard por turma em StudentArea
+- [ ] Implementar filtro de materiais por turma em StudentArea
+- [ ] Implementar filtro de avisos por turma em StudentArea
+- [ ] Implementar filtro de conquistas por turma em StudentArea
+- [ ] Criar rotas tRPC para buscar dados filtrados por turma
+- [ ] Adicionar persistência de seleção de turma em localStorage
+- [ ] Testar isolamento de dados por turma
+
+## Notificações em Tempo Real
+- [ ] Instalar dependência ws (WebSocket)
+- [ ] Criar servidor WebSocket para notificações
+- [ ] Implementar hook useRealtimeNotifications para cliente
+- [ ] Integrar notificações de novo material publicado
+- [ ] Integrar notificações de atividade publicada
+- [ ] Integrar notificações de mudança de ranking
+- [ ] Integrar notificações de badge conquistado
+- [ ] Criar UI de toast notifications com auto-dismiss
+- [ ] Testar conexão WebSocket em produção
+
+## Relatório de Progresso por Turma
+- [ ] Criar rota tRPC para buscar estatísticas da turma
+- [ ] Implementar cálculo de média de PF por turma
+- [ ] Implementar cálculo de taxa de participação
+- [ ] Implementar cálculo de evolução semanal
+- [ ] Criar página /professor/relatorio-turma/:classId
+- [ ] Implementar gráfico de evolução de PF (Chart.js)
+- [ ] Implementar gráfico de distribuição de notas
+- [ ] Implementar gráfico de participação por atividade
+- [ ] Implementar tabela de alunos com desempenho individual
+- [ ] Implementar filtros por semana/período
+- [ ] Implementar exportação em PDF
+- [ ] Testar com dados reais

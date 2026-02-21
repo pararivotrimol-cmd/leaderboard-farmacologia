@@ -864,6 +864,36 @@ export const appRouter = router({
         settings: settingsMap,
       };
     }),
+
+    getDataByClass: publicProcedure
+      .input(z.object({ classId: z.number() }))
+      .query(async ({ input }) => {
+        const classTeams = await db.getTeamsByClass(input.classId);
+        const classMembers = await db.getMembersByClass(input.classId);
+        const activitiesData = await db.getAllXpActivities();
+        const highlightsData = await db.getAllHighlights();
+        const settings = await db.getAllSettings();
+
+        const settingsMap: Record<string, string> = {};
+        for (const s of settings) {
+          if (s.settingKey !== ADMIN_PASSWORD_KEY) {
+            settingsMap[s.settingKey] = s.settingValue;
+          }
+        }
+
+        return {
+          teams: classTeams.map(t => ({
+            ...t,
+            members: classMembers
+              .filter(m => m.teamId === t.id)
+              .map(m => ({ ...m, xp: parseFloat(m.xp) }))
+              .sort((a, b) => a.name.localeCompare(b.name)),
+          })),
+          activities: activitiesData.map(a => ({ ...a, maxXP: parseFloat(a.maxXP) })).sort((a, b) => a.name.localeCompare(b.name)),
+          highlights: highlightsData.sort((a, b) => b.week - a.week),
+          settings: settingsMap,
+        };
+      }),
   }),
 
   // ─── Admin CRUD (password-protected) ───
@@ -1332,6 +1362,12 @@ export const appRouter = router({
       return db.getActiveNotifications();
     }),
 
+    getByClass: publicProcedure
+      .input(z.object({ classId: z.number() }))
+      .query(async () => {
+        return db.getActiveNotifications();
+      }),
+
     getAll: publicProcedure
       .input(z.object({ password: z.string() }))
       .query(async ({ input }) => {
@@ -1399,6 +1435,14 @@ export const appRouter = router({
     getVisible: publicProcedure.query(async () => {
       return db.getVisibleMaterials();
     }),
+
+    // Public: get materials by class
+    getByClass: publicProcedure
+      .input(z.object({ classId: z.number() }))
+      .query(async ({ input }) => {
+        const materials = await db.getAllMaterials();
+        return materials.filter((m: any) => m.classId === input.classId || !m.classId);
+      }),
 
     // Admin: get all materials
     getAll: publicProcedure
@@ -1512,6 +1556,19 @@ export const appRouter = router({
         earnedCount: allMemberBadges.filter(mb => mb.badgeId === b.id).length,
       }));
     }),
+
+    getByClass: publicProcedure
+      .input(z.object({ classId: z.number() }))
+      .query(async ({ input }) => {
+        const classMembers = await db.getMembersByClass(input.classId);
+        const badgesData = await db.getActiveBadges();
+        const allMemberBadges = await db.getAllMemberBadges();
+        const classMemberIds = classMembers.map(m => m.id);
+        return badgesData.map(b => ({
+          ...b,
+          earnedCount: allMemberBadges.filter(mb => mb.badgeId === b.id && classMemberIds.includes(mb.memberId)).length,
+        }));
+      }),
 
     // Public: get badges earned by a specific member
     getByMember: publicProcedure

@@ -21,6 +21,30 @@ export default function StudentArea() {
     { enabled: !!classId }
   );
 
+  // Buscar dados filtrados por turma
+  const { data: leaderboardData } = trpc.leaderboard.getDataByClass.useQuery(
+    { classId: classId || 0 },
+    { enabled: !!classId }
+  );
+
+  // Buscar materiais da turma
+  const { data: materialsData } = trpc.materials.getByClass.useQuery(
+    { classId: classId || 0 },
+    { enabled: !!classId }
+  );
+
+  // Buscar avisos da turma
+  const { data: announcementsData } = trpc.notifications.getByClass.useQuery(
+    { classId: classId || 0 },
+    { enabled: !!classId }
+  );
+
+  // Buscar conquistas da turma
+  const { data: badgesData } = trpc.badges.getByClass.useQuery(
+    { classId: classId || 0 },
+    { enabled: !!classId }
+  );
+
   // Verificar se aluno está matriculado na turma
   const isEnrolled = user && classData && classData.members?.some((m: any) => m.id === user.id);
 
@@ -121,54 +145,158 @@ export default function StudentArea() {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        <div
-          className="rounded-lg p-8 text-center"
-          style={{
-            backgroundColor: CARD_BG,
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          <h2 className="text-2xl font-bold text-white mb-2">
-            {activeTab === "leaderboard" && "Ranking da Turma"}
-            {activeTab === "individual" && "Top 10 Individual"}
-            {activeTab === "activities" && "Atividades PF"}
-            {activeTab === "game" && "Jogo Caverna do Dragão"}
-            {activeTab === "materials" && "Materiais da Turma"}
-            {activeTab === "calculator" && "Calculadora de Média"}
-            {activeTab === "rules" && "Regras da Disciplina"}
-          </h2>
-          <p className="text-white/60">
-            Conteúdo da aba "{activeTab}" será renderizado aqui.
-          </p>
-          <p className="text-white/40 text-sm mt-4">
-            Dados isolados apenas para a turma <strong>{classData.name}</strong>.
-          </p>
-        </div>
-
-        {/* Class Info Card */}
-        <div
-          className="mt-8 rounded-lg p-6"
-          style={{
-            backgroundColor: CARD_BG,
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          <h3 className="text-lg font-bold text-white mb-4">Informações da Turma</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-white/60 mb-1">Turma</p>
-              <p className="text-lg font-bold text-white">{classData.name}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/60 mb-1">Alunos Matriculados</p>
-              <p className="text-lg font-bold text-white">{classData.members?.length || 0}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/60 mb-1">Status</p>
-              <p className="text-lg font-bold" style={{ color: ORANGE }}>Ativo</p>
+        {/* Leaderboard Tab */}
+        {activeTab === "leaderboard" && leaderboardData && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6">Ranking da Turma</h2>
+            <div className="space-y-4">
+              {leaderboardData.teams.map((team: any, idx: number) => (
+                <div
+                  key={team.id}
+                  className="rounded-lg p-4"
+                  style={{
+                    backgroundColor: CARD_BG,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold" style={{ color: ORANGE }}>#{idx + 1}</span>
+                      <div>
+                        <h3 className="font-bold text-white">{team.name}</h3>
+                        <p className="text-sm text-white/60">{team.members.length} membros</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">{team.members.reduce((sum: number, m: any) => sum + parseFloat(m.xp), 0).toFixed(1)} PF</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Materials Tab */}
+        {activeTab === "materials" && materialsData && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6">Materiais da Turma</h2>
+            {materialsData.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {materialsData.map((material: any) => (
+                  <div
+                    key={material.id}
+                    className="rounded-lg p-4"
+                    style={{
+                      backgroundColor: CARD_BG,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <h3 className="font-bold text-white mb-2">{material.title}</h3>
+                    <p className="text-sm text-white/60 mb-3">{material.description}</p>
+                    {material.fileUrl && (
+                      <a
+                        href={material.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-4 py-2 rounded-lg text-white text-sm font-medium transition-all"
+                        style={{ backgroundColor: ORANGE }}
+                      >
+                        Baixar Arquivo
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/60">Nenhum material disponível para esta turma.</p>
+            )}
+          </div>
+        )}
+
+        {/* Announcements Tab */}
+        {activeTab === "avisos" && announcementsData && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6">Avisos da Turma</h2>
+            {announcementsData.length > 0 ? (
+              <div className="space-y-4">
+                {announcementsData.map((announcement: any) => (
+                  <div
+                    key={announcement.id}
+                    className="rounded-lg p-4"
+                    style={{
+                      backgroundColor: CARD_BG,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <h3 className="font-bold text-white mb-2">{announcement.title}</h3>
+                    <p className="text-white/80 mb-2">{announcement.content}</p>
+                    <p className="text-xs text-white/40">
+                      {new Date(announcement.createdAt).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/60">Nenhum aviso para esta turma.</p>
+            )}
+          </div>
+        )}
+
+        {/* Badges Tab */}
+        {activeTab === "conquistas" && badgesData && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6">Conquistas da Turma</h2>
+            {badgesData.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {badgesData.map((badge: any) => (
+                  <div
+                    key={badge.id}
+                    className="rounded-lg p-4 text-center"
+                    style={{
+                      backgroundColor: CARD_BG,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    {badge.imageUrl && (
+                      <img
+                        src={badge.imageUrl}
+                        alt={badge.name}
+                        className="w-16 h-16 mx-auto mb-2 rounded-lg"
+                      />
+                    )}
+                    <h3 className="font-bold text-white text-sm">{badge.name}</h3>
+                    <p className="text-xs text-white/60 mt-1">{badge.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/60">Nenhuma conquista disponível ainda.</p>
+            )}
+          </div>
+        )}
+
+        {/* Other Tabs */}
+        {["individual", "activities", "game", "calculator", "rules"].includes(activeTab) && (
+          <div
+            className="rounded-lg p-8 text-center"
+            style={{
+              backgroundColor: CARD_BG,
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {activeTab === "individual" && "Top 10 Individual"}
+              {activeTab === "activities" && "Atividades PF"}
+              {activeTab === "game" && "Jogo Caverna do Dragão"}
+              {activeTab === "calculator" && "Calculadora de Média"}
+              {activeTab === "rules" && "Regras da Disciplina"}
+            </h2>
+            <p className="text-white/60">
+              Conteúdo da aba "{activeTab}" será renderizado aqui.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
