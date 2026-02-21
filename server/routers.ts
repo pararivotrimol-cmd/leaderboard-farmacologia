@@ -15,6 +15,7 @@ import { settingsRouter } from "./routers/settings";
 import { attendanceRouter } from "./routers/attendance";
 import { attendanceReportRouter } from "./routers/attendance-report";
 import { auditRouter } from "./routers/audit";
+import { assessmentRouter } from "./routers/assessments";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -124,6 +125,7 @@ export const appRouter = router({
   attendance: attendanceRouter,
   attendanceReport: attendanceReportRouter,
   audit: auditRouter,
+  assessments: assessmentRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

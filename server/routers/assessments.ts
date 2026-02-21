@@ -52,7 +52,11 @@ export const assessmentRouter = router({
         createdBy: ctx.user.id,
       });
 
-      return { id: result.insertId, success: true };
+      // Get the last inserted ID
+      const insertedAssessment = await db.select().from(assessments).where(eq(assessments.createdBy, ctx.user.id)).orderBy(assessments.id).limit(1);
+      const assessmentId = insertedAssessment.length > 0 ? insertedAssessment[0].id : 0;
+
+      return { id: assessmentId, success: true };
     }),
 
   // ─── Teacher: Add Questions ───
@@ -82,7 +86,11 @@ export const assessmentRouter = router({
         explanation: input.explanation,
       });
 
-      return { id: result.insertId, success: true };
+      // Get the last inserted ID
+      const insertedQuestion = await db.select().from(assessmentQuestions).where(eq(assessmentQuestions.assessmentId, input.assessmentId)).orderBy(assessmentQuestions.id).limit(1);
+      const questionId = insertedQuestion.length > 0 ? insertedQuestion[0].id : 0;
+
+      return { id: questionId, success: true };
     }),
 
   // ─── Student: Start Assessment ───
@@ -128,6 +136,10 @@ export const assessmentRouter = router({
         status: "in_progress",
       });
 
+      // Get the last inserted submission ID
+      const insertedSubmission = await db.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.memberId, member[0].id)).orderBy(assessmentSubmissions.id).limit(1);
+      const submissionId = insertedSubmission.length > 0 ? insertedSubmission[0].id : 0;
+
       // Create IP block
       const expiresAt = new Date(assessment[0].endsAt || new Date().getTime() + 4 * 60 * 60 * 1000);
       await db.insert(assessmentIPBlocks).values({
@@ -139,12 +151,12 @@ export const assessmentRouter = router({
 
       // Log event
       await db.insert(assessmentLogs).values({
-        submissionId: submission.insertId,
+        submissionId: submissionId,
         eventType: "submission_started",
         severity: "info",
       });
 
-      return { submissionId: submission.insertId, success: true };
+      return { submissionId: submissionId, success: true };
     }),
 
   // ─── Student: Submit Answer ───
@@ -175,7 +187,11 @@ export const assessmentRouter = router({
         timeSpent: input.timeSpent,
       });
 
-      return { id: result.insertId, isCorrect, pointsEarned, success: true };
+      // Get the last inserted answer ID
+      const insertedAnswer = await db.select().from(assessmentAnswers).where(eq(assessmentAnswers.submissionId, input.submissionId)).orderBy(assessmentAnswers.id).limit(1);
+      const answerId = insertedAnswer.length > 0 ? insertedAnswer[0].id : 0;
+
+      return { id: answerId, isCorrect, pointsEarned, success: true };
     }),
 
   // ─── Student: Submit Assessment ───
@@ -276,14 +292,33 @@ export const assessmentRouter = router({
       return logs;
     }),
 
-  // ─── Publish Assessment ───
+   // ─── Publish Assessment ───
   publish: protectedProcedure
     .input(z.object({ assessmentId: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       await db.update(assessments).set({ status: "published" }).where(eq(assessments.id, input.assessmentId));
+      return { success: true };
+    }),
+
+  // ─── Get Assessments by Class ───
+  getAssessmentsByClass: publicProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const result = await db.select().from(assessments).where(eq(assessments.classId, input.classId));
+      return result;
+    }),
+
+  // ─── Delete Assessment ───
+  delete: protectedProcedure
+    .input(z.object({ assessmentId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      await db.delete(assessments).where(eq(assessments.id, input.assessmentId));
       return { success: true };
     }),
 });
