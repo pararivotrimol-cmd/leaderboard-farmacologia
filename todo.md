@@ -1095,3 +1095,11 @@
 - [ ] Adicionar filtros por professor, ação e data
 - [ ] Implementar paginação na timeline
 - [ ] Adicionar exportação de logs de auditoria
+
+## Integração de Dados Reais do Jigsaw
+- [x] Analisar rotas tRPC do Jigsaw (expertGroups.getByClass, homeGroups.getByClass)
+- [x] Obter classId do aluno autenticado na página GruposJigsaw
+- [x] Substituir mock data por queries reais com tRPC
+- [x] Modificar rotas do servidor para incluir membros e tópicos automaticamente
+- [x] Adicionar classId e memberId ao retorno de getMyStats
+- [ ] Salvar checkpoint com integração completa

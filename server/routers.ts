@@ -755,6 +755,8 @@ export const appRouter = router({
         badgesCount: myBadges.length,
         attendanceCount: myAttendance.length,
         teamName: myMember.teamId ? (await db.getTeamById(myMember.teamId))?.name : "Sem equipe",
+        classId: myMember.classId || null,
+        memberId: myMember.id,
       };
     }),
     

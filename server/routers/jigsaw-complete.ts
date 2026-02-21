@@ -247,7 +247,43 @@ export const jigsawCompleteRouter = router({
             .from(jigsawExpertGroups)
             .where(eq(jigsawExpertGroups.classId, input.classId));
           
-          return groups;
+          // Buscar membros e tópico para cada grupo
+          const groupsWithDetails = await Promise.all(
+            groups.map(async (group) => {
+              // Buscar membros do grupo
+              const groupMembers = await db
+                .select()
+                .from(jigsawExpertMembers)
+                .where(eq(jigsawExpertMembers.expertGroupId, group.id));
+              
+              // Buscar dados completos dos membros
+              const membersData = await Promise.all(
+                groupMembers.map(async (gm) => {
+                  const memberData = await db
+                    .select()
+                    .from(members)
+                    .where(eq(members.id, gm.memberId))
+                    .limit(1);
+                  return memberData[0] ? { ...memberData[0], role: gm.role } : null;
+                })
+              );
+              
+              // Buscar tópico
+              const topicData = await db
+                .select()
+                .from(jigsawTopics)
+                .where(eq(jigsawTopics.id, group.topicId))
+                .limit(1);
+              
+              return {
+                ...group,
+                members: membersData.filter(Boolean),
+                topicTitle: topicData[0]?.name || "Tópico não encontrado",
+              };
+            })
+          );
+          
+          return groupsWithDetails;
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -479,7 +515,47 @@ export const jigsawCompleteRouter = router({
             .from(jigsawHomeGroups)
             .where(eq(jigsawHomeGroups.classId, input.classId));
           
-          return groups;
+          // Buscar membros e tópicos para cada grupo
+          const groupsWithDetails = await Promise.all(
+            groups.map(async (group) => {
+              // Buscar membros do grupo
+              const groupMembers = await db
+                .select()
+                .from(jigsawHomeMembers)
+                .where(eq(jigsawHomeMembers.homeGroupId, group.id));
+              
+              // Buscar dados completos dos membros com seus tópicos
+              const membersData = await Promise.all(
+                groupMembers.map(async (gm) => {
+                  const memberData = await db
+                    .select()
+                    .from(members)
+                    .where(eq(members.id, gm.memberId))
+                    .limit(1);
+                  
+                  // Buscar tópico do membro
+                  const topicData = await db
+                    .select()
+                    .from(jigsawTopics)
+                    .where(eq(jigsawTopics.id, gm.topicId))
+                    .limit(1);
+                  
+                  return memberData[0] ? {
+                    ...memberData[0],
+                    topicId: gm.topicId,
+                    topicName: topicData[0]?.name || "Tópico desconhecido",
+                  } : null;
+                })
+              );
+              
+              return {
+                ...group,
+                members: membersData.filter(Boolean),
+              };
+            })
+          );
+          
+          return groupsWithDetails;
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",

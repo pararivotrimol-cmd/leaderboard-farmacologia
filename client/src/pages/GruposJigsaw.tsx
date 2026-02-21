@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, Users, BookOpen, FileText, ArrowLeft,
-  ChevronDown, ChevronUp, UserPlus, X, Target, Award
+  ChevronDown, ChevronUp, UserPlus, X, Target, Award, Loader2
 } from "lucide-react";
 
 /**
@@ -17,14 +17,42 @@ export default function GruposJigsaw() {
   const [expandedExpertGroup, setExpandedExpertGroup] = useState<number | null>(null);
   const [expandedJigsawGroup, setExpandedJigsawGroup] = useState<number | null>(null);
 
+  const [sessionToken, setSessionToken] = useState<string>("");
+  const [classId, setClassId] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Obter token de aluno do localStorage
+    const studentToken = localStorage.getItem("studentSessionToken");
+    if (studentToken) {
+      setSessionToken(studentToken);
+    }
+  }, []);
+
+  // Obter dados do aluno para pegar o classId
+  const { data: myStats } = trpc.studentDashboard.getMyStats.useQuery(
+    { sessionToken },
+    { enabled: !!sessionToken }
+  );
+
+  useEffect(() => {
+    if (myStats?.classId) {
+      setClassId(myStats.classId);
+    }
+  }, [myStats]);
+
   // Queries usando rotas tRPC reais
   const { data: topics, isLoading: loadingTopics } = trpc.jigsawComplete.topics.getAll.useQuery();
   
-  // Mock data para grupos (pode ser substituído por queries reais com classId)
-  const expertGroups: any[] = [];
-  const jigsawGroups: any[] = [];
-  const loadingExperts = false;
-  const loadingJigsaw = false;
+  // Buscar grupos de especialistas e grupos Jigsaw com classId real
+  const { data: expertGroups = [], isLoading: loadingExperts } = trpc.jigsawComplete.expertGroups.getByClass.useQuery(
+    { classId: classId! },
+    { enabled: classId !== null }
+  );
+  
+  const { data: jigsawGroups = [], isLoading: loadingJigsaw } = trpc.jigsawComplete.homeGroups.getByClass.useQuery(
+    { classId: classId! },
+    { enabled: classId !== null }
+  );
 
   const tabs = [
     { key: "topicos" as const, label: "Tópicos", icon: <BookOpen size={16} /> },
