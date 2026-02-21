@@ -1167,3 +1167,14 @@
 - [x] Usar preload="metadata" para reduzir consumo de banda
 - [x] Pré-carregar próxima faixa ao pular
 - [x] Salvar checkpoint final
+
+## Rebalanceamento Autom\u00e1tico de Gr## Rebalanceamento Automático de Grupos Jigsaw
+- [x] Analisar rotas disponíveis para mover alunos entre grupos
+- [x] Implementar algoritmo de rebalanceamento por tamanho de grupo
+- [x] Implementar algoritmo de rebalanceamento por especialidades
+- [x] Implementar algoritmo de rebalanceamento por desempenho (XP)
+- [x] Criar interface UI com seletor de critério de rebalanceamento
+- [x] Implementar preview de mudanças antes de confirmar
+- [x] Adicionar botão para executar rebalanceamento
+- [x] Adicionar aba de rebalanceamento no painel admin
+- [ ] Salvar checkpoint com rebalanceamento implementado

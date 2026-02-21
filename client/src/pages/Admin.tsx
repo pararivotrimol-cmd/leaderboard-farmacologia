@@ -8,13 +8,14 @@ import { ExportButton } from "@/components/ExportButton";
 import { SortSelector, useSortStudents, type SortOption } from "@/components/SortSelector";
 import { Pagination } from "@/components/Pagination";
 import { AuditLogManager } from "./AdminAuditLog";
+import JigsawRebalancingManager from "./AdminJigsawRebalancing";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -3112,7 +3113,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria">("turmas");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria" | "rebalanceamento">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -3167,6 +3168,7 @@ export default function Admin() {
     { key: "importar-alunos" as const, label: "Importar Alunos", icon: <Upload size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "auditoria" as const, label: "Auditoria", icon: <Clock size={16} /> },
+    { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -3222,6 +3224,7 @@ export default function Admin() {
         {activeSection === "importar-alunos" && teacherToken && <ImportarAlunosManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "auditoria" && teacherToken && <AuditLogManager teacherToken={teacherToken} />}
+        {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}
         {activeSection === "settings" && password && <SettingsManager password={password} />}
       </div>
     </div>
