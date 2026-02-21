@@ -1,1 +1,0 @@
-ALTER TABLE `materials` MODIFY COLUMN `tags` text;

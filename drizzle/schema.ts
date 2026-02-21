@@ -136,8 +136,6 @@ export const materials = mysqlTable("materials", {
   week: int("week"),
   // Whether the material is visible to students
   isVisible: int("isVisible").notNull().default(1),
-  // JSON array of tags: [{id, name, color}]
-  tags: text("tags"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -978,3 +976,121 @@ export const questionPerformance = mysqlTable("questionPerformance", {
 
 export type QuestionPerformance = typeof questionPerformance.$inferSelect;
 export type InsertQuestionPerformance = typeof questionPerformance.$inferInsert;
+
+
+/**
+ * Game Progress - Track player progress in the Caverna do Dragão game
+ */
+export const gameProgress = mysqlTable("gameProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  
+  // Game Stats
+  level: int("level").notNull().default(1), // 1-10 levels to complete Farmacologia I
+  farmacologiaPoints: int("farmacologiaPoints").notNull().default(0), // PF (Pontos de Farmacologia)
+  experience: int("experience").notNull().default(0),
+  
+  // Progress
+  questsCompleted: int("questsCompleted").notNull().default(0),
+  questsTotal: int("questsTotal").notNull().default(0),
+  currentQuestId: int("currentQuestId"), // Current active quest
+  
+  // Combat Stats
+  totalCombats: int("totalCombats").notNull().default(0),
+  combatsWon: int("combatsWon").notNull().default(0),
+  combatsLost: int("combatsLost").notNull().default(0),
+  
+  // Achievements
+  achievements: text("achievements").default("[]"), // JSON array of achievement IDs
+  
+  // Status
+  isCompleted: boolean("isCompleted").notNull().default(false), // Completed Farmacologia I
+  lastPlayedAt: timestamp("lastPlayedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GameProgress = typeof gameProgress.$inferSelect;
+export type InsertGameProgress = typeof gameProgress.$inferInsert;
+
+/**
+ * Game Quests - Define quests/challenges in the game
+ */
+export const gameQuests = mysqlTable("gameQuests", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  
+  // Quest Info
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  npcName: varchar("npcName", { length: 100 }).notNull(), // NPC that gives quest
+  npcType: mysqlEnum("npcType", ["merchant", "warrior", "mage", "healer", "boss"]).notNull(),
+  
+  // Quest Details
+  level: int("level").notNull(), // Required level to start
+  questType: mysqlEnum("questType", ["combat", "puzzle", "dialogue", "collection"]).notNull(),
+  
+  // Rewards
+  farmacologiaPointsReward: int("farmacologiaPointsReward").notNull().default(10),
+  experienceReward: int("experienceReward").notNull().default(100),
+  
+  // Combat Quest
+  questionId: int("questionId").references(() => questionBank.id, { onDelete: "set null" }),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  
+  // Status
+  isActive: boolean("isActive").notNull().default(true),
+  order: int("order").notNull(), // Order in game progression
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GameQuest = typeof gameQuests.$inferSelect;
+export type InsertGameQuest = typeof gameQuests.$inferInsert;
+
+/**
+ * Game Combats - Track individual combat encounters
+ */
+export const gameCombats = mysqlTable("gameCombats", {
+  id: int("id").autoincrement().primaryKey(),
+  gameProgressId: int("gameProgressId").notNull().references(() => gameProgress.id, { onDelete: "cascade" }),
+  questId: int("questId").notNull().references(() => gameQuests.id, { onDelete: "cascade" }),
+  questionId: int("questionId").notNull().references(() => questionBank.id, { onDelete: "cascade" }),
+  
+  // Combat Result
+  playerAnswer: varchar("playerAnswer", { length: 500 }),
+  correctAnswer: varchar("correctAnswer", { length: 500 }),
+  isWon: boolean("isWon").notNull(),
+  farmacologiaPointsEarned: int("farmacologiaPointsEarned").notNull().default(0),
+  
+  // Timing
+  timeSpent: int("timeSpent").notNull(), // seconds
+  attemptNumber: int("attemptNumber").notNull().default(1),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameCombat = typeof gameCombats.$inferSelect;
+export type InsertGameCombat = typeof gameCombats.$inferInsert;
+
+/**
+ * Game Achievements - Badges and achievements in the game
+ */
+export const gameAchievements = mysqlTable("gameAchievements", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Achievement Info
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 100 }), // Icon name or URL
+  
+  // Unlock Condition
+  condition: varchar("condition", { length: 200 }).notNull(), // e.g., "level_5", "win_10_combats"
+  
+  // Reward
+  farmacologiaPointsBonus: int("farmacologiaPointsBonus").notNull().default(0),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameAchievement = typeof gameAchievements.$inferSelect;
+export type InsertGameAchievement = typeof gameAchievements.$inferInsert;

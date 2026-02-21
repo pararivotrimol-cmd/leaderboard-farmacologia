@@ -1339,3 +1339,76 @@
 - [x] Criar componente TagDisplay para exibir tags
 - [x] Executar migração do banco (pnpm db:push)
 - [ ] Salvar checkpoint com sistema de tags
+
+
+## Busca e Filtro por Tags (Página de Alunos)
+- [ ] Criar página StudentMaterials.tsx para visualização de materiais por alunos
+- [ ] Implementar busca por título/descrição de materiais
+- [ ] Implementar filtro por tags com seleção múltipla
+- [ ] Implementar filtro por módulo/disciplina
+- [ ] Implementar filtro por semana
+- [ ] Adicionar contador de materiais por filtro
+- [ ] Implementar ordenação (mais recente, mais antigo, alfabética)
+- [ ] Adicionar pré-visualização rápida de materiais (modal)
+- [ ] Testar responsividade em mobile/tablet/desktop
+
+## Integração com Sistema de Notificações
+- [ ] Criar rota tRPC para notificar alunos sobre novo material
+- [ ] Implementar lógica para enviar notificação ao publicar material
+- [ ] Criar página de notificações para alunos (StudentNotifications.tsx)
+- [ ] Implementar marcação de notificação como lida
+- [ ] Implementar filtro de notificações (lidas/não lidas)
+- [ ] Adicionar badge de notificações não lidas no header
+- [ ] Implementar notificação em tempo real (WebSocket ou polling)
+- [ ] Testar envio de notificações em múltiplos cenários
+
+
+## Game 3D - Caverna do Dragão (Farmacologia Quest)
+
+### Fase 1: Schema e Backend
+- [x] Criar tabela gameProgress para rastrear progresso do aluno
+- [x] Criar tabela gameQuests para definir quests/desafios
+- [x] Criar tabela gameCombats para registrar combates
+- [x] Criar rotas tRPC para gerenciar game (getProgress, startQuest, submitAnswer, etc)
+- [x] Implementar lógica de cálculo de PF (Pontos de Farmacologia)
+- [x] Implementar sistema de level/rank no jogo
+
+### Fase 2: Cena 3D com Three.js
+- [ ] Instalar Three.js e dependências (react-three-fiber, drei) - PRÓXIMA FASE
+- [ ] Criar componente GameScene.tsx com cena 3D
+- [ ] Modelar personagem do aluno (avatar 3D ou modelo simples)
+- [ ] Criar ambiente do calabouço (paredes, piso, iluminação)
+- [ ] Implementar câmera em terceira pessoa
+- [ ] Adicionar controles de movimento (WASD, setas)
+- [ ] Criar sistema de partículas para efeitos visuais
+
+### Fase 3: Sistema de Quests e Combate
+- [ ] Criar componente QuestNPC para inimigos/NPCs - PRÓXIMA FASE
+- [ ] Implementar sistema de diálogo com NPCs
+- [ ] Criar interface de combate (questão aparece, aluno responde)
+- [ ] Implementar feedback visual de acerto/erro
+- [ ] Criar sistema de recompensa (PF, experiência)
+- [ ] Implementar boss final da disciplina
+
+### Fase 4: Portal do Aluno
+- [ ] Criar página GamePortal.tsx - PRÓXIMA FASE
+- [ ] Integrar cena 3D do jogo
+- [ ] Criar HUD (Health, PF, Level, Missão Atual)
+- [ ] Implementar menu pausa com inventário
+- [ ] Adicionar sistema de save/load de progresso
+- [ ] Criar cinemática de introdução
+
+### Fase 5: Dashboard Admin
+- [ ] Criar página GameAnalytics.tsx - PRÓXIMA FASE
+- [ ] Mostrar progresso de cada aluno (level, PF, quests completas)
+- [ ] Gráficos de taxa de acerto por questão
+- [ ] Ranking de alunos por PF
+- [ ] Filtro por turma/módulo
+- [ ] Exportar relatório de progresso
+
+### Fase 6: Testes e Refinamento
+- [ ] Testar gameplay em diferentes navegadores - PRÓXIMA FASE
+- [ ] Otimizar performance 3D
+- [ ] Testar responsividade em tablet
+- [ ] Implementar leaderboard em tempo real
+- [ ] Adicionar sons e música (opcional)

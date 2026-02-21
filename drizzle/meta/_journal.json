@@ -162,20 +162,6 @@
       "when": 1771694849952,
       "tag": "0022_familiar_war_machine",
       "breakpoints": true
-    },
-    {
-      "idx": 23,
-      "version": "5",
-      "when": 1771706787180,
-      "tag": "0023_blushing_inertia",
-      "breakpoints": true
-    },
-    {
-      "idx": 24,
-      "version": "5",
-      "when": 1771706801486,
-      "tag": "0024_little_magdalene",
-      "breakpoints": true
     }
   ]
 }

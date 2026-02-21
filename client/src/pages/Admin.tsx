@@ -1294,11 +1294,7 @@ function MaterialsManager({ password }: { password: string }) {
                             {mat.week && <span className="text-xs text-muted-foreground">Semana {mat.week}</span>}
                             {!mat.isVisible && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/20 text-destructive">Oculto</span>}
                           </div>
-                          {mat.tags && (
-                            <div className="mt-1">
-                              <TagDisplay tags={JSON.parse(mat.tags || "[]")} maxDisplay={3} />
-                            </div>
-                          )}
+
                           <h4 className="font-medium text-sm text-foreground">{mat.title}</h4>
                           {mat.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>}
                           {mat.type === "file" && mat.fileName && (
