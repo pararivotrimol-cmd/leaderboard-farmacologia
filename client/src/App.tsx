@@ -31,6 +31,8 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminReports from "./pages/AdminReports";
 import Cronograma from "./pages/Cronograma";
 import LoungePlaylist from "./components/LoungePlaylist";
+import QuestionsManager from "./pages/QuestionsManager";
+import ResultsDashboard from "./pages/ResultsDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -42,6 +44,8 @@ function Router() {
       <Route path={"/admin/configuracoes"} component={AdminSettings} />
       <Route path={"/admin/relatorios"} component={AdminReports} />
       <Route path={"/admin/professor"} component={Admin} />
+      <Route path={"/professor/questoes"} component={QuestionsManager} />
+      <Route path={"/professor/resultados"} component={ResultsDashboard} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />

@@ -1255,3 +1255,38 @@
 - [ ] Criar interface do professor para gerenciar provas
 - [ ] Criar dashboard de monitoramento com alertas de foco perdido
 - [ ] Testar e salvar checkpoint
+
+## Editor Visual de Questões (Fase 1)
+- [x] Criar schema de banco para questões reutilizáveis (questionBank table)
+- [x] Criar rotas tRPC para CRUD de questões (create, update, delete, get)
+- [x] Criar componente QuestionEditor.tsx com editor visual
+- [x] Implementar suporte a upload de imagens para questões
+- [x] Implementar suporte a fórmulas LaTeX em questões
+- [x] Criar interface para adicionar 5 alternativas de múltipla escolha
+- [x] Implementar seleção de alternativa correta
+- [x] Criar página /professor/questoes para gerenciar questões
+- [x] Implementar preview de questão em tempo real
+- [x] Escrever testes para CRUD de questões (17 testes passando)
+
+## Banco de Questões Reutilizável (Fase 2)
+- [x] Adicionar campos de categoria e tags ao schema de questões
+- [x] Criar rotas tRPC para buscar questões por categoria/tags
+- [x] Implementar componente de busca e filtro de questões
+- [x] Criar página /professor/banco-questoes com listagem (integrada em QuestionsManager)
+- [x] Implementar seleção de questões para adicionar à prova
+- [x] Criar interface de arrastar e soltar para ordenar questões
+- [x] Implementar duplicação de questões
+- [x] Adicionar estatísticas de uso de cada questão
+- [x] Escrever testes para banco de questões (17 testes passando)
+
+## Dashboard de Resultados (Fase 3)
+- [x] Criar rotas tRPC para calcular estatísticas de desempenho
+- [x] Implementar análise por aluno (acertos, erros, tempo)
+- [x] Implementar análise por questão (taxa de acerto, questões difíceis)
+- [x] Implementar análise por classe (média, distribuição de notas)
+- [x] Criar página /professor/resultados com dashboard
+- [x] Implementar gráficos com Chart.js (distribuição, evolução, heatmap)
+- [x] Implementar detecção de fraude (flags de comportamento suspeito)
+- [ ] Criar relatório exportável em PDF (em desenvolvimento)
+- [x] Implementar filtros por prova, turma e período
+- [ ] Escrever testes para dashboard de resultados (em desenvolvimento)

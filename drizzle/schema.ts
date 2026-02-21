@@ -902,3 +902,77 @@ export const assessmentIPBlocks = mysqlTable("assessmentIPBlocks", {
 });
 export type AssessmentIPBlock = typeof assessmentIPBlocks.$inferSelect;
 export type InsertAssessmentIPBlock = typeof assessmentIPBlocks.$inferInsert;
+
+
+/**
+ * Question Bank - Reusable questions for assessments
+ */
+export const questionBank = mysqlTable("questionBank", {
+  id: int("id").autoincrement().primaryKey(),
+  createdBy: int("createdBy").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }).notNull(), // e.g., "Farmacocinética", "SNA", "Colinérgicos"
+  tags: text("tags"), // JSON array of tags for filtering
+  questionText: text("questionText").notNull(),
+  questionType: mysqlEnum("questionType", ["multiple_choice", "essay", "true_false"]).default("multiple_choice").notNull(),
+  
+  // Multiple choice specific fields
+  alternatives: text("alternatives"), // JSON array with 5 alternatives: [{ text: string, isCorrect: boolean, explanation?: string }]
+  correctAnswer: varchar("correctAnswer", { length: 255 }), // For essay/true-false
+  
+  // Media
+  imageUrl: text("imageUrl"), // URL to question image
+  formulaLatex: text("formulaLatex"), // LaTeX formula if applicable
+  
+  // Metadata
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  points: int("points").notNull().default(1),
+  estimatedTime: int("estimatedTime"), // seconds
+  
+  // Statistics
+  timesUsed: int("timesUsed").notNull().default(0),
+  correctRate: decimal("correctRate", { precision: 5, scale: 2 }).default("0"), // percentage
+  
+  // Status
+  isActive: boolean("isActive").notNull().default(true),
+  isPublished: boolean("isPublished").notNull().default(false), // Can be used in assessments
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type QuestionBank = typeof questionBank.$inferSelect;
+export type InsertQuestionBank = typeof questionBank.$inferInsert;
+
+/**
+ * Assessment Questions - Link between assessments and questions
+ */
+export const assessmentQuestionLinks = mysqlTable("assessmentQuestionLinks", {
+  id: int("id").autoincrement().primaryKey(),
+  assessmentId: int("assessmentId").notNull().references(() => assessments.id, { onDelete: "cascade" }),
+  questionId: int("questionId").notNull().references(() => questionBank.id, { onDelete: "cascade" }),
+  order: int("order").notNull(), // Question order in assessment
+  points: int("points").notNull().default(1), // Points for this question
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AssessmentQuestionLink = typeof assessmentQuestionLinks.$inferSelect;
+export type InsertAssessmentQuestionLink = typeof assessmentQuestionLinks.$inferInsert;
+
+/**
+ * Question Performance - Track performance metrics for each question
+ */
+export const questionPerformance = mysqlTable("questionPerformance", {
+  id: int("id").autoincrement().primaryKey(),
+  questionId: int("questionId").notNull().references(() => questionBank.id, { onDelete: "cascade" }),
+  assessmentId: int("assessmentId").notNull().references(() => assessments.id, { onDelete: "cascade" }),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  isCorrect: boolean("isCorrect").notNull(),
+  timeSpent: int("timeSpent"), // seconds
+  attemptNumber: int("attemptNumber").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuestionPerformance = typeof questionPerformance.$inferSelect;
+export type InsertQuestionPerformance = typeof questionPerformance.$inferInsert;
