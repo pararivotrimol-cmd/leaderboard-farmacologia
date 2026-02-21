@@ -13,6 +13,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import StudentNavBar from "@/components/StudentNavBar";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
@@ -358,6 +359,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
+      <StudentNavBar
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as any)}
+        selectedClassId={selectedClassId || undefined}
+        onClassChange={setSelectedClassId}
+        showClassSelector={true}
+      />
       <audio
         ref={vinhetaAudioRef}
         src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
@@ -575,30 +583,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Tab Navigation */}
-      <div className="container mb-6">
-        <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-          {[
-            { key: "teams" as const, label: "Ranking Equipes", icon: <Users size={15} /> },
-            { key: "individual" as const, label: "Top 10 Individual", icon: <Award size={15} /> },
-            { key: "activities" as const, label: "Atividades PF", icon: <Target size={15} /> },
-            { key: "calculator" as const, label: "Calcular Média", icon: <BarChart3 size={15} /> },
-            { key: "rules" as const, label: "Regras", icon: <ClipboardList size={15} /> },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
-              style={{
-                backgroundColor: activeTab === tab.key ? ORANGE : "transparent",
-                color: activeTab === tab.key ? "#fff" : "rgba(255,255,255,0.5)",
-              }}
-            >
-              {tab.icon}<span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* Content */}
       <div className="container pb-16">

@@ -34,6 +34,8 @@ import LoungePlaylist from "./components/LoungePlaylist";
 import QuestionsManager from "./pages/QuestionsManager";
 import ResultsDashboard from "./pages/ResultsDashboard";
 import GamePortal from "./pages/GamePortal";
+import AdminStudentView from "./pages/AdminStudentView";
+import StudentArea from "./pages/StudentArea";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -44,10 +46,12 @@ function Router() {
       <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/admin/configuracoes"} component={AdminSettings} />
       <Route path={"/admin/relatorios"} component={AdminReports} />
+      <Route path={"/admin/alunos/:classId"} component={AdminStudentView} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/professor/questoes"} component={QuestionsManager} />
       <Route path={"/professor/resultados"} component={ResultsDashboard} />
       <Route path={"/jogo/:classId"} component={GamePortal} />
+      <Route path={"/aluno/:classId"} component={StudentArea} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />

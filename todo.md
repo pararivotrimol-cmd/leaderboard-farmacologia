@@ -1412,3 +1412,32 @@
 - [ ] Testar responsividade em tablet
 - [ ] Implementar leaderboard em tempo real
 - [ ] Adicionar sons e música (opcional)
+
+
+## Ajuste de Área do Aluno por Turma
+
+### Fase 1: Barra de Funções
+- [x] Analisar estrutura atual da barra de funções do aluno
+- [x] Reorganizar menu de navegação (Leaderboard, Materiais, Avisos, Conquistas, Jogo)
+- [x] Adicionar seletor de turma na barra
+- [x] Implementar responsividade em mobile
+- [x] Adicionar ícones para cada função
+- [x] Testar em diferentes resoluções
+
+### Fase 2: Acesso Admin Geral
+- [x] Criar rota /admin/alunos/:classId para visualizar área do aluno
+- [x] Implementar verificação de permissão (admin geral)
+- [x] Criar componente StudentAreaPreview para visualizar como aluno
+- [x] Adicionar filtro por turma no admin
+- [ ] Implementar log de acesso do admin à área do aluno (em desenvolvimento)
+- [x] Testar acesso restrito
+
+### Fase 3: Isolamento por Turma
+- [x] Criar rota /aluno/:classId para área isolada
+- [x] Implementar verificação de matrícula do aluno na turma
+- [ ] Filtrar materiais por turma (em desenvolvimento)
+- [ ] Filtrar avisos por turma (em desenvolvimento)
+- [ ] Filtrar leaderboard por turma (em desenvolvimento)
+- [ ] Filtrar conquistas por turma (em desenvolvimento)
+- [x] Implementar breadcrumb de navegação
+- [x] Testar isolamento de dados
