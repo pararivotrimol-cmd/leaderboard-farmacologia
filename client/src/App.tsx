@@ -27,6 +27,8 @@ import PerformanceReport from "./pages/PerformanceReport";
 import AdminDashboard from "./pages/AdminDashboard";
 import JigsawGroups from "./pages/JigsawGroups";
 import AdminSettings from "./pages/AdminSettings";
+import AdminReports from "./pages/AdminReports";
+import Cronograma from "./pages/Cronograma";
 import LoungePlaylist from "./components/LoungePlaylist";
 
 function Router() {
@@ -37,6 +39,7 @@ function Router() {
       <Route path={"/leaderboard"} component={Home} />
       <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/admin/configuracoes"} component={AdminSettings} />
+      <Route path={"/admin/relatorios"} component={AdminReports} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />
@@ -47,6 +50,7 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/performance"} component={PerformanceReport} />
       <Route path={"/grupos-jigsaw"} component={JigsawGroups} />
+      <Route path={"/cronograma"} component={Cronograma} />
       <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />

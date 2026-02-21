@@ -1019,3 +1019,29 @@
 - [ ] Atualizar rotas tRPC para respeitar preferência de ordenação
 - [x] Salvar preferência nas settings
 - [ ] Aplicar ordenação em todas as listas de alunos
+
+
+## Integração de Componentes e Redesign
+
+### Integração em Admin.tsx
+- [x] Integrar SearchStudents, ExportButton, SortSelector em TeamManager
+- [x] Integrar SearchStudents, ExportButton em ClassManager (TurmasManager)
+- [x] Testar busca, exportação e ordenação
+
+### Paginação
+- [x] Criar componente Pagination.tsx
+- [ ] Implementar paginação em TeamManager e ClassManager (20-50 por página)
+
+### Dashboard de Relatórios
+- [x] Criar página /admin/relatorios com gráficos (AdminReports.tsx)
+- [ ] Implementar exportação de relatórios em PDF
+
+### Redesign da Página Inicial
+- [x] Remover jornada do semestre e explicações
+- [x] Adicionar logos (UNIRIO em destaque, plataforma)
+- [x] Adicionar imagem do professor Pedro com jaleco branco (avatar gerado)
+- [x] Adicionar logo "Conexão em Farmacologia"
+
+### Aba de Cronograma
+- [x] Criar aba de cronograma para alunos, professores e admin (/cronograma)
+- [x] Exibir cronograma da turma de Farmacologia 1

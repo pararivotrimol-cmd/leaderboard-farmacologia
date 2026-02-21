@@ -1,7 +1,11 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { SearchStudents } from "@/components/SearchStudents";
+import { ExportButton } from "@/components/ExportButton";
+import { SortSelector, useSortStudents, type SortOption } from "@/components/SortSelector";
+import { Pagination } from "@/components/Pagination";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
@@ -88,9 +92,25 @@ function TeamManager({ password }: { password: string }) {
   const [editEmoji, setEditEmoji] = useState("");
   const [editColor, setEditColor] = useState("");
   const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState<SortOption>("alphabetical");
+  const sortStudents = useSortStudents(sortOption);
 
   const utils = trpc.useUtils();
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
+
+  // Flatten all students for search and export
+  const allStudents = useMemo(() => {
+    if (!leaderboard?.teams) return [];
+    return leaderboard.teams.flatMap(team =>
+      team.members.map(m => ({
+        id: m.id,
+        name: m.name,
+        xp: m.xp,
+        teamId: team.id,
+        teamName: team.name,
+      }))
+    );
+  }, [leaderboard]);
 
   const createTeam = trpc.teams.create.useMutation({
     onSuccess: () => { utils.leaderboard.getData.invalidate(); toast.success("Equipe criada!"); setNewTeamName(""); },
@@ -142,6 +162,25 @@ function TeamManager({ password }: { password: string }) {
           >
             Criar
           </button>
+        </div>
+      </div>
+
+      {/* Toolbar: Search + Sort + Export */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex-1 w-full sm:max-w-sm">
+          <SearchStudents
+            students={allStudents}
+            onSelect={(student) => {
+              const team = leaderboard?.teams.find(t => t.id === student.teamId);
+              if (team) setExpandedTeam(team.id);
+              toast.info(`${student.name} — ${student.teamName || 'Sem equipe'} — ${student.xp.toFixed(1)} PF`);
+            }}
+            placeholder="Buscar aluno por nome..."
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <SortSelector value={sortOption} onChange={setSortOption} />
+          <ExportButton students={allStudents} filename="alunos-equipes" label="Exportar" />
         </div>
       </div>
 
@@ -2824,10 +2863,40 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
             <h3 className="font-display font-semibold text-sm text-foreground flex items-center gap-2">
               <UserPlus size={16} className="text-primary" /> Alunos da Turma ({classDetail.members.length})
             </h3>
-            <button onClick={() => setShowAddStudent(!showAddStudent)} className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium">
-              <Plus size={12} /> Adicionar Aluno
-            </button>
+            <div className="flex items-center gap-2">
+              <ExportButton
+                students={classDetail.members.map((m: any) => ({
+                  id: m.id,
+                  name: m.name,
+                  xp: parseFloat(m.xp || "0"),
+                  teamName: classDetail.teams.find((t: any) => t.id === m.teamId)?.name || "—",
+                }))}
+                filename={`turma-${classDetail.name}`}
+                label="Exportar"
+              />
+              <button onClick={() => setShowAddStudent(!showAddStudent)} className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+                <Plus size={12} /> Adicionar Aluno
+              </button>
+            </div>
           </div>
+
+          {/* Search within class */}
+          {classDetail.members.length > 5 && (
+            <div className="mb-3">
+              <SearchStudents
+                students={classDetail.members.map((m: any) => ({
+                  id: m.id,
+                  name: m.name,
+                  xp: parseFloat(m.xp || "0"),
+                  teamName: classDetail.teams.find((t: any) => t.id === m.teamId)?.name || "—",
+                }))}
+                onSelect={(student) => {
+                  toast.info(`${student.name} — ${student.teamName || 'Sem equipe'} — ${student.xp.toFixed(1)} PF`);
+                }}
+                placeholder="Buscar aluno nesta turma..."
+              />
+            </div>
+          )}
 
           {showAddStudent && (
             <div className="flex gap-2 flex-wrap mb-4 p-3 rounded-lg border border-border bg-background">
