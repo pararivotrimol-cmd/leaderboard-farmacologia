@@ -1239,3 +1239,19 @@
 - [ ] Criar interface para alunos responder atividades
 - [ ] Implementar sistema de correção automática/manual
 - [ ] Adicionar visualização de notas das atividades
+
+
+## Sistema de Atividades Avaliativas Te\u00f3ricas com Lockdown
+- [ ] Criar schema de banco de dados para atividades avaliativas (assessments, questions, answers)
+- [ ] Criar schema para logs de monitoramento (focus loss, IP, timestamps)
+- [ ] Implementar rotas tRPC para gerenciar provas (create, list, get, submit)
+- [ ] Implementar navegador travado (lockdown) - bloquear abas/janelas
+- [ ] Implementar limite de 2 minutos por quest\u00e3o com timer visual
+- [ ] Implementar bloqueio de retrocesso - n\u00e3o permitir voltar
+- [ ] Implementar detec\u00e7\u00e3o de foco (blur/focus events)
+- [ ] Implementar bloqueio de IP - apenas um acesso por IP
+- [ ] Implementar logging de todas as atividades do aluno
+- [ ] Criar interface do aluno para fazer prova com lockdown
+- [ ] Criar interface do professor para gerenciar provas
+- [ ] Criar dashboard de monitoramento com alertas de foco perdido
+- [ ] Testar e salvar checkpoint

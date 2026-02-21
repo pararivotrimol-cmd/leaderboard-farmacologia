@@ -773,3 +773,132 @@ export const jigsawScores = mysqlTable("jigsawScores", {
 });
 export type JigsawScore = typeof jigsawScores.$inferSelect;
 export type InsertJigsawScore = typeof jigsawScores.$inferInsert;
+
+
+/**
+ * Assessments - Theoretical evaluation activities with lockdown
+ */
+export const assessments = mysqlTable("assessments", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  type: mysqlEnum("type", ["multiple_choice", "essay", "mixed"]).default("multiple_choice").notNull(),
+  totalQuestions: int("totalQuestions").notNull().default(0),
+  timePerQuestion: int("timePerQuestion").notNull().default(120), // seconds (default 2 minutes)
+  allowRetrocess: boolean("allowRetrocess").notNull().default(false), // false = no going back
+  enableLockdown: boolean("enableLockdown").notNull().default(true), // Prevent tab switching
+  passingScore: decimal("passingScore", { precision: 5, scale: 1 }).notNull().default("60"), // percentage
+  maxAttempts: int("maxAttempts").notNull().default(1),
+  scheduledAt: timestamp("scheduledAt"),
+  startsAt: timestamp("startsAt"),
+  endsAt: timestamp("endsAt"),
+  status: mysqlEnum("status", ["draft", "published", "active", "closed"]).default("draft").notNull(),
+  createdBy: int("createdBy").notNull(), // teacherAccountId
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Assessment = typeof assessments.$inferSelect;
+export type InsertAssessment = typeof assessments.$inferInsert;
+
+/**
+ * Assessment Questions
+ */
+export const assessmentQuestions = mysqlTable("assessmentQuestions", {
+  id: int("id").autoincrement().primaryKey(),
+  assessmentId: int("assessmentId").notNull().references(() => assessments.id, { onDelete: "cascade" }),
+  questionNumber: int("questionNumber").notNull(),
+  question: text("question").notNull(),
+  questionType: mysqlEnum("questionType", ["multiple_choice", "essay", "true_false"]).notNull(),
+  options: text("options"), // JSON array for multiple choice
+  correctAnswer: text("correctAnswer"), // JSON for multiple answers or essay rubric
+  points: decimal("points", { precision: 5, scale: 1 }).notNull().default("1"),
+  explanation: text("explanation"), // Feedback after submission
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AssessmentQuestion = typeof assessmentQuestions.$inferSelect;
+export type InsertAssessmentQuestion = typeof assessmentQuestions.$inferInsert;
+
+/**
+ * Assessment Submissions - Student responses to assessments
+ */
+export const assessmentSubmissions = mysqlTable("assessmentSubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+  assessmentId: int("assessmentId").notNull().references(() => assessments.id, { onDelete: "cascade" }),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  attemptNumber: int("attemptNumber").notNull().default(1),
+  startedAt: timestamp("startedAt").notNull(),
+  submittedAt: timestamp("submittedAt"),
+  score: decimal("score", { precision: 5, scale: 1 }), // Final score
+  percentage: decimal("percentage", { precision: 5, scale: 1 }), // Percentage score
+  passed: boolean("passed"), // true if >= passingScore
+  status: mysqlEnum("status", ["in_progress", "submitted", "graded"]).default("in_progress").notNull(),
+  ipAddress: varchar("ipAddress", { length: 45 }), // IPv4 or IPv6
+  userAgent: text("userAgent"), // Browser info
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AssessmentSubmission = typeof assessmentSubmissions.$inferSelect;
+export type InsertAssessmentSubmission = typeof assessmentSubmissions.$inferInsert;
+
+/**
+ * Assessment Answers - Individual question responses
+ */
+export const assessmentAnswers = mysqlTable("assessmentAnswers", {
+  id: int("id").autoincrement().primaryKey(),
+  submissionId: int("submissionId").notNull().references(() => assessmentSubmissions.id, { onDelete: "cascade" }),
+  questionId: int("questionId").notNull().references(() => assessmentQuestions.id, { onDelete: "cascade" }),
+  answer: text("answer").notNull(), // Student's response
+  isCorrect: boolean("isCorrect"), // true if correct
+  pointsEarned: decimal("pointsEarned", { precision: 5, scale: 1 }), // Points for this question
+  answeredAt: timestamp("answeredAt").notNull(),
+  timeSpent: int("timeSpent"), // seconds spent on this question
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AssessmentAnswer = typeof assessmentAnswers.$inferSelect;
+export type InsertAssessmentAnswer = typeof assessmentAnswers.$inferInsert;
+
+/**
+ * Assessment Logs - Monitoring and security logs
+ */
+export const assessmentLogs = mysqlTable("assessmentLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  submissionId: int("submissionId").notNull().references(() => assessmentSubmissions.id, { onDelete: "cascade" }),
+  eventType: mysqlEnum("eventType", [
+    "focus_lost", // User left the tab/window
+    "focus_regained", // User returned to the tab
+    "tab_switched", // Attempted to switch tabs
+    "window_minimized", // Window was minimized
+    "copy_attempt", // Attempted to copy content
+    "right_click", // Right-click attempt
+    "keyboard_shortcut", // Suspicious keyboard shortcut
+    "network_issue", // Connection lost
+    "suspicious_activity", // Other suspicious activity
+    "question_answered", // Question submitted
+    "time_warning", // Time warning issued
+    "submission_started", // Assessment started
+    "submission_completed", // Assessment completed
+  ]).notNull(),
+  details: text("details"), // JSON with additional info
+  severity: mysqlEnum("severity", ["info", "warning", "critical"]).default("info").notNull(),
+  flagged: boolean("flagged").notNull().default(false), // Requires review
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+export type AssessmentLog = typeof assessmentLogs.$inferSelect;
+export type InsertAssessmentLog = typeof assessmentLogs.$inferInsert;
+
+/**
+ * Assessment IP Blocks - Prevent multiple simultaneous access from same IP
+ */
+export const assessmentIPBlocks = mysqlTable("assessmentIPBlocks", {
+  id: int("id").autoincrement().primaryKey(),
+  assessmentId: int("assessmentId").notNull().references(() => assessments.id, { onDelete: "cascade" }),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(), // Lock expires after assessment ends
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AssessmentIPBlock = typeof assessmentIPBlocks.$inferSelect;
+export type InsertAssessmentIPBlock = typeof assessmentIPBlocks.$inferInsert;

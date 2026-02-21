@@ -148,6 +148,13 @@
       "when": 1771607671180,
       "tag": "0020_nosy_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1771693554885,
+      "tag": "0021_friendly_violations",
+      "breakpoints": true
     }
   ]
 }
