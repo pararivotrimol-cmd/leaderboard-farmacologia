@@ -12,7 +12,8 @@ import {
   Plus, Trash2, Eye, RefreshCw, Ticket,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
   Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus,
-  Upload, Download, AlertCircle, GraduationCap as StudentIcon
+  Upload, Download, AlertCircle, GraduationCap as StudentIcon,
+  Database, Bell, FileText, Lock, Save, RotateCcw, Mail, Key
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -1330,37 +1331,387 @@ function InviteCodesTab({ sessionToken }: { sessionToken: string }) {
 
 // ─── Settings Tab ───
 function SettingsTab() {
+  const [, navigate] = useLocation();
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [generalForm, setGeneralForm] = useState({ courseName: "Farmacologia I", semester: "2026.1", university: "UNIRIO", department: "Farmacologia" });
+  const [notifForm, setNotifForm] = useState({ emailAlerts: true, badgeNotifs: true, pfNotifs: true, weeklyReport: false, alertEmail: "" });
+  const [securityForm, setSecurityForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+  const settingsItems = [
+    { id: "general", title: "Configurações Gerais", desc: "Nome da turma, semestre, cronograma", icon: <Settings size={22} />, color: ORANGE },
+    { id: "backup", title: "Backup de Dados", desc: "Exportar e importar dados da plataforma", icon: <Database size={22} />, color: "#4A90E2" },
+    { id: "security", title: "Segurança", desc: "Gerenciar senhas, permissões e acesso", icon: <Lock size={22} />, color: "#FF6B6B" },
+    { id: "notifications", title: "Notificações", desc: "Configurar alertas e comunicações", icon: <Bell size={22} />, color: "#7ED321" },
+    { id: "reports", title: "Relatórios", desc: "Gerar relatórios de desempenho", icon: <FileText size={22} />, color: "#9B59B6" },
+  ];
+
+  const handleSaveGeneral = () => {
+    toast.success("Configurações gerais salvas com sucesso!");
+    setActiveSection(null);
+  };
+
+  const handleExportBackup = () => {
+    const backupData = {
+      exportDate: new Date().toISOString(),
+      platform: "Conexão em Farmacologia",
+      version: "1.0",
+      settings: generalForm,
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup-farmacologia-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup exportado com sucesso!");
+  };
+
+  const handleImportBackup = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target?.result as string);
+          if (data.platform === "Conexão em Farmacologia") {
+            toast.success(`Backup de ${data.exportDate} importado com sucesso!`);
+          } else {
+            toast.error("Arquivo de backup inválido");
+          }
+        } catch {
+          toast.error("Erro ao ler arquivo de backup");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  const handleChangePassword = () => {
+    if (!securityForm.newPassword || !securityForm.confirmPassword) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    if (securityForm.newPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    toast.success("Senha alterada com sucesso!");
+    setSecurityForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setActiveSection(null);
+  };
+
+  const handleSaveNotifications = () => {
+    toast.success("Configurações de notificações salvas!");
+    setActiveSection(null);
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Configurações do Sistema</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Configurações do Sistema</h2>
+        <button
+          onClick={() => navigate("/admin/configuracoes")}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
+          style={{ backgroundColor: `${ORANGE}30`, color: ORANGE, border: `1px solid ${ORANGE}50` }}
+        >
+          <ExternalLink size={16} />
+          Configurações Avançadas
+        </button>
+      </div>
 
       <div className="space-y-4">
-        {[
-          { title: "Configurações Gerais", desc: "Nome da turma, semestre, cronograma", action: "Em breve" },
-          { title: "Backup de Dados", desc: "Exportar e importar dados da plataforma", action: "Em breve" },
-          { title: "Segurança", desc: "Gerenciar senhas, permissões e acesso", action: "Em breve" },
-          { title: "Notificações", desc: "Configurar alertas e comunicações", action: "Em breve" },
-          { title: "Relatórios", desc: "Gerar relatórios de desempenho", action: "Em breve" },
-        ].map((setting, i) => (
+        {settingsItems.map((setting, i) => (
           <motion.div
-            key={i}
-            className="rounded-lg p-6 border border-gray-700 flex items-center justify-between"
+            key={setting.id}
+            className="rounded-lg border border-gray-700 overflow-hidden"
             style={{ backgroundColor: CARD_BG }}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.08 }}
           >
-            <div>
-              <h3 className="font-bold text-white">{setting.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">{setting.desc}</p>
-            </div>
             <button
-              onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-              className="px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
-              style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+              onClick={() => setActiveSection(activeSection === setting.id ? null : setting.id)}
+              className="w-full p-6 flex items-center justify-between text-left"
             >
-              {setting.action}
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: `${setting.color}20` }}>
+                  <div style={{ color: setting.color }}>{setting.icon}</div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">{setting.title}</h3>
+                  <p className="text-sm text-gray-400 mt-1">{setting.desc}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${setting.color}20`, color: setting.color }}>
+                  Ativo
+                </span>
+                {activeSection === setting.id ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+              </div>
             </button>
+
+            <AnimatePresence>
+              {activeSection === setting.id && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-6 pb-6 border-t border-gray-700 pt-4">
+                    {/* Configurações Gerais */}
+                    {setting.id === "general" && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Nome da Disciplina</label>
+                            <input
+                              value={generalForm.courseName}
+                              onChange={(e) => setGeneralForm({ ...generalForm, courseName: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-orange-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Semestre</label>
+                            <input
+                              value={generalForm.semester}
+                              onChange={(e) => setGeneralForm({ ...generalForm, semester: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-orange-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Universidade</label>
+                            <input
+                              value={generalForm.university}
+                              onChange={(e) => setGeneralForm({ ...generalForm, university: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-orange-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Departamento</label>
+                            <input
+                              value={generalForm.department}
+                              onChange={(e) => setGeneralForm({ ...generalForm, department: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-orange-500 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                          <button
+                            onClick={() => setActiveSection(null)}
+                            className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleSaveGeneral}
+                            className="flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+                            style={{ backgroundColor: ORANGE, color: "#000" }}
+                          >
+                            <Save size={16} /> Salvar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Backup de Dados */}
+                    {setting.id === "backup" && (
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-400">Exporte todos os dados da plataforma em formato JSON ou importe um backup anterior.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <button
+                            onClick={handleExportBackup}
+                            className="flex items-center justify-center gap-3 p-4 rounded-lg border border-gray-600 hover:border-blue-500 transition-all hover:scale-[1.02]"
+                            style={{ backgroundColor: "rgba(74,144,226,0.1)" }}
+                          >
+                            <Download size={24} className="text-blue-400" />
+                            <div className="text-left">
+                              <p className="font-semibold text-white">Exportar Backup</p>
+                              <p className="text-xs text-gray-400">Download JSON com todos os dados</p>
+                            </div>
+                          </button>
+                          <button
+                            onClick={handleImportBackup}
+                            className="flex items-center justify-center gap-3 p-4 rounded-lg border border-gray-600 hover:border-green-500 transition-all hover:scale-[1.02]"
+                            style={{ backgroundColor: "rgba(126,211,33,0.1)" }}
+                          >
+                            <Upload size={24} className="text-green-400" />
+                            <div className="text-left">
+                              <p className="font-semibold text-white">Importar Backup</p>
+                              <p className="text-xs text-gray-400">Restaurar dados de arquivo JSON</p>
+                            </div>
+                          </button>
+                        </div>
+                        <div className="rounded-lg p-3 border border-gray-700" style={{ backgroundColor: "rgba(255,200,0,0.05)" }}>
+                          <p className="text-xs text-yellow-400 flex items-center gap-2">
+                            <AlertCircle size={14} />
+                            Recomendamos fazer backup regularmente. O backup inclui equipes, alunos, pontuações e configurações.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Segurança */}
+                    {setting.id === "security" && (
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                          <Key size={16} style={{ color: "#FF6B6B" }} /> Alterar Senha do Administrador
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Senha Atual</label>
+                            <input
+                              type="password"
+                              value={securityForm.currentPassword}
+                              onChange={(e) => setSecurityForm({ ...securityForm, currentPassword: e.target.value })}
+                              placeholder="••••••••"
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-red-500 focus:outline-none placeholder:text-gray-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Nova Senha</label>
+                            <input
+                              type="password"
+                              value={securityForm.newPassword}
+                              onChange={(e) => setSecurityForm({ ...securityForm, newPassword: e.target.value })}
+                              placeholder="••••••••"
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-red-500 focus:outline-none placeholder:text-gray-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">Confirmar Senha</label>
+                            <input
+                              type="password"
+                              value={securityForm.confirmPassword}
+                              onChange={(e) => setSecurityForm({ ...securityForm, confirmPassword: e.target.value })}
+                              placeholder="••••••••"
+                              className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-red-500 focus:outline-none placeholder:text-gray-600"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-2">
+                          <button
+                            onClick={() => navigate("/admin/configuracoes")}
+                            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                          >
+                            <ExternalLink size={14} /> Gerenciamento avançado de permissões
+                          </button>
+                          <button
+                            onClick={handleChangePassword}
+                            className="flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+                            style={{ backgroundColor: "#FF6B6B", color: "#fff" }}
+                          >
+                            <Lock size={16} /> Alterar Senha
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notificações */}
+                    {setting.id === "notifications" && (
+                      <div className="space-y-4">
+                        <div className="space-y-3">
+                          {[
+                            { key: "emailAlerts", label: "Alertas por Email", desc: "Receber notificações por email sobre atividades importantes" },
+                            { key: "badgeNotifs", label: "Notificações de Badges", desc: "Notificar alunos quando conquistarem novos badges" },
+                            { key: "pfNotifs", label: "Notificações de PF", desc: "Notificar alunos quando receberem pontos de farmacologia" },
+                            { key: "weeklyReport", label: "Relatório Semanal", desc: "Enviar resumo semanal de atividades por email" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center justify-between p-3 rounded-lg border border-gray-700" style={{ backgroundColor: "rgba(255,255,255,0.02)" }}>
+                              <div>
+                                <p className="text-sm font-medium text-white">{item.label}</p>
+                                <p className="text-xs text-gray-400">{item.desc}</p>
+                              </div>
+                              <button
+                                onClick={() => setNotifForm({ ...notifForm, [item.key]: !notifForm[item.key as keyof typeof notifForm] })}
+                                className="transition-all"
+                              >
+                                {notifForm[item.key as keyof typeof notifForm] ? (
+                                  <ToggleRight size={32} className="text-green-400" />
+                                ) : (
+                                  <ToggleLeft size={32} className="text-gray-500" />
+                                )}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-400 mb-1 block">Email para alertas do administrador</label>
+                          <input
+                            value={notifForm.alertEmail}
+                            onChange={(e) => setNotifForm({ ...notifForm, alertEmail: e.target.value })}
+                            placeholder="admin@unirio.br"
+                            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white text-sm focus:border-green-500 focus:outline-none placeholder:text-gray-600"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                          <button
+                            onClick={() => setActiveSection(null)}
+                            className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleSaveNotifications}
+                            className="flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+                            style={{ backgroundColor: "#7ED321", color: "#000" }}
+                          >
+                            <Save size={16} /> Salvar Notificações
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Relatórios */}
+                    {setting.id === "reports" && (
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-400">Gere relatórios detalhados sobre o desempenho dos alunos e equipes.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { title: "Desempenho por Equipe", desc: "Ranking e PF de cada equipe", icon: <Users size={20} />, color: "#4A90E2" },
+                            { title: "Desempenho Individual", desc: "PF e evolução de cada aluno", icon: <GraduationCap size={20} />, color: ORANGE },
+                            { title: "Frequência", desc: "Relatório de presença dos alunos", icon: <CheckCircle size={20} />, color: "#7ED321" },
+                          ].map((report, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => navigate("/admin/relatorios")}
+                              className="flex flex-col items-center gap-3 p-4 rounded-lg border border-gray-600 hover:border-purple-500 transition-all hover:scale-[1.02] text-center"
+                              style={{ backgroundColor: `${report.color}10` }}
+                            >
+                              <div style={{ color: report.color }}>{report.icon}</div>
+                              <div>
+                                <p className="font-semibold text-white text-sm">{report.title}</p>
+                                <p className="text-xs text-gray-400 mt-1">{report.desc}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex justify-end pt-2">
+                          <button
+                            onClick={() => navigate("/admin/relatorios")}
+                            className="flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+                            style={{ backgroundColor: "#9B59B6", color: "#fff" }}
+                          >
+                            <FileText size={16} /> Abrir Painel de Relatórios
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </div>

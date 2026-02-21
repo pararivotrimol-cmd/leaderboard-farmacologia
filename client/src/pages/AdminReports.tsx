@@ -48,7 +48,56 @@ export default function AdminReports() {
   }, [leaderboardQuery.data]);
 
   const handleExportPDF = () => {
-    toast.info("Exportação em PDF será implementada em breve");
+    // Criar conteúdo HTML para impressão/PDF
+    const printContent = document.createElement("div");
+    printContent.innerHTML = `
+      <style>
+        @media print {
+          body { font-family: Arial, sans-serif; color: #333; }
+          h1 { color: #0A1628; font-size: 24px; border-bottom: 2px solid #F7941D; padding-bottom: 8px; }
+          h2 { color: #1A1A2E; font-size: 18px; margin-top: 20px; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+          th { background-color: #0A1628; color: white; }
+          .stat { display: inline-block; margin: 10px 20px 10px 0; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #F7941D; }
+          .stat-label { font-size: 11px; color: #666; }
+        }
+      </style>
+      <h1>Relatório de Desempenho — Conexão em Farmacologia</h1>
+      <p>Gerado em: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}</p>
+      <div>
+        <span class="stat"><span class="stat-value">${reportData.totalTeams}</span><br/><span class="stat-label">Equipes</span></span>
+        <span class="stat"><span class="stat-value">${reportData.totalStudents}</span><br/><span class="stat-label">Alunos</span></span>
+        <span class="stat"><span class="stat-value">${reportData.totalActivities}</span><br/><span class="stat-label">Atividades</span></span>
+      </div>
+      <h2>Desempenho por Equipe</h2>
+      <table>
+        <thead><tr><th>Equipe</th><th>Membros</th><th>PF Total</th><th>PF Médio</th></tr></thead>
+        <tbody>
+          ${reportData.teams.map((t: any) => `<tr><td>${t.name}</td><td>${t.members}</td><td>${t.pf.toFixed(1)}</td><td>${(t.pf / (t.members || 1)).toFixed(1)}</td></tr>`).join("")}
+        </tbody>
+      </table>
+      <h2>Atividades Avaliativas</h2>
+      <table>
+        <thead><tr><th>Atividade</th><th>Pontuação Máxima</th></tr></thead>
+        <tbody>
+          ${reportData.activities.map((a: any) => `<tr><td>${a.name}</td><td>${a.pontos}</td></tr>`).join("")}
+        </tbody>
+      </table>
+    `;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(printContent.innerHTML);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        toast.success("Relatório gerado! Use 'Salvar como PDF' na janela de impressão.");
+      }, 500);
+    } else {
+      toast.error("Permita pop-ups para gerar o relatório em PDF");
+    }
   };
 
   if (isLoading) {

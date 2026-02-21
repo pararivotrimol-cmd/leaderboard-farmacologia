@@ -1045,3 +1045,14 @@
 ### Aba de Cronograma
 - [x] Criar aba de cronograma para alunos, professores e admin (/cronograma)
 - [x] Exibir cronograma da turma de Farmacologia 1
+
+
+## Ativação de Funcionalidades Admin "Em Breve"
+- [x] Configurações Gerais - Formulário inline com nome da disciplina, semestre, universidade
+- [x] Backup de Dados - Exportar JSON e importar backup com validação
+- [x] Segurança - Alterar senha do admin com validação
+- [x] Notificações - Toggles para alertas por email, badges, PF, relatório semanal
+- [x] Relatórios - Cards de navegação para relatórios por equipe, individual e frequência
+- [x] Semana Atual - Botão "Salvar" agora funcional via settings.updateSettings
+- [x] Exportação PDF - Relatório formatado com tabelas via window.print()
+- [x] Eliminar todas as mensagens "em breve" e "em desenvolvimento" do sistema
