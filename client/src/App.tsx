@@ -25,7 +25,7 @@ import ProfessorSignup from "./pages/ProfessorSignup";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import PerformanceReport from "./pages/PerformanceReport";
 import AdminDashboard from "./pages/AdminDashboard";
-import JigsawGroups from "./pages/JigsawGroups";
+import GruposJigsaw from "./pages/GruposJigsaw";
 import AdminSettings from "./pages/AdminSettings";
 import AdminReports from "./pages/AdminReports";
 import Cronograma from "./pages/Cronograma";
@@ -49,7 +49,7 @@ function Router() {
       <Route path={"/presenca"} component={Presenca} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/performance"} component={PerformanceReport} />
-      <Route path={"/grupos-jigsaw"} component={JigsawGroups} />
+      <Route path={"/grupos-jigsaw"} component={GruposJigsaw} />
       <Route path={"/cronograma"} component={Cronograma} />
       <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />

@@ -1056,3 +1056,42 @@
 - [x] Semana Atual - Botão "Salvar" agora funcional via settings.updateSettings
 - [x] Exportação PDF - Relatório formatado com tabelas via window.print()
 - [x] Eliminar todas as mensagens "em breve" e "em desenvolvimento" do sistema
+
+
+## Novas Melhorias Solicitadas
+
+### Cronograma e Subdivisão de Turmas
+- [ ] Inserir cronograma na aba do quadro geral de alunos (turma Medicina Farmacologia 1)
+- [ ] Subdividir quadro de alunos no portal entre as turmas do semestre
+- [ ] Criar filtro/dropdown para selecionar turma específica
+
+### Gerenciamento de Professores
+- [ ] Adicionar opção "Coordenador" na função de professores
+- [ ] Implementar permissões diferenciadas para coordenador
+- [ ] Atualizar schema do banco para incluir role "coordenador"
+
+### Importação UNIRIO
+- [ ] Remover caixa "em anexo" da aba importar alunos
+
+### Paginação Real
+- [ ] Implementar paginação no TeamManager (lista de membros por equipe)
+- [ ] Implementar paginação no TurmasManager (lista de alunos por turma)
+- [ ] Adicionar controles de página (anterior, próxima, ir para página)
+- [ ] Adicionar seletor de itens por página (20, 50, 100)
+
+### Interface Jigsaw Completa
+- [ ] Criar página /grupos-jigsaw com layout completo
+- [ ] Implementar formulário de criação de grupo de especialistas
+- [ ] Implementar formulário de criação de grupo Jigsaw
+- [ ] Exibir lista de grupos disponíveis para entrar
+- [ ] Exibir tópicos e artigos por grupo
+- [ ] Implementar sistema de convites entre alunos
+- [ ] Adicionar visualização de membros por grupo
+
+### Aba de Auditoria
+- [ ] Criar AuditTab no AdminDashboard
+- [ ] Implementar timeline de ações dos professores
+- [ ] Exibir quem alterou PF, criou equipes, importou alunos
+- [ ] Adicionar filtros por professor, ação e data
+- [ ] Implementar paginação na timeline
+- [ ] Adicionar exportação de logs de auditoria

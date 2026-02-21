@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,13 +7,14 @@ import { SearchStudents } from "@/components/SearchStudents";
 import { ExportButton } from "@/components/ExportButton";
 import { SortSelector, useSortStudents, type SortOption } from "@/components/SortSelector";
 import { Pagination } from "@/components/Pagination";
+import { AuditLogManager } from "./AdminAuditLog";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -239,6 +241,8 @@ function MemberList({ teamId, members, password, teamColor }: {
   const [editingMember, setEditingMember] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editXP, setEditXP] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const utils = trpc.useUtils();
 
@@ -281,27 +285,44 @@ function MemberList({ teamId, members, password, teamColor }: {
       {members.length === 0 ? (
         <p className="text-xs text-muted-foreground text-center py-2">Nenhum aluno nesta equipe</p>
       ) : (
-        <div className="space-y-1">
-          {members.sort((a, b) => a.name.localeCompare(b.name)).map(member => (
-            <div key={member.id} className="flex items-center gap-2 py-1">
-              {editingMember === member.id ? (
-                <>
-                  <input value={editName} onChange={e => setEditName(e.target.value)} className="flex-1 px-2 py-1 rounded bg-secondary border border-border text-xs text-foreground" />
-                  <input value={editXP} onChange={e => setEditXP(e.target.value)} className="w-16 px-2 py-1 rounded bg-secondary border border-border text-xs text-foreground text-right font-mono" type="number" step="0.5" />
-                  <button onClick={() => updateMember.mutate({ password, id: member.id, name: editName, xp: editXP })} className="p-1 rounded bg-primary/20 text-primary"><Save size={12} /></button>
-                  <button onClick={() => setEditingMember(null)} className="p-1 rounded bg-destructive/20 text-destructive"><X size={12} /></button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-xs text-foreground truncate">{member.name}</span>
-                  <span className="font-mono text-xs font-bold w-12 text-right" style={{ color: teamColor }}>{member.xp.toFixed(1)}</span>
-                  <button onClick={() => { setEditingMember(member.id); setEditName(member.name); setEditXP(member.xp.toFixed(1)); }} className="p-1 rounded hover:bg-secondary text-muted-foreground"><Edit2 size={12} /></button>
-                  <button onClick={() => { if (confirm(`Remover "${member.name}"?`)) deleteMember.mutate({ password, id: member.id }); }} className="p-1 rounded hover:bg-destructive/20 text-destructive"><Trash2 size={12} /></button>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="space-y-1">
+            {members
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+              .map(member => (
+                <div key={member.id} className="flex items-center gap-2 py-1">
+                  {editingMember === member.id ? (
+                    <>
+                      <input value={editName} onChange={e => setEditName(e.target.value)} className="flex-1 px-2 py-1 rounded bg-secondary border border-border text-xs text-foreground" />
+                      <input value={editXP} onChange={e => setEditXP(e.target.value)} className="w-16 px-2 py-1 rounded bg-secondary border border-border text-xs text-foreground text-right font-mono" type="number" step="0.5" />
+                      <button onClick={() => updateMember.mutate({ password, id: member.id, name: editName, xp: editXP })} className="p-1 rounded bg-primary/20 text-primary"><Save size={12} /></button>
+                      <button onClick={() => setEditingMember(null)} className="p-1 rounded bg-destructive/20 text-destructive"><X size={12} /></button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-xs text-foreground truncate">{member.name}</span>
+                      <span className="font-mono text-xs font-bold w-12 text-right" style={{ color: teamColor }}>{member.xp.toFixed(1)}</span>
+                      <button onClick={() => { setEditingMember(member.id); setEditName(member.name); setEditXP(member.xp.toFixed(1)); }} className="p-1 rounded hover:bg-secondary text-muted-foreground"><Edit2 size={12} /></button>
+                      <button onClick={() => { if (confirm(`Remover "${member.name}"?`)) deleteMember.mutate({ password, id: member.id }); }} className="p-1 rounded hover:bg-destructive/20 text-destructive"><Trash2 size={12} /></button>
+                    </>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+          {members.length > 10 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(members.length / pageSize)}
+              onPageChange={setCurrentPage}
+              pageSize={pageSize}
+              onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+              totalItems={members.length}
+              className="mt-2 pt-2 border-t border-border/30"
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -578,21 +599,7 @@ function ProfessoresManager({ teacherToken }: { teacherToken: string | null }) {
         <p className="text-muted-foreground">Gerencie contas de professores e coordenadores</p>
       </div>
 
-      {/* First Coordinator Alert */}
-      {teachers && teachers.filter(t => t.role === "coordenador").length === 0 && (
-        <div className="mb-6 border border-amber-500/50 rounded-lg p-4 bg-amber-500/10">
-          <div className="flex items-start gap-3">
-            <AlertTriangle size={20} className="text-amber-500 mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">Nenhum coordenador cadastrado</h3>
-              <p className="text-sm text-muted-foreground">
-                O sistema precisa de pelo menos um coordenador para gerenciar professores. 
-                Promova um professor existente usando o botão "Promover" ao lado do nome dele.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Search and Filters */}
       <div className="mb-6 flex gap-3 flex-wrap">
@@ -2638,6 +2645,7 @@ function JigsawSeminarsManager({ teacherToken }: { teacherToken: string | null }
 
 // ─── Turmas Manager ───
 function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
+  const [, setLocation] = useLocation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCourse, setNewCourse] = useState("");
@@ -2651,6 +2659,8 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamEmoji, setNewTeamEmoji] = useState("🧪");
   const [newTeamColor, setNewTeamColor] = useState("#10b981");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const utils = trpc.useUtils();
 
@@ -2761,7 +2771,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
             <div className="text-xs text-muted-foreground uppercase">Equipes</div>
             <div className="font-mono font-bold text-2xl text-foreground">{classDetail.teams.length}</div>
@@ -2776,6 +2786,16 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
               {classDetail.members.reduce((s: number, m: any) => s + parseFloat(m.xp || "0"), 0).toFixed(1)}
             </div>
           </div>
+          <button
+            onClick={() => setLocation("/cronograma")}
+            className="border border-border rounded-lg p-4 hover:bg-primary/10 transition-colors cursor-pointer"
+            style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+          >
+            <div className="text-xs text-muted-foreground uppercase">Cronograma</div>
+            <div className="font-mono font-bold text-lg text-primary flex items-center gap-2">
+              <Calendar size={20} /> Ver
+            </div>
+          </button>
         </div>
 
         {/* Teams in this class */}
@@ -2946,29 +2966,47 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
           {classDetail.members.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
           ) : (
-            <div className="space-y-1">
-              {[...classDetail.members].sort((a: any, b: any) => a.name.localeCompare(b.name)).map((m: any, idx: number) => {
-                const team = classDetail.teams.find((t: any) => t.id === m.teamId);
-                return (
-                  <div key={m.id} className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary/50">
-                    <span className="w-6 text-center text-xs text-muted-foreground font-mono">{idx + 1}</span>
-                    <span className="text-sm text-foreground flex-1">{m.name}</span>
-                    {team && (
-                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: team.color + "22", color: team.color }}>
-                        {team.emoji} {team.name}
-                      </span>
-                    )}
-                    <span className="text-xs font-mono font-bold text-primary">{parseFloat(m.xp || "0").toFixed(1)} PF</span>
-                    <button
-                      onClick={() => { if (confirm(`Remover aluno "${m.name}"?`)) deleteMemberMut.mutate({ password: "authenticated", id: m.id }); }}
-                      className="p-1 rounded hover:bg-destructive/20 text-destructive"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              <div className="space-y-1">
+                {[...classDetail.members]
+                  .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((m: any, idx: number) => {
+                    const team = classDetail.teams.find((t: any) => t.id === m.teamId);
+                    const globalIdx = (currentPage - 1) * pageSize + idx + 1;
+                    return (
+                      <div key={m.id} className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary/50">
+                        <span className="w-6 text-center text-xs text-muted-foreground font-mono">{globalIdx}</span>
+                        <span className="text-sm text-foreground flex-1">{m.name}</span>
+                        {team && (
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: team.color + "22", color: team.color }}>
+                            {team.emoji} {team.name}
+                          </span>
+                        )}
+                        <span className="text-xs font-mono font-bold text-primary">{parseFloat(m.xp || "0").toFixed(1)} PF</span>
+                        <button
+                          onClick={() => { if (confirm(`Remover aluno "${m.name}"?`)) deleteMemberMut.mutate({ password: "authenticated", id: m.id }); }}
+                          className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+              {classDetail.members.length > 10 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(classDetail.members.length / pageSize)}
+                  onPageChange={setCurrentPage}
+                  pageSize={pageSize}
+                  onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                  totalItems={classDetail.members.length}
+                  className="mt-3"
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -3074,7 +3112,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos">("turmas");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -3128,6 +3166,7 @@ export default function Admin() {
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "importar-alunos" as const, label: "Importar Alunos", icon: <Upload size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
+    { key: "auditoria" as const, label: "Auditoria", icon: <Clock size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -3182,6 +3221,7 @@ export default function Admin() {
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "importar-alunos" && teacherToken && <ImportarAlunosManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
+        {activeSection === "auditoria" && teacherToken && <AuditLogManager teacherToken={teacherToken} />}
         {activeSection === "settings" && password && <SettingsManager password={password} />}
       </div>
     </div>
