@@ -24,6 +24,7 @@ export const settingsRouter = router({
       totalWeeks: 17,
       primaryColor: "#FF9500",
       secondaryColor: "#1A1A2E",
+      sortBy: "alphabetical",
     };
   }),
 
@@ -42,6 +43,7 @@ export const settingsRouter = router({
         description: z.string().optional(),
         primaryColor: z.string().optional(),
         secondaryColor: z.string().optional(),
+        sortBy: z.enum(["alphabetical", "by_pf", "by_date"]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {

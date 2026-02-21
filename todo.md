@@ -961,3 +961,61 @@
 - [x] Atualizar rota leaderboard.getData para ordenar membros e atividades alfabeticamente
 - [x] Atualizar testes para refletir nova ordenação alfabética
 - [x] Verificar que todos os 88 testes passam
+
+
+## Filtros de Busca, Exportação e Ordenação Customizável
+
+### Filtros de Busca
+- [ ] Criar componente SearchStudents.tsx com campo de busca
+- [ ] Implementar busca por nome (case-insensitive)
+- [ ] Implementar busca por CPF
+- [ ] Implementar busca por matrícula
+- [ ] Integrar busca em Admin.tsx (TeamManager)
+- [ ] Integrar busca em Admin.tsx (ClassManager)
+- [ ] Adicionar debounce para melhor performance
+
+### Exportação em Excel
+- [ ] Instalar biblioteca xlsx (excel-js ou similar)
+- [ ] Criar função de exportação para lista de alunos
+- [ ] Incluir colunas: nome, PF, equipe, turma, CPF, matrícula
+- [ ] Adicionar botão de exportação em Admin.tsx
+- [ ] Testar geração de arquivo Excel
+- [ ] Adicionar formatação (headers, cores, largura de colunas)
+
+### Ordenação Customizável
+- [ ] Adicionar campo sortBy nas configurações do sistema
+- [ ] Criar enum com opções: ALPHABETICAL, BY_PF, BY_DATE
+- [ ] Implementar seletor de ordenação em Admin.tsx
+- [ ] Atualizar rotas tRPC para respeitar preferência de ordenação
+- [ ] Salvar preferência nas settings
+- [ ] Aplicar ordenação em todas as listas de alunos
+
+
+## Implementação Completa - Filtros, Busca e Exportação
+
+### Filtros de Busca
+- [x] Criar componente SearchStudents.tsx com campo de busca
+- [x] Implementar busca por nome (case-insensitive)
+- [x] Implementar busca por CPF
+- [x] Implementar busca por matrícula
+- [ ] Integrar busca em Admin.tsx (TeamManager)
+- [ ] Integrar busca em Admin.tsx (ClassManager)
+- [x] Adicionar debounce para melhor performance
+
+### Exportação em Excel
+- [x] Instalar biblioteca xlsx (v0.18.5)
+- [x] Criar função de exportação para lista de alunos (export-excel.ts)
+- [x] Incluir colunas: nome, PF, equipe, turma, CPF, matrícula
+- [x] Criar componente ExportButton.tsx com menu de opções
+- [ ] Adicionar botão de exportação em Admin.tsx
+- [ ] Testar geração de arquivo Excel
+- [x] Adicionar formatação (headers, cores, largura de colunas)
+
+### Ordenação Customizável
+- [x] Adicionar campo sortBy nas configurações do sistema
+- [x] Criar enum com opções: ALPHABETICAL, BY_PF, BY_DATE
+- [x] Criar componente SortSelector.tsx
+- [x] Implementar hook useSortStudents para ordenação
+- [ ] Atualizar rotas tRPC para respeitar preferência de ordenação
+- [x] Salvar preferência nas settings
+- [ ] Aplicar ordenação em todas as listas de alunos
