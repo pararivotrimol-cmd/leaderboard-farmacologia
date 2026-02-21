@@ -3114,7 +3114,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -3160,13 +3160,10 @@ export default function Admin() {
     { key: "xp" as const, label: "Atualizar PF", icon: <Zap size={16} /> },
     { key: "activities" as const, label: "Atividades", icon: <Trophy size={16} /> },
     { key: "highlights" as const, label: "Destaques", icon: <Activity size={16} /> },
-    { key: "notifications" as const, label: "Notificações", icon: <Bell size={16} /> },
-    { key: "materials" as const, label: "Materiais", icon: <FileText size={16} /> },
+    { key: "recursos" as const, label: "Recursos", icon: <FileText size={16} /> },
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
-    { key: "youtube" as const, label: "YouTube", icon: <Youtube size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
-    { key: "importar-alunos" as const, label: "Importar Alunos", icon: <Upload size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "auditoria" as const, label: "Auditoria", icon: <Clock size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
@@ -3217,13 +3214,25 @@ export default function Admin() {
         {activeSection === "xp" && password && <BulkXPManager password={password} />}
         {activeSection === "activities" && password && <ActivitiesManager password={password} />}
         {activeSection === "highlights" && password && <HighlightsManager password={password} />}
-        {activeSection === "notifications" && password && <NotificationsManager password={password} />}
-        {activeSection === "materials" && password && <MaterialsManager password={password} />}
+        {activeSection === "recursos" && password && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Notificações</h3>
+              <NotificationsManager password={password} />
+            </div>
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Materiais</h3>
+              <MaterialsManager password={password} />
+            </div>
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">YouTube</h3>
+              <YouTubePlaylistsManager password={password} />
+            </div>
+          </div>
+        )}
         {activeSection === "badges" && password && <BadgesManager password={password} />}
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
-        {activeSection === "youtube" && password && <YouTubePlaylistsManager password={password} />}
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
-        {activeSection === "importar-alunos" && teacherToken && <ImportarAlunosManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "auditoria" && teacherToken && <AuditLogManager teacherToken={teacherToken} />}
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}

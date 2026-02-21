@@ -13,59 +13,8 @@ export function AuditLogManager({ teacherToken }: { teacherToken: string | null 
   const [filterTeacher, setFilterTeacher] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Query audit logs (mock data for now - can be connected to real tRPC route)
-  const auditLogs = [
-    {
-      id: 1,
-      teacherName: "Prof. Pedro Henrique",
-      teacherEmail: "pedro@unirio.br",
-      action: "update_xp",
-      entityType: "member",
-      entityId: 15,
-      details: JSON.stringify({ memberName: "João Silva", oldXP: 10.5, newXP: 15.0, reason: "Apresentação Jigsaw" }),
-      createdAt: new Date("2026-02-20T14:30:00"),
-    },
-    {
-      id: 2,
-      teacherName: "Prof. Pedro Henrique",
-      teacherEmail: "pedro@unirio.br",
-      action: "create_team",
-      entityType: "team",
-      entityId: 8,
-      details: JSON.stringify({ teamName: "Equipe Alfa", emoji: "🧪", color: "#10b981" }),
-      createdAt: new Date("2026-02-19T10:15:00"),
-    },
-    {
-      id: 3,
-      teacherName: "Prof. Maria Santos",
-      teacherEmail: "maria@unirio.br",
-      action: "import_students",
-      entityType: "class",
-      entityId: 1,
-      details: JSON.stringify({ imported: 25, className: "Farmacologia I - 2026.1" }),
-      createdAt: new Date("2026-02-18T09:00:00"),
-    },
-    {
-      id: 4,
-      teacherName: "Prof. Pedro Henrique",
-      teacherEmail: "pedro@unirio.br",
-      action: "delete_member",
-      entityType: "member",
-      entityId: 12,
-      details: JSON.stringify({ memberName: "Carlos Oliveira", teamName: "Equipe Beta" }),
-      createdAt: new Date("2026-02-17T16:45:00"),
-    },
-    {
-      id: 5,
-      teacherName: "Prof. Pedro Henrique",
-      teacherEmail: "pedro@unirio.br",
-      action: "update_settings",
-      entityType: "settings",
-      entityId: null,
-      details: JSON.stringify({ setting: "currentWeek", oldValue: 5, newValue: 6 }),
-      createdAt: new Date("2026-02-16T08:20:00"),
-    },
-  ];
+  // Query audit logs - conectar a rota tRPC real quando disponível
+  const auditLogs: any[] = [];
 
   // Action labels
   const actionLabels: Record<string, { label: string; icon: any; color: string }> = {
@@ -80,15 +29,15 @@ export function AuditLogManager({ teacherToken }: { teacherToken: string | null 
   };
 
   // Filter logs
-  const filteredLogs = auditLogs.filter(log => {
+  const filteredLogs = auditLogs.filter((log: any) => {
     if (filterAction !== "all" && log.action !== filterAction) return false;
     if (filterTeacher !== "all" && log.teacherEmail !== filterTeacher) return false;
-    if (searchTerm && !log.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) && !JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (searchTerm && !log.teacherName?.toLowerCase().includes(searchTerm.toLowerCase()) && !JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
 
   // Get unique teachers
-  const uniqueTeachers = Array.from(new Set(auditLogs.map(log => log.teacherEmail)));
+  const uniqueTeachers = Array.from(new Set(auditLogs.map((log: any) => log.teacherEmail)));
 
   return (
     <div className="container max-w-6xl py-8">
