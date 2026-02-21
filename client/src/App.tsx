@@ -35,6 +35,7 @@ import QuestionsManager from "./pages/QuestionsManager";
 import ResultsDashboard from "./pages/ResultsDashboard";
 import GamePortal from "./pages/GamePortal";
 import AdminStudentView from "./pages/AdminStudentView";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentArea from "./pages/StudentArea";
 
 function Router() {
@@ -47,6 +48,7 @@ function Router() {
       <Route path={"/admin/configuracoes"} component={AdminSettings} />
       <Route path={"/admin/relatorios"} component={AdminReports} />
       <Route path={"/admin/alunos/:classId"} component={AdminStudentView} />
+      <Route path={"/professor/dashboard"} component={TeacherDashboard} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/professor/questoes"} component={QuestionsManager} />
       <Route path={"/professor/resultados"} component={ResultsDashboard} />

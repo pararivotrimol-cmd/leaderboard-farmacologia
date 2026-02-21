@@ -1476,3 +1476,38 @@
 - [ ] Implementar filtros por semana/período
 - [ ] Implementar exportação em PDF
 - [ ] Testar com dados reais
+
+
+## Dashboard do Professor - Progresso e Dificuldades
+
+### Fase 1: Rotas tRPC
+- [ ] Criar rota getClassProgress para buscar progresso geral da turma
+- [ ] Criar rota getStudentPerformance para desempenho individual
+- [ ] Criar rota getQuestionDifficulty para análise de dificuldade de questões
+- [ ] Criar rota getAssessmentStats para estatísticas de atividades
+- [ ] Criar rota getClassComparison para comparar turmas
+- [ ] Implementar cálculo de taxa de acerto por questão
+- [ ] Implementar cálculo de evolução temporal
+
+### Fase 2: Componentes de Gráficos
+- [ ] Criar componente ProgressChart (evolução de PF ao longo do tempo)
+- [ ] Criar componente DifficultyChart (distribuição de dificuldade)
+- [ ] Criar componente PerformanceChart (desempenho por aluno)
+- [ ] Criar componente ComparisonChart (comparação entre turmas)
+- [ ] Criar componente HeatmapChart (matriz de acertos por questão)
+- [ ] Integrar Chart.js com dados reais
+
+### Fase 3: Página TeacherDashboard
+- [ ] Criar página TeacherDashboard.tsx
+- [ ] Implementar seletor de turma
+- [ ] Implementar filtro por período/semana
+- [ ] Organizar gráficos em grid responsivo
+- [ ] Adicionar resumo de estatísticas (média, mediana, desvio padrão)
+- [ ] Implementar exportação de relatório em PDF
+- [ ] Adicionar navegação por abas (Visão Geral, Alunos, Questões, Atividades)
+
+### Fase 4: Testes
+- [ ] Escrever testes para rotas de progresso
+- [ ] Testar cálculos de dificuldade
+- [ ] Validar responsividade em mobile/tablet
+- [ ] Testar exportação de PDF
