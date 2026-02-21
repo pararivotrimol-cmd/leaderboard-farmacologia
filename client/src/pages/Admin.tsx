@@ -9,13 +9,14 @@ import { SortSelector, useSortStudents, type SortOption } from "@/components/Sor
 import { Pagination } from "@/components/Pagination";
 import { AuditLogManager } from "./AdminAuditLog";
 import JigsawRebalancingManager from "./AdminJigsawRebalancing";
+import AttendanceQRCodeManager from "./AdminAttendanceQRCode";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
   Plus, Trophy, Zap, Activity, Settings, ChevronDown, ChevronUp,
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -1485,26 +1486,26 @@ function AttendanceManager({ password }: { password: string }) {
   const [manualNote, setManualNote] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = trpc.attendance.getSummary.useQuery(
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = trpc.attendanceOld.getSummary.useQuery(
     { password }, { enabled: viewMode === "summary" }
   );
-  const { data: weeklyData, isLoading: weeklyLoading, refetch: refetchWeekly } = trpc.attendance.getByWeek.useQuery(
+  const { data: weeklyData, isLoading: weeklyLoading, refetch: refetchWeekly } = trpc.attendanceOld.getByWeek.useQuery(
     { password, week: selectedWeek }, { enabled: viewMode === "weekly" }
   );
-  const { data: accounts, isLoading: accountsLoading, refetch: refetchAccounts } = trpc.attendance.getAccounts.useQuery(
+  const { data: accounts, isLoading: accountsLoading, refetch: refetchAccounts } = trpc.attendanceOld.getAccounts.useQuery(
     { password }, { enabled: viewMode === "accounts" }
   );
 
-  const updateStatusMutation = trpc.attendance.updateStatus.useMutation({
+  const updateStatusMutation = trpc.attendanceOld.updateStatus.useMutation({
     onSuccess: () => { toast.success("Status atualizado"); refetchWeekly(); refetchSummary(); },
   });
   const manualCheckInMutation = trpc.attendance.manualCheckIn.useMutation({
     onSuccess: () => { toast.success("Presença manual registrada"); refetchWeekly(); refetchSummary(); setManualMemberId(""); setManualNote(""); },
   });
-  const deleteRecordMutation = trpc.attendance.delete.useMutation({
+  const deleteRecordMutation = trpc.attendanceOld.delete.useMutation({
     onSuccess: () => { toast.success("Registro removido"); refetchWeekly(); refetchSummary(); },
   });
-  const deleteAccountMutation = trpc.attendance.deleteAccount.useMutation({
+  const deleteAccountMutation = trpc.attendanceOld.deleteAccount.useMutation({
     onSuccess: () => { toast.success("Conta removida"); refetchAccounts(); },
   });
 
@@ -1515,7 +1516,7 @@ function AttendanceManager({ password }: { password: string }) {
     return summary.filter((m: any) => m.memberName.toLowerCase().includes(s) || m.teamName.toLowerCase().includes(s));
   }, [summary, searchTerm]);
 
-  const reportQuery = trpc.attendance.exportReport.useQuery({ password });
+  const reportQuery = trpc.attendanceOld.exportReport.useQuery({ password });
 
   const exportCSV = () => {
     const data = reportQuery.data;
@@ -1719,8 +1720,8 @@ function AttendanceManager({ password }: { password: string }) {
                   if (!manualMemberId) return;
                   const today = new Date().toISOString().split("T")[0];
                   manualCheckInMutation.mutate({
-                    password, memberId: Number(manualMemberId),
-                    week: selectedWeek, classDate: today, note: manualNote || undefined,
+                    studentAccountId: Number(manualMemberId),
+                    classDate: today, note: manualNote || undefined,
                   });
                 }}
                 disabled={!manualMemberId || manualCheckInMutation.isPending}
@@ -3113,7 +3114,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria" | "rebalanceamento">("turmas");
+  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "notifications" | "materials" | "badges" | "attendance" | "youtube" | "professores" | "jigsaw" | "settings" | "importar-alunos" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -3169,6 +3170,7 @@ export default function Admin() {
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "auditoria" as const, label: "Auditoria", icon: <Clock size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
+    { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
   ];
 
@@ -3225,6 +3227,7 @@ export default function Admin() {
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
         {activeSection === "auditoria" && teacherToken && <AuditLogManager teacherToken={teacherToken} />}
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}
+        {activeSection === "qr-code" && <AttendanceQRCodeManager />}
         {activeSection === "settings" && password && <SettingsManager password={password} />}
       </div>
     </div>

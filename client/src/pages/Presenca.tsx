@@ -49,12 +49,12 @@ export default function Presenca() {
   }, [isLoading, isAuthenticated, setLocation]);
 
   // Get attendance history
-  const { data: attendanceHistory } = trpc.attendance.myAttendance.useQuery(
+  const { data: attendanceHistory } = trpc.attendanceOld.myAttendance.useQuery(
     { sessionToken: sessionToken || "" },
     { enabled: !!sessionToken }
   );
 
-  const checkInMutation = trpc.attendance.checkIn.useMutation();
+  const checkInMutation = trpc.attendanceOld.checkIn.useMutation();
 
   // Calculate distance between two points using Haversine formula
   function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {

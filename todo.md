@@ -1178,3 +1178,27 @@
 - [x] Adicionar botão para executar rebalanceamento
 - [x] Adicionar aba de rebalanceamento no painel admin
 - [ ] Salvar checkpoint com rebalanceamento implementado
+
+## Sistema de Presen\u00e7a com QR Code
+- [ ] Analisar estrutura de banco de dados para presen\u00e7a
+- [ ] Criar rotas tRPC para gerar QR code di\u00e1rio
+- [ ] Criar rotas tRPC para validar e registrar presen\u00e7a
+- [ ] Implementar portal do professor para gerar QR code por turma/dia
+- [ ] Implementar leitor de QR code no portal do aluno
+- [ ] Criar ficha de presen\u00e7a com hist\u00f3rico
+- [ ] Adicionar valida\u00e7\u00e3o de hor\u00e1rio de aula
+- [ ] Adicionar notifica\u00e7\u00e3o ao aluno ap\u00f3s registrar presen\u00e7a
+- [ ] Salvar checkpoint com sistema de presen\u00e7a
+
+
+## Sistema de Presença com QR Code (Feb 21, 2026)
+- [x] Analisar estrutura de banco de dados para presença
+- [x] Criar rotas tRPC para gerar e validar QR code
+- [x] Implementar portal do professor para gerar QR code
+- [x] Criar helper para gerar QR codes com tokens únicos
+- [x] Integrar rotas no appRouter
+- [x] Adicionar aba de QR Code no painel admin
+- [ ] Implementar portal do aluno para ler QR code e registrar presença
+- [ ] Criar ficha de presença para visualizar histórico
+- [ ] Testar sistema completo de presença
+- [ ] Salvar checkpoint com sistema de presença
