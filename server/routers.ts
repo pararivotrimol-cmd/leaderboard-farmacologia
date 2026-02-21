@@ -13,6 +13,7 @@ import { jigsawCompleteRouter } from "./routers/jigsaw-complete";
 import { unirioRouter } from "./routers/unirio";
 import { settingsRouter } from "./routers/settings";
 import { attendanceRouter } from "./routers/attendance";
+import { attendanceReportRouter } from "./routers/attendance-report";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -120,6 +121,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   jigsawComplete: jigsawCompleteRouter,
   attendance: attendanceRouter,
+  attendanceReport: attendanceReportRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

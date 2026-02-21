@@ -1202,3 +1202,40 @@
 - [ ] Criar ficha de presença para visualizar histórico
 - [ ] Testar sistema completo de presença
 - [ ] Salvar checkpoint com sistema de presença
+
+
+## Relatório de Frequência para Professor
+- [ ] Criar rota tRPC para buscar frequência de todos os alunos
+- [ ] Implementar cálculo de taxa de frequência por aluno
+- [ ] Identificar alunos com risco de reprovação (< 75%)
+- [ ] Criar interface visual com tabela de frequência
+- [ ] Adicionar filtros por turma/semana
+- [ ] Exibir alertas visuais para alunos em risco
+
+## Integração de Frequência com Notas Finais
+- [ ] Analisar estrutura de notas no banco de dados
+- [ ] Criar rota tRPC para calcular nota final com penalidade de frequência
+- [ ] Implementar fórmula: nota_final = nota_base * (1 - penalidade_frequência)
+- [ ] Adicionar visualização de impacto de frequência na nota
+
+## Exportação de Relatório de Presença
+- [ ] Implementar exportação em PDF
+- [ ] Implementar exportação em Excel
+- [ ] Incluir dados: aluno, data, status, observações
+- [ ] Adicionar resumo estatístico no relatório
+- [ ] Criar botão de download na interface
+
+## Melhorias de Interface de Presença
+- [ ] Melhorar design da página PresencaQRCode
+- [ ] Melhorar design da página MinhaPresenca
+- [ ] Adicionar animações e feedback visual
+- [ ] Otimizar responsividade em mobile
+- [ ] Adicionar ícones e cores mais intuitivos
+
+## Seção de Atividades Avaliativas Teóricas
+- [ ] Criar tabela de atividades avaliativas no banco de dados
+- [ ] Implementar rotas tRPC para CRUD de atividades
+- [ ] Criar interface para professor criar/editar atividades
+- [ ] Criar interface para alunos responder atividades
+- [ ] Implementar sistema de correção automática/manual
+- [ ] Adicionar visualização de notas das atividades
