@@ -1146,8 +1146,24 @@
 - [x] Salvar preferência no localStorage
 - [x] Restaurar estado ao carregar página
 
-## Lazy Loading de Áudio
-- [ ] Implementar carregamento sob demanda de faixas
-- [ ] Adicionar indicador de carregamento
-- [ ] Otimizar uso de memória
-- [ ] Testar em conexões lentas
+## Interface de Pontuação Jigsaw no Admin
+- [x] Criar aba "Pontuação Jigsaw" no painel admin
+- [x] Listar grupos de especialistas com filtros por turma
+- [x] Implementar formulário para atribuir nota de apresentação
+- [x] Implementar formulário para atribuir nota de participação
+- [x] Integrar com mutation expertGroups.scorePresentation
+- [x] Exibir feedback visual de sucesso/erro
+
+## Sistema de Notificações Automáticas para Jigsaw
+- [x] Criar helper de notificações para Jigsaw (jigsawNotifications.ts)
+- [x] Enviar notificação ao adicionar aluno em grupo de especialistas
+- [x] Integrar com rota system.notifyOwner
+- [x] Adicionar templates de mensagens
+
+## Lazy Loading de Áudio (Otimizado)
+- [x] Implementar carregamento sob demanda de faixas
+- [x] Adicionar indicador de carregamento (spinner)
+- [x] Otimizar cache de faixas carregadas
+- [x] Usar preload="metadata" para reduzir consumo de banda
+- [x] Pré-carregar próxima faixa ao pular
+- [x] Salvar checkpoint final

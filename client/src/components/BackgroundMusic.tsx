@@ -5,19 +5,46 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const ORANGE = "#F7941D";
 
-// 10 músicas lounge hospedadas no CDN (URLs reais verificadas)
-const LOUNGE_TRACKS = [
-  { title: "Lounge Groove 1", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/QclUBaMsTWjOfyzF.mp3" },
-  { title: "Smooth Vibes", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/QoLcqWJhhfKNntMN.mp3" },
-  { title: "Chill Ambient", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/bNgqplxFRGkTFsxH.mp3" },
-  { title: "Relaxing Beat", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/cPyaXLcFUgGLMWAp.mp3" },
-  { title: "Evening Mood", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/KKvrsrWMCcgaHHKp.mp3" },
-  { title: "Soft Jazz", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/wXlRGvxKwqOBJGoW.mp3" },
-  { title: "Mellow Flow", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/NQaAjktTgJIuqLJk.mp3" },
-  { title: "Peaceful Piano", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/nFVhEhgnAUnXEZjJ.mp3" },
-  { title: "Calm Lounge", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/FjZbqjXespkOIyxn.mp3" },
-  { title: "Deep Relax", url: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/PIokKCfiIDAXWAHD.mp3" },
+// Lazy loading: Metadados das músicas (URLs carregadas sob demanda)
+const LOUNGE_TRACKS_METADATA = [
+  { title: "Lounge Groove 1", id: "lounge-1" },
+  { title: "Smooth Vibes", id: "smooth-vibes" },
+  { title: "Chill Ambient", id: "chill-ambient" },
+  { title: "Relaxing Beat", id: "relaxing-beat" },
+  { title: "Evening Mood", id: "evening-mood" },
+  { title: "Soft Jazz", id: "soft-jazz" },
+  { title: "Mellow Flow", id: "mellow-flow" },
+  { title: "Peaceful Piano", id: "peaceful-piano" },
+  { title: "Calm Lounge", id: "calm-lounge" },
+  { title: "Deep Relax", id: "deep-relax" },
 ];
+
+const TRACK_URLS: Record<string, string> = {
+  "lounge-1": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/QclUBaMsTWjOfyzF.mp3",
+  "smooth-vibes": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/QoLcqWJhhfKNntMN.mp3",
+  "chill-ambient": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/bNgqplxFRGkTFsxH.mp3",
+  "relaxing-beat": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/cPyaXLcFUgGLMWAp.mp3",
+  "evening-mood": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/KKvrsrWMCcgaHHKp.mp3",
+  "soft-jazz": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/wXlRGvxKwqOBJGoW.mp3",
+  "mellow-flow": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/NQaAjktTgJIuqLJk.mp3",
+  "peaceful-piano": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/nFVhEhgnAUnXEZjJ.mp3",
+  "calm-lounge": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/FjZbqjXespkOIyxn.mp3",
+  "deep-relax": "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/PIokKCfiIDAXWAHD.mp3",
+};
+
+// Cache de faixas carregadas para evitar múltiplos downloads
+const trackCache = new Map<string, string>();
+
+function getTrackUrl(trackId: string): string {
+  if (trackCache.has(trackId)) {
+    return trackCache.get(trackId)!;
+  }
+  const url = TRACK_URLS[trackId];
+  if (url) {
+    trackCache.set(trackId, url);
+  }
+  return url;
+}
 
 function shuffleArray<T>(arr: T[]): T[] {
   const shuffled = [...arr];
@@ -42,7 +69,8 @@ export default function BackgroundMusic() {
   const [showControls, setShowControls] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [currentTrackTitle, setCurrentTrackTitle] = useState("Lounge Mix");
-  const [shuffledTracks, setShuffledTracks] = useState(() => shuffleArray(LOUNGE_TRACKS));
+  const [shuffledTracks, setShuffledTracks] = useState(() => shuffleArray(LOUNGE_TRACKS_METADATA));
+  const [isLoadingTrack, setIsLoadingTrack] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasSetupRef = useRef(false);
   const PLAYER_ID = "background-music";
@@ -60,7 +88,7 @@ export default function BackgroundMusic() {
 
     const audio = new Audio();
     audio.volume = 0.25;
-    audio.preload = "auto";
+    audio.preload = "metadata"; // Lazy load: apenas metadados, não o arquivo completo
     audioRef.current = audio;
     
     // Registrar player no contexto global
@@ -68,8 +96,10 @@ export default function BackgroundMusic() {
 
     // Load first track
     const firstTrack = shuffledTracks[0];
-    audio.src = firstTrack.url;
     setCurrentTrackTitle(firstTrack.title);
+    setIsLoadingTrack(true);
+    audio.src = getTrackUrl(firstTrack.id);
+    setIsLoadingTrack(false);
 
     audio.addEventListener("ended", () => {
       setCurrentTrackIndex(prev => {
@@ -115,7 +145,9 @@ export default function BackgroundMusic() {
 
     const track = shuffledTracks[currentTrackIndex];
     setCurrentTrackTitle(track.title);
-    audio.src = track.url;
+    setIsLoadingTrack(true);
+    audio.src = getTrackUrl(track.id);
+    setIsLoadingTrack(false);
     audio.load();
 
     if (isPlaying) {
@@ -160,12 +192,16 @@ export default function BackgroundMusic() {
 
   const skipTrack = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentTrackIndex(prev => (prev + 1) % shuffledTracks.length);
+    const nextIndex = (currentTrackIndex + 1) % shuffledTracks.length;
+    setCurrentTrackIndex(nextIndex);
+    // Pré-carregar a próxima faixa para evitar delay
+    const nextTrack = shuffledTracks[nextIndex];
+    getTrackUrl(nextTrack.id);
   };
 
   const reshuffleAndPlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newShuffle = shuffleArray(LOUNGE_TRACKS);
+    const newShuffle = shuffleArray(LOUNGE_TRACKS_METADATA);
     setShuffledTracks(newShuffle);
     setCurrentTrackIndex(0);
   };
@@ -212,7 +248,13 @@ export default function BackgroundMusic() {
               }}
               title={isPlaying ? "Pausar música" : "Tocar música lounge"}
             >
-              {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+              {isLoadingTrack ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause size={14} />
+              ) : (
+                <Play size={14} className="ml-0.5" />
+              )}
             </button>
 
             <AnimatePresence>

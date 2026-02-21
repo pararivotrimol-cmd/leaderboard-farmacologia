@@ -17,6 +17,7 @@ import {
   jigsawScores,
   members,
 } from "../../drizzle/schema";
+import { sendJigsawNotification } from "../_core/jigsawNotifications";
 
 /**
  * Input validation schemas
@@ -358,6 +359,35 @@ export const jigsawCompleteRouter = router({
             memberId: input.memberId,
             role: input.role,
           });
+          
+          // Buscar dados do membro e grupo para notificação
+          const memberData = await db
+            .select()
+            .from(members)
+            .where(eq(members.id, input.memberId))
+            .limit(1);
+          
+          const groupData = await db
+            .select()
+            .from(jigsawExpertGroups)
+            .where(eq(jigsawExpertGroups.id, input.expertGroupId))
+            .limit(1);
+          
+          const topicData = await db
+            .select()
+            .from(jigsawTopics)
+            .where(eq(jigsawTopics.id, groupData[0]?.topicId))
+            .limit(1);
+          
+          // Enviar notificação
+          if (memberData[0] && groupData[0]) {
+            await sendJigsawNotification({
+              type: "member_added_expert",
+              studentName: memberData[0].name,
+              groupName: groupData[0].name,
+              topicName: topicData[0]?.name || "Tópico desconhecido",
+            });
+          }
           
           return { success: true, memberId: input.memberId };
         } catch (error) {
