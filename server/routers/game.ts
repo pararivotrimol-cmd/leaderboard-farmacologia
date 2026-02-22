@@ -4,7 +4,7 @@ import { getDb } from "../db";
 import {
   gameProgress, gameQuests, gameCombats, gameAchievements,
   members, gameTransactions, gameWeeklyReleases, playerAvatars,
-  gameErrorReports, questionBank, classes
+  gameErrorReports, questionBank, classes, bossBattles
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 
@@ -1016,4 +1016,322 @@ export const gameRouter = router({
   getAllQuests: publicProcedure.query(() => {
     return BUILTIN_QUESTS;
   }),
+
+  // ═══════════════════════════════════════
+  // Boss Battle Routes
+  // ═══════════════════════════════════════
+
+  /**
+   * Get boss status for a specific week (available/defeated/attempts)
+   */
+  getBossStatus: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      memberId: z.number(),
+      weekNumber: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { available: false, defeated: false, attempts: 0 };
+
+      const weekQuests = BUILTIN_QUESTS.filter(q => q.weekNumber === input.weekNumber);
+      if (weekQuests.length === 0) return { available: false, defeated: false, attempts: 0 };
+
+      const progressRows = await db
+        .select({ id: gameProgress.id })
+        .from(gameProgress)
+        .where(
+          and(
+            eq(gameProgress.memberId, input.memberId),
+            eq(gameProgress.classId, input.classId)
+          )
+        )
+        .limit(1);
+
+      if (!progressRows[0]) return { available: false, defeated: false, attempts: 0 };
+
+      const completedCombats = await db
+        .select({ questId: gameCombats.questId })
+        .from(gameCombats)
+        .where(
+          and(
+            eq(gameCombats.gameProgressId, progressRows[0].id),
+            eq(gameCombats.isWon, true)
+          )
+        );
+
+      const completedQuestIds = new Set(completedCombats.map(c => c.questId));
+      const allWeekQuestsCompleted = weekQuests.every(q => completedQuestIds.has(q.id));
+
+      const bossBattleRows = await db
+        .select()
+        .from(bossBattles)
+        .where(
+          and(
+            eq(bossBattles.memberId, input.memberId),
+            eq(bossBattles.classId, input.classId),
+            eq(bossBattles.weekNumber, input.weekNumber)
+          )
+        )
+        .orderBy(desc(bossBattles.createdAt));
+
+      const defeated = bossBattleRows.some(b => b.isVictory);
+      const attempts = bossBattleRows.length;
+
+      return {
+        available: allWeekQuestsCompleted,
+        defeated,
+        attempts,
+        lastAttempt: bossBattleRows[0] || null,
+      };
+    }),
+
+  /**
+   * Get all boss statuses for a player (weeks 1-10)
+   */
+  getAllBossStatuses: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      memberId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const progressRows = await db
+        .select({ id: gameProgress.id })
+        .from(gameProgress)
+        .where(
+          and(
+            eq(gameProgress.memberId, input.memberId),
+            eq(gameProgress.classId, input.classId)
+          )
+        )
+        .limit(1);
+
+      if (!progressRows[0]) return [];
+
+      const completedCombats = await db
+        .select({ questId: gameCombats.questId })
+        .from(gameCombats)
+        .where(
+          and(
+            eq(gameCombats.gameProgressId, progressRows[0].id),
+            eq(gameCombats.isWon, true)
+          )
+        );
+
+      const completedQuestIds = new Set(completedCombats.map(c => c.questId));
+
+      const allBossBattles = await db
+        .select()
+        .from(bossBattles)
+        .where(
+          and(
+            eq(bossBattles.memberId, input.memberId),
+            eq(bossBattles.classId, input.classId)
+          )
+        );
+
+      const statuses = [];
+      for (let week = 1; week <= 10; week++) {
+        const weekQuests = BUILTIN_QUESTS.filter(q => q.weekNumber === week);
+        const allCompleted = weekQuests.length > 0 && weekQuests.every(q => completedQuestIds.has(q.id));
+        const weekBattles = allBossBattles.filter(b => b.weekNumber === week);
+        const defeated = weekBattles.some(b => b.isVictory);
+
+        statuses.push({
+          weekNumber: week,
+          available: allCompleted,
+          defeated,
+          attempts: weekBattles.length,
+        });
+      }
+
+      return statuses;
+    }),
+
+  /**
+   * Record a boss battle result
+   */
+  completeBossBattle: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      memberId: z.number(),
+      weekNumber: z.number(),
+      isVictory: z.boolean(),
+      bossName: z.string(),
+      totalDamageDealt: z.number(),
+      playerHpRemaining: z.number(),
+      phasesCompleted: z.number(),
+      totalPhases: z.number(),
+      comboMax: z.number(),
+      pfEarned: z.number(),
+      xpEarned: z.number(),
+      totalTimeSpent: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const previousAttempts = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(bossBattles)
+        .where(
+          and(
+            eq(bossBattles.memberId, input.memberId),
+            eq(bossBattles.classId, input.classId),
+            eq(bossBattles.weekNumber, input.weekNumber)
+          )
+        );
+
+      const attemptNumber = Number(previousAttempts[0]?.count || 0) + 1;
+
+      const alreadyDefeated = await db
+        .select({ id: bossBattles.id })
+        .from(bossBattles)
+        .where(
+          and(
+            eq(bossBattles.memberId, input.memberId),
+            eq(bossBattles.classId, input.classId),
+            eq(bossBattles.weekNumber, input.weekNumber),
+            eq(bossBattles.isVictory, true)
+          )
+        )
+        .limit(1);
+
+      const isFirstVictory = input.isVictory && alreadyDefeated.length === 0;
+
+      await db.insert(bossBattles).values({
+        memberId: input.memberId,
+        classId: input.classId,
+        weekNumber: input.weekNumber,
+        isVictory: input.isVictory,
+        bossName: input.bossName,
+        totalDamageDealt: input.totalDamageDealt,
+        playerHpRemaining: input.playerHpRemaining,
+        phasesCompleted: input.phasesCompleted,
+        totalPhases: input.totalPhases,
+        comboMax: input.comboMax,
+        pfEarned: isFirstVictory ? input.pfEarned : 0,
+        xpEarned: isFirstVictory ? input.xpEarned : 0,
+        totalTimeSpent: input.totalTimeSpent,
+        attemptNumber,
+      });
+
+      if (isFirstVictory) {
+        const progressRows = await db
+          .select()
+          .from(gameProgress)
+          .where(
+            and(
+              eq(gameProgress.memberId, input.memberId),
+              eq(gameProgress.classId, input.classId)
+            )
+          )
+          .limit(1);
+
+        if (progressRows[0]) {
+          const prog = progressRows[0];
+          await db
+            .update(gameProgress)
+            .set({
+              farmacologiaPoints: prog.farmacologiaPoints + input.pfEarned,
+              experience: prog.experience + input.xpEarned,
+              combatsWon: prog.combatsWon + 1,
+              totalCombats: prog.totalCombats + 1,
+              lastPlayedAt: new Date(),
+            })
+            .where(eq(gameProgress.id, prog.id));
+
+          await db.insert(gameTransactions).values({
+            memberId: input.memberId,
+            classId: input.classId,
+            pfAmount: input.pfEarned,
+            transactionType: "boss_victory",
+            missionId: null,
+            description: `Boss "${input.bossName}" derrotado: +${input.pfEarned} PF`,
+          });
+
+          const member = await db
+            .select()
+            .from(members)
+            .where(eq(members.id, input.memberId))
+            .limit(1);
+
+          if (member[0]) {
+            await db
+              .update(members)
+              .set({ xp: String(parseFloat(member[0].xp) + input.pfEarned) })
+              .where(eq(members.id, input.memberId));
+          }
+
+          const currentAchievements: string[] = JSON.parse(prog.achievements || "[]");
+          const newAchievements: string[] = [];
+
+          if (!currentAchievements.includes("boss_slayer")) {
+            const allBossVictories = await db
+              .select({ weekNumber: bossBattles.weekNumber })
+              .from(bossBattles)
+              .where(
+                and(
+                  eq(bossBattles.memberId, input.memberId),
+                  eq(bossBattles.classId, input.classId),
+                  eq(bossBattles.isVictory, true)
+                )
+              );
+
+            const defeatedWeeks = new Set(allBossVictories.map(b => b.weekNumber));
+            if (defeatedWeeks.has(4) && defeatedWeeks.has(10)) {
+              newAchievements.push("boss_slayer");
+            }
+          }
+
+          if (newAchievements.length > 0) {
+            const allAchievements = [...currentAchievements, ...newAchievements];
+            await db
+              .update(gameProgress)
+              .set({ achievements: JSON.stringify(allAchievements) })
+              .where(eq(gameProgress.id, prog.id));
+          }
+        }
+      }
+
+      return {
+        success: true,
+        isFirstVictory,
+        pfEarned: isFirstVictory ? input.pfEarned : 0,
+        xpEarned: isFirstVictory ? input.xpEarned : 0,
+        attemptNumber,
+        message: input.isVictory
+          ? (isFirstVictory ? `${input.bossName} derrotado! +${input.pfEarned} PF!` : `${input.bossName} derrotado novamente! (sem recompensa adicional)`)
+          : `Derrota contra ${input.bossName}. Tente novamente!`,
+      };
+    }),
+
+  /**
+   * Get boss battle history for a player
+   */
+  getBossBattleHistory: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      memberId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const rows = await db
+        .select()
+        .from(bossBattles)
+        .where(
+          and(
+            eq(bossBattles.memberId, input.memberId),
+            eq(bossBattles.classId, input.classId)
+          )
+        )
+        .orderBy(desc(bossBattles.createdAt));
+
+      return rows;
+    }),
 });

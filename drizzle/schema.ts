@@ -1325,3 +1325,29 @@ export const gameErrorReports = mysqlTable("gameErrorReports", {
 });
 export type GameErrorReport = typeof gameErrorReports.$inferSelect;
 export type InsertGameErrorReport = typeof gameErrorReports.$inferInsert;
+
+/**
+ * Boss Battles - Records of boss encounters at the end of each week's missions
+ */
+export const bossBattles = mysqlTable("bossBattles", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  weekNumber: int("weekNumber").notNull(),
+  
+  isVictory: boolean("isVictory").notNull().default(false),
+  bossName: varchar("bossName", { length: 100 }).notNull(),
+  totalDamageDealt: int("totalDamageDealt").notNull().default(0),
+  playerHpRemaining: int("playerHpRemaining").notNull().default(0),
+  phasesCompleted: int("phasesCompleted").notNull().default(0),
+  totalPhases: int("totalPhases").notNull().default(3),
+  comboMax: int("comboMax").notNull().default(0),
+  pfEarned: int("pfEarned").notNull().default(0),
+  xpEarned: int("xpEarned").notNull().default(0),
+  totalTimeSpent: int("totalTimeSpent").notNull().default(0),
+  attemptNumber: int("attemptNumber").notNull().default(1),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BossBattle = typeof bossBattles.$inferSelect;
+export type InsertBossBattle = typeof bossBattles.$inferInsert;

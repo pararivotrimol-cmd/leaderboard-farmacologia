@@ -7,9 +7,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Pause, Play, RotateCcw, LogOut, Zap, Sword, Target, TrendingUp,
   Map, Trophy, ArrowLeft, Clock, Shield, Star, AlertTriangle,
-  CheckCircle2, XCircle, ChevronRight, MessageCircle
+  CheckCircle2, XCircle, ChevronRight, MessageCircle, Skull, Flame
 } from "lucide-react";
 import { toast } from "sonner";
+import BossBattle, { BOSSES } from "@/components/game/BossBattle";
 
 // Character images
 const CHARACTER_IMAGES: Record<string, string> = {
@@ -36,7 +37,21 @@ const QUEST_POSITIONS: Record<number, { x: number; y: number }> = {
   15: { x: 85, y: 25 }, 16: { x: 88, y: 10 },
 };
 
-type GameView = "map" | "quest" | "result" | "report";
+// Boss positions on map (between week quest clusters)
+const BOSS_POSITIONS: Record<number, { x: number; y: number }> = {
+  1: { x: 18, y: 75 },   // After week 1 quests
+  2: { x: 22, y: 50 },   // After week 2 quests
+  3: { x: 46, y: 55 },   // After week 3 quests
+  4: { x: 42, y: 32 },   // After week 4 quests
+  5: { x: 58, y: 30 },   // After week 5 quests
+  6: { x: 68, y: 27 },   // After week 6 quests
+  7: { x: 72, y: 18 },   // After week 7 quests
+  8: { x: 82, y: 28 },   // After week 8 quests
+  9: { x: 80, y: 12 },   // After week 9 quests
+  10: { x: 92, y: 5 },   // Final boss
+};
+
+type GameView = "map" | "quest" | "result" | "report" | "boss";
 
 export default function GamePortal() {
   const { classId } = useParams<{ classId: string }>();
@@ -56,6 +71,7 @@ export default function GamePortal() {
   const [showReport, setShowReport] = useState(false);
   const [reportText, setReportText] = useState("");
   const [reportType, setReportType] = useState<"error" | "doubt" | "suggestion">("doubt");
+  const [activeBossWeek, setActiveBossWeek] = useState<number | null>(null);
 
   // Hardcoded memberId=1 for now (will be dynamic with auth)
   const memberId = 1;
@@ -80,10 +96,16 @@ export default function GamePortal() {
     limit: 5,
   });
 
+  const { data: bossStatuses, refetch: refetchBossStatuses } = trpc.game.getAllBossStatuses.useQuery({
+    classId: classIdNum,
+    memberId,
+  });
+
   // Mutations
   const submitMutation = trpc.game.submitAnswer.useMutation();
   const initMutation = trpc.game.initializeProgress.useMutation();
   const reportMutation = trpc.game.reportError.useMutation();
+  const completeBossMutation = trpc.game.completeBossBattle.useMutation();
 
   // Initialize progress if needed
   useEffect(() => {
@@ -171,7 +193,83 @@ export default function GamePortal() {
     }
   };
 
+  const handleBossClick = (weekNumber: number) => {
+    const status = bossStatuses?.find(s => s.weekNumber === weekNumber);
+    if (!status?.available) {
+      toast.info("Complete todas as missões da semana para desbloquear o boss! 🔒");
+      return;
+    }
+    setActiveBossWeek(weekNumber);
+    setView("boss");
+  };
+
+  const handleBossComplete = async (result: {
+    isVictory: boolean;
+    bossName: string;
+    totalDamageDealt: number;
+    playerHpRemaining: number;
+    phasesCompleted: number;
+    totalPhases: number;
+    comboMax: number;
+    pfEarned: number;
+    xpEarned: number;
+    totalTimeSpent: number;
+  }) => {
+    try {
+      const serverResult = await completeBossMutation.mutateAsync({
+        classId: classIdNum,
+        memberId,
+        weekNumber: activeBossWeek!,
+        ...result,
+      });
+
+      if (serverResult.isFirstVictory) {
+        toast.success(serverResult.message);
+      } else if (result.isVictory) {
+        toast.info(serverResult.message);
+      }
+
+      refetchProgress();
+      refetchBossStatuses();
+    } catch (error) {
+      toast.error("Erro ao salvar resultado do boss");
+    }
+
+    setView("map");
+    setActiveBossWeek(null);
+  };
+
   const completedSet = useMemo(() => new Set(completedQuestIds || []), [completedQuestIds]);
+
+  // Build boss status map
+  const bossStatusMap = useMemo(() => {
+    const map: Record<number, { available: boolean; defeated: boolean; attempts: number }> = {};
+    (bossStatuses || []).forEach(s => {
+      map[s.weekNumber] = { available: s.available, defeated: s.defeated, attempts: s.attempts };
+    });
+    return map;
+  }, [bossStatuses]);
+
+  // Count defeated bosses
+  const defeatedBossCount = useMemo(() => {
+    return Object.values(bossStatusMap).filter(s => s.defeated).length;
+  }, [bossStatusMap]);
+
+  // ═══════════════════════════════════════
+  // RENDER: BOSS BATTLE VIEW
+  // ═══════════════════════════════════════
+  if (view === "boss" && activeBossWeek) {
+    return (
+      <BossBattle
+        weekNumber={activeBossWeek}
+        onComplete={handleBossComplete}
+        onBack={() => {
+          setView("map");
+          setActiveBossWeek(null);
+        }}
+      />
+    );
+  }
 
   // ═══════════════════════════════════════
   // RENDER: MAP VIEW
@@ -211,6 +309,12 @@ export default function GamePortal() {
               <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-1.5">
                 <Target size={14} className="text-emerald-400" />
                 <span className="font-mono text-sm font-bold text-emerald-400">{progress?.questsCompleted || 0}/16</span>
+              </div>
+              {/* Boss counter */}
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-1.5">
+                <Skull size={14} className="text-red-400" />
+                <span className="font-mono text-sm font-bold text-red-400">{defeatedBossCount}/10</span>
+                <span className="text-xs text-gray-400">Boss</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowMenu(true)} className="text-gray-400">
                 <Trophy size={18} />
@@ -270,45 +374,147 @@ export default function GamePortal() {
                 </button>
               );
             })}
-          </div>
 
-          {/* Quest list below map */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-            {(availableQuests || []).map((quest: any) => {
-              const isCompleted = completedSet.has(quest.id);
+            {/* Boss markers on map */}
+            {BOSSES.map((boss) => {
+              const pos = BOSS_POSITIONS[boss.weekNumber];
+              if (!pos) return null;
+              const status = bossStatusMap[boss.weekNumber];
+              const isAvailable = status?.available || false;
+              const isDefeated = status?.defeated || false;
+
               return (
                 <button
-                  key={quest.id}
-                  onClick={() => handleQuestClick(quest)}
-                  className={`
-                    flex items-center gap-3 p-3 rounded-xl border transition-all text-left
-                    ${isCompleted
-                      ? "bg-emerald-500/5 border-emerald-500/20 opacity-70"
-                      : "bg-white/5 border-white/10 hover:border-amber-500/40 hover:bg-amber-500/5"
-                    }
-                  `}
+                  key={`boss-${boss.weekNumber}`}
+                  onClick={() => handleBossClick(boss.weekNumber)}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 >
                   <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center shrink-0
-                    ${isCompleted ? "bg-emerald-500/20" : "bg-amber-500/20"}
+                    relative w-12 h-12 rounded-lg flex items-center justify-center text-xl
+                    transition-all duration-300 hover:scale-125 border-2
+                    ${isDefeated
+                      ? "bg-emerald-900/80 border-emerald-500/50 shadow-lg shadow-emerald-500/30"
+                      : isAvailable
+                        ? "bg-red-900/80 border-red-500/60 shadow-lg shadow-red-500/50 animate-pulse"
+                        : "bg-gray-800/80 border-gray-600/40 opacity-50"
+                    }
                   `}>
-                    {isCompleted ? (
-                      <CheckCircle2 size={18} className="text-emerald-400" />
-                    ) : (
-                      <Sword size={18} className="text-amber-400" />
+                    {isDefeated ? "💀" : boss.emoji}
+                    {/* Glow ring for available bosses */}
+                    {isAvailable && !isDefeated && (
+                      <div className="absolute inset-0 rounded-lg border-2 border-red-400 animate-ping opacity-30" />
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{quest.title}</p>
-                    <p className="text-xs text-gray-400">{quest.npcName} • Nível {quest.level} • {quest.difficulty}</p>
+
+                  {/* Boss tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    <div className="bg-black/95 rounded-lg px-3 py-2 whitespace-nowrap text-center border border-red-500/30">
+                      <p className="text-xs font-bold" style={{ color: boss.color }}>
+                        {boss.emoji} {boss.name}
+                      </p>
+                      <p className="text-[10px] text-gray-400">{boss.title}</p>
+                      <p className="text-[10px] mt-1">
+                        {isDefeated ? (
+                          <span className="text-emerald-400">✅ Derrotado</span>
+                        ) : isAvailable ? (
+                          <span className="text-red-400">⚔️ Disponível! +{boss.pfReward} PF</span>
+                        ) : (
+                          <span className="text-gray-500">🔒 Complete as missões da semana {boss.weekNumber}</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-mono font-bold text-amber-400">+{quest.farmacologiaPointsReward} PF</p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-500 shrink-0" />
                 </button>
               );
             })}
+          </div>
+
+          {/* Boss section below map */}
+          <div className="mt-6 mb-4">
+            <h2 className="text-lg font-bold text-red-400 flex items-center gap-2 mb-3">
+              <Skull size={20} /> Chefes da Semana
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {BOSSES.map((boss) => {
+                const status = bossStatusMap[boss.weekNumber];
+                const isAvailable = status?.available || false;
+                const isDefeated = status?.defeated || false;
+
+                return (
+                  <button
+                    key={`boss-list-${boss.weekNumber}`}
+                    onClick={() => handleBossClick(boss.weekNumber)}
+                    className={`
+                      p-3 rounded-xl border text-center transition-all
+                      ${isDefeated
+                        ? "bg-emerald-500/5 border-emerald-500/20"
+                        : isAvailable
+                          ? "bg-red-500/10 border-red-500/30 hover:border-red-500/60 hover:bg-red-500/20"
+                          : "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
+                      }
+                    `}
+                  >
+                    <div className="text-2xl mb-1">{isDefeated ? "💀" : boss.emoji}</div>
+                    <p className="text-xs font-bold text-white truncate">{boss.name}</p>
+                    <p className="text-[10px] text-gray-400">Sem. {boss.weekNumber}</p>
+                    {isDefeated && (
+                      <p className="text-[10px] text-emerald-400 mt-1">Derrotado</p>
+                    )}
+                    {isAvailable && !isDefeated && (
+                      <p className="text-[10px] text-red-400 mt-1 animate-pulse">Disponível!</p>
+                    )}
+                    {!isAvailable && !isDefeated && (
+                      <p className="text-[10px] text-gray-500 mt-1">🔒</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Quest list below map */}
+          <div className="mt-4">
+            <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2 mb-3">
+              <Sword size={20} /> Missões
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(availableQuests || []).map((quest: any) => {
+                const isCompleted = completedSet.has(quest.id);
+                return (
+                  <button
+                    key={quest.id}
+                    onClick={() => handleQuestClick(quest)}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-xl border transition-all text-left
+                      ${isCompleted
+                        ? "bg-emerald-500/5 border-emerald-500/20 opacity-70"
+                        : "bg-white/5 border-white/10 hover:border-amber-500/40 hover:bg-amber-500/5"
+                      }
+                    `}
+                  >
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                      ${isCompleted ? "bg-emerald-500/20" : "bg-amber-500/20"}
+                    `}>
+                      {isCompleted ? (
+                        <CheckCircle2 size={18} className="text-emerald-400" />
+                      ) : (
+                        <Sword size={18} className="text-amber-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{quest.title}</p>
+                      <p className="text-xs text-gray-400">{quest.npcName} • Nível {quest.level} • {quest.difficulty}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-mono font-bold text-amber-400">+{quest.farmacologiaPointsReward} PF</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-500 shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
