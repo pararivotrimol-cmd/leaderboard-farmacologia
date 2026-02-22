@@ -4,6 +4,8 @@ import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import confetti from "canvas-confetti";
 import { 
   Sparkles, ArrowLeft, CheckCircle, XCircle, 
   Lightbulb, User, Activity, AlertCircle 
@@ -27,6 +29,7 @@ interface ClinicalCase {
 export default function GameMission() {
   const [, params] = useRoute("/game/mission/:id");
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const missionId = params?.id ? parseInt(params.id) : 1;
   const [classId] = useState(1); // TODO: Get from context
   
@@ -34,6 +37,17 @@ export default function GameMission() {
   const [result, setResult] = useState<{ success: boolean; message: string; pfEarned: number } | null>(null);
   const [showOracle, setShowOracle] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Efeitos sonoros
+  const playSound = (type: 'correct' | 'wrong' | 'levelup') => {
+    const audio = new Audio(
+      type === 'correct' ? 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3' :
+      type === 'wrong' ? 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3' :
+      'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'
+    );
+    audio.volume = 0.3;
+    audio.play().catch(() => {/* Ignore autoplay errors */});
+  };
 
   // Buscar missão real do arquivo de missões
   const mission = GAME_MISSIONS.find(m => m.id === missionId) || GAME_MISSIONS[0];
@@ -63,6 +77,27 @@ export default function GameMission() {
       message: decision.feedback,
       pfEarned: decision.pfReward,
     });
+
+    // Efeitos visuais e sonoros
+    if (decision.isCorrect) {
+      playSound('correct');
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      toast({
+        title: "\u2705 Resposta Correta!",
+        description: `Voc\u00ea ganhou ${decision.pfReward} PF!`,
+      });
+    } else {
+      playSound('wrong');
+      toast({
+        title: "\u274c Resposta Incorreta",
+        description: "Tente novamente na pr\u00f3xima miss\u00e3o!",
+        variant: "destructive",
+      });
+    }
 
     // Auto-save: Award PF if correct
     if (decision.isCorrect && decision.pfReward > 0) {

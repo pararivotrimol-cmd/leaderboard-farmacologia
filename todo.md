@@ -1801,3 +1801,13 @@
 - [x] Painel Admin/Professor com seção exclusiva do jogo (evolução estudantes, liberar desafios, verificar erros/dúvidas)
 - [x] Sistema de conquistas com badges automáticos
 - [x] Ranking global do jogo (top 10 por PF, missões, tempo médio)
+
+## Jogo RPG - Melhorias Finais (Feb 22, 2026)
+- [ ] Popular gameQuests com 16 enigmas de farmacologia do game-quests.md
+- [ ] Gerar badges temáticos para cada missão do jogo (16 badges)
+- [ ] Integrar sistema de conquistas automáticas ao completar missões
+- [ ] Exibir badges conquistados na ficha do personagem
+- [ ] Adicionar efeitos sonoros de acerto/erro nas respostas
+- [ ] Adicionar animação de level-up quando o aluno sobe de nível
+- [ ] Adicionar notificação toast quando ganha PF ou desbloqueia missão
+- [ ] Testar fluxo completo com todos os efeitos visuais e sonoros
