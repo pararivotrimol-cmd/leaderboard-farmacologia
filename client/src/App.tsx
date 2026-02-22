@@ -40,6 +40,10 @@ import StudentArea from "./pages/StudentArea";
 import AttendanceCheckIn from "./pages/AttendanceCheckIn";
 import AdminAttendance from "./pages/AdminAttendance";
 import AttendanceDashboard from "./pages/AttendanceDashboard";
+import GameAvatarSelect from "./pages/GameAvatarSelect";
+import GameHub from "./pages/GameHub";
+import GameMission from "./pages/GameMission";
+import GameHintsShop from "./pages/GameHintsShop";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -59,6 +63,10 @@ function Router() {
       <Route path={"/professor/questoes"} component={QuestionsManager} />
       <Route path={"/professor/resultados"} component={ResultsDashboard} />
       <Route path={"/jogo/:classId"} component={GamePortal} />
+      <Route path={"/game/avatar-select"} component={GameAvatarSelect} />
+      <Route path={"/game/hub"} component={GameHub} />
+      <Route path={"/game/mission/:id"} component={GameMission} />
+      <Route path={"/game/hints-shop"} component={GameHintsShop} />
       <Route path={"/aluno/:classId"} component={StudentArea} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />

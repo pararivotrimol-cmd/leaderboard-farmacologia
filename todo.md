@@ -1607,12 +1607,16 @@
 - [x] Criar rotas tRPC para salvar/carregar progresso do jogo (gameRouter já existe)
 - [x] Criar página GameAvatarSelect com seleção de avatar
 - [x] Implementar 6 avatares da Caverna do Dragão (Hank, Eric, Diana, Presto, Sheila, Bobby)
-- [ ] Criar GameHub 3D com Three.js
-- [ ] Criar sistema de missões baseado no cronograma de farmacologia
-- [ ] Implementar Oráculo Professor Pedro com diálogos contextuais
-- [ ] Criar sistema de casos clínicos com decisões
-- [ ] Implementar loja de dicas usando PF
-- [ ] Adicionar níveis de dificuldade progressivos
-- [ ] Criar sistema de save/load automático
-- [ ] Adicionar rotas /game/* no App.tsx
-- [ ] Testar integração com sistema de PF
+- [x] Criar GameHub 3D com Three.js e navegação
+- [x] Criar cenário 3D com iluminação e texturas
+- [x] Adicionar controles de câmera e movimentação (OrbitControls)
+- [x] Criar sistema de missões com casos clínicos
+- [x] Implementar Oráculo Professor Pedro com diálogos contextuais
+- [x] Criar sistema de decisões com feedback instantâneo
+- [x] Implementar loja de dicas usando PF acumulados
+- [x] Adicionar interface de compra de dicas
+- [x] Adicionar rotas /game/* no App.tsx
+- [ ] Criar 16 missões completas (1 por semana do cronograma)
+- [ ] Integrar com sistema de PF do leaderboard
+- [ ] Adicionar sistema de save/load automático
+- [ ] Testar integração completa
