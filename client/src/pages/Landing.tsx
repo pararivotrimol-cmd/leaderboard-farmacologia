@@ -14,6 +14,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useStudentAuth } from "./StudentLogin";
 import BackgroundMusic from "@/components/BackgroundMusic";
 import YouTubeButton from "@/components/YouTubeButton";
+import RecentVideos from "@/components/RecentVideos";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
@@ -603,6 +604,11 @@ export default function Landing() {
             <YouTubeButton channelUrl={YOUTUBE_URL} />
           </div>
         </div>
+      </div>
+
+      {/* ═══════ RECENT VIDEOS SECTION ═══════ */}
+      <div className="relative" style={{ backgroundColor: "#0A1628" }}>
+        <RecentVideos />
       </div>
 
       {/* ═══════ FOOTER ═══════ */}
