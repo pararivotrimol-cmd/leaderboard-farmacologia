@@ -1697,3 +1697,30 @@
 - [x] Desabilitar botão durante salvamento
 - [x] Mostrar alerta de erro se falhar
 - [x] Feedback visual "Salvando..." com SVG spinner
+
+
+## Geração de Avatares 3D Pixar (Feb 22, 2026 - Concluído)
+- [x] Gerar avatar 3D de Hank (Ranger) - pose idle
+- [x] Gerar avatar 3D de Eric (Cavalier) - pose idle
+- [x] Gerar avatar 3D de Diana (Acrobat) - pose idle
+- [x] Gerar avatar 3D de Presto (Magician) - pose idle
+- [x] Gerar avatar 3D de Sheila (Thief) - pose idle
+- [x] Gerar avatar 3D de Bobby (Barbarian) - pose idle
+- [x] Salvar avatares no projeto (client/public/avatars/)
+- [ ] Integrar avatares no GameAvatarSelect
+- [ ] Integrar avatares no GameHub
+
+## Tabela gameTransactions (Feb 22, 2026 - Concluído)
+- [x] Criar schema gameTransactions no drizzle/schema.ts
+- [x] Adicionar campos: id, memberId, classId, pfAmount, transactionType, missionId, description, createdAt
+- [x] Atualizar awardPF para registrar transação
+- [ ] Criar query getTransactions para histórico de transações
+
+## Dashboard de Progresso do Aluno (Feb 22, 2026 - Concluído)
+- [x] Criar página StudentProgressDashboard.tsx
+- [x] Adicionar cards de estatísticas (Nível, PF, Missões, Progresso)
+- [x] Adicionar grid de missões por semana com status
+- [x] Adicionar placeholder para histórico de atividades
+- [x] Adicionar rota /game/progress no App.tsx
+- [ ] Implementar query getTransactions
+- [ ] Adicionar gráfico de PF ganhos por semana

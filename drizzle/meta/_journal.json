@@ -8,6 +8,13 @@
       "when": 1771724221018,
       "tag": "0000_sweet_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1771755156218,
+      "tag": "0001_clear_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

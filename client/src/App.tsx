@@ -40,7 +40,8 @@ import StudentArea from "./pages/StudentArea";
 import AttendanceCheckIn from "./pages/AttendanceCheckIn";
 import AdminAttendance from "./pages/AdminAttendance";
 import AttendanceDashboard from "./pages/AttendanceDashboard";
-import GameAvatarSelect from "./pages/GameAvatarSelect";
+import GameAvatarSelect from "@/pages/GameAvatarSelect";
+import StudentProgressDashboard from "@/pages/StudentProgressDashboard";
 import GameHub from "./pages/GameHub";
 import GameMission from "./pages/GameMission";
 import GameHintsShop from "./pages/GameHintsShop";
@@ -66,7 +67,8 @@ function Router() {
       <Route path={"/game/avatar-select"} component={GameAvatarSelect} />
       <Route path={"/game/hub"} component={GameHub} />
       <Route path={"/game/mission/:id"} component={GameMission} />
-      <Route path={"/game/hints-shop"} component={GameHintsShop} />
+      <Route path="/game/hints" component={GameHintsShop} />
+      <Route path="/game/progress" component={StudentProgressDashboard} />
       <Route path={"/aluno/:classId"} component={StudentArea} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
       <Route path={"/avisos"} component={Avisos} />

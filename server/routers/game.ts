@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameProgress, gameQuests, gameCombats, gameAchievements, xpActivities, members } from "../../drizzle/schema";
+import { gameProgress, gameQuests, gameCombats, gameAchievements, xpActivities, members, gameTransactions } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 export const gameRouter = router({
@@ -379,8 +379,15 @@ export const gameRouter = router({
           .where(eq(members.id, ctx.user.id));
       }
 
-      // 3. Log activity (optional - for audit trail)
-      // Could add a record to a gameTransactions table here
+      // 3. Log transaction for audit trail
+      await db.insert(gameTransactions).values({
+        memberId: ctx.user.id,
+        classId: input.classId,
+        pfAmount: input.pfAmount,
+        transactionType: input.activityType,
+        missionId: input.missionId,
+        description: `${input.activityType}: +${input.pfAmount} PF`,
+      });
 
       return {
         success: true,

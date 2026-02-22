@@ -1237,3 +1237,23 @@ export const oracleMessages = mysqlTable("oracleMessages", {
 
 export type OracleMessage = typeof oracleMessages.$inferSelect;
 export type InsertOracleMessage = typeof oracleMessages.$inferInsert;
+
+
+/**
+ * Game Transactions - Audit trail for all PF transactions
+ */
+export const gameTransactions = mysqlTable("gameTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  
+  pfAmount: int("pfAmount").notNull(), // Positive for gains, negative for spending
+  transactionType: varchar("transactionType", { length: 50 }).notNull(), // "mission_complete", "hint_used", "quest_reward", etc.
+  missionId: int("missionId"), // Optional reference to mission
+  description: text("description"), // Human-readable description
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GameTransaction = typeof gameTransactions.$inferSelect;
+export type InsertGameTransaction = typeof gameTransactions.$inferInsert;
