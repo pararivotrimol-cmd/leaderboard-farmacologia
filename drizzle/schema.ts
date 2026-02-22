@@ -1166,3 +1166,74 @@ export const attendanceSummary = mysqlTable("attendanceSummary", {
 
 export type AttendanceSummary = typeof attendanceSummary.$inferSelect;
 export type InsertAttendanceSummary = typeof attendanceSummary.$inferInsert;
+
+
+
+/**
+ * Game Missions - Missões do jogo (configuradas pelo professor)
+ */
+export const gameMissions = mysqlTable("gameMissions", {
+  id: int("id").autoincrement().primaryKey(),
+  weekNumber: int("weekNumber").notNull(), // Semana do cronograma (1-16)
+  classId: int("classId").notNull(),
+  
+  // Conteúdo da missão
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  pharmacologyTopic: varchar("pharmacologyTopic", { length: 200 }).notNull(), // Tema de farmacologia
+  
+  // Caso clínico
+  clinicalCase: json("clinicalCase").$type<{
+    patientName: string;
+    symptoms: string[];
+    history: string;
+    question: string;
+  }>().notNull(),
+  
+  // Opções de decisão
+  decisions: json("decisions").$type<{
+    id: string;
+    text: string;
+    isCorrect: boolean;
+    feedback: string;
+    pfReward: number;
+  }[]>().notNull(),
+  
+  // Dificuldade e recompensas
+  difficulty: int("difficulty").notNull().default(1), // 1-5
+  pfReward: int("pfReward").notNull().default(10),
+  
+  // Dicas disponíveis (custam PF para desbloquear)
+  hints: json("hints").$type<{
+    id: number;
+    text: string;
+    pfCost: number;
+  }[]>().notNull().default([]),
+  
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameMission = typeof gameMissions.$inferSelect;
+export type InsertGameMission = typeof gameMissions.$inferInsert;
+
+/**
+ * Oracle Messages - Mensagens do Oráculo Professor Pedro
+ */
+export const oracleMessages = mysqlTable("oracleMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  missionId: int("missionId").notNull(),
+  
+  // Tipo de mensagem
+  triggerType: varchar("triggerType", { length: 50 }).notNull(), // "start", "hint", "correct", "wrong", "complete"
+  
+  // Conteúdo
+  message: text("message").notNull(),
+  audioUrl: varchar("audioUrl", { length: 500 }), // URL do áudio (opcional)
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OracleMessage = typeof oracleMessages.$inferSelect;
+export type InsertOracleMessage = typeof oracleMessages.$inferInsert;

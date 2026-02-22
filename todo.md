@@ -1599,3 +1599,20 @@
 - [ ] Adicionar sistema de notificações de alunos em risco
 - [ ] Criar relatório de desempenho por equipe
 - [ ] Adicionar filtros por período/semana
+
+
+## Jogo RPG 3D - Caverna do Dragão Farmacologia (Feb 22, 2026 - Em Progresso)
+- [x] Instalar dependências: @react-three/fiber, @react-three/drei, three
+- [x] Criar schema de banco para gameProgress, gameMissions, oracleMessages
+- [x] Criar rotas tRPC para salvar/carregar progresso do jogo (gameRouter já existe)
+- [x] Criar página GameAvatarSelect com seleção de avatar
+- [x] Implementar 6 avatares da Caverna do Dragão (Hank, Eric, Diana, Presto, Sheila, Bobby)
+- [ ] Criar GameHub 3D com Three.js
+- [ ] Criar sistema de missões baseado no cronograma de farmacologia
+- [ ] Implementar Oráculo Professor Pedro com diálogos contextuais
+- [ ] Criar sistema de casos clínicos com decisões
+- [ ] Implementar loja de dicas usando PF
+- [ ] Adicionar níveis de dificuldade progressivos
+- [ ] Criar sistema de save/load automático
+- [ ] Adicionar rotas /game/* no App.tsx
+- [ ] Testar integração com sistema de PF
