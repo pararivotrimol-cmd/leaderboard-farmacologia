@@ -1783,3 +1783,15 @@
 - [ ] Agrupar transações por semana
 - [ ] Adicionar linha de tendência
 - [ ] Integrar no StudentProgressDashboard
+
+
+## Refatoração Completa Landing.tsx (Feb 22, 2026 - Concluído)
+- [x] Restaurar Landing.tsx do backup
+- [x] Criar layout em 2 colunas (esquerda 60%, direita 40%)
+- [x] Lado esquerdo: Avatar Professor Pedro + "Conexão em Farmacologia" (horizontal)
+- [x] Lado esquerdo: Quadro amarelo "Professor Pedro Barga - Farmacologia UNIRIO"
+- [x] Lado esquerdo: Logotipos institucionais (UNIRIO, Medicina, etc.)
+- [x] Lado esquerdo: Texto "Uma experiência gamificada..."
+- [x] Lado direito: YouTubeCard centralizado com 4.31K inscritos e 147 vídeos
+- [x] Adicionar botão "Entrar no Sistema"
+- [x] Testar layout final

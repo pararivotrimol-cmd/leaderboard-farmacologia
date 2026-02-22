@@ -1,629 +1,132 @@
-/**
- * Landing Page — Conexão em Farmacologia
- * Design: Logo + Logos institucionais (UNIRIO destaque) à esquerda, Avatar Professor Pedro à direita
- * Sem jornada do semestre, sem stats, sem "Como Funciona"
- */
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Trophy, Youtube, GraduationCap,
-  ArrowRight, LogIn, Shield, Lock
-} from "lucide-react";
-import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useStudentAuth } from "./StudentLogin";
-import BackgroundMusic from "@/components/BackgroundMusic";
+import { getLoginUrl } from "@/const";
+import { Button } from "@/components/ui/button";
 import YouTubeCard from "@/components/YouTubeCard";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
-const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
-const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
-const PROFESSOR_AVATAR_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/kmrZlZNcVzNpoWYz.png";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/PxxmnrVLfupqXVFw.png";
+const PEDRO_AVATAR_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/fHkVTuSmLcECPtYo.png";
 
-// Floating particles for background
-function FloatingParticles() {
-  const particles = Array.from({ length: 15 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
-    duration: Math.random() * 10 + 15,
-    delay: Math.random() * 5,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.id % 3 === 0 ? "#F7941D" : p.id % 3 === 1 ? "#999" : "#4A4A4A",
-            opacity: 0.15,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0.1, 0.25, 0.1],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+const INSTITUTION_LOGOS = [
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/ZrxNxBNzXqKPHLxE.png", alt: "UNIRIO" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/kWjpjpNLVxTxUXVV.png", alt: "Medicina" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/kWjpjpNLVxTxUXVV.png", alt: "Farmacologia" },
+];
 
 export default function Landing() {
-  const [, setLocation] = useLocation();
-  const [showVinheta, setShowVinheta] = useState(true);
-  const [vinhetaComplete, setVinhetaComplete] = useState(false);
-  const { isAuthenticated } = useAuth();
-  const { isAuthenticated: isStudentAuth } = useStudentAuth();
-
-  // Check if teacher is logged in
-  const [teacherLoggedIn, setTeacherLoggedIn] = useState(false);
-  useEffect(() => {
-    const token = localStorage.getItem("teacherSessionToken");
-    setTeacherLoggedIn(!!token);
-  }, []);
-
-  // Check if intro was already shown this session
-  useEffect(() => {
-    const shown = sessionStorage.getItem("intro_shown");
-    if (shown) {
-      setShowVinheta(false);
-      setVinhetaComplete(true);
-    }
-  }, []);
-
-  const handleVinhetaComplete = () => {
-    sessionStorage.setItem("intro_shown", "true");
-    setVinhetaComplete(true);
-    setTimeout(() => setShowVinheta(false), 800);
-  };
+  const { isAuthenticated, loading } = useAuth();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
-      {/* ═══════ ANIMATED INTRO VINHETA ═══════ */}
-      {showVinheta && !vinhetaComplete && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <audio
-            autoPlay
-            loop
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
-            style={{ display: "none" }}
-          />
-          <video
-            key="intro-video"
-            autoPlay
-            muted
-            onEnded={handleVinhetaComplete}
-            className="w-full h-full object-cover"
-            style={{ backgroundColor: "#000" }}
-          >
-            <source src={INTRO_VIDEO_URL} type="video/mp4" />
-          </video>
-          <motion.button
-            onClick={handleVinhetaComplete}
-            className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
-            style={{
-              backgroundColor: "#F7941D",
-              color: "#fff",
-              border: "2px solid #fff",
-              boxShadow: "0 0 20px rgba(247, 148, 29, 0.6)"
-            }}
-            initial={{ opacity: 0, y: -20, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.4, delay: 1 }}
-            whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(247, 148, 29, 0.8)" }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Pular
-          </motion.button>
-        </motion.div>
-      )}
-
-      {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}
-      {vinhetaComplete && <BackgroundMusic />}
-
-      {/* ═══════ HERO SECTION — Logo + Professor Pedro ═══════ */}
-      <div className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Animated radial gradient background */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "radial-gradient(ellipse at 30% 50%, rgba(247,148,29,0.08) 0%, rgba(10,22,40,0) 60%)",
-              "radial-gradient(ellipse at 30% 50%, rgba(247,148,29,0.14) 0%, rgba(10,22,40,0) 50%)",
-              "radial-gradient(ellipse at 30% 50%, rgba(247,148,29,0.08) 0%, rgba(10,22,40,0) 60%)",
-            ],
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        <FloatingParticles />
-
-        {/* Expanding circle rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={`ring-${i}`}
-              className="absolute rounded-full"
-              style={{ border: "1px solid rgba(247,148,29,0.08)" }}
-              animate={{
-                width: [100, 600 + i * 200],
-                height: [100, 600 + i * 200],
-                opacity: [0.2, 0],
-              }}
-              transition={{
-                duration: 4,
-                delay: i * 1.5,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-screen py-12 lg:py-0">
-            
-            {/* ═══ RIGHT SIDE: Logo + Título + Login + YouTube ═══ */}
-            <motion.div
-              className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-2"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              {/* Glow behind professor */}
-              <motion.div
-                className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full blur-3xl"
-                style={{ backgroundColor: "#F7941D", opacity: 0.08 }}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.06, 0.12, 0.06],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-
-              {/* Decorative ring */}
-              <motion.div
-                className="absolute w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-full"
-                style={{ border: "2px solid rgba(247,148,29,0.15)" }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-              >
-                {/* Orbital dots */}
-                {[0, 90, 180, 270].map((deg) => (
-                  <div
-                    key={deg}
-                    className="absolute w-2.5 h-2.5 rounded-full"
-                    style={{
-                      backgroundColor: "#F7941D",
-                      opacity: 0.5,
-                      top: "50%",
-                      left: "50%",
-                      transform: `rotate(${deg}deg) translateX(${160}px) translateY(-50%)`,
-                    }}
-                  />
-                ))}
-              </motion.div>
-
-              {/* Professor Avatar */}
-              <motion.img
-                src={PROFESSOR_AVATAR_URL}
-                alt="Prof. Pedro Braga"
-                className="relative w-64 h-80 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] object-contain drop-shadow-2xl"
-                initial={{ scale: 0.8, opacity: 0, y: 30 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 100, damping: 15 }}
-              />
-
-              {/* Name badge */}
-              <motion.div
-                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-xl"
-                style={{
-                  background: "linear-gradient(135deg, rgba(247,148,29,0.9) 0%, rgba(247,148,29,0.7) 100%)",
-                  boxShadow: "0 4px 20px rgba(247,148,29,0.3)",
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5, duration: 0.5 }}
-              >
-                <p className="text-white font-bold text-sm sm:text-base text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Prof. Pedro Braga
-                </p>
-                <p className="text-white/80 text-[10px] sm:text-xs text-center">
-                  Farmacologia I — UNIRIO
-                </p>
-              </motion.div>
-            </motion.div>
-
-            {/* ═══ LEFT SIDE: Professor Pedro ═══ */}
-            <motion.div
-              className="relative flex items-center justify-center order-1 lg:order-1"
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              {/* Logo Conexão em Farmacologia */}
-              <motion.div className="relative mb-6">
-                <motion.div
-                  className="absolute inset-0 rounded-full blur-3xl"
-                  style={{ backgroundColor: "#F7941D", opacity: 0.15 }}
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.1, 0.25, 0.1],
-                  }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.img
-                  src={LOGO_URL}
-                  alt="Conexão em Farmacologia"
-                  className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 object-contain drop-shadow-2xl"
-                  initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.5, type: "spring", stiffness: 150, damping: 20 }}
-                />
-              </motion.div>
-
-              {/* Título animado */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.6 }}
-              >
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  <span className="inline-flex overflow-hidden">
-                    {"Conexão".split("").map((letter, i) => (
-                      <motion.span
-                        key={`c-${i}`}
-                        style={{ color: "#F7941D" }}
-                        initial={{ y: 60, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 1 + i * 0.05, type: "spring", stiffness: 300, damping: 20 }}
-                      >
-                        {letter}
-                      </motion.span>
-                    ))}
-                  </span>
-                  <br className="sm:hidden" />
-                  <motion.span
-                    className="text-white/60 text-xl sm:text-2xl md:text-3xl lg:text-4xl mx-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.4, duration: 0.4 }}
-                  >
-                    em
-                  </motion.span>
-                  <br className="hidden sm:block lg:hidden" />
-                  <span className="inline-flex overflow-hidden">
-                    {"Farmacologia".split("").map((letter, i) => (
-                      <motion.span
-                        key={`f-${i}`}
-                        className="text-white"
-                        initial={{ y: 60, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 1.5 + i * 0.03, type: "spring", stiffness: 300, damping: 20 }}
-                      >
-                        {letter}
-                      </motion.span>
-                    ))}
-                  </span>
-                </h1>
-
-                {/* Animated underline */}
-                <motion.div
-                  className="h-1 rounded-full mt-3 lg:mr-auto"
-                  style={{ backgroundColor: "#F7941D" }}
-                  initial={{ width: 0 }}
-                  animate={{ width: "60%" }}
-                  transition={{ delay: 2.2, duration: 0.8, ease: "easeOut" }}
-                />
-              </motion.div>
-
-              {/* Subtítulo */}
-              <motion.p
-                className="mt-4 text-sm sm:text-base max-w-md"
-                style={{ color: "rgba(255,255,255,0.5)" }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2.4, duration: 0.6 }}
-              >
-                Uma experiência gamificada de aprendizado com metodologias ativas
-              </motion.p>
-
-              {/* ═══ LOGOS INSTITUCIONAIS — UNIRIO em destaque ═══ */}
-              <motion.div
-                className="mt-8 w-full max-w-lg"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2.6, duration: 0.6 }}
-              >
-                {/* Linha decorativa */}
-                <motion.div
-                  className="flex items-center justify-center lg:justify-start gap-3 mb-4"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 2.8, duration: 0.6 }}
-                >
-                  <div className="h-px flex-1 max-w-12" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.4))" }} />
-                  <span className="text-[10px] tracking-[0.3em] uppercase" style={{ color: "rgba(247,148,29,0.6)", fontFamily: "'JetBrains Mono', monospace" }}>Parceiros Acadêmicos</span>
-                  <div className="h-px flex-1 max-w-12" style={{ background: "linear-gradient(to left, transparent, rgba(247,148,29,0.4))" }} />
-                </motion.div>
-
-                {/* UNIRIO em destaque maior */}
-                <div className="flex flex-col items-center lg:items-start gap-4">
-                  <motion.div
-                    className="bg-white/90 rounded-2xl p-3 shadow-xl"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 3, type: "spring", stiffness: 200, damping: 15 }}
-                    whileHover={{ scale: 1.05, y: -4 }}
-                  >
-                    <img
-                      src="/logos/unirio.png"
-                      alt="UNIRIO"
-                      className="h-16 sm:h-20 w-auto object-contain"
-                    />
-                  </motion.div>
-
-                  {/* Demais logos menores */}
-                  <div className="flex items-center gap-3 flex-wrap justify-center lg:justify-start">
-                    {[
-                      { src: "/logos/medicina.png", alt: "Escola de Medicina e Cirurgia", bg: false },
-                      { src: "/logos/ibio.png", alt: "Instituto Biomédico", bg: true },
-                      { src: "/logos/nutricao.png", alt: "Escola de Nutrição", bg: false },
-                      { src: "/logos/enfermagem.png", alt: "Escola de Enfermagem", bg: false },
-                    ].map((logo, i) => (
-                      <motion.div
-                        key={logo.alt}
-                        className={`relative group cursor-pointer ${
-                          logo.bg ? "bg-white/90 rounded-full p-1.5 shadow-md" : ""
-                        }`}
-                        initial={{ opacity: 0, y: 15, scale: 0.8 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{
-                          delay: 3.1 + i * 0.1,
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 15,
-                        }}
-                        whileHover={{ scale: 1.15, y: -3 }}
-                      >
-                        <img
-                          src={logo.src}
-                          alt={logo.alt}
-                          className={`h-9 sm:h-11 w-auto object-contain ${
-                            logo.bg ? "" : "opacity-75 group-hover:opacity-100 transition-opacity duration-300"
-                          }`}
-                        />
-                        {/* Tooltip */}
-                        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                          <span className="text-[9px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "rgba(247,148,29,0.8)" }}>
-                            {logo.alt}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════ CTA + LOGIN SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: "#0D1B2A" }}>
-        {/* Divider decorativo */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.3), transparent)" }} />
-
-        <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40" />
+      
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-[60%_40%] gap-8 lg:gap-12 items-start min-h-screen py-12">
+          
+          {/* ═══ LEFT SIDE ═══ */}
           <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            className="space-y-8"
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Pronto para a Jornada?
-            </h2>
-            <p className="text-base sm:text-lg mb-4 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Acesse o leaderboard, acompanhe sua equipe e conquiste seus Pontos Farmacológicos!
-            </p>
+            {/* Avatar + Título (horizontal) */}
+            <div className="flex items-center gap-6">
+              <motion.img
+                src={PEDRO_AVATAR_URL}
+                alt="Professor Pedro"
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-orange-500 shadow-2xl"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 1, type: "spring" }}
+              />
+              
+              <div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  <span className="text-orange-500">Conexão</span>
+                  <br />
+                  <span className="text-white">em Farmacologia</span>
+                </h1>
+              </div>
+            </div>
+
+            {/* Quadro Amarelo */}
+            <motion.div
+              className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 rounded-2xl shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                Professor Pedro Barga
+                <br />
+                Farmacologia UNIRIO
+              </p>
+            </motion.div>
+
+            {/* Logotipos */}
+            <motion.div
+              className="flex items-center justify-start gap-6 flex-wrap"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {INSTITUTION_LOGOS.map((logo, idx) => (
+                <motion.img
+                  key={idx}
+                  src={logo.src}
+                  alt={logo.alt}
+                  className="h-16 sm:h-20 object-contain opacity-80 hover:opacity-100 transition-opacity"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 0.8, y: 0 }}
+                  transition={{ delay: 0.6 + idx * 0.1 }}
+                />
+              ))}
+            </motion.div>
+
+            {/* Texto Gamificado */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              <p className="text-lg sm:text-xl text-slate-300 leading-relaxed">
+                Uma experiência gamificada para aprender farmacologia de forma interativa,
+                com missões, desafios e um sistema de pontuação que torna o aprendizado mais envolvente.
+              </p>
+            </motion.div>
+
+            {/* Botão de Login */}
+            {!isAuthenticated && !loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+              >
+                <Button
+                  size="lg"
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-8 py-6"
+                  onClick={() => window.location.href = getLoginUrl()}
+                >
+                  Entrar no Sistema
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
 
-          {/* Login Cards */}
-          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
-            {/* Student Login Card */}
-            <motion.div
-              className="relative p-8 rounded-2xl border overflow-hidden group"
-              style={{
-                backgroundColor: "rgba(247,148,29,0.04)",
-                borderColor: "rgba(247,148,29,0.2)",
-              }}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ borderColor: "#F7941D", boxShadow: "0 0 40px rgba(247,148,29,0.15)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
-                  <GraduationCap size={32} style={{ color: "#F7941D" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Aluno
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
-                </p>
-                <div className="space-y-3">
-                  {isStudentAuth ? (
-                    <button
-                      onClick={() => setLocation("/leaderboard")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                      style={{ backgroundColor: "#F7941D", color: "#fff" }}
-                    >
-                      <Trophy size={18} />
-                      Acessar Plataforma
-                      <ArrowRight size={18} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setLocation("/login-aluno")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
-                      style={{ backgroundColor: "#F7941D", color: "#fff" }}
-                    >
-                      <LogIn size={18} />
-                      Fazer Login / Cadastrar
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+          {/* ═══ RIGHT SIDE: YouTube ═══ */}
+          <motion.div
+            className="flex items-center justify-center"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <YouTubeCard channelUrl="https://www.youtube.com/@conexaoemciencia-farmacolo9093" />
+          </motion.div>
 
-            {/* Professor Card */}
-            <motion.div
-              className="relative p-8 rounded-2xl border overflow-hidden group"
-              style={{
-                backgroundColor: "rgba(74,74,74,0.08)",
-                borderColor: "rgba(255,255,255,0.1)",
-              }}
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ borderColor: "rgba(255,255,255,0.3)", boxShadow: "0 0 40px rgba(255,255,255,0.05)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5" style={{ backgroundColor: "#fff" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                  <Shield size={32} style={{ color: "#ccc" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Professor
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
-                </p>
-                <div className="space-y-3">
-                  {teacherLoggedIn ? (
-                    <button
-                      onClick={() => setLocation("/admin")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                    >
-                      <Lock size={18} />
-                      Painel Administrativo
-                      <ArrowRight size={18} />
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => setLocation("/professor/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
-                        style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                      >
-                        <LogIn size={18} />
-                        Professor
-                      </button>
-                      <button
-                        onClick={() => setLocation("/super-admin/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] min-h-[44px]"
-                        style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "#F7941D", border: "1px solid rgba(247,148,29,0.3)" }}
-                      >
-                        <Shield size={16} />
-                        Super Admin
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Admin Card */}
-            <motion.div
-              className="relative p-8 rounded-2xl border overflow-hidden group sm:col-span-2 sm:max-w-md sm:mx-auto sm:w-full"
-              style={{
-                backgroundColor: "rgba(247,148,29,0.08)",
-                borderColor: "rgba(247,148,29,0.3)",
-              }}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              whileHover={{ borderColor: "rgba(247,148,29,0.6)", boxShadow: "0 0 40px rgba(247,148,29,0.2)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
-                  <Lock size={32} style={{ color: "#F7941D" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Administrador
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Acesso total ao sistema, gerenciar professores, alunos, equipes, configurações e relatórios.
-                </p>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setLocation("/super-admin/login")}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
-                    style={{ backgroundColor: "#F7941D", color: "#000", border: "none" }}
-                  >
-                    <Shield size={18} />
-                    Acessar Admin
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* YouTube CTA - Enhanced Card */}
-          <div className="flex justify-center mt-8">
-            <YouTubeCard
-              channelUrl={YOUTUBE_URL}
-              channelName="Conexão em Ciência - Farmacológica"
-              description="Aulas interativas, dicas de farmacologia e conteúdo educativo"
-              subscriberCount="1.2K"
-              videoCount="50+"
-            />
-          </div>
         </div>
       </div>
-
-      {/* ═══════ FOOTER ═══════ */}
-      <footer className="py-8 px-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "#0A1628" }}>
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="Logo" className="w-8 h-8 object-contain" />
-            <span className="text-sm font-semibold text-white/70">Conexão em Farmacologia</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-            <span>UNIRIO — Farmacologia I — 2026.1</span>
-            <span>•</span>
-            <span>Prof. Pedro Braga</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
