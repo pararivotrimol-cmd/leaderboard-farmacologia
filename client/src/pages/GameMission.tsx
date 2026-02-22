@@ -46,7 +46,9 @@ export default function GameMission() {
     setSelectedDecision(decisionId);
   };
 
-  const handleSubmit = () => {
+  const awardPFMutation = trpc.game.awardPF.useMutation();
+
+  const handleSubmit = async () => {
     if (!selectedDecision) {
       alert("Selecione uma decisão primeiro!");
       return;
@@ -61,8 +63,19 @@ export default function GameMission() {
       pfEarned: decision.pfReward,
     });
 
-    // TODO: Salvar progresso no backend
-    // completeMissionMutation.mutate({ ... });
+    // Auto-save: Award PF if correct
+    if (decision.isCorrect && decision.pfReward > 0) {
+      try {
+        await awardPFMutation.mutateAsync({
+          classId: 1, // TODO: Get from context
+          missionId: typeof missionId === 'string' ? parseInt(missionId) : missionId,
+          pfAmount: decision.pfReward,
+          activityType: "mission_complete",
+        });
+      } catch (error) {
+        console.error("Failed to save progress:", error);
+      }
+    }
   };
 
   const handleContinue = () => {

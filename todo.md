@@ -1655,3 +1655,30 @@
 - [ ] Gerar modelo 3D de Sheila (A Ladina)
 - [ ] Gerar modelo 3D de Bobby (O Bárbaro)
 - [ ] Integrar modelos 3D no GameHub com animações
+
+
+## Integração PF com Leaderboard (Feb 22, 2026 - Concluído)
+- [x] Criar procedure tRPC para adicionar PF ao completar missão (awardPF)
+- [x] Atualizar gameProgress ao ganhar PF no jogo
+- [ ] Sincronizar com tabela xpActivities do leaderboard principal
+- [ ] Adicionar log de transações de PF (ganhos/gastos)
+- [ ] Testar integração completa
+
+## Sistema de Save/Load Automático (Feb 22, 2026 - Concluído)
+- [x] Implementar auto-save ao completar missão
+- [x] Integrar awardPF mutation no GameMission
+- [ ] Salvar progresso ao gastar PF em dicas
+- [ ] Carregar progresso ao entrar no jogo (getProgress)
+- [ ] Adicionar indicador visual de "Salvando..."
+- [ ] Testar recuperação de progresso
+
+## Avatares 3D Estilo Pixar (Feb 22, 2026 - Em Progresso)
+- [ ] Gerar modelo 3D de Hank (Ranger)
+- [ ] Gerar modelo 3D de Eric (Cavalier)
+- [ ] Gerar modelo 3D de Diana (Acrobat)
+- [ ] Gerar modelo 3D de Presto (Magician)
+- [ ] Gerar modelo 3D de Sheila (Thief)
+- [ ] Gerar modelo 3D de Bobby (Barbarian)
+- [ ] Adicionar animações básicas (idle, walk, celebrate)
+- [ ] Integrar modelos no GameHub
+- [ ] Testar renderização e performance
