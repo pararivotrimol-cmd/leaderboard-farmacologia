@@ -37,6 +37,8 @@ import GamePortal from "./pages/GamePortal";
 import AdminStudentView from "./pages/AdminStudentView";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentArea from "./pages/StudentArea";
+import AttendanceCheckIn from "./pages/AttendanceCheckIn";
+import AdminAttendance from "./pages/AdminAttendance";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -48,6 +50,8 @@ function Router() {
       <Route path={"/admin/configuracoes"} component={AdminSettings} />
       <Route path={"/admin/relatorios"} component={AdminReports} />
       <Route path={"/admin/alunos/:classId"} component={AdminStudentView} />
+      <Route path={"/admin/attendance"} component={AdminAttendance} />
+      <Route path={"/attendance/check-in"} component={AttendanceCheckIn} />
       <Route path={"/professor/dashboard"} component={TeacherDashboard} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/professor/questoes"} component={QuestionsManager} />

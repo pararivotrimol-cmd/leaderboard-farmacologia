@@ -1570,9 +1570,9 @@
 - [x] Implementar verificação de horário e dia da semana
 - [x] Adicionar suporte a modo câmera e modo manual
 - [x] Adicionar exportação de relatório em CSV
-- [ ] Escrever testes para rotas de QR Code
-- [ ] Integrar QRCodeManager no painel admin
-- [ ] Integrar AttendanceCheckIn na navegação do aluno
+- [x] Escrever testes para rotas de QR Code (implementado)
+- [x] Integrar QRCodeManager no painel admin (/admin/attendance)
+- [x] Integrar AttendanceCheckIn na navegação do aluno (/attendance/check-in)
 
 ## Refatoração de Home.tsx (Feb 21, 2026 - Pendente)
 - [ ] Separar aba Ranking em rota /leaderboard/ranking
