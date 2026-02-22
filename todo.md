@@ -1511,3 +1511,28 @@
 - [ ] Testar cálculos de dificuldade
 - [ ] Validar responsividade em mobile/tablet
 - [ ] Testar exportação de PDF
+
+
+## Gráficos Interativos com Chart.js
+- [ ] Criar componente DistributionChart para distribuição de PF
+- [ ] Criar componente EvolutionChart para evolução temporal
+- [ ] Criar componente DifficultyHeatmap para dificuldades por questão
+- [ ] Integrar gráficos em TeacherDashboard
+- [ ] Implementar filtros de período (semana, mês, semestre)
+- [ ] Testar responsividade dos gráficos em mobile
+
+## Exportação de Relatórios em PDF
+- [ ] Criar rota tRPC para gerar PDF com dados da turma
+- [ ] Integrar biblioteca html2pdf ou similar
+- [ ] Adicionar botão de download em TeacherDashboard
+- [ ] Incluir gráficos no PDF
+- [ ] Adicionar recomendações automáticas no PDF
+- [ ] Testar geração de PDF
+
+## Alertas de Alunos em Risco
+- [ ] Criar componente RiskAlerts para destacar alunos em risco
+- [ ] Implementar lógica de detecção (desempenho < média - 1 desvio padrão)
+- [ ] Adicionar sugestões de intervenção personalizadas
+- [ ] Criar notificações para professor quando aluno entra em risco
+- [ ] Integrar alertas em TeacherDashboard
+- [ ] Testar cálculo de risco
