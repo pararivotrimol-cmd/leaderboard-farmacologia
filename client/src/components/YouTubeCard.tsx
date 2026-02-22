@@ -13,8 +13,8 @@ export default function YouTubeCard({
   channelUrl,
   channelName = "Conexão em Ciência - Farmacológica",
   description = "Aulas interativas, dicas de farmacologia e conteúdo educativo",
-  subscriberCount = "4.31K",
-  videoCount = "147",
+  subscriberCount = "4K",
+  videoCount = "140+",
 }: YouTubeCardProps) {
   return (
     <motion.a
