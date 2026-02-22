@@ -299,9 +299,9 @@ export default function Landing() {
                 <div className="flex flex-col items-center lg:items-start gap-4">
                   <motion.div
                     className="bg-white/90 rounded-2xl p-3 shadow-xl"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 3, type: "spring", stiffness: 200, damping: 15 }}
+                    initial={{ opacity: 0, scale: 0.8, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    transition={{ delay: 3, duration: 0.8, type: "spring", stiffness: 150, damping: 18 }}
                     whileHover={{ scale: 1.05, y: -4 }}
                   >
                     <img
@@ -324,13 +324,14 @@ export default function Landing() {
                         className={`relative group cursor-pointer ${
                           logo.bg ? "bg-white/90 rounded-full p-1.5 shadow-md" : ""
                         }`}
-                        initial={{ opacity: 0, y: 15, scale: 0.8 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        initial={{ opacity: 0, y: 20, scale: 0.8, filter: "blur(6px)" }}
+                        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                         transition={{
-                          delay: 3.1 + i * 0.1,
+                          delay: 3.2 + i * 0.15,
+                          duration: 0.7,
                           type: "spring",
-                          stiffness: 200,
-                          damping: 15,
+                          stiffness: 150,
+                          damping: 18,
                         }}
                         whileHover={{ scale: 1.15, y: -3 }}
                       >
@@ -400,9 +401,9 @@ export default function Landing() {
                 src={PROFESSOR_AVATAR_URL}
                 alt="Prof. Pedro Braga"
                 className="relative w-64 h-80 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] object-contain drop-shadow-2xl"
-                initial={{ scale: 0.8, opacity: 0, y: 30 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 100, damping: 15 }}
+                initial={{ scale: 0.9, opacity: 0, y: 40, filter: "blur(10px)" }}
+                animate={{ scale: 1, opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 1.2, delay: 0.8, type: "spring", stiffness: 80, damping: 20 }}
               />
 
               {/* Name badge */}
@@ -488,7 +489,7 @@ export default function Landing() {
                   ) : (
                     <button
                       onClick={() => setLocation("/login-aluno")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:brightness-110 min-h-[48px]"
                       style={{ backgroundColor: "#F7941D", color: "#fff" }}
                     >
                       <LogIn size={18} />
@@ -538,7 +539,7 @@ export default function Landing() {
                     <div className="space-y-2">
                       <button
                         onClick={() => setLocation("/professor/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
+                        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-white/20 min-h-[48px]"
                         style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
                       >
                         <LogIn size={18} />
@@ -546,7 +547,7 @@ export default function Landing() {
                       </button>
                       <button
                         onClick={() => setLocation("/super-admin/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] min-h-[44px]"
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-orange-500/25 min-h-[44px]"
                         style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "#F7941D", border: "1px solid rgba(247,148,29,0.3)" }}
                       >
                         <Shield size={16} />

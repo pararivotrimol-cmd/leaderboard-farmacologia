@@ -68,7 +68,14 @@ export const gameRouter = router({
           farmacologiaPoints: 0,
           experience: 0,
           questsCompleted: 0,
-          questsTotal: 0,
+          questsTotal: 16, // 16 missões totais
+          currentQuestId: null,
+          totalCombats: 0,
+          combatsWon: 0,
+          combatsLost: 0,
+          achievements: "[]",
+          isCompleted: false,
+          lastPlayedAt: null,
         });
 
       // Get the inserted record
