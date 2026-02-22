@@ -1758,13 +1758,15 @@
 - [x] Investigar por que botão do jogo não produz atividade
 - [x] Adicionar useLocation no StudentNavBar
 - [x] Criar handleTabClick para redirecionar /game/avatar-select
-- [x] Atualizar botões desktop e mobile para usar h## Reorganização Landing.tsx (Feb 22, 2026 - Concluído)
-- [x] Mover Professor Pedro para lado esquerdo
-- [x] Mover logo e título para lado direito
-- [x] Trocar conteúdo entre as duas colunas
-- [x] Atualizar classes de ordem (order-1, order-2)
-- [ ] Adicionar login e YouTube no lado direito (próxima etapa)
-- [ ] Testar layout em diferentes resoluçõesouTube (Feb 22, 2026 - Concluído)
+- [x] Atualizar botões desktop e mobile para usar handleTabClick
+
+## Reorganização Landing.tsx (Feb 22, 2026 - Em Progresso)
+- [ ] Mover seção Professor Pedro para lado esquerdo
+- [ ] Mover login e YouTube para lado direito
+- [ ] Ajustar responsividade mobile
+- [ ] Testar layout em diferentes resoluções
+
+## Correção Números YouTube (Feb 22, 2026 - Concluído)
 - [x] Pesquisar números reais de inscritos do canal (4.31K)
 - [x] Pesquisar número total de vídeos do canal (147)
 - [x] Atualizar YouTubeCard com valores corretos
@@ -1783,15 +1785,3 @@
 - [ ] Agrupar transações por semana
 - [ ] Adicionar linha de tendência
 - [ ] Integrar no StudentProgressDashboard
-
-
-## Refatoração Completa Landing.tsx (Feb 22, 2026 - Concluído)
-- [x] Restaurar Landing.tsx do backup
-- [x] Criar layout em 2 colunas (esquerda 60%, direita 40%)
-- [x] Lado esquerdo: Avatar Professor Pedro + "Conexão em Farmacologia" (horizontal)
-- [x] Lado esquerdo: Quadro amarelo "Professor Pedro Barga - Farmacologia UNIRIO"
-- [x] Lado esquerdo: Logotipos institucionais (UNIRIO, Medicina, etc.)
-- [x] Lado esquerdo: Texto "Uma experiência gamificada..."
-- [x] Lado direito: YouTubeCard centralizado com 4.31K inscritos e 147 vídeos
-- [x] Adicionar botão "Entrar no Sistema"
-- [x] Testar layout final
