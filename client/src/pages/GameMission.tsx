@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { GAME_MISSIONS } from "@shared/gameMissions";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -33,51 +34,11 @@ export default function GameMission() {
   const [result, setResult] = useState<{ success: boolean; message: string; pfEarned: number } | null>(null);
   const [showOracle, setShowOracle] = useState(true);
 
-  // Mock data - em produção viria do backend
-  const mission = {
-    id: missionId,
-    weekNumber: missionId,
-    title: `Missão ${missionId}: Farmacocinética Básica`,
-    description: "Aprenda sobre absorção, distribuição, metabolismo e excreção de fármacos",
-    pharmacologyTopic: "Farmacocinética",
-    clinicalCase: {
-      patientName: "Maria Silva",
-      symptoms: ["Dor de cabeça intensa", "Febre de 38.5°C", "Mal-estar geral"],
-      history: "Paciente de 45 anos, sem comorbidades conhecidas, apresenta sintomas há 2 dias",
-      question: "Qual medicamento você recomendaria e por quê?",
-    } as ClinicalCase,
-    decisions: [
-      {
-        id: "1",
-        text: "Paracetamol 500mg - Analgésico e antipirético com boa absorção oral",
-        isCorrect: true,
-        feedback: "✅ Correto! O paracetamol é uma excelente escolha para dor e febre, com perfil de segurança favorável.",
-        pfReward: 10,
-      },
-      {
-        id: "2",
-        text: "Antibiótico de amplo espectro - Para combater possível infecção",
-        isCorrect: false,
-        feedback: "❌ Incorreto. Não há evidências de infecção bacteriana. Antibióticos não são indicados para sintomas virais.",
-        pfReward: 0,
-      },
-      {
-        id: "3",
-        text: "Corticoide oral - Para reduzir inflamação rapidamente",
-        isCorrect: false,
-        feedback: "❌ Incorreto. Corticoides não são primeira linha para sintomas gripais simples.",
-        pfReward: 0,
-      },
-    ] as Decision[],
-    difficulty: 2,
-    hints: [
-      { id: 1, text: "Considere medicamentos de venda livre para sintomas leves", pfCost: 5 },
-      { id: 2, text: "Paracetamol tem meia-vida de 2-4 horas", pfCost: 3 },
-    ],
-  };
+  // Buscar missão real do arquivo de missões
+  const mission = GAME_MISSIONS.find(m => m.id === missionId) || GAME_MISSIONS[0];
 
   const oracleMessage = showOracle
-    ? "Bem-vindo, jovem aprendiz! Eu sou o Oráculo Professor Pedro. Esta missão testará seus conhecimentos sobre farmacocinética. Analise o caso clínico com atenção e escolha a melhor conduta terapêutica."
+    ? mission.oracleMessages.find(m => m.triggerType === "start")?.message || "Bem-vindo, jovem aprendiz!"
     : null;
 
   const handleDecisionSelect = (decisionId: string) => {

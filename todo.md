@@ -1620,3 +1620,38 @@
 - [ ] Integrar com sistema de PF do leaderboard
 - [ ] Adicionar sistema de save/load automático
 - [ ] Testar integração completa
+
+
+## Missões Completas do Jogo (Feb 22, 2026 - Concluído)
+- [x] Missão 1: Introdução à Farmacologia (Semana 1)
+- [x] Missão 2: Farmacocinética Básica (Semana 2)
+- [x] Missão 3: Farmacodinâmica (Semana 3)
+- [x] Missão 4: Vias de Administração (Semana 4)
+- [x] Missão 5: Interações Medicamentosas (Semana 5)
+- [x] Missão 6: Farmacologia do Sistema Nervoso Autônomo (Semana 6)
+- [x] Missão 7: Farmacologia do Sistema Nervoso Central (Semana 7)
+- [x] Missão 8: Analgésicos e Anti-inflamátorios (Semana 8)
+- [x] Missão 9: Farmacologia Cardiovascular (Semana 9)
+- [x] Missão 10: Farmacologia Renal (Semana 10)
+- [x] Missão 11: Farmacologia Respiratória (Semana 11)
+- [x] Missão 12: Antimicrobianos (Semana 12)
+- [x] Missão 13: Quimioterápicos (Semana 13)
+- [x] Missão 14: Farmacologia Endócrina (Semana 14)
+- [x] Missão 15: Toxicologia (Semana 15)
+- [x] Missão 16: Revisão e Casos Complexos (Semana 16)
+- [x] Integrar missões no GameMission.tsx
+
+## Integração PF com Leaderboard (Feb 22, 2026 - Pendente)
+- [ ] Sincronizar PF ganhos no jogo com tabela de pontos principal
+- [ ] Atualizar leaderboard ao completar missões
+- [ ] Adicionar histórico de PF ganhos no jogo
+- [ ] Criar dashboard de progresso do jogo no perfil do aluno
+
+## Modelos 3D Estilo Pixar (Feb 22, 2026 - Pendente)
+- [ ] Gerar modelo 3D de Hank (O Guardião)
+- [ ] Gerar modelo 3D de Eric (O Cavaleiro)
+- [ ] Gerar modelo 3D de Diana (A Acrobata)
+- [ ] Gerar modelo 3D de Presto (O Mago)
+- [ ] Gerar modelo 3D de Sheila (A Ladina)
+- [ ] Gerar modelo 3D de Bobby (O Bárbaro)
+- [ ] Integrar modelos 3D no GameHub com animações
