@@ -1555,3 +1555,38 @@
 - [ ] Criar interface para aluno escanear QR Code
 - [ ] Implementar verificação de horário e dia da semana
 - [ ] Adicionar histórico de presenças registradas
+
+
+## Sistema de QR Code de Presença (Feb 21, 2026 - Em Progresso)
+- [x] Criar schema de banco para qrCodeSessions (classId, dayOfWeek, startTime, endTime, isActive, createdBy)
+- [x] Criar schema para attendanceRecords com qrCodeSessionId
+- [x] Criar schema para attendanceSummary
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar rotas tRPC para CRUD de QR Code sessions
+- [ ] Instalar biblioteca qrcode para gerar QR Codes
+- [ ] Criar gerador de QR Code com dados da sessão
+- [ ] Criar validador de presença por QR Code
+- [ ] Criar página QRCodeManager para professor configurar
+- [ ] Criar interface para aluno escanear QR Code
+- [ ] Implementar verificação de horário e dia da semana
+- [ ] Adicionar histórico de presenças registradas
+- [ ] Escrever testes para rotas de QR Code
+
+## Refatoração de Home.tsx (Feb 21, 2026 - Pendente)
+- [ ] Separar aba Ranking em rota /leaderboard/ranking
+- [ ] Separar aba Top 10 em rota /leaderboard/top10
+- [ ] Separar aba Atividades em rota /leaderboard/atividades
+- [ ] Separar aba Jogo em rota /leaderboard/jogo
+- [ ] Separar aba Materiais em rota /leaderboard/materiais
+- [ ] Separar aba Calcular em rota /leaderboard/calcular
+- [ ] Separar aba Regras em rota /leaderboard/regras
+- [ ] Atualizar navegação em Home.tsx para links de rotas
+- [ ] Testar todas as rotas
+
+## Melhorias no Dashboard do Professor (Feb 21, 2026 - Pendente)
+- [ ] Adicionar gráfico de evolução de PF por aluno
+- [ ] Adicionar gráfico de distribuição de pontos por atividade
+- [ ] Adicionar alertas de risco para alunos em dificuldade (< 40% da média)
+- [ ] Adicionar sistema de notificações de alunos em risco
+- [ ] Criar relatório de desempenho por equipe
+- [ ] Adicionar filtros por período/semana

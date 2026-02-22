@@ -1094,3 +1094,75 @@ export const gameAchievements = mysqlTable("gameAchievements", {
 });
 export type GameAchievement = typeof gameAchievements.$inferSelect;
 export type InsertGameAchievement = typeof gameAchievements.$inferInsert;
+
+
+/**
+ * QR Code Sessions - Presença com QR Code
+ * Professor pode ativar presença por dia da semana e horário
+ */
+export const qrCodeSessions = mysqlTable("qrCodeSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(), // Turma
+  teacherId: int("teacherId").notNull(), // Professor que criou
+  
+  // Configuração de dia e horário
+  dayOfWeek: int("dayOfWeek").notNull(), // 0-6 (domingo a sábado)
+  startTime: varchar("startTime", { length: 5 }).notNull(), // HH:MM
+  endTime: varchar("endTime", { length: 5 }).notNull(), // HH:MM
+  
+  // Status
+  isActive: boolean("isActive").notNull().default(true),
+  
+  // QR Code data (será gerado dinamicamente)
+  qrCodeData: text("qrCodeData"), // JSON com dados da sessão
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type QRCodeSession = typeof qrCodeSessions.$inferSelect;
+export type InsertQRCodeSession = typeof qrCodeSessions.$inferInsert;
+
+/**
+ * Attendance Records - Registros de presença via QR Code
+ */
+export const attendanceRecords = mysqlTable("attendanceRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  qrCodeSessionId: int("qrCodeSessionId").notNull(),
+  memberId: int("memberId").notNull(), // Aluno
+  classId: int("classId").notNull(), // Turma
+  
+  // Timestamp do check-in
+  checkedInAt: timestamp("checkedInAt").defaultNow().notNull(),
+  
+  // Validação
+  isValid: boolean("isValid").notNull().default(true),
+  validationNotes: text("validationNotes"), // Notas do professor se inválido
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
+export type InsertAttendanceRecord = typeof attendanceRecords.$inferInsert;
+
+/**
+ * Attendance Summary - Resumo de presença por aluno
+ */
+export const attendanceSummary = mysqlTable("attendanceSummary", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull(),
+  classId: int("classId").notNull(),
+  
+  // Contadores
+  totalSessions: int("totalSessions").notNull().default(0),
+  presentSessions: int("presentSessions").notNull().default(0),
+  absentSessions: int("absentSessions").notNull().default(0),
+  
+  // Percentual
+  attendancePercentage: decimal("attendancePercentage", { precision: 5, scale: 2 }).notNull().default("0"),
+  
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AttendanceSummary = typeof attendanceSummary.$inferSelect;
+export type InsertAttendanceSummary = typeof attendanceSummary.$inferInsert;
