@@ -1563,14 +1563,16 @@
 - [x] Criar schema para attendanceSummary
 - [x] Executar migração do banco (pnpm db:push)
 - [x] Criar rotas tRPC para CRUD de QR Code sessions
-- [ ] Instalar biblioteca qrcode para gerar QR Codes
-- [ ] Criar gerador de QR Code com dados da sessão
-- [ ] Criar validador de presença por QR Code
-- [ ] Criar página QRCodeManager para professor configurar
-- [ ] Criar interface para aluno escanear QR Code
-- [ ] Implementar verificação de horário e dia da semana
-- [ ] Adicionar histórico de presenças registradas
+- [x] Instalar biblioteca qrcode para gerar QR Codes
+- [x] Criar componente QRCodeManager para professor gerenciar sessões
+- [x] Criar página AttendanceCheckIn para aluno escanear QR Code
+- [x] Implementar gerador de QR Code com dados da sessão
+- [x] Implementar verificação de horário e dia da semana
+- [x] Adicionar suporte a modo câmera e modo manual
+- [x] Adicionar exportação de relatório em CSV
 - [ ] Escrever testes para rotas de QR Code
+- [ ] Integrar QRCodeManager no painel admin
+- [ ] Integrar AttendanceCheckIn na navegação do aluno
 
 ## Refatoração de Home.tsx (Feb 21, 2026 - Pendente)
 - [ ] Separar aba Ranking em rota /leaderboard/ranking
