@@ -39,6 +39,7 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentArea from "./pages/StudentArea";
 import AttendanceCheckIn from "./pages/AttendanceCheckIn";
 import AdminAttendance from "./pages/AdminAttendance";
+import AttendanceDashboard from "./pages/AttendanceDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -51,6 +52,7 @@ function Router() {
       <Route path={"/admin/relatorios"} component={AdminReports} />
       <Route path={"/admin/alunos/:classId"} component={AdminStudentView} />
       <Route path={"/admin/attendance"} component={AdminAttendance} />
+      <Route path={"/admin/attendance/dashboard"} component={AttendanceDashboard} />
       <Route path={"/attendance/check-in"} component={AttendanceCheckIn} />
       <Route path={"/professor/dashboard"} component={TeacherDashboard} />
       <Route path={"/admin/professor"} component={Admin} />

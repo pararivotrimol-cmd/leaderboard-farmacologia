@@ -1574,6 +1574,13 @@
 - [x] Integrar QRCodeManager no painel admin (/admin/attendance)
 - [x] Integrar AttendanceCheckIn na navegação do aluno (/attendance/check-in)
 
+## Dashboard de Presença (Feb 21, 2026 - Concluído)
+- [x] Criar AttendanceDashboard.tsx com estatísticas
+- [x] Integrar rota /admin/attendance/dashboard
+- [x] Adicionar tabela de presença por aluno
+- [x] Implementar alertas de alunos em risco (< 75%)
+- [x] Adicionar sistema de notificações no AttendanceCheckIn
+
 ## Refatoração de Home.tsx (Feb 21, 2026 - Pendente)
 - [ ] Separar aba Ranking em rota /leaderboard/ranking
 - [ ] Separar aba Top 10 em rota /leaderboard/top10
@@ -1582,7 +1589,7 @@
 - [ ] Separar aba Materiais em rota /leaderboard/materiais
 - [ ] Separar aba Calcular em rota /leaderboard/calcular
 - [ ] Separar aba Regras em rota /leaderboard/regras
-- [ ] Atualizar navegação em Home.tsx para links de rotas
+- [ ] Atualizar navegação no App.tsx
 - [ ] Testar todas as rotas
 
 ## Melhorias no Dashboard do Professor (Feb 21, 2026 - Pendente)
