@@ -1,0 +1,22 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND (TABLE_NAME LIKE '%game%' OR TABLE_NAME LIKE '%player%' OR TABLE_NAME LIKE '%progress%' OR TABLE_NAME LIKE '%combat%' OR TABLE_NAME LIKE '%quest%' OR TABLE_NAME LIKE '%achieve%' OR TABLE_NAME LIKE '%transaction%');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND (TABLE_NAME LIKE '%game%' OR TABLE_NAME LIKE '%player%' OR TABLE_NAME LIKE '%progress%' OR TABLE_NAME LIKE '%combat%' OR TABLE_NAME LIKE '%quest%' OR TABLE_NAME LIKE '%achieve%' OR TABLE_NAME LIKE '%transaction%');",
+  "rows": [
+    {
+      "TABLE_NAME": "questionPerformance"
+    },
+    {
+      "TABLE_NAME": "questionBank"
+    },
+    {
+      "TABLE_NAME": "playerAvatars"
+    },
+    {
+      "TABLE_NAME": "gameErrorReports"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nquestionPerformance\nquestionBank\nplayerAvatars\ngameErrorReports\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -1257,3 +1257,71 @@ export const gameTransactions = mysqlTable("gameTransactions", {
 
 export type GameTransaction = typeof gameTransactions.$inferSelect;
 export type InsertGameTransaction = typeof gameTransactions.$inferInsert;
+
+
+/**
+ * Game Weekly Releases - Professor controls which quests are available each week
+ */
+export const gameWeeklyReleases = mysqlTable("gameWeeklyReleases", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  
+  weekNumber: int("weekNumber").notNull(), // 1-16
+  questIds: text("questIds").notNull().default("[]"), // JSON array of quest IDs released this week
+  title: varchar("title", { length: 200 }), // e.g., "Semana 3 - Farmacodinâmica"
+  description: text("description"), // Description of what's released
+  
+  isReleased: boolean("isReleased").notNull().default(false), // Professor must explicitly release
+  releasedAt: timestamp("releasedAt"), // When it was released
+  releasedBy: int("releasedBy"), // Teacher account ID who released it
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GameWeeklyRelease = typeof gameWeeklyReleases.$inferSelect;
+export type InsertGameWeeklyRelease = typeof gameWeeklyReleases.$inferInsert;
+
+/**
+ * Player Avatars - Custom avatar configurations
+ */
+export const playerAvatars = mysqlTable("playerAvatars", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  
+  // Selected character or custom
+  characterId: varchar("characterId", { length: 50 }), // "hank", "eric", etc. or "custom"
+  
+  // Custom avatar options
+  skinTone: varchar("skinTone", { length: 50 }),
+  hairStyle: varchar("hairStyle", { length: 50 }),
+  hairColor: varchar("hairColor", { length: 50 }),
+  clothingColor: varchar("clothingColor", { length: 50 }),
+  accessory: varchar("accessory", { length: 50 }),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PlayerAvatar = typeof playerAvatars.$inferSelect;
+export type InsertPlayerAvatar = typeof playerAvatars.$inferInsert;
+
+/**
+ * Game Error Reports - Students can report errors/doubts about questions
+ */
+export const gameErrorReports = mysqlTable("gameErrorReports", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().references(() => members.id, { onDelete: "cascade" }),
+  classId: int("classId").notNull().references(() => classes.id, { onDelete: "cascade" }),
+  questId: int("questId").references(() => gameQuests.id, { onDelete: "set null" }),
+  
+  reportType: mysqlEnum("reportType", ["error", "doubt", "suggestion"]).notNull().default("error"),
+  description: text("description").notNull(),
+  
+  status: mysqlEnum("status", ["pending", "reviewed", "resolved", "dismissed"]).notNull().default("pending"),
+  teacherResponse: text("teacherResponse"),
+  resolvedBy: int("resolvedBy"), // Teacher account ID
+  resolvedAt: timestamp("resolvedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameErrorReport = typeof gameErrorReports.$inferSelect;
+export type InsertGameErrorReport = typeof gameErrorReports.$inferInsert;

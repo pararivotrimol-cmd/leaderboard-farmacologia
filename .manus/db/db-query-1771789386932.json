@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS `gameQuests` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `classId` int NOT NULL,\n  `title` varchar(200) NOT NULL,\n  `description` text,\n  `npcName` varchar(100) NOT NULL,\n  `npcType` enum('merchant','warrior','mage','healer','boss') NOT NULL,\n  `level` int NOT NULL,\n  `questType` enum('combat','puzzle','dialogue','collection') NOT NULL,\n  `farmacologiaPointsReward` int NOT NULL DEFAULT 10,\n  `experienceReward` int NOT NULL DEFAULT 100,\n  `questionId` int,\n  `difficulty` enum('easy','medium','hard') NOT NULL DEFAULT 'medium',\n  `isActive` boolean NOT NULL DEFAULT true,\n  `order` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute \nCREATE TABLE IF NOT EXISTS `gameQuests` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `classId` int NOT NULL,\n  `title` varchar(200) NOT NULL,\n  `description` text,\n  `npcName` varchar(100) NOT NULL,\n  `npcType` enum('merchant','warrior','mage','healer','boss') NOT NULL,\n  `level` int NOT NULL,\n  `questType` enum('combat','puzzle','dialogue','collection') NOT NULL,\n  `farmacologiaPointsReward` int NOT NULL DEFAULT 10,\n  `experienceReward` int NOT NULL DEFAULT 100,\n  `questionId` int,\n  `difficulty` enum('easy','medium','hard') NOT NULL DEFAULT 'medium',\n  `isActive` boolean NOT NULL DEFAULT true,\n  `order` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 157
+}

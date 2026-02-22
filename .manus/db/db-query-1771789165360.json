@@ -1,0 +1,19 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%game%' OR TABLE_NAME LIKE '%player%' OR TABLE_NAME LIKE '%combat%' OR TABLE_NAME LIKE '%weekly%' OR TABLE_NAME LIKE '%achievement%' OR TABLE_NAME LIKE '%error%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%game%' OR TABLE_NAME LIKE '%player%' OR TABLE_NAME LIKE '%combat%' OR TABLE_NAME LIKE '%weekly%' OR TABLE_NAME LIKE '%achievement%' OR TABLE_NAME LIKE '%error%';",
+  "rows": [
+    {
+      "TABLE_NAME": "weeklyHighlights"
+    },
+    {
+      "TABLE_NAME": "playerAvatars"
+    },
+    {
+      "TABLE_NAME": "gameErrorReports"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nweeklyHighlights\nplayerAvatars\ngameErrorReports\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

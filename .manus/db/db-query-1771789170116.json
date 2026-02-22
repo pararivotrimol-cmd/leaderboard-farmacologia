@@ -1,0 +1,172 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "rows": [
+    {
+      "TABLE_NAME": "__drizzle_migrations"
+    },
+    {
+      "TABLE_NAME": "activityTemplates"
+    },
+    {
+      "TABLE_NAME": "assessmentAnswers"
+    },
+    {
+      "TABLE_NAME": "assessmentIPBlocks"
+    },
+    {
+      "TABLE_NAME": "assessmentLogs"
+    },
+    {
+      "TABLE_NAME": "assessmentQuestionLinks"
+    },
+    {
+      "TABLE_NAME": "assessmentQuestions"
+    },
+    {
+      "TABLE_NAME": "assessmentSubmissions"
+    },
+    {
+      "TABLE_NAME": "assessments"
+    },
+    {
+      "TABLE_NAME": "attendance"
+    },
+    {
+      "TABLE_NAME": "attendanceRecords"
+    },
+    {
+      "TABLE_NAME": "attendanceSummary"
+    },
+    {
+      "TABLE_NAME": "auditLog"
+    },
+    {
+      "TABLE_NAME": "backupRecords"
+    },
+    {
+      "TABLE_NAME": "badges"
+    },
+    {
+      "TABLE_NAME": "classes"
+    },
+    {
+      "TABLE_NAME": "courseSettings"
+    },
+    {
+      "TABLE_NAME": "emailLog"
+    },
+    {
+      "TABLE_NAME": "gameErrorReports"
+    },
+    {
+      "TABLE_NAME": "importHistory"
+    },
+    {
+      "TABLE_NAME": "inviteCodes"
+    },
+    {
+      "TABLE_NAME": "jigsawExpertGroups"
+    },
+    {
+      "TABLE_NAME": "jigsawExpertMembers"
+    },
+    {
+      "TABLE_NAME": "jigsawGroups"
+    },
+    {
+      "TABLE_NAME": "jigsawHomeGroups"
+    },
+    {
+      "TABLE_NAME": "jigsawHomeMembers"
+    },
+    {
+      "TABLE_NAME": "jigsawMembers"
+    },
+    {
+      "TABLE_NAME": "jigsawScores"
+    },
+    {
+      "TABLE_NAME": "jigsawTopics"
+    },
+    {
+      "TABLE_NAME": "materials"
+    },
+    {
+      "TABLE_NAME": "memberBadges"
+    },
+    {
+      "TABLE_NAME": "members"
+    },
+    {
+      "TABLE_NAME": "notifications"
+    },
+    {
+      "TABLE_NAME": "onlineMeetings"
+    },
+    {
+      "TABLE_NAME": "passwordResetTokens"
+    },
+    {
+      "TABLE_NAME": "playerAvatars"
+    },
+    {
+      "TABLE_NAME": "qrCodeSessions"
+    },
+    {
+      "TABLE_NAME": "questionBank"
+    },
+    {
+      "TABLE_NAME": "questionPerformance"
+    },
+    {
+      "TABLE_NAME": "restoreHistory"
+    },
+    {
+      "TABLE_NAME": "seminarArticles"
+    },
+    {
+      "TABLE_NAME": "seminarParticipants"
+    },
+    {
+      "TABLE_NAME": "seminarRoles"
+    },
+    {
+      "TABLE_NAME": "seminars"
+    },
+    {
+      "TABLE_NAME": "studentAccounts"
+    },
+    {
+      "TABLE_NAME": "systemSettings"
+    },
+    {
+      "TABLE_NAME": "teacherAccounts"
+    },
+    {
+      "TABLE_NAME": "teacherTeams"
+    },
+    {
+      "TABLE_NAME": "teams"
+    },
+    {
+      "TABLE_NAME": "users"
+    },
+    {
+      "TABLE_NAME": "weeklyHighlights"
+    },
+    {
+      "TABLE_NAME": "xpActivities"
+    },
+    {
+      "TABLE_NAME": "xpHistory"
+    },
+    {
+      "TABLE_NAME": "youtubePlaylistsTable"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\n__drizzle_migrations\nactivityTemplates\nassessmentAnswers\nassessmentIPBlocks\nassessmentLogs\nassessmentQuestionLinks\nassessmentQuestions\nassessmentSubmissions\nassessments\nattendance\nattendanceRecords\nattendanceSummary\nauditLog\nbackupRecords\nbadges\nclasses\ncourseSettings\nemailLog\ngameErrorReports\nimportHistory\ninviteCodes\njigsawExpertGroups\njigsawExpertMembers\njigsawGroups\njigsawHomeGroups\njigsawHomeMembers\njigsawMembers\njigsawScores\njigsawTopics\nmaterials\nmemberBadges\nmembers\nnotifications\nonlineMeetings\npasswordResetTokens\nplayerAvatars\nqrCodeSessions\nquestionBank\nquestionPerformance\nrestoreHistory\nseminarArticles\nseminarParticipants\nseminarRoles\nseminars\nstudentAccounts\nsystemSettings\nteacherAccounts\nteacherTeams\nteams\nusers\nweeklyHighlights\nxpActivities\nxpHistory\nyoutubePlaylistsTable\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

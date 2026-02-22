@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE 'game%'; SHOW TABLES LIKE 'player%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SHOW TABLES LIKE 'game%'; SHOW TABLES LIKE 'player%';",
+  "rows": [
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr (game%)": "gameErrorReports"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr (game%)": "Tables_in_FUZ2ecmXaKXVi9q85vHrsr (player%)"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr (game%)": "playerAvatars"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_FUZ2ecmXaKXVi9q85vHrsr (game%)\ngameErrorReports\nTables_in_FUZ2ecmXaKXVi9q85vHrsr (player%)\nplayerAvatars\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

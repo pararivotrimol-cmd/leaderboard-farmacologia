@@ -1793,3 +1793,11 @@
 - [x] Integrar sistema de progressão com desbloqueio automático de missões
 - [x] Implementar tracking de PF/XP ganhos e salvamento no banco
 - [x] Testar fluxo completo do jogo (seleção personagem → mapa → combate → progressão)
+
+## Jogo RPG - Ambiente Completo
+- [x] Corrigir erro ao clicar na aba Jogos
+- [x] Integrar banco de dados com rotas tRPC (gameProgress, gameCombats, enigmas)
+- [x] Sistema de liberação semanal de fases pelo professor
+- [x] Painel Admin/Professor com seção exclusiva do jogo (evolução estudantes, liberar desafios, verificar erros/dúvidas)
+- [x] Sistema de conquistas com badges automáticos
+- [x] Ranking global do jogo (top 10 por PF, missões, tempo médio)

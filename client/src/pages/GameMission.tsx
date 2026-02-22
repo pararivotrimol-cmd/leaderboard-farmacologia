@@ -47,7 +47,7 @@ export default function GameMission() {
     setSelectedDecision(decisionId);
   };
 
-  const awardPFMutation = trpc.game.awardPF.useMutation();
+  const submitAnswerMutation = trpc.game.submitAnswer.useMutation();
 
   const handleSubmit = async () => {
     if (!selectedDecision) {
@@ -68,11 +68,12 @@ export default function GameMission() {
     if (decision.isCorrect && decision.pfReward > 0) {
       setIsSaving(true);
       try {
-        await awardPFMutation.mutateAsync({
+        await submitAnswerMutation.mutateAsync({
           classId: 1, // TODO: Get from context
-          missionId: typeof missionId === 'string' ? parseInt(missionId) : missionId,
-          pfAmount: decision.pfReward,
-          activityType: "mission_complete",
+          memberId: 1, // TODO: Get from context
+          questId: typeof missionId === 'string' ? parseInt(missionId) : missionId,
+          answer: selectedDecision || '',
+          timeSpent: 30,
         });
         // Success feedback is already shown in result message
       } catch (error) {

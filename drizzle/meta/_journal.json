@@ -15,6 +15,13 @@
       "when": 1771755156218,
       "tag": "0001_clear_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771788104041,
+      "tag": "0002_wise_ultragirl",
+      "breakpoints": true
     }
   ]
 }

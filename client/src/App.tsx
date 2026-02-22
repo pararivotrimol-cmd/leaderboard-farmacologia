@@ -47,6 +47,7 @@ import StudentProgressDashboard from "@/pages/StudentProgressDashboard";
 import GameHub from "./pages/GameHub";
 import GameMission from "./pages/GameMission";
 import GameHintsShop from "./pages/GameHintsShop";
+import AdminGamePanel from "./pages/AdminGamePanel";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/game/main" component={GameMain} />
       <Route path={"/game/mission/:id"} component={GameMission} />
       <Route path="/game/hints" component={GameHintsShop} />
+      <Route path="/admin/jogo" component={AdminGamePanel} />
       <Route path="/game/progress" component={StudentProgressDashboard} />
       <Route path={"/aluno/:classId"} component={StudentArea} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
