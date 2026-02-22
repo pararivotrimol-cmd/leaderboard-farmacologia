@@ -1536,3 +1536,22 @@
 - [ ] Criar notificações para professor quando aluno entra em risco
 - [ ] Integrar alertas em TeacherDashboard
 - [ ] Testar cálculo de risco
+
+
+## Melhorias de UI/UX
+- [x] Criar componente YouTubeCard com design lúdico e animações
+- [x] Integrar YouTubeCard na página inicial (Landing.tsx)
+- [x] Adicionar animações de hover e partículas flutuantes
+- [x] Criar estatísticas visuais (inscritos, vídeos)
+
+## Sistema de QR Code de Presença
+- [ ] Criar schema de banco para qrCodeSessions (classId, dayOfWeek, startTime, endTime, isActive, createdBy)
+- [ ] Criar schema para attendance com qrCodeSessionId
+- [ ] Criar rotas tRPC para CRUD de QR Code sessions
+- [ ] Instalar biblioteca qrcode para gerar QR Codes
+- [ ] Criar gerador de QR Code com dados da sessão
+- [ ] Criar validador de presença por QR Code
+- [ ] Criar página QRCodeManager para professor configurar
+- [ ] Criar interface para aluno escanear QR Code
+- [ ] Implementar verificação de horário e dia da semana
+- [ ] Adicionar histórico de presenças registradas

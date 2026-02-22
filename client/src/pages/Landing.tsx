@@ -13,6 +13,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useStudentAuth } from "./StudentLogin";
 import BackgroundMusic from "@/components/BackgroundMusic";
+import YouTubeCard from "@/components/YouTubeCard";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
@@ -596,22 +597,15 @@ export default function Landing() {
             </motion.div>
           </div>
 
-          {/* YouTube CTA */}
+          {/* YouTube CTA - Enhanced Card */}
           <div className="flex justify-center mt-8">
-            <a
-              href={YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 border"
-              style={{
-                borderColor: "rgba(255,255,255,0.2)",
-                color: "#fff",
-                backgroundColor: "rgba(255,255,255,0.05)",
-              }}
-            >
-              <Youtube size={20} />
-              Canal no YouTube
-            </a>
+            <YouTubeCard
+              channelUrl={YOUTUBE_URL}
+              channelName="Conexão em Ciência - Farmacológica"
+              description="Aulas interativas, dicas de farmacologia e conteúdo educativo"
+              subscriberCount="1.2K"
+              videoCount="50+"
+            />
           </div>
         </div>
       </div>
