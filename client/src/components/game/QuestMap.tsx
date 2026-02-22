@@ -41,7 +41,13 @@ const TYPE_ICONS = {
   collection: Trophy,
 };
 
-export default function QuestMap() {
+interface QuestMapProps {
+  onQuestClick?: (questId: number) => void;
+  completedQuests?: number[];
+  currentLevel?: number;
+}
+
+export default function QuestMap({ onQuestClick, completedQuests = [], currentLevel = 1 }: QuestMapProps) {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [hoveredQuest, setHoveredQuest] = useState<number | null>(null);
 
@@ -98,7 +104,12 @@ export default function QuestMap() {
               whileTap={{ scale: 0.95 }}
               onMouseEnter={() => setHoveredQuest(quest.id)}
               onMouseLeave={() => setHoveredQuest(null)}
-              onClick={() => setSelectedQuest(quest)}
+              onClick={() => {
+                setSelectedQuest(quest);
+                if (onQuestClick && !quest.isLocked) {
+                  onQuestClick(quest.id);
+                }
+              }}
               disabled={quest.isLocked}
             >
               {/* Glow effect */}

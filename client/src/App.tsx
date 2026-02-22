@@ -22,7 +22,8 @@ import TeacherResetPassword from "./pages/TeacherResetPassword";
 import SuperAdminSetup from "./pages/SuperAdminSetup";
 import SuperAdminProfile from "./pages/SuperAdminProfile";
 import ProfessorLogin from "./pages/ProfessorLogin";
-import Game from "./pages/Game";
+import Game from "@/pages/Game";
+import GameMain from "@/pages/GameMain";
 import ProfessorSignup from "./pages/ProfessorSignup";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import PerformanceReport from "./pages/PerformanceReport";
@@ -66,8 +67,9 @@ function Router() {
       <Route path={"/professor/resultados"} component={ResultsDashboard} />
       <Route path={"/jogo/:classId"} component={GamePortal} />
       <Route path={"/game/avatar-select"} component={GameAvatarSelect} />
-      <Route path={"game/hub"} component={GameHub} />
-      <Route path={"game/map"} component={Game} />
+      <Route path="/game/hub" component={GameHub} />
+      <Route path="/game/map" component={Game} />
+      <Route path="/game/main" component={GameMain} />
       <Route path={"/game/mission/:id"} component={GameMission} />
       <Route path="/game/hints" component={GameHintsShop} />
       <Route path="/game/progress" component={StudentProgressDashboard} />

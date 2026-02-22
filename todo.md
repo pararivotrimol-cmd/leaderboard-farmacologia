@@ -1785,3 +1785,11 @@
 - [ ] Agrupar transações por semana
 - [ ] Adicionar linha de tendência
 - [ ] Integrar no StudentProgressDashboard
+
+## Jogo RPG - Caverna do Dragão + Farmacologia
+- [x] Criar schema do banco de dados para progresso do jogo (gameProgress, questProgress, userAvatar)
+- [x] Implementar tela de combate/quiz com timer, múltipla escolha e animações
+- [x] Criar editor de avatar customizável (cor de pele, cabelo, roupa, acessórios)
+- [x] Integrar sistema de progressão com desbloqueio automático de missões
+- [x] Implementar tracking de PF/XP ganhos e salvamento no banco
+- [x] Testar fluxo completo do jogo (seleção personagem → mapa → combate → progressão)
