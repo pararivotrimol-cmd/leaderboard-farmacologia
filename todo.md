@@ -1724,3 +1724,31 @@
 - [x] Adicionar rota /game/progress no App.tsx
 - [ ] Implementar query getTransactions
 - [ ] Adicionar gráfico de PF ganhos por semana
+
+
+## Melhorias Landing Page (Feb 22, 2026 - Em Progresso)
+- [ ] Reposicionar avatar Professor Pedro para lado esquerdo
+- [ ] Reposicionar login e YouTube para lado direito
+- [ ] Corrigir número de inscritos do canal YouTube
+- [ ] Corrigir número de vídeos totais do canal
+
+## Integração Avatares 3D (Feb 22, 2026 - Concluído)
+- [x] Importar AVATAR_URLS no GameAvatarSelect
+- [x] Adicionar imageUrl à interface Avatar
+- [x] Atualizar todos os 6 avatares com URLs CDN
+- [x] Substituir ícones por imagens 3D no card
+- [ ] Testar seleção visual no browser
+
+## Query getTransactions (Feb 22, 2026 - Em Progresso)
+- [ ] Criar procedure getTransactions no gameRouter
+- [ ] Adicionar filtros por tipo de transação
+- [ ] Adicionar filtros por período
+- [ ] Integrar no StudentProgressDashboard
+- [ ] Exibir histórico completo em tabela
+
+## Gráfico de Evolução PF (Feb 22, 2026 - Em Progresso)
+- [ ] Instalar Chart.js (se necessário)
+- [ ] Criar componente de gráfico de linha
+- [ ] Agrupar transações por semana
+- [ ] Adicionar linha de tendência
+- [ ] Integrar no StudentProgressDashboard

@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Gamepad2, Sparkles, Sword, Shield, Wand2, Eye, Baby } from "lucide-react";
+import { AVATAR_URLS } from "@shared/avatarUrls";
 
 interface Avatar {
   id: number;
@@ -11,6 +12,7 @@ interface Avatar {
   title: string;
   description: string;
   icon: React.ReactNode;
+  imageUrl: string;
   color: string;
   abilities: string[];
 }
@@ -22,6 +24,7 @@ const avatars: Avatar[] = [
     title: "O Guardião",
     description: "Líder corajoso com arco de energia",
     icon: <Sword size={48} />,
+    imageUrl: AVATAR_URLS.hank,
     color: "from-yellow-500 to-orange-600",
     abilities: ["Arco de Energia", "Liderança", "Coragem"],
   },
@@ -31,6 +34,7 @@ const avatars: Avatar[] = [
     title: "O Cavaleiro",
     description: "Guerreiro com escudo mágico",
     icon: <Shield size={48} />,
+    imageUrl: AVATAR_URLS.eric,
     color: "from-red-500 to-pink-600",
     abilities: ["Escudo Mágico", "Defesa", "Proteção"],
   },
@@ -40,6 +44,7 @@ const avatars: Avatar[] = [
     title: "A Acrobata",
     description: "Ágil e rápida com bastão mágico",
     icon: <Sparkles size={48} />,
+    imageUrl: AVATAR_URLS.diana,
     color: "from-purple-500 to-indigo-600",
     abilities: ["Agilidade", "Bastão Mágico", "Velocidade"],
   },
@@ -49,6 +54,7 @@ const avatars: Avatar[] = [
     title: "O Mago",
     description: "Ilusionista com chapéu mágico",
     icon: <Wand2 size={48} />,
+    imageUrl: AVATAR_URLS.presto,
     color: "from-blue-500 to-cyan-600",
     abilities: ["Ilusões", "Magia", "Criatividade"],
   },
@@ -58,6 +64,7 @@ const avatars: Avatar[] = [
     title: "A Ladina",
     description: "Invisível com capa mágica",
     icon: <Eye size={48} />,
+    imageUrl: AVATAR_URLS.sheila,
     color: "from-green-500 to-emerald-600",
     abilities: ["Invisibilidade", "Furtividade", "Estratégia"],
   },
@@ -67,6 +74,7 @@ const avatars: Avatar[] = [
     title: "O Bárbaro",
     description: "Pequeno mas poderoso com clava mágica",
     icon: <Baby size={48} />,
+    imageUrl: AVATAR_URLS.bobby,
     color: "from-amber-500 to-yellow-600",
     abilities: ["Força", "Clava Mágica", "Determinação"],
   },
@@ -141,7 +149,11 @@ export default function GameAvatarSelect() {
                     <h3 className="text-2xl font-bold">{avatar.name}</h3>
                     <p className="text-sm opacity-90">{avatar.title}</p>
                   </div>
-                  <div className="bg-white/20 p-3 rounded-full">{avatar.icon}</div>
+                  <img 
+                    src={avatar.imageUrl} 
+                    alt={avatar.name}
+                    className="w-24 h-24 object-contain rounded-lg bg-white/10 p-2"
+                  />
                 </div>
                 <p className="text-sm mb-4 opacity-90">{avatar.description}</p>
                 <div className="space-y-2">
