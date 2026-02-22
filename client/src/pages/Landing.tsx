@@ -182,9 +182,80 @@ export default function Landing() {
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-screen py-12 lg:py-0">
             
-            {/* ═══ LEFT SIDE: Logo + Título + Logos Institucionais ═══ */}
+            {/* ═══ RIGHT SIDE: Logo + Título + Login + YouTube ═══ */}
             <motion.div
-              className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1"
+              className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-2"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              {/* Glow behind professor */}
+              <motion.div
+                className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full blur-3xl"
+                style={{ backgroundColor: "#F7941D", opacity: 0.08 }}
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.06, 0.12, 0.06],
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+
+              {/* Decorative ring */}
+              <motion.div
+                className="absolute w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-full"
+                style={{ border: "2px solid rgba(247,148,29,0.15)" }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              >
+                {/* Orbital dots */}
+                {[0, 90, 180, 270].map((deg) => (
+                  <div
+                    key={deg}
+                    className="absolute w-2.5 h-2.5 rounded-full"
+                    style={{
+                      backgroundColor: "#F7941D",
+                      opacity: 0.5,
+                      top: "50%",
+                      left: "50%",
+                      transform: `rotate(${deg}deg) translateX(${160}px) translateY(-50%)`,
+                    }}
+                  />
+                ))}
+              </motion.div>
+
+              {/* Professor Avatar */}
+              <motion.img
+                src={PROFESSOR_AVATAR_URL}
+                alt="Prof. Pedro Braga"
+                className="relative w-64 h-80 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] object-contain drop-shadow-2xl"
+                initial={{ scale: 0.8, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 100, damping: 15 }}
+              />
+
+              {/* Name badge */}
+              <motion.div
+                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-xl"
+                style={{
+                  background: "linear-gradient(135deg, rgba(247,148,29,0.9) 0%, rgba(247,148,29,0.7) 100%)",
+                  boxShadow: "0 4px 20px rgba(247,148,29,0.3)",
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              >
+                <p className="text-white font-bold text-sm sm:text-base text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Prof. Pedro Braga
+                </p>
+                <p className="text-white/80 text-[10px] sm:text-xs text-center">
+                  Farmacologia I — UNIRIO
+                </p>
+              </motion.div>
+            </motion.div>
+
+            {/* ═══ LEFT SIDE: Professor Pedro ═══ */}
+            <motion.div
+              className="relative flex items-center justify-center order-1 lg:order-1"
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
@@ -351,77 +422,6 @@ export default function Landing() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
-
-            {/* ═══ RIGHT SIDE: Avatar Professor Pedro ═══ */}
-            <motion.div
-              className="relative flex items-center justify-center order-1 lg:order-2"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              {/* Glow behind professor */}
-              <motion.div
-                className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full blur-3xl"
-                style={{ backgroundColor: "#F7941D", opacity: 0.08 }}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.06, 0.12, 0.06],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-
-              {/* Decorative ring */}
-              <motion.div
-                className="absolute w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-full"
-                style={{ border: "2px solid rgba(247,148,29,0.15)" }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-              >
-                {/* Orbital dots */}
-                {[0, 90, 180, 270].map((deg) => (
-                  <div
-                    key={deg}
-                    className="absolute w-2.5 h-2.5 rounded-full"
-                    style={{
-                      backgroundColor: "#F7941D",
-                      opacity: 0.5,
-                      top: "50%",
-                      left: "50%",
-                      transform: `rotate(${deg}deg) translateX(${160}px) translateY(-50%)`,
-                    }}
-                  />
-                ))}
-              </motion.div>
-
-              {/* Professor Avatar */}
-              <motion.img
-                src={PROFESSOR_AVATAR_URL}
-                alt="Prof. Pedro Braga"
-                className="relative w-64 h-80 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] object-contain drop-shadow-2xl"
-                initial={{ scale: 0.8, opacity: 0, y: 30 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 100, damping: 15 }}
-              />
-
-              {/* Name badge */}
-              <motion.div
-                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-xl"
-                style={{
-                  background: "linear-gradient(135deg, rgba(247,148,29,0.9) 0%, rgba(247,148,29,0.7) 100%)",
-                  boxShadow: "0 4px 20px rgba(247,148,29,0.3)",
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5, duration: 0.5 }}
-              >
-                <p className="text-white font-bold text-sm sm:text-base text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Prof. Pedro Braga
-                </p>
-                <p className="text-white/80 text-[10px] sm:text-xs text-center">
-                  Farmacologia I — UNIRIO
-                </p>
               </motion.div>
             </motion.div>
           </div>
