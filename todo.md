@@ -1682,3 +1682,18 @@
 - [ ] Adicionar animações básicas (idle, walk, celebrate)
 - [ ] Integrar modelos no GameHub
 - [ ] Testar renderização e performance
+
+
+## Sincronização gameProgress com xpActivities (Feb 22, 2026 - Concluído)
+- [x] Importar members no gameRouter
+- [x] Sincronizar gameProgress.farmacologiaPoints com members.xp
+- [x] Atualizar leaderboard principal ao ganhar PF no jogo
+- [ ] Adicionar tabela gameTransactions para audit trail
+- [ ] Testar unificação de pontuação
+
+## Indicador Visual de Salvamento (Feb 22, 2026 - Concluído)
+- [x] Adicionar estado "isSaving" no GameMission
+- [x] Adicionar spinner animado no botão durante salvamento
+- [x] Desabilitar botão durante salvamento
+- [x] Mostrar alerta de erro se falhar
+- [x] Feedback visual "Salvando..." com SVG spinner

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameProgress, gameQuests, gameCombats, gameAchievements } from "../../drizzle/schema";
+import { gameProgress, gameQuests, gameCombats, gameAchievements, xpActivities, members } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 export const gameRouter = router({
@@ -363,9 +363,24 @@ export const gameRouter = router({
           )
         );
 
-      // 2. TODO: Sync with main leaderboard table (xpActivities)
-      // This would require importing the xpActivities table and adding a record
-      // For now, we're just updating the game progress
+      // 2. Sync with main leaderboard (members.xp)
+      const member = await db
+        .select()
+        .from(members)
+        .where(eq(members.id, ctx.user.id))
+        .limit(1);
+
+      if (member[0]) {
+        await db
+          .update(members)
+          .set({
+            xp: String(parseFloat(member[0].xp) + input.pfAmount),
+          })
+          .where(eq(members.id, ctx.user.id));
+      }
+
+      // 3. Log activity (optional - for audit trail)
+      // Could add a record to a gameTransactions table here
 
       return {
         success: true,

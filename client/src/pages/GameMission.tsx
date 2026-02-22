@@ -33,6 +33,7 @@ export default function GameMission() {
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [result, setResult] = useState<{ success: boolean; message: string; pfEarned: number } | null>(null);
   const [showOracle, setShowOracle] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Buscar missão real do arquivo de missões
   const mission = GAME_MISSIONS.find(m => m.id === missionId) || GAME_MISSIONS[0];
@@ -65,6 +66,7 @@ export default function GameMission() {
 
     // Auto-save: Award PF if correct
     if (decision.isCorrect && decision.pfReward > 0) {
+      setIsSaving(true);
       try {
         await awardPFMutation.mutateAsync({
           classId: 1, // TODO: Get from context
@@ -72,8 +74,12 @@ export default function GameMission() {
           pfAmount: decision.pfReward,
           activityType: "mission_complete",
         });
+        // Success feedback is already shown in result message
       } catch (error) {
         console.error("Failed to save progress:", error);
+        alert("⚠️ Erro ao salvar progresso. Tente novamente.");
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -214,10 +220,20 @@ export default function GameMission() {
           {!result && (
             <Button
               onClick={handleSubmit}
-              disabled={!selectedDecision}
+              disabled={!selectedDecision || isSaving}
               className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg py-6"
             >
-              Confirmar Decisão
+              {isSaving ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Salvando...
+                </span>
+              ) : (
+                "Confirmar Decisão"
+              )}
             </Button>
           )}
         </Card>
