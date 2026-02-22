@@ -1752,3 +1752,36 @@
 - [ ] Agrupar transações por semana
 - [ ] Adicionar linha de tendência
 - [ ] Integrar no StudentProgressDashboard
+
+
+## Correção Botão do Jogo (Feb 22, 2026 - Concluído)
+- [x] Investigar por que botão do jogo não produz atividade
+- [x] Adicionar useLocation no StudentNavBar
+- [x] Criar handleTabClick para redirecionar /game/avatar-select
+- [x] Atualizar botões desktop e mobile para usar handleTabClick
+
+## Reorganização Landing.tsx (Feb 22, 2026 - Em Progresso)
+- [ ] Mover seção Professor Pedro para lado esquerdo
+- [ ] Mover login e YouTube para lado direito
+- [ ] Ajustar responsividade mobile
+- [ ] Testar layout em diferentes resoluções
+
+## Correção Números YouTube (Feb 22, 2026 - Em Progresso)
+- [ ] Pesquisar números reais de inscritos do canal
+- [ ] Pesquisar número total de vídeos do canal
+- [ ] Atualizar YouTubeCard com valores corretos
+- [ ] Verificar se dados estão atualizados
+
+## Query getTransactions (Feb 22, 2026 - Em Progresso)
+- [ ] Criar procedure getTransactions no gameRouter
+- [ ] Adicionar filtros por tipo de transação (ganho/gasto)
+- [ ] Adicionar filtro por período (semana/mês)
+- [ ] Integrar no StudentProgressDashboard
+- [ ] Exibir histórico em tabela
+
+## Gráfico de Evolução PF (Feb 22, 2026 - Em Progresso)
+- [ ] Instalar Chart.js
+- [ ] Criar componente de gráfico de linha
+- [ ] Agrupar transações por semana
+- [ ] Adicionar linha de tendência
+- [ ] Integrar no StudentProgressDashboard

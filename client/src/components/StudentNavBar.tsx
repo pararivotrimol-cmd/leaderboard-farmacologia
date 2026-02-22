@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   Users, Award, Target, BarChart3, ClipboardList, Menu, X,
   LogOut, Settings, Bell, BookOpen, Gamepad2
@@ -37,8 +37,17 @@ export default function StudentNavBar({
   showClassSelector = true,
 }: StudentNavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
+
+  const handleTabClick = (key: string) => {
+    if (key === "game") {
+      setLocation("/game/avatar-select");
+    } else {
+      onTabChange?.(key);
+    }
+  };
 
   return (
     <>
@@ -69,7 +78,7 @@ export default function StudentNavBar({
               {NAV_ITEMS.map((item) => (
                 <button
                   key={item.key}
-                  onClick={() => onTabChange?.(item.key)}
+                  onClick={() => handleTabClick(item.key)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap"
                   style={{
                     backgroundColor: activeTab === item.key ? ORANGE : "transparent",
@@ -161,7 +170,7 @@ export default function StudentNavBar({
                   <button
                     key={item.key}
                     onClick={() => {
-                      onTabChange?.(item.key);
+                      handleTabClick(item.key);
                       setMobileMenuOpen(false);
                     }}
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all"
