@@ -67,7 +67,7 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [showVinheta, setShowVinheta] = useState(true);
   const [vinhetaComplete, setVinhetaComplete] = useState(false);
-  const [vinhetaStarted, setVinhetaStarted] = useState(false);
+
   const { isAuthenticated } = useAuth();
   const { isAuthenticated: isStudentAuth } = useStudentAuth();
 
@@ -90,17 +90,29 @@ export default function Landing() {
     }
   }, []);
 
-  const handleStartVinheta = () => {
-    setVinhetaStarted(true);
-    // Play audio after user interaction (guaranteed by browser policy)
+  // Auto-start vinheta: try to play audio automatically, with fallback on first user interaction
+  useEffect(() => {
+    if (!showVinheta || vinhetaComplete) return;
+    // Try autoplay audio
     if (audioRef.current) {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => {
+        // Browser blocked autoplay - play on first user interaction
+        const playOnInteraction = () => {
+          if (audioRef.current) {
+            audioRef.current.play().catch(() => {});
+          }
+          document.removeEventListener("click", playOnInteraction);
+          document.removeEventListener("touchstart", playOnInteraction);
+        };
+        document.addEventListener("click", playOnInteraction, { once: true });
+        document.addEventListener("touchstart", playOnInteraction, { once: true });
+      });
     }
-    // Play video
+    // Autoplay video (muted videos are allowed by browsers)
     if (videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
-  };
+  }, [showVinheta, vinhetaComplete]);
 
   const handleVinhetaComplete = () => {
     sessionStorage.setItem("intro_shown", "true");
@@ -131,44 +143,23 @@ export default function Landing() {
             style={{ display: "none" }}
           />
 
-          {/* Click-to-start overlay - ensures browser allows audio */}
-          {!vinhetaStarted && (
-            <div
-              className="absolute inset-0 z-[60] flex flex-col items-center justify-center cursor-pointer bg-black"
-              onClick={handleStartVinheta}
-            >
-              <img
-                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/YRjLKbBGCKbXjpfP.png"
-                alt="Conexão em Farmacologia"
-                className="w-32 h-32 sm:w-40 sm:h-40 object-contain mb-8"
-              />
-              <motion.div
-                className="flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-xl sm:text-2xl cursor-pointer"
-                style={{ backgroundColor: "#F7941D", color: "#fff", border: "2px solid rgba(255,255,255,0.3)" }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <span style={{ fontSize: "1.5em" }}>▶</span>
-                Toque para Iniciar
-              </motion.div>
-              <p className="mt-4 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Conexão em Farmacologia — UNIRIO</p>
-            </div>
-          )}
 
-          {/* Video plays after user clicks */}
+
+          {/* Video autoplays muted (browsers allow muted autoplay) */}
           <video
             ref={videoRef}
             key="intro-video"
+            autoPlay
+            muted
             playsInline
             onEnded={handleVinhetaComplete}
             className="w-full h-full object-cover"
-            style={{ backgroundColor: "#000", display: vinhetaStarted ? "block" : "none" }}
+            style={{ backgroundColor: "#000" }}
           >
             <source src={INTRO_VIDEO_URL} type="video/mp4" />
           </video>
 
-          {vinhetaStarted && (
-            <motion.button
+          <motion.button
               onClick={handleVinhetaComplete}
               className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
               style={{
@@ -185,7 +176,6 @@ export default function Landing() {
             >
               Pular
             </motion.button>
-          )}
         </motion.div>
       )}
 
