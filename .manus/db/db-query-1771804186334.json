@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as count FROM questionBank;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT COUNT(*) as count FROM questionBank;",
+  "rows": [
+    {
+      "count": "103"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\n103\n",
+  "stderr": "",
+  "execution_time_ms": 144
+}

@@ -7,6 +7,7 @@ import {
   gameErrorReports, questionBank, classes, bossBattles
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { QUEST_EXTRA_QUESTIONS } from "../../shared/questExtraQuestions";
 
 // ─── Helper: find memberId from user openId ───
 async function findMemberId(db: any, userId: number): Promise<number | null> {
@@ -329,6 +330,36 @@ export const gameRouter = router({
     }),
 
   /**
+   * Get a random question for a quest (from pool of original + extra questions)
+   * Returns the question text and alternatives for the frontend to display
+   */
+  getQuestQuestion: publicProcedure
+    .input(z.object({ questId: z.number() }))
+    .query(({ input }) => {
+      const quest = BUILTIN_QUESTS.find(q => q.id === input.questId);
+      if (!quest) throw new Error("Quest not found");
+      // Build question pool: original question + extras
+      const originalQuestion = {
+        description: quest.description,
+        alternatives: quest.alternatives,
+        explanation: quest.explanation,
+      };
+      const extras = QUEST_EXTRA_QUESTIONS[input.questId] || [];
+      const pool = [originalQuestion, ...extras];
+      // Pick a random question from the pool
+      const idx = Math.floor(Math.random() * pool.length);
+      const selected = pool[idx];
+      return {
+        questId: input.questId,
+        questionIndex: idx,
+        totalQuestions: pool.length,
+        description: selected.description,
+        alternatives: selected.alternatives,
+        explanation: selected.explanation,
+      };
+    }),
+
+  /**
    * Get player's game progress (works with memberId directly)
    */
   getProgress: publicProcedure
@@ -436,6 +467,7 @@ export const gameRouter = router({
       memberId: z.number(),
       answer: z.string(), // alternative id: "a", "b", "c", "d"
       timeSpent: z.number(),
+      questionIndex: z.number().optional(), // index into question pool (0 = original)
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -445,8 +477,15 @@ export const gameRouter = router({
       const quest = BUILTIN_QUESTS.find(q => q.id === input.questId);
       if (!quest) throw new Error("Quest not found");
 
-      // Check answer
-      const correctAlt = quest.alternatives.find(a => a.isCorrect);
+      // Determine which question was shown (original or extra)
+      const extras = QUEST_EXTRA_QUESTIONS[input.questId] || [];
+      const originalQ = { alternatives: quest.alternatives, explanation: quest.explanation };
+      const pool = [originalQ, ...extras];
+      const qIdx = input.questionIndex ?? 0;
+      const activeQuestion = pool[qIdx] || originalQ;
+
+      // Check answer against the active question's alternatives
+      const correctAlt = activeQuestion.alternatives.find(a => a.isCorrect);
       const isCorrect = input.answer === correctAlt?.id;
       const pfEarned = isCorrect ? quest.farmacologiaPointsReward : 0;
       const xpEarned = isCorrect ? quest.experienceReward : 0;
@@ -569,7 +608,7 @@ export const gameRouter = router({
         isCorrect,
         correctAnswer: correctAlt?.id || "",
         correctAnswerText: correctAlt?.text || "",
-        explanation: quest.explanation,
+        explanation: activeQuestion.explanation || quest.explanation,
         pfEarned,
         xpEarned,
         newAchievements: newAchievements.map(id => ACHIEVEMENT_DEFS.find(a => a.id === id)!),

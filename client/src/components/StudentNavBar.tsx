@@ -79,14 +79,25 @@ export default function StudentNavBar({
                 <button
                   key={item.key}
                   onClick={() => handleTabClick(item.key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
                   style={{
-                    backgroundColor: activeTab === item.key ? ORANGE : "transparent",
-                    color: activeTab === item.key ? "#fff" : "rgba(255,255,255,0.6)",
+                    backgroundColor: activeTab === item.key
+                      ? ORANGE
+                      : item.key === "game"
+                        ? "rgba(16, 185, 129, 0.15)"
+                        : "transparent",
+                    color: activeTab === item.key
+                      ? "#fff"
+                      : item.key === "game"
+                        ? "#34d399"
+                        : "rgba(255,255,255,0.6)",
                   }}
                 >
                   {item.icon}
                   <span>{item.label}</span>
+                  {item.key === "game" && activeTab !== "game" && (
+                    <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  )}
                 </button>
               ))}
             </div>
@@ -173,14 +184,25 @@ export default function StudentNavBar({
                       handleTabClick(item.key);
                       setMobileMenuOpen(false);
                     }}
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all"
+                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60" : ""}`}
                     style={{
-                      backgroundColor: activeTab === item.key ? ORANGE : "rgba(255,255,255,0.05)",
-                      color: activeTab === item.key ? "#fff" : "rgba(255,255,255,0.6)",
+                      backgroundColor: activeTab === item.key
+                        ? ORANGE
+                        : item.key === "game"
+                          ? "rgba(16, 185, 129, 0.15)"
+                          : "rgba(255,255,255,0.05)",
+                      color: activeTab === item.key
+                        ? "#fff"
+                        : item.key === "game"
+                          ? "#34d399"
+                          : "rgba(255,255,255,0.6)",
                     }}
                   >
                     {item.icon}
                     <span>{item.label}</span>
+                    {item.key === "game" && activeTab !== "game" && (
+                      <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    )}
                   </button>
                 ))}
               </div>

@@ -39,11 +39,13 @@ async function startServer() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "https:"],
-        connectSrc: ["'self'"],
-        frameSrc: ["'none'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "https:", "data:", "blob:"],
+        connectSrc: ["'self'", "https://files.manuscdn.com", "https://api.manus.im", "wss:", "ws:"],
+        frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        mediaSrc: ["'self'", "https://files.manuscdn.com", "blob:"],
       },
     },
     hsts: {
@@ -56,7 +58,19 @@ async function startServer() {
   // CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
   app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      // Allow any manus.space or manus.computer domain
+      if (origin.endsWith('.manus.space') || origin.endsWith('.manus.computer') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow localhost in development
+      if (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        return callback(null, true);
+      }
+      callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -65,8 +79,10 @@ async function startServer() {
   // Rate limiting
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per window
-    message: 'Muitas requisições, tente novamente mais tarde',
+    max: 500, // 500 requests per window
+    handler: (_req, res) => {
+      res.status(429).json({ error: 'Muitas requisições, tente novamente mais tarde' });
+    },
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -74,14 +90,18 @@ async function startServer() {
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // 5 attempts per window
-    message: 'Muitas tentativas de login, tente novamente mais tarde',
+    handler: (_req, res) => {
+      res.status(429).json({ error: 'Muitas tentativas de login, tente novamente mais tarde' });
+    },
     skipSuccessfulRequests: true,
   });
   
   const trpcLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
-    max: 50, // 50 requests per minute
-    message: 'Muitas requisições à API, tente novamente mais tarde',
+    max: 200, // 200 requests per minute
+    handler: (_req, res) => {
+      res.status(429).json({ error: 'Muitas requisições à API, tente novamente mais tarde' });
+    },
   });
   
   // Apply rate limiters

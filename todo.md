@@ -1818,3 +1818,27 @@
 - [ ] Adicionar animação de level-up quando o aluno sobe de nível
 - [ ] Adicionar notificação toast quando ganha PF ou desbloqueia missão
 - [ ] Testar fluxo completo com todos os efeitos visuais e sonoros
+
+## Boss Battle - Imagens dos Chefes
+- [ ] Gerar imagem do Boss 1 - Guardião do Portal (Farmacocinética)
+- [ ] Gerar imagem do Boss 2 - Alquimista Sombrio (Farmacocinética Avançada)
+- [ ] Gerar imagem do Boss 3 - Senhor dos Receptores (Farmacodinâmica)
+- [ ] Gerar imagem do Boss 4 - Escriba Maldito (Prescrição)
+- [ ] Gerar imagem do Boss 5 - Hidra Simpática (SNA Simpático)
+- [ ] Gerar imagem do Boss 6 - Golem Colinérgico (Colinérgicos/BNM)
+- [ ] Gerar imagem do Boss 7 - Esfinge do Conhecimento (Seminários)
+- [ ] Gerar imagem do Boss 8 - Dragão Histamínico (Anti-histamínicos)
+- [ ] Gerar imagem do Boss 9 - Venger (Anestésicos)
+- [ ] Gerar imagem do Boss 10 - Tiamat (Boss Final)
+- [ ] Integrar imagens no componente BossBattle
+- [ ] Upload das imagens para S3 e atualizar referências
+
+## Correções e Melhorias (Feb 22, 2026)
+- [x] Corrigir erro SyntaxError JSON ("Unexpected token '<'") - problema de conexão (CSP, CORS, rate limit)
+- [x] Adicionar aba destacada do Jogo no portal do aluno
+- [x] Adicionar aba destacada do Jogo no portal do professor (via StudentNavBar)
+- [x] Adicionar aba destacada do Jogo no portal do admin
+- [x] Expandir perguntas por missão de 1 para 3-5 perguntas (4 perguntas por missão)
+- [x] Criar página /jogo/conquistas com badges, animação de desbloqueio e progresso
+- [x] Gerar imagens com IA para os 10 bosses temáticos
+- [x] Integrar imagens dos bosses no componente BossBattle e GamePortal

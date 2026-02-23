@@ -21,7 +21,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -3165,7 +3165,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 // ─── Main Admin Page ───
 export default function Admin() {
   const [password, setPassword] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication
@@ -3206,6 +3206,7 @@ export default function Admin() {
   }
 
   const sections = [
+    { key: "jogo" as const, label: "🎮 Jogo", icon: <Gamepad2 size={16} /> },
     { key: "turmas" as const, label: "Turmas", icon: <FlaskConical size={16} /> },
     { key: "teams" as const, label: "Equipes", icon: <Users size={16} /> },
     { key: "xp" as const, label: "Atualizar PF", icon: <Zap size={16} /> },
@@ -3252,6 +3253,20 @@ export default function Admin() {
 
       {/* Content */}
       <div className="container pb-16">
+        {activeSection === "jogo" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg border border-emerald-500/30" style={{ backgroundColor: "rgba(16, 185, 129, 0.08)" }}>
+              <Gamepad2 size={24} className="text-emerald-400" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground">Painel de Gerenciamento do Jogo</h3>
+                <p className="text-sm text-muted-foreground">Libere semanas, gerencie missões, boss battles e veja o progresso dos alunos.</p>
+              </div>
+              <a href="/admin/jogo" className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 transition-colors">
+                Abrir Painel do Jogo
+              </a>
+            </div>
+          </div>
+        )}
         {activeSection === "turmas" && <TurmasManager teacherToken={teacherToken || ""} />}
         {activeSection === "teams" && password && <TeamManager password={password} />}
         {activeSection === "xp" && password && <BulkXPManager password={password} />}

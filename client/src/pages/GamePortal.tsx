@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
@@ -72,9 +72,11 @@ export default function GamePortal() {
   const [reportText, setReportText] = useState("");
   const [reportType, setReportType] = useState<"error" | "doubt" | "suggestion">("doubt");
   const [activeBossWeek, setActiveBossWeek] = useState<number | null>(null);
+  const [activeQuestion, setActiveQuestion] = useState<{ description: string; alternatives: any[]; explanation: string; questionIndex: number; totalQuestions: number } | null>(null);
 
   // Hardcoded memberId=1 for now (will be dynamic with auth)
   const memberId = 1;
+  const utils = trpc.useUtils();
 
   // Queries
   const { data: progress, refetch: refetchProgress } = trpc.game.getProgress.useQuery({
@@ -100,6 +102,12 @@ export default function GamePortal() {
     classId: classIdNum,
     memberId,
   });
+
+  // Count earned achievements for badge
+  const earnedAchievementCount = useMemo(() => {
+    if (!progress?.achievements) return 0;
+    try { return JSON.parse(progress.achievements).length; } catch { return 0; }
+  }, [progress]);
 
   // Mutations
   const submitMutation = trpc.game.submitAnswer.useMutation();
@@ -141,7 +149,7 @@ export default function GamePortal() {
     }
   };
 
-  const handleQuestClick = (quest: any) => {
+  const handleQuestClick = async (quest: any) => {
     if (completedQuestIds?.includes(quest.id)) {
       toast.info("Missão já completada! ✅");
       return;
@@ -149,10 +157,26 @@ export default function GamePortal() {
     setSelectedQuest(quest);
     setSelectedAnswer(null);
     setTimeLeft(60);
-    setTimerActive(true);
     setShowResult(false);
     setResultData(null);
+    setActiveQuestion(null);
     setView("quest");
+    // Fetch a random question from the pool
+    try {
+      const q = await utils.game.getQuestQuestion.fetch({ questId: quest.id });
+      setActiveQuestion(q);
+      setTimerActive(true);
+    } catch {
+      // Fallback to original quest question
+      setActiveQuestion({
+        description: quest.description,
+        alternatives: quest.alternatives,
+        explanation: quest.explanation,
+        questionIndex: 0,
+        totalQuestions: 1,
+      });
+      setTimerActive(true);
+    }
   };
 
   const handleSubmit = async (answer: string) => {
@@ -166,6 +190,7 @@ export default function GamePortal() {
         memberId,
         answer: answer === "timeout" ? "" : answer,
         timeSpent: 60 - timeLeft,
+        questionIndex: activeQuestion?.questionIndex ?? 0,
       });
 
       setResultData(result);
@@ -316,9 +341,16 @@ export default function GamePortal() {
                 <span className="font-mono text-sm font-bold text-red-400">{defeatedBossCount}/10</span>
                 <span className="text-xs text-gray-400">Boss</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowMenu(true)} className="text-gray-400">
-                <Trophy size={18} />
-              </Button>
+              <Link href="/jogo/conquistas">
+                <Button variant="ghost" size="sm" className="text-amber-400 hover:text-amber-300 relative">
+                  <Trophy size={18} />
+                  {earnedAchievementCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-[10px] font-bold text-black rounded-full flex items-center justify-center">
+                      {earnedAchievementCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -400,7 +432,9 @@ export default function GamePortal() {
                         : "bg-gray-800/80 border-gray-600/40 opacity-50"
                     }
                   `}>
-                    {isDefeated ? "💀" : boss.emoji}
+                    {isDefeated ? "💀" : boss.imageUrl ? (
+                      <img src={boss.imageUrl} alt={boss.name} className="w-10 h-10 object-contain rounded" />
+                    ) : boss.emoji}
                     {/* Glow ring for available bosses */}
                     {isAvailable && !isDefeated && (
                       <div className="absolute inset-0 rounded-lg border-2 border-red-400 animate-ping opacity-30" />
@@ -411,7 +445,9 @@ export default function GamePortal() {
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     <div className="bg-black/95 rounded-lg px-3 py-2 whitespace-nowrap text-center border border-red-500/30">
                       <p className="text-xs font-bold" style={{ color: boss.color }}>
-                        {boss.emoji} {boss.name}
+                        {boss.imageUrl ? (
+                          <img src={boss.imageUrl} alt={boss.name} className="w-4 h-4 object-contain inline mr-1" />
+                        ) : boss.emoji} {boss.name}
                       </p>
                       <p className="text-[10px] text-gray-400">{boss.title}</p>
                       <p className="text-[10px] mt-1">
@@ -455,7 +491,11 @@ export default function GamePortal() {
                       }
                     `}
                   >
-                    <div className="text-2xl mb-1">{isDefeated ? "💀" : boss.emoji}</div>
+                    <div className="text-2xl mb-1">
+                      {isDefeated ? "💀" : boss.imageUrl ? (
+                        <img src={boss.imageUrl} alt={boss.name} className="w-10 h-10 object-contain mx-auto" />
+                      ) : boss.emoji}
+                    </div>
                     <p className="text-xs font-bold text-white truncate">{boss.name}</p>
                     <p className="text-[10px] text-gray-400">Sem. {boss.weekNumber}</p>
                     {isDefeated && (
@@ -604,13 +644,25 @@ export default function GamePortal() {
 
             {/* Question */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-lg font-medium text-center leading-relaxed">{selectedQuest.description}</p>
+              {activeQuestion ? (
+                <>
+                  <p className="text-lg font-medium text-center leading-relaxed">{activeQuestion.description}</p>
+                  {activeQuestion.totalQuestions > 1 && (
+                    <p className="text-xs text-purple-400 text-center mt-2">Pergunta variante ({activeQuestion.totalQuestions} possíveis)</p>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-2 text-sm text-gray-400">Carregando pergunta...</span>
+                </div>
+              )}
             </div>
 
             {/* Alternatives */}
-            {!showResult ? (
+            {!showResult && activeQuestion ? (
               <div className="space-y-3">
-                {selectedQuest.alternatives.map((alt: any) => (
+                {activeQuestion.alternatives.map((alt: any) => (
                   <button
                     key={alt.id}
                     onClick={() => {
