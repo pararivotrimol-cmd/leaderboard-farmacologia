@@ -537,24 +537,14 @@ export default function Landing() {
                       <ArrowRight size={18} />
                     </button>
                   ) : (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => setLocation("/professor/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-white/20 min-h-[48px]"
-                        style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                      >
-                        <LogIn size={18} />
-                        Professor
-                      </button>
-                      <button
-                        onClick={() => setLocation("/super-admin/login")}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-orange-500/25 min-h-[44px]"
-                        style={{ backgroundColor: "rgba(247,148,29,0.15)", color: "#F7941D", border: "1px solid rgba(247,148,29,0.3)" }}
-                      >
-                        <Shield size={16} />
-                        Super Admin
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setLocation("/professor/login")}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-white/20 min-h-[48px]"
+                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                    >
+                      <LogIn size={18} />
+                      Fazer Login / Cadastrar
+                    </button>
                   )}
                 </div>
               </div>

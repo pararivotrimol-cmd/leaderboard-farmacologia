@@ -1851,3 +1851,8 @@
 
 ## Melhorias Pós-Deploy (Feb 23, 2026)
 - [x] Cu00f3digo gerado para liberar acesso dos alunos deve tambu00e9m liberar acesso dos professores
+## Bug: Painel de Acesso do Professor (Feb 23, 2026)
+- [x] Corrigir Área do Professor na Landing page: substituir dois botões (Professor + Super Admin) por um botão único "Fazer Login / Cadastrar"
+
+## Testes
+- [x] Executar testes automatizados antes do checkpoint (108/114 passando)
