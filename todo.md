@@ -1848,3 +1848,6 @@
 - [x] Corrigir erro "Unexpected token '<'" no fluxo Admin → Portal Aluno → Jogo
 - [x] GameAvatarSelect agora redireciona para /jogo/:classId ao invés de /game/hub quebrado
 - [x] Remover arquivo órfão use-toast.ts que causava erros TypeScript
+
+## Melhorias Pós-Deploy (Feb 23, 2026)
+- [x] Cu00f3digo gerado para liberar acesso dos alunos deve tambu00e9m liberar acesso dos professores
