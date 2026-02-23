@@ -67,19 +67,13 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [showVinheta, setShowVinheta] = useState(true);
   const [vinhetaComplete, setVinhetaComplete] = useState(false);
+  const [vinhetaAudioStopped, setVinhetaAudioStopped] = useState(false);
 
   const { isAuthenticated } = useAuth();
   const { isAuthenticated: isStudentAuth } = useStudentAuth();
 
-  // Check if teacher is logged in
-  const [teacherLoggedIn, setTeacherLoggedIn] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("teacherSessionToken");
-    setTeacherLoggedIn(!!token);
-  }, []);
 
   // Check if intro was already shown this session
   useEffect(() => {
@@ -87,6 +81,7 @@ export default function Landing() {
     if (shown) {
       setShowVinheta(false);
       setVinhetaComplete(true);
+      setVinhetaAudioStopped(true);
     }
   }, []);
 
@@ -116,11 +111,15 @@ export default function Landing() {
 
   const handleVinhetaComplete = () => {
     sessionStorage.setItem("intro_shown", "true");
-    // Stop the intro audio
+    // Completely stop and destroy the intro audio to prevent overlap
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.src = ""; // Release the audio resource
+      audioRef.current.load(); // Force release
+      audioRef.current = null;
     }
+    setVinhetaAudioStopped(true);
     setVinhetaComplete(true);
     setTimeout(() => setShowVinheta(false), 800);
   };
@@ -180,7 +179,7 @@ export default function Landing() {
       )}
 
       {/* ═══════ BACKGROUND MUSIC PLAYER ═══════ */}
-      {vinhetaComplete && <BackgroundMusic />}
+      {vinhetaComplete && vinhetaAudioStopped && <BackgroundMusic />}
 
       {/* ═══════ HERO SECTION — Logo + Professor Pedro ═══════ */}
       <div className="relative min-h-screen flex items-center overflow-hidden">
@@ -575,17 +574,7 @@ export default function Landing() {
                     <LogIn size={18} />
                     Fazer Login / Cadastrar
                   </button>
-                  {teacherLoggedIn && (
-                    <button
-                      onClick={() => setLocation("/admin")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)" }}
-                    >
-                      <Lock size={16} />
-                      Ir ao Painel Administrativo
-                      <ArrowRight size={16} />
-                    </button>
-                  )}
+
                 </div>
               </div>
             </motion.div>

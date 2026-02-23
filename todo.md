@@ -1860,3 +1860,10 @@
 ## Bugs Reportados (Feb 23, 2026 - Round 2)
 - [x] Portal do Professor: correção confirmada no site publicado (botão 'Fazer Login / Cadastrar' funciona)
 - [x] Música de introdução/vinheta: corrigido autoplay com fallback para primeiro clique do usuário
+
+## Correções Críticas Landing Page (Feb 23, 2026)
+- [x] Remover overlay "Toque para Iniciar" - vinheta agora autoplay imediato
+- [x] Corrigir sobreposição de música vinheta/lounge - áudio da vinheta é destruído antes do BackgroundMusic montar
+- [x] Remover botão "Ir ao Painel Administrativo" da Área do Professor - apenas "Fazer Login / Cadastrar" visível
+- [x] Limpar estado teacherLoggedIn não utilizado
+- [x] Adicionar flag vinhetaAudioStopped para garantir sequência correta áudio vinheta → lounge
