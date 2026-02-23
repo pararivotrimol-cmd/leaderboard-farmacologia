@@ -67,41 +67,19 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [showVinheta, setShowVinheta] = useState(true);
   const [vinhetaComplete, setVinhetaComplete] = useState(false);
+  const [vinhetaStarted, setVinhetaStarted] = useState(false);
   const { isAuthenticated } = useAuth();
   const { isAuthenticated: isStudentAuth } = useStudentAuth();
 
   // Check if teacher is logged in
   const [teacherLoggedIn, setTeacherLoggedIn] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [audioStarted, setAudioStarted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("teacherSessionToken");
     setTeacherLoggedIn(!!token);
   }, []);
-
-  // Try to play audio on any user interaction (click/touch/keydown)
-  useEffect(() => {
-    if (!showVinheta || vinhetaComplete || audioStarted) return;
-    const tryPlayAudio = () => {
-      if (audioRef.current && !audioStarted) {
-        audioRef.current.play().then(() => {
-          setAudioStarted(true);
-        }).catch(() => { /* browser blocked, will retry on next interaction */ });
-      }
-    };
-    // Try immediately
-    tryPlayAudio();
-    // Also listen for user interaction
-    document.addEventListener("click", tryPlayAudio, { once: true });
-    document.addEventListener("touchstart", tryPlayAudio, { once: true });
-    document.addEventListener("keydown", tryPlayAudio, { once: true });
-    return () => {
-      document.removeEventListener("click", tryPlayAudio);
-      document.removeEventListener("touchstart", tryPlayAudio);
-      document.removeEventListener("keydown", tryPlayAudio);
-    };
-  }, [showVinheta, vinhetaComplete, audioStarted]);
 
   // Check if intro was already shown this session
   useEffect(() => {
@@ -111,6 +89,18 @@ export default function Landing() {
       setVinhetaComplete(true);
     }
   }, []);
+
+  const handleStartVinheta = () => {
+    setVinhetaStarted(true);
+    // Play audio after user interaction (guaranteed by browser policy)
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+    // Play video
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  };
 
   const handleVinhetaComplete = () => {
     sessionStorage.setItem("intro_shown", "true");
@@ -140,33 +130,62 @@ export default function Landing() {
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
             style={{ display: "none" }}
           />
+
+          {/* Click-to-start overlay - ensures browser allows audio */}
+          {!vinhetaStarted && (
+            <div
+              className="absolute inset-0 z-[60] flex flex-col items-center justify-center cursor-pointer bg-black"
+              onClick={handleStartVinheta}
+            >
+              <img
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/YRjLKbBGCKbXjpfP.png"
+                alt="Conexão em Farmacologia"
+                className="w-32 h-32 sm:w-40 sm:h-40 object-contain mb-8"
+              />
+              <motion.div
+                className="flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-xl sm:text-2xl cursor-pointer"
+                style={{ backgroundColor: "#F7941D", color: "#fff", border: "2px solid rgba(255,255,255,0.3)" }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span style={{ fontSize: "1.5em" }}>▶</span>
+                Toque para Iniciar
+              </motion.div>
+              <p className="mt-4 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Conexão em Farmacologia — UNIRIO</p>
+            </div>
+          )}
+
+          {/* Video plays after user clicks */}
           <video
+            ref={videoRef}
             key="intro-video"
-            autoPlay
-            muted
+            playsInline
             onEnded={handleVinhetaComplete}
             className="w-full h-full object-cover"
-            style={{ backgroundColor: "#000" }}
+            style={{ backgroundColor: "#000", display: vinhetaStarted ? "block" : "none" }}
           >
             <source src={INTRO_VIDEO_URL} type="video/mp4" />
           </video>
-          <motion.button
-            onClick={handleVinhetaComplete}
-            className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
-            style={{
-              backgroundColor: "#F7941D",
-              color: "#fff",
-              border: "2px solid #fff",
-              boxShadow: "0 0 20px rgba(247, 148, 29, 0.6)"
-            }}
-            initial={{ opacity: 0, y: -20, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.4, delay: 1 }}
-            whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(247, 148, 29, 0.8)" }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Pular
-          </motion.button>
+
+          {vinhetaStarted && (
+            <motion.button
+              onClick={handleVinhetaComplete}
+              className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
+              style={{
+                backgroundColor: "#F7941D",
+                color: "#fff",
+                border: "2px solid #fff",
+                boxShadow: "0 0 20px rgba(247, 148, 29, 0.6)"
+              }}
+              initial={{ opacity: 0, y: -20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.4, delay: 1 }}
+              whileHover={{ scale: 1.15, boxShadow: "0 0 30px rgba(247, 148, 29, 0.8)" }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Pular
+            </motion.button>
+          )}
         </motion.div>
       )}
 
@@ -558,24 +577,23 @@ export default function Landing() {
                   Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
                 </p>
                 <div className="space-y-3">
-                  {teacherLoggedIn ? (
+                  <button
+                    onClick={() => setLocation("/professor/login")}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-white/20 min-h-[48px]"
+                    style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                  >
+                    <LogIn size={18} />
+                    Fazer Login / Cadastrar
+                  </button>
+                  {teacherLoggedIn && (
                     <button
                       onClick={() => setLocation("/admin")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)" }}
                     >
-                      <Lock size={18} />
-                      Painel Administrativo
-                      <ArrowRight size={18} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setLocation("/professor/login")}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:bg-white/20 min-h-[48px]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}
-                    >
-                      <LogIn size={18} />
-                      Fazer Login / Cadastrar
+                      <Lock size={16} />
+                      Ir ao Painel Administrativo
+                      <ArrowRight size={16} />
                     </button>
                   )}
                 </div>
