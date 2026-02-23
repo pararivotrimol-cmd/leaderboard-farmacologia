@@ -72,10 +72,36 @@ export default function Landing() {
 
   // Check if teacher is logged in
   const [teacherLoggedIn, setTeacherLoggedIn] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioStarted, setAudioStarted] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("teacherSessionToken");
     setTeacherLoggedIn(!!token);
   }, []);
+
+  // Try to play audio on any user interaction (click/touch/keydown)
+  useEffect(() => {
+    if (!showVinheta || vinhetaComplete || audioStarted) return;
+    const tryPlayAudio = () => {
+      if (audioRef.current && !audioStarted) {
+        audioRef.current.play().then(() => {
+          setAudioStarted(true);
+        }).catch(() => { /* browser blocked, will retry on next interaction */ });
+      }
+    };
+    // Try immediately
+    tryPlayAudio();
+    // Also listen for user interaction
+    document.addEventListener("click", tryPlayAudio, { once: true });
+    document.addEventListener("touchstart", tryPlayAudio, { once: true });
+    document.addEventListener("keydown", tryPlayAudio, { once: true });
+    return () => {
+      document.removeEventListener("click", tryPlayAudio);
+      document.removeEventListener("touchstart", tryPlayAudio);
+      document.removeEventListener("keydown", tryPlayAudio);
+    };
+  }, [showVinheta, vinhetaComplete, audioStarted]);
 
   // Check if intro was already shown this session
   useEffect(() => {
@@ -88,6 +114,11 @@ export default function Landing() {
 
   const handleVinhetaComplete = () => {
     sessionStorage.setItem("intro_shown", "true");
+    // Stop the intro audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setVinhetaComplete(true);
     setTimeout(() => setShowVinheta(false), 800);
   };
@@ -103,8 +134,9 @@ export default function Landing() {
           transition={{ duration: 0.8 }}
         >
           <audio
-            autoPlay
+            ref={audioRef}
             loop
+            preload="auto"
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
             style={{ display: "none" }}
           />

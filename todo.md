@@ -1856,3 +1856,7 @@
 
 ## Testes
 - [x] Executar testes automatizados antes do checkpoint (108/114 passando)
+
+## Bugs Reportados (Feb 23, 2026 - Round 2)
+- [x] Portal do Professor: correção confirmada no site publicado (botão 'Fazer Login / Cadastrar' funciona)
+- [x] Música de introdução/vinheta: corrigido autoplay com fallback para primeiro clique do usuário
