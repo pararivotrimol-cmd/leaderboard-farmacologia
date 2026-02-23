@@ -1843,3 +1843,8 @@
 - [x] Criar página /jogo/conquistas com badges, animação de desbloqueio e progresso
 - [x] Gerar imagens com IA para os 10 bosses temáticos
 - [x] Integrar imagens dos bosses no componente BossBattle e GamePortal
+
+## Correção Bug Crítico (Feb 22, 2026)
+- [x] Corrigir erro "Unexpected token '<'" no fluxo Admin → Portal Aluno → Jogo
+- [x] GameAvatarSelect agora redireciona para /jogo/:classId ao invés de /game/hub quebrado
+- [x] Remover arquivo órfão use-toast.ts que causava erros TypeScript

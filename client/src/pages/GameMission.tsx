@@ -4,7 +4,7 @@ import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { 
   Sparkles, ArrowLeft, CheckCircle, XCircle, 
@@ -29,7 +29,7 @@ interface ClinicalCase {
 export default function GameMission() {
   const [, params] = useRoute("/game/mission/:id");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  // Using sonner toast (imported above)
   const missionId = params?.id ? parseInt(params.id) : 1;
   const [classId] = useState(1); // TODO: Get from context
   
@@ -86,16 +86,13 @@ export default function GameMission() {
         spread: 70,
         origin: { y: 0.6 }
       });
-      toast({
-        title: "\u2705 Resposta Correta!",
-        description: `Voc\u00ea ganhou ${decision.pfReward} PF!`,
+      toast.success("✅ Resposta Correta!", {
+        description: `Você ganhou ${decision.pfReward} PF!`,
       });
     } else {
       playSound('wrong');
-      toast({
-        title: "\u274c Resposta Incorreta",
-        description: "Tente novamente na pr\u00f3xima miss\u00e3o!",
-        variant: "destructive",
+      toast.error("❌ Resposta Incorreta", {
+        description: "Tente novamente na próxima missão!",
       });
     }
 

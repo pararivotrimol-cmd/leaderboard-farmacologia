@@ -86,8 +86,9 @@ export default function GameAvatarSelect() {
   const [classId, setClassId] = useState<number>(1); // TODO: Get from context
 
   const initializeProgressMutation = trpc.game.initializeProgress.useMutation({
-    onSuccess: () => {
-      setLocation("/game/hub");
+    onSuccess: (data) => {
+      // Redirect to GamePortal instead of broken GameHub
+      setLocation(`/jogo/${data.classId}`);
     },
     onError: (error) => {
       alert(`Erro ao iniciar jogo: ${error.message}`);
