@@ -1835,6 +1835,7 @@
 
 ## Correções e Melhorias (Feb 22, 2026)
 - [x] Corrigir erro SyntaxError JSON ("Unexpected token '<'") - problema de conexão (CSP, CORS, rate limit)
+- [x] Corrigir SPA fallback em produção: /api/* agora retorna JSON 404 ao invés de HTML
 - [x] Adicionar aba destacada do Jogo no portal do aluno
 - [x] Adicionar aba destacada do Jogo no portal do professor (via StudentNavBar)
 - [x] Adicionar aba destacada do Jogo no portal do admin
