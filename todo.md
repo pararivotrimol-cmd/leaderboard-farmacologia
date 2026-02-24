@@ -2056,3 +2056,9 @@
 - [x] Melhorar feedback visual de erro no login (mensagem inline + dica)
 - [x] Normalizar email (lowercase, trim) antes de enviar
 - [x] Testar registro de novo professor e login de professor existente
+
+## Bug: Loop de Redirecionamento no Painel do Professor (Feb 24, 2026)
+- [x] Investigar causa do loop (Admin.tsx redireciona para login repetidamente)
+- [x] Corrigir lógica de autenticação: ler localStorage sincronamente no useState initializer
+- [x] Corrigir condição de redirect: usar && em vez de || (ambos devem ser falsy)
+- [x] Testar fluxo completo: login → painel sem loop (149 testes passando)

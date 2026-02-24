@@ -3164,24 +3164,21 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
 
 // ─── Main Admin Page ───
 export default function Admin() {
-  const [password, setPassword] = useState<string | null>(null);
+  // Read tokens synchronously from localStorage to avoid race condition
+  const [password, setPassword] = useState<string | null>(() => {
+    const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
+    return token ? "authenticated" : null;
+  });
   const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
   
-  // Check teacher authentication
-  const [teacherToken, setTeacherToken] = useState<string | null>(null);
-  const [teacherName, setTeacherName] = useState<string>("");
-  
-  useEffect(() => {
-    const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
-    const name = localStorage.getItem("teacherName") || localStorage.getItem("adminEmail") || "";
-    if (token) {
-      setTeacherToken(token);
-      setTeacherName(name);
-      // Set a dummy password for backward compatibility with existing components
-      setPassword("authenticated");
-    }
-  }, []);
+  // Check teacher authentication - read synchronously to prevent redirect loop
+  const [teacherToken, setTeacherToken] = useState<string | null>(() => {
+    return localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken") || null;
+  });
+  const [teacherName, setTeacherName] = useState<string>(() => {
+    return localStorage.getItem("teacherName") || localStorage.getItem("adminEmail") || "";
+  });
   
   const handleLogout = () => {
     localStorage.removeItem("teacherSessionToken");
@@ -3197,12 +3194,9 @@ export default function Admin() {
   };
   
   // If not authenticated with teacher token or admin token, redirect to login
-  if (!teacherToken || !password) {
-    const adminToken = localStorage.getItem("sessionToken");
-    if (!adminToken) {
-      window.location.href = "/professor/login";
-      return null;
-    }
+  if (!teacherToken && !password) {
+    window.location.href = "/professor/login";
+    return null;
   }
 
   const sections = [
