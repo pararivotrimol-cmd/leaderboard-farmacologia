@@ -6,27 +6,70 @@ import {
   attendanceRecords,
   attendanceSummary,
   members,
+  teams,
 } from "../../drizzle/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
+import crypto from "crypto";
+
+// ═══════ TOKEN CONFIGURATION ═══════
+const TOKEN_VALIDITY_MINUTES = 10;
+const TOKEN_SECRET = process.env.JWT_SECRET || "qrcode-attendance-secret-key";
+
+/**
+ * Generate a rotating HMAC token for a QR Code session
+ * Token = HMAC-SHA256(sessionId + rotationCount + timestamp, secret)
+ */
+function generateRotatingToken(sessionId: number, rotationCount: number): {
+  token: string;
+  expiresAt: Date;
+} {
+  const timestamp = Date.now();
+  const payload = `${sessionId}:${rotationCount}:${timestamp}`;
+  const token = crypto
+    .createHmac("sha256", TOKEN_SECRET)
+    .update(payload)
+    .digest("hex")
+    .substring(0, 32); // 32 char token for QR readability
+
+  const expiresAt = new Date(timestamp + TOKEN_VALIDITY_MINUTES * 60 * 1000);
+
+  return { token, expiresAt };
+}
+
+/**
+ * Validate a token against the session's current token
+ */
+function isTokenValid(
+  sessionToken: string | null,
+  providedToken: string,
+  tokenExpiresAt: Date | null
+): boolean {
+  if (!sessionToken || !tokenExpiresAt) return false;
+  if (sessionToken !== providedToken) return false;
+  if (new Date() > tokenExpiresAt) return false;
+  return true;
+}
 
 export const qrcodeRouter = router({
   /**
-   * Criar nova sessão de QR Code
+   * Criar nova sessão de QR Code com token rotativo
    * Professor define dia da semana e horário
    */
   createSession: protectedProcedure
     .input(
       z.object({
         classId: z.number(),
-        dayOfWeek: z.number().min(0).max(6), // 0-6
-        startTime: z.string().regex(/^\d{2}:\d{2}$/), // HH:MM
-        endTime: z.string().regex(/^\d{2}:\d{2}$/), // HH:MM
+        dayOfWeek: z.number().min(0).max(6),
+        startTime: z.string().regex(/^\d{2}:\d{2}$/),
+        endTime: z.string().regex(/^\d{2}:\d{2}$/),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const teacherId = ctx.user?.id || 0;
 
-      // Gerar dados para QR Code
+      // Generate initial rotating token
+      const { token, expiresAt } = generateRotatingToken(0, 0);
+
       const qrCodeData = {
         classId: input.classId,
         dayOfWeek: input.dayOfWeek,
@@ -38,6 +81,7 @@ export const qrcodeRouter = router({
 
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
       const result = await db
         .insert(qrCodeSessions)
         .values({
@@ -48,16 +92,107 @@ export const qrcodeRouter = router({
           endTime: input.endTime,
           isActive: true,
           qrCodeData: JSON.stringify(qrCodeData),
+          currentToken: token,
+          tokenExpiresAt: expiresAt,
+          tokenRotationCount: 0,
         })
         .catch((err) => {
           console.error("Erro ao criar sessão QR Code:", err);
           throw err;
         });
 
+      // Get the inserted ID
+      const insertedId = (result as any)[0]?.insertId || (result as any).insertId;
+
       return {
         success: true,
-        sessionId: qrCodeData.sessionId,
+        sessionId: insertedId,
         qrCodeData,
+        token,
+        tokenExpiresAt: expiresAt.toISOString(),
+      };
+    }),
+
+  /**
+   * Gerar novo token rotativo para uma sessão ativa
+   * Chamado automaticamente a cada 10 minutos pelo frontend
+   */
+  rotateToken: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get current session
+      const session = await db
+        .select()
+        .from(qrCodeSessions)
+        .where(eq(qrCodeSessions.id, input.sessionId));
+
+      if (!session || session.length === 0) {
+        throw new Error("Sessão não encontrada");
+      }
+
+      if (!session[0].isActive) {
+        throw new Error("Sessão não está ativa");
+      }
+
+      const newRotationCount = (session[0].tokenRotationCount || 0) + 1;
+      const { token, expiresAt } = generateRotatingToken(
+        input.sessionId,
+        newRotationCount
+      );
+
+      // Update session with new token
+      await db
+        .update(qrCodeSessions)
+        .set({
+          currentToken: token,
+          tokenExpiresAt: expiresAt,
+          tokenRotationCount: newRotationCount,
+        })
+        .where(eq(qrCodeSessions.id, input.sessionId));
+
+      return {
+        success: true,
+        token,
+        tokenExpiresAt: expiresAt.toISOString(),
+        rotationCount: newRotationCount,
+      };
+    }),
+
+  /**
+   * Obter token atual e tempo restante de uma sessão
+   */
+  getCurrentToken: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const session = await db
+        .select()
+        .from(qrCodeSessions)
+        .where(eq(qrCodeSessions.id, input.sessionId));
+
+      if (!session || session.length === 0) {
+        throw new Error("Sessão não encontrada");
+      }
+
+      const s = session[0];
+      const now = new Date();
+      const isExpired = s.tokenExpiresAt ? now > s.tokenExpiresAt : true;
+      const remainingMs = s.tokenExpiresAt
+        ? Math.max(0, s.tokenExpiresAt.getTime() - now.getTime())
+        : 0;
+
+      return {
+        token: s.currentToken,
+        tokenExpiresAt: s.tokenExpiresAt?.toISOString() || null,
+        isExpired,
+        remainingSeconds: Math.floor(remainingMs / 1000),
+        rotationCount: s.tokenRotationCount,
+        isActive: s.isActive,
       };
     }),
 
@@ -72,11 +207,13 @@ export const qrcodeRouter = router({
       const sessions = await db
         .select()
         .from(qrCodeSessions)
-        .where(eq(qrCodeSessions.classId, input.classId));
+        .where(eq(qrCodeSessions.classId, input.classId))
+        .orderBy(desc(qrCodeSessions.createdAt));
 
       return sessions.map((session) => ({
         ...session,
         qrCodeData: session.qrCodeData ? JSON.parse(session.qrCodeData) : null,
+        tokenExpiresAt: session.tokenExpiresAt?.toISOString() || null,
       }));
     }),
 
@@ -117,21 +254,23 @@ export const qrcodeRouter = router({
     }),
 
   /**
-   * Registrar presença via QR Code
+   * Registrar presença via QR Code com validação de token rotativo
    * Aluno escaneia o QR Code e registra presença
    */
-  checkIn: protectedProcedure
+  checkIn: publicProcedure
     .input(
       z.object({
         sessionId: z.number(),
         memberId: z.number(),
         classId: z.number(),
+        token: z.string().min(1), // Token rotativo obrigatório
       })
     )
     .mutation(async ({ input }) => {
-      // Verificar se a sessão existe e está ativa
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      // Verificar se a sessão existe e está ativa
       const session = await db
         .select()
         .from(qrCodeSessions)
@@ -145,23 +284,77 @@ export const qrcodeRouter = router({
         throw new Error("Sessão de QR Code não está ativa");
       }
 
-      // Verificar horário
+      // ═══════ VALIDAR TOKEN ROTATIVO ═══════
+      const tokenValid = isTokenValid(
+        session[0].currentToken,
+        input.token,
+        session[0].tokenExpiresAt
+      );
+
+      if (!tokenValid) {
+        // Check if token is expired vs wrong
+        if (
+          session[0].tokenExpiresAt &&
+          new Date() > session[0].tokenExpiresAt
+        ) {
+          throw new Error(
+            "QR Code expirado. Peça ao professor para gerar um novo QR Code."
+          );
+        }
+        throw new Error(
+          "Token inválido. Escaneie o QR Code atualizado na tela do professor."
+        );
+      }
+
+      // Verificar horário (com tolerância de 5 minutos)
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
         now.getMinutes()
       ).padStart(2, "0")}`;
       const currentDay = now.getDay();
 
-      if (
-        currentDay !== session[0].dayOfWeek ||
-        currentTime < session[0].startTime ||
-        currentTime > session[0].endTime
-      ) {
-        throw new Error("Fora do horário de presença");
+      // Permitir check-in no dia correto, com tolerância de horário
+      if (currentDay !== session[0].dayOfWeek) {
+        throw new Error("Fora do dia de aula para esta sessão");
+      }
+
+      // Adicionar 5 min de tolerância no início e fim
+      const addMinutes = (time: string, mins: number) => {
+        const [h, m] = time.split(":").map(Number);
+        const totalMins = h * 60 + m + mins;
+        return `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+      };
+
+      const startWithTolerance = addMinutes(session[0].startTime, -5);
+      const endWithTolerance = addMinutes(session[0].endTime, 5);
+
+      if (currentTime < startWithTolerance || currentTime > endWithTolerance) {
+        throw new Error(
+          `Fora do horário de presença (${session[0].startTime} - ${session[0].endTime})`
+        );
+      }
+
+      // Verificar se aluno já registrou presença nesta sessão
+      const existingRecord = await db
+        .select()
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.qrCodeSessionId, input.sessionId),
+            eq(attendanceRecords.memberId, input.memberId)
+          )
+        );
+
+      if (existingRecord.length > 0) {
+        return {
+          success: true,
+          message: "Presença já registrada anteriormente!",
+          alreadyCheckedIn: true,
+        };
       }
 
       // Registrar presença
-      const result = await db!
+      await db
         .insert(attendanceRecords)
         .values({
           qrCodeSessionId: input.sessionId,
@@ -177,7 +370,34 @@ export const qrcodeRouter = router({
       // Atualizar resumo de presença
       await updateAttendanceSummary(input.memberId, input.classId);
 
-      return { success: true, message: "Presença registrada com sucesso!" };
+      return {
+        success: true,
+        message: "Presença registrada com sucesso!",
+        alreadyCheckedIn: false,
+      };
+    }),
+
+  /**
+   * Contar check-ins de uma sessão (para exibir no projetor)
+   */
+  getSessionCheckInCount: publicProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const records = await db
+        .select()
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.qrCodeSessionId, input.sessionId));
+
+      return {
+        count: records.length,
+        records: records.map((r) => ({
+          memberId: r.memberId,
+          checkedInAt: r.checkedInAt,
+        })),
+      };
     }),
 
   /**
@@ -220,7 +440,224 @@ export const qrcodeRouter = router({
     }),
 
   /**
-   * Obter relatório de presença da turma
+   * Obter relatório detalhado de presença da turma por sessão
+   * Inclui dados de cada sessão com lista de presentes/ausentes
+   */
+  getDetailedAttendanceReport: protectedProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get all sessions for this class
+      const sessions = await db
+        .select()
+        .from(qrCodeSessions)
+        .where(eq(qrCodeSessions.classId, input.classId))
+        .orderBy(desc(qrCodeSessions.createdAt));
+
+      // Get all members for this class
+      const allMembers = await db
+        .select()
+        .from(members)
+        .where(eq(members.classId, input.classId));
+
+      // Get all attendance records for this class
+      const allRecords = await db
+        .select()
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.classId, input.classId));
+
+      // Get team info
+      const allTeams = await db.select().from(teams);
+      const teamMap = new Map(allTeams.map((t) => [t.id, t]));
+
+      // Build report per session
+      const sessionReports = sessions.map((session) => {
+        const sessionRecords = allRecords.filter(
+          (r) => r.qrCodeSessionId === session.id
+        );
+        const presentMemberIds = new Set(sessionRecords.map((r) => r.memberId));
+
+        const presentMembers = allMembers
+          .filter((m) => presentMemberIds.has(m.id))
+          .map((m) => ({
+            id: m.id,
+            name: m.name,
+            teamName: teamMap.get(m.teamId || 0)?.name || "Sem equipe",
+            checkedInAt: sessionRecords.find((r) => r.memberId === m.id)
+              ?.checkedInAt,
+          }));
+
+        const absentMembers = allMembers
+          .filter((m) => !presentMemberIds.has(m.id))
+          .map((m) => ({
+            id: m.id,
+            name: m.name,
+            teamName: teamMap.get(m.teamId || 0)?.name || "Sem equipe",
+          }));
+
+        const DAYS = [
+          "Domingo",
+          "Segunda",
+          "Terça",
+          "Quarta",
+          "Quinta",
+          "Sexta",
+          "Sábado",
+        ];
+
+        return {
+          sessionId: session.id,
+          date: session.createdAt,
+          dayOfWeek: DAYS[session.dayOfWeek] || "Desconhecido",
+          startTime: session.startTime,
+          endTime: session.endTime,
+          totalStudents: allMembers.length,
+          presentCount: presentMembers.length,
+          absentCount: absentMembers.length,
+          attendanceRate:
+            allMembers.length > 0
+              ? ((presentMembers.length / allMembers.length) * 100).toFixed(1)
+              : "0.0",
+          presentMembers,
+          absentMembers,
+        };
+      });
+
+      // Build summary per student
+      const studentSummaries = allMembers.map((member) => {
+        const memberRecords = allRecords.filter(
+          (r) => r.memberId === member.id
+        );
+        const presentCount = memberRecords.length;
+        const totalSessions = sessions.length;
+        const absentCount = totalSessions - presentCount;
+        const percentage =
+          totalSessions > 0
+            ? ((presentCount / totalSessions) * 100).toFixed(1)
+            : "0.0";
+
+        return {
+          memberId: member.id,
+          name: member.name,
+          teamName: teamMap.get(member.teamId || 0)?.name || "Sem equipe",
+          totalSessions,
+          presentCount,
+          absentCount,
+          attendancePercentage: percentage,
+        };
+      });
+
+      return {
+        sessions: sessionReports,
+        studentSummaries: studentSummaries.sort(
+          (a, b) => parseFloat(b.attendancePercentage) - parseFloat(a.attendancePercentage)
+        ),
+        totalSessions: sessions.length,
+        totalStudents: allMembers.length,
+      };
+    }),
+
+  /**
+   * Exportar relatório de presença em CSV
+   */
+  exportAttendanceCSV: protectedProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get all sessions
+      const sessions = await db
+        .select()
+        .from(qrCodeSessions)
+        .where(eq(qrCodeSessions.classId, input.classId))
+        .orderBy(qrCodeSessions.createdAt);
+
+      // Get all members
+      const allMembers = await db
+        .select()
+        .from(members)
+        .where(eq(members.classId, input.classId));
+
+      // Get all records
+      const allRecords = await db
+        .select()
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.classId, input.classId));
+
+      // Get teams
+      const allTeams = await db.select().from(teams);
+      const teamMap = new Map(allTeams.map((t) => [t.id, t]));
+
+      const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+      // Build CSV headers: Nome, Equipe, Sessão1, Sessão2, ..., Total, Percentual
+      const sessionHeaders = sessions.map((s, i) => {
+        const date = s.createdAt
+          ? new Date(s.createdAt).toLocaleDateString("pt-BR")
+          : `Sessão ${i + 1}`;
+        return `${DAYS[s.dayOfWeek]} ${date}`;
+      });
+
+      const headers = [
+        "Nome do Aluno",
+        "Equipe",
+        ...sessionHeaders,
+        "Presenças",
+        "Faltas",
+        "Total Sessões",
+        "Percentual (%)",
+      ];
+
+      // Build rows
+      const rows = allMembers
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((member) => {
+          const memberRecords = allRecords.filter(
+            (r) => r.memberId === member.id
+          );
+          const presentSessionIds = new Set(
+            memberRecords.map((r) => r.qrCodeSessionId)
+          );
+
+          const sessionCells = sessions.map((s) =>
+            presentSessionIds.has(s.id) ? "P" : "F"
+          );
+
+          const presentCount = memberRecords.length;
+          const totalSessions = sessions.length;
+          const absentCount = totalSessions - presentCount;
+          const percentage =
+            totalSessions > 0
+              ? ((presentCount / totalSessions) * 100).toFixed(1)
+              : "0.0";
+
+          return [
+            `"${member.name}"`,
+            `"${teamMap.get(member.teamId || 0)?.name || "Sem equipe"}"`,
+            ...sessionCells,
+            presentCount,
+            absentCount,
+            totalSessions,
+            percentage,
+          ];
+        });
+
+      const csv = [
+        headers.join(","),
+        ...rows.map((row) => row.join(",")),
+      ].join("\n");
+
+      return {
+        csv,
+        filename: `relatorio_presenca_turma_${input.classId}_${new Date().toISOString().split("T")[0]}.csv`,
+      };
+    }),
+
+  /**
+   * Obter relatório de presença da turma (resumo)
    */
   getClassAttendanceReport: protectedProcedure
     .input(z.object({ classId: z.number() }))
@@ -232,19 +669,20 @@ export const qrcodeRouter = router({
         .from(attendanceSummary)
         .where(eq(attendanceSummary.classId, input.classId));
 
-      // Enriquecer com dados do aluno
       const report = await Promise.all(
-        summaries.map(async (summary: typeof attendanceSummary.$inferSelect) => {
-          const member = await db
-            .select()
-            .from(members)
-            .where(eq(members.id, summary.memberId));
+        summaries.map(
+          async (summary: typeof attendanceSummary.$inferSelect) => {
+            const member = await db
+              .select()
+              .from(members)
+              .where(eq(members.id, summary.memberId));
 
-          return {
-            ...summary,
-            studentName: member[0]?.name || "Desconhecido",
-          };
-        })
+            return {
+              ...summary,
+              studentName: member[0]?.name || "Desconhecido",
+            };
+          }
+        )
       );
 
       return report;
@@ -272,7 +710,6 @@ export const qrcodeRouter = router({
         })
         .where(eq(attendanceRecords.id, input.recordId));
 
-      // Atualizar resumo
       const record = await db
         .select()
         .from(attendanceRecords)
@@ -283,64 +720,6 @@ export const qrcodeRouter = router({
       }
 
       return { success: true };
-    }),
-
-  /**
-   * Exportar relatório de presença em CSV
-   */
-  exportAttendanceReport: protectedProcedure
-    .input(z.object({ classId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-      const summaries = await db
-        .select()
-        .from(attendanceSummary)
-        .where(eq(attendanceSummary.classId, input.classId));
-
-      // Enriquecer com dados do aluno
-      const enrichedReport = await Promise.all(
-        summaries.map(async (summary: typeof attendanceSummary.$inferSelect) => {
-          const member = await db
-            .select()
-            .from(members)
-            .where(eq(members.id, summary.memberId));
-
-          return {
-            studentName: member[0]?.name || "Desconhecido",
-            totalSessions: summary.totalSessions,
-            presentSessions: summary.presentSessions,
-            absentSessions: summary.absentSessions,
-            attendancePercentage: summary.attendancePercentage,
-          };
-        })
-      );
-
-      // Gerar CSV
-      const headers = [
-        "Nome do Aluno",
-        "Total de Sessões",
-        "Presenças",
-        "Ausências",
-        "Percentual",
-      ];
-      const rows = enrichedReport.map((r: any) => [
-        r.studentName,
-        r.totalSessions,
-        r.presentSessions,
-        r.absentSessions,
-        `${r.attendancePercentage}%`,
-      ]);
-
-      const csv = [
-        headers.join(","),
-        ...rows.map((row: any) => row.join(",")),
-      ].join("\n");
-
-      return {
-        csv,
-        filename: `attendance_report_${input.classId}_${Date.now()}.csv`,
-      };
     }),
 });
 
@@ -353,13 +732,12 @@ async function updateAttendanceSummary(
 ): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  // Contar sessões totais
+
   const sessions = await db
     .select()
     .from(qrCodeSessions)
     .where(eq(qrCodeSessions.classId, classId));
 
-  // Contar presenças válidas
   const presentRecords = await db
     .select()
     .from(attendanceRecords)
@@ -377,7 +755,6 @@ async function updateAttendanceSummary(
   const attendancePercentage =
     totalSessions > 0 ? (presentSessions / totalSessions) * 100 : 0;
 
-  // Atualizar ou criar resumo
   const existing = await db
     .select()
     .from(attendanceSummary)

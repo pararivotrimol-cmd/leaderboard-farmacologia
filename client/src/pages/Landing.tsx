@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Youtube, GraduationCap,
-  ArrowRight, LogIn, Shield, Lock
+  ArrowRight, LogIn, Shield
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -85,28 +85,50 @@ export default function Landing() {
     }
   }, []);
 
-  // Auto-start vinheta: try to play audio automatically, with fallback on first user interaction
+  // Auto-start vinheta: play audio on any user interaction (click/touch/key)
+  // Browsers block autoplay of audio with sound, so we MUST wait for user gesture
   useEffect(() => {
     if (!showVinheta || vinhetaComplete) return;
-    // Try autoplay audio
+
+    let audioStarted = false;
+
+    const startAudio = () => {
+      if (audioStarted || !audioRef.current) return;
+      audioStarted = true;
+      audioRef.current.volume = 0.5;
+      audioRef.current.play().catch(() => {});
+      // Remove all listeners after first successful play
+      document.removeEventListener("click", startAudio);
+      document.removeEventListener("touchstart", startAudio);
+      document.removeEventListener("keydown", startAudio);
+      document.removeEventListener("pointerdown", startAudio);
+    };
+
+    // Try autoplay first (will work if user already interacted with the page)
     if (audioRef.current) {
-      audioRef.current.play().catch(() => {
-        // Browser blocked autoplay - play on first user interaction
-        const playOnInteraction = () => {
-          if (audioRef.current) {
-            audioRef.current.play().catch(() => {});
-          }
-          document.removeEventListener("click", playOnInteraction);
-          document.removeEventListener("touchstart", playOnInteraction);
-        };
-        document.addEventListener("click", playOnInteraction, { once: true });
-        document.addEventListener("touchstart", playOnInteraction, { once: true });
+      audioRef.current.volume = 0.5;
+      audioRef.current.play().then(() => {
+        audioStarted = true;
+      }).catch(() => {
+        // Autoplay blocked — register listeners for first user gesture
+        document.addEventListener("click", startAudio, { once: true });
+        document.addEventListener("touchstart", startAudio, { once: true });
+        document.addEventListener("keydown", startAudio, { once: true });
+        document.addEventListener("pointerdown", startAudio, { once: true });
       });
     }
+
     // Autoplay video (muted videos are allowed by browsers)
     if (videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
+
+    return () => {
+      document.removeEventListener("click", startAudio);
+      document.removeEventListener("touchstart", startAudio);
+      document.removeEventListener("keydown", startAudio);
+      document.removeEventListener("pointerdown", startAudio);
+    };
   }, [showVinheta, vinhetaComplete]);
 
   const handleVinhetaComplete = () => {
@@ -579,43 +601,7 @@ export default function Landing() {
               </div>
             </motion.div>
 
-            {/* Admin Card */}
-            <motion.div
-              className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group sm:col-span-2 sm:max-w-md 2xl:max-w-lg sm:mx-auto sm:w-full"
-              style={{
-                backgroundColor: "rgba(247,148,29,0.08)",
-                borderColor: "rgba(247,148,29,0.3)",
-              }}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              whileHover={{ borderColor: "rgba(247,148,29,0.6)", boxShadow: "0 0 40px rgba(247,148,29,0.2)" }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
-              <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
-                  <Lock size={32} style={{ color: "#F7941D" }} />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Área do Administrador
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Acesso total ao sistema, gerenciar professores, alunos, equipes, configurações e relatórios.
-                </p>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setLocation("/super-admin/login")}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] min-h-[48px]"
-                    style={{ backgroundColor: "#F7941D", color: "#000", border: "none" }}
-                  >
-                    <Shield size={18} />
-                    Acessar Admin
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+
           </div>
 
           {/* YouTube CTA - Botão com Logotipo */}

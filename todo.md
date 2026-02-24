@@ -1183,8 +1183,8 @@
 - [ ] Analisar estrutura de banco de dados para presen\u00e7a
 - [ ] Criar rotas tRPC para gerar QR code di\u00e1rio
 - [ ] Criar rotas tRPC para validar e registrar presen\u00e7a
-- [ ] Implementar portal do professor para gerar QR code por turma/dia
-- [ ] Implementar leitor de QR code no portal do aluno
+- [x] Implementar portal do professor para gerar QR code por turma/dia
+- [x] Implementar leitor de QR code no portal do aluno
 - [ ] Criar ficha de presen\u00e7a com hist\u00f3rico
 - [ ] Adicionar valida\u00e7\u00e3o de hor\u00e1rio de aula
 - [ ] Adicionar notifica\u00e7\u00e3o ao aluno ap\u00f3s registrar presen\u00e7a
@@ -1198,7 +1198,7 @@
 - [x] Criar helper para gerar QR codes com tokens únicos
 - [x] Integrar rotas no appRouter
 - [x] Adicionar aba de QR Code no painel admin
-- [ ] Implementar portal do aluno para ler QR code e registrar presença
+- [x] Implementar portal do aluno para ler QR code e registrar presença
 - [ ] Criar ficha de presença para visualizar histórico
 - [ ] Testar sistema completo de presença
 - [ ] Salvar checkpoint com sistema de presença
@@ -1947,3 +1947,44 @@
 - [x] Adicionar CSS utilities para landscape (landscape-compact-y, landscape-min-h-auto, etc.)
 - [x] Adicionar CSS utilities para tablet portrait
 - [x] Adicionar fullscreen support para QR Code Projector
+
+## QR Code Token Rotativo e Expiração
+- [ ] Implementar geração de token rotativo no backend (crypto hash + timestamp)
+- [ ] Adicionar campo tokenHash e expiresAt na sessão de QR Code
+- [ ] Criar endpoint para gerar novo token (rotação a cada 10 minutos)
+- [ ] Validar token no check-in (verificar hash + expiração)
+- [ ] Rejeitar tokens expirados com mensagem clara
+
+## Teste de Fluxo Completo de Presença
+- [ ] Testar criação de sessão QR pelo professor
+- [ ] Testar geração e rotação de token
+- [ ] Testar check-in do aluno com token válido
+- [ ] Testar rejeição de token expirado
+- [ ] Testar registro no banco de dados
+
+## Relatório de Presença por QR Code
+- [ ] Criar endpoint para relatório de presença por sessão
+- [ ] Implementar exportação CSV com dados de check-in
+- [ ] Implementar exportação PDF com dados de check-in
+- [ ] Adicionar UI de relatório no painel do professor
+
+## Correções Solicitadas - Vinheta, Portais, Equipes
+- [x] Música da vinheta deve tocar ao clicar no link (autoplay + fallback no primeiro gesto)
+- [x] Verificar fluxo completo de cadastro e acesso do aluno
+- [x] Portal do aluno - barra com apenas: Cronograma, Presença, Cálculo da Média, Materiais, Jogo, Atividades, Equipes
+- [x] Remover botões sem função do portal do aluno (StudentNavBar reescrito)
+- [x] Remover botões sem função do portal do professor (tabs Questões/Atividades removidos)
+- [x] Criar 6 equipes para seminários (85 alunos, sem distribuição)
+- [x] Verificar acesso dos professores
+- [ ] Equipes devem mostrar assuntos relacionados
+
+## Thumbnails dos Vídeos e Auditoria
+- [x] Corrigir thumbnails dos vídeos do YouTube na página inicial (vídeos reais do canal)
+- [x] Criar thumbnails clicáveis com ilustrações para os vídeos (3 séries: Farmacocinética, Farmacodinâmica, TGI)
+- [x] Verificar toda a funcionalidade da plataforma (auditoria visual completa)
+- [x] Auditar todos os fluxos: cadastro, login, portal aluno, portal professor
+- [x] Remover card 'Área do Administrador' da landing page
+- [x] Implementar token rotativo no QR Code (HMAC-SHA256, 10 min expiração)
+- [x] Atualizar QRCodeProjector com countdown e auto-rotação
+- [x] Atualizar AttendanceCheckIn para validar token rotativo
+- [x] Reescrever StudentArea com 7 abas essenciais (Cronograma, Presença, Média, Materiais, Jogo, Atividades, Equipes)

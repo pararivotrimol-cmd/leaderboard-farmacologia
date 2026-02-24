@@ -1,13 +1,13 @@
 /**
  * QR Code Projector — Conexão em Farmacologia
  * Full-screen QR Code display for classroom TV projection
- * Teacher generates QR code, students scan to check-in
+ * Features: rotating token (10 min), countdown, auto-refresh, live check-in count
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   QrCode, Users, Clock, CheckCircle, Maximize, Minimize,
-  RefreshCw, ArrowLeft, Wifi, WifiOff, FlaskConical, X
+  RefreshCw, ArrowLeft, Wifi, FlaskConical, X, Shield, Timer, AlertTriangle
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -18,6 +18,7 @@ const ORANGE = "#F7941D";
 const DARK_BG = "#0A1628";
 const CARD_BG = "#0D1B2A";
 const EMERALD = "#10B981";
+const RED = "#EF4444";
 
 interface QRSession {
   id: number;
@@ -27,6 +28,9 @@ interface QRSession {
   endTime: string;
   isActive: boolean;
   qrCodeData: any;
+  currentToken?: string | null;
+  tokenExpiresAt?: string | null;
+  tokenRotationCount?: number;
 }
 
 export default function QRCodeProjector() {
@@ -34,12 +38,16 @@ export default function QRCodeProjector() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [checkedInCount, setCheckedInCount] = useState(0);
-  const [selectedClassId] = useState(1); // Default: Farmacologia 1
+  const [selectedClassId] = useState(1);
   const [activeSession, setActiveSession] = useState<QRSession | null>(null);
+  const [activeSessionDbId, setActiveSessionDbId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showSetup, setShowSetup] = useState(true);
+  const [tokenCountdown, setTokenCountdown] = useState(0); // seconds remaining
+  const [isTokenExpired, setIsTokenExpired] = useState(false);
+  const [isRotating, setIsRotating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Check teacher auth
   const teacherToken = localStorage.getItem("teacherSessionToken");
@@ -50,14 +58,41 @@ export default function QRCodeProjector() {
     { enabled: !!teacherToken }
   );
 
+  // Get live check-in count
+  const { data: checkInData } = trpc.qrcode.getSessionCheckInCount.useQuery(
+    { sessionId: activeSessionDbId || 0 },
+    {
+      enabled: !!activeSessionDbId,
+      refetchInterval: 5000, // Poll every 5 seconds
+    }
+  );
+
   // Create session mutation
   const createSessionMutation = trpc.qrcode.createSession.useMutation({
     onSuccess: async (data) => {
-      if (data.qrCodeData) {
-        await generateQRImage(data.qrCodeData);
+      const dbId = data.sessionId;
+      setActiveSessionDbId(dbId);
+      if (data.token) {
+        await generateQRImage(dbId, data.token);
+        startCountdown(data.tokenExpiresAt);
       }
       refetchSessions();
       setShowSetup(false);
+    },
+  });
+
+  // Rotate token mutation
+  const rotateTokenMutation = trpc.qrcode.rotateToken.useMutation({
+    onSuccess: async (data) => {
+      if (activeSessionDbId && data.token) {
+        await generateQRImage(activeSessionDbId, data.token);
+        startCountdown(data.tokenExpiresAt);
+        setIsTokenExpired(false);
+      }
+      setIsRotating(false);
+    },
+    onError: () => {
+      setIsRotating(false);
     },
   });
 
@@ -67,11 +102,10 @@ export default function QRCodeProjector() {
     return () => clearInterval(timer);
   }, []);
 
-  // Generate QR Code image from data
-  const generateQRImage = useCallback(async (qrData: any) => {
+  // Generate QR Code image with token embedded in URL
+  const generateQRImage = useCallback(async (sessionDbId: number, token: string) => {
     try {
-      // The QR data includes the check-in URL with session info
-      const checkInUrl = `${window.location.origin}/attendance/check-in?s=${qrData.sessionId}&c=${qrData.classId}`;
+      const checkInUrl = `${window.location.origin}/attendance/check-in?sid=${sessionDbId}&c=${selectedClassId}&t=${token}`;
       const dataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 600,
         margin: 2,
@@ -85,21 +119,66 @@ export default function QRCodeProjector() {
     } catch (err) {
       console.error("Error generating QR code:", err);
     }
+  }, [selectedClassId]);
+
+  // Start countdown timer
+  const startCountdown = useCallback((expiresAtStr: string) => {
+    // Clear existing countdown
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+
+    const expiresAt = new Date(expiresAtStr).getTime();
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+      setTokenCountdown(remaining);
+
+      if (remaining <= 0) {
+        setIsTokenExpired(true);
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+      }
+    };
+
+    updateCountdown();
+    countdownRef.current = setInterval(updateCountdown, 1000);
+  }, []);
+
+  // Auto-rotate token when expired
+  useEffect(() => {
+    if (isTokenExpired && activeSessionDbId && !isRotating) {
+      handleRotateToken();
+    }
+  }, [isTokenExpired, activeSessionDbId]);
+
+  // Cleanup countdown on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
   }, []);
 
   // Auto-select active session on load
   useEffect(() => {
     if (sessions && sessions.length > 0) {
       const active = sessions.find((s: QRSession) => s.isActive);
-      if (active) {
+      if (active && !activeSessionDbId) {
         setActiveSession(active);
-        if (active.qrCodeData) {
-          generateQRImage(active.qrCodeData);
+        setActiveSessionDbId(active.id);
+        if (active.currentToken && active.tokenExpiresAt) {
+          generateQRImage(active.id, active.currentToken);
+          startCountdown(active.tokenExpiresAt);
           setShowSetup(false);
         }
       }
     }
-  }, [sessions, generateQRImage]);
+  }, [sessions, generateQRImage, startCountdown, activeSessionDbId]);
 
   // Create new session for today
   const handleCreateSession = async () => {
@@ -110,12 +189,24 @@ export default function QRCodeProjector() {
         classId: selectedClassId,
         dayOfWeek: now.getDay(),
         startTime: "08:00",
-        endTime: "12:00",
+        endTime: "22:00",
       });
     } catch (err) {
       console.error("Error creating session:", err);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  // Rotate token manually or automatically
+  const handleRotateToken = async () => {
+    if (!activeSessionDbId || isRotating) return;
+    setIsRotating(true);
+    try {
+      await rotateTokenMutation.mutateAsync({ sessionId: activeSessionDbId });
+    } catch (err) {
+      console.error("Error rotating token:", err);
+      setIsRotating(false);
     }
   };
 
@@ -146,7 +237,24 @@ export default function QRCodeProjector() {
     return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
   };
 
+  // Format countdown
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  // Countdown color based on remaining time
+  const getCountdownColor = () => {
+    if (tokenCountdown <= 0) return RED;
+    if (tokenCountdown <= 60) return RED;
+    if (tokenCountdown <= 120) return ORANGE;
+    return EMERALD;
+  };
+
   const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+  const checkedInCount = checkInData?.count || 0;
 
   // If not authenticated, redirect
   if (!teacherToken) {
@@ -197,6 +305,19 @@ export default function QRCodeProjector() {
         </div>
 
         <div className="flex items-center gap-3 2xl:gap-5">
+          {/* Token countdown */}
+          {!showSetup && (
+            <div
+              className="flex items-center gap-2 2xl:gap-3 px-3 py-1.5 2xl:px-5 2xl:py-2.5 rounded-lg"
+              style={{ backgroundColor: `${getCountdownColor()}15` }}
+            >
+              <Timer size={16} className="2xl:w-5 2xl:h-5" style={{ color: getCountdownColor() }} />
+              <span className="font-mono text-sm 2xl:text-xl font-semibold" style={{ color: getCountdownColor() }}>
+                {isTokenExpired ? "Renovando..." : formatCountdown(tokenCountdown)}
+              </span>
+            </div>
+          )}
+
           {/* Live clock */}
           <div className="flex items-center gap-2 2xl:gap-3">
             <Clock size={16} className="2xl:w-5 2xl:h-5" style={{ color: ORANGE }} />
@@ -248,6 +369,12 @@ export default function QRCodeProjector() {
                 <p className="text-sm 2xl:text-xl" style={{ color: "rgba(255,255,255,0.5)" }}>
                   {formatDate(currentTime)}
                 </p>
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <Shield size={14} style={{ color: EMERALD }} />
+                  <span className="text-xs 2xl:text-sm" style={{ color: EMERALD }}>
+                    Token rotativo a cada 10 minutos (anti-fraude)
+                  </span>
+                </div>
               </div>
 
               {/* Existing sessions */}
@@ -262,8 +389,10 @@ export default function QRCodeProjector() {
                         key={session.id}
                         onClick={() => {
                           setActiveSession(session);
-                          if (session.qrCodeData) {
-                            generateQRImage(session.qrCodeData);
+                          setActiveSessionDbId(session.id);
+                          if (session.currentToken && session.tokenExpiresAt) {
+                            generateQRImage(session.id, session.currentToken);
+                            startCountdown(session.tokenExpiresAt);
                           }
                           setShowSetup(false);
                         }}
@@ -319,38 +448,42 @@ export default function QRCodeProjector() {
               className="w-full flex flex-col items-center"
             >
               {/* Title */}
-              <div className="text-center mb-6 2xl:mb-10">
-                <h1 className="text-3xl 2xl:text-6xl font-bold text-white mb-2 2xl:mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <div className="text-center mb-4 2xl:mb-8">
+                <h1 className="text-2xl sm:text-3xl 2xl:text-6xl font-bold text-white mb-2 2xl:mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   Escaneie para registrar presença
                 </h1>
-                <p className="text-base 2xl:text-2xl" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm sm:text-base 2xl:text-2xl" style={{ color: "rgba(255,255,255,0.5)" }}>
                   Aponte a câmera do celular para o QR Code abaixo
                 </p>
               </div>
 
-              {/* QR Code Container */}
+              {/* QR Code Container with countdown ring */}
               <div className="relative">
                 {/* Glow effect */}
                 <div
                   className="absolute inset-0 blur-3xl opacity-20 rounded-3xl"
-                  style={{ backgroundColor: ORANGE }}
+                  style={{ backgroundColor: isTokenExpired ? RED : ORANGE }}
                 />
 
                 {/* QR Code */}
                 <motion.div
                   className="relative p-6 2xl:p-10 rounded-3xl"
                   style={{ backgroundColor: "white" }}
-                  animate={{ boxShadow: ["0 0 30px rgba(247,148,29,0.2)", "0 0 60px rgba(247,148,29,0.3)", "0 0 30px rgba(247,148,29,0.2)"] }}
+                  animate={{
+                    boxShadow: isTokenExpired
+                      ? ["0 0 30px rgba(239,68,68,0.3)", "0 0 60px rgba(239,68,68,0.5)", "0 0 30px rgba(239,68,68,0.3)"]
+                      : ["0 0 30px rgba(247,148,29,0.2)", "0 0 60px rgba(247,148,29,0.3)", "0 0 30px rgba(247,148,29,0.2)"],
+                  }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {qrCodeDataUrl ? (
                     <img
                       src={qrCodeDataUrl}
                       alt="QR Code de Presença"
-                      className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 2xl:w-[500px] 2xl:h-[500px]"
+                      className="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 2xl:w-[440px] 2xl:h-[440px]"
                     />
                   ) : (
-                    <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 2xl:w-[500px] 2xl:h-[500px] flex items-center justify-center">
+                    <div className="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 2xl:w-[440px] 2xl:h-[440px] flex items-center justify-center">
                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                         <FlaskConical size={48} style={{ color: ORANGE }} />
                       </motion.div>
@@ -359,10 +492,35 @@ export default function QRCodeProjector() {
                 </motion.div>
               </div>
 
+              {/* Token countdown bar */}
+              <div className="mt-4 2xl:mt-8 w-64 sm:w-72 md:w-80 lg:w-96 2xl:w-[500px]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Shield size={12} className="2xl:w-4 2xl:h-4" style={{ color: getCountdownColor() }} />
+                    <span className="text-[10px] 2xl:text-sm uppercase tracking-wider" style={{ color: getCountdownColor() }}>
+                      {isTokenExpired ? "Renovando token..." : "Token válido"}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs 2xl:text-base font-bold" style={{ color: getCountdownColor() }}>
+                    {isTokenExpired ? "00:00" : formatCountdown(tokenCountdown)}
+                  </span>
+                </div>
+                <div className="h-1.5 2xl:h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: getCountdownColor() }}
+                    animate={{
+                      width: `${Math.min(100, (tokenCountdown / (10 * 60)) * 100)}%`,
+                    }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+
               {/* Session info */}
-              <div className="mt-6 2xl:mt-10 flex items-center gap-6 2xl:gap-10">
+              <div className="mt-4 2xl:mt-8 flex items-center gap-4 sm:gap-6 2xl:gap-10 flex-wrap justify-center">
                 <div className="flex items-center gap-2 2xl:gap-3">
-                  <Clock size={18} className="2xl:w-6 2xl:h-6" style={{ color: ORANGE }} />
+                  <Clock size={16} className="2xl:w-5 2xl:h-5" style={{ color: ORANGE }} />
                   <span className="text-sm 2xl:text-xl text-white">
                     {activeSession?.startTime} — {activeSession?.endTime}
                   </span>
@@ -373,12 +531,23 @@ export default function QRCodeProjector() {
                     Sessão ativa
                   </span>
                 </div>
+                <div className="flex items-center gap-2 2xl:gap-3">
+                  <Users size={16} className="2xl:w-5 2xl:h-5" style={{ color: EMERALD }} />
+                  <span className="text-sm 2xl:text-xl font-semibold" style={{ color: EMERALD }}>
+                    {checkedInCount} check-ins
+                  </span>
+                </div>
               </div>
 
               {/* Action buttons */}
-              <div className="mt-6 2xl:mt-10 flex items-center gap-3 2xl:gap-5">
+              <div className="mt-5 2xl:mt-8 flex items-center gap-3 2xl:gap-5">
                 <button
-                  onClick={() => setShowSetup(true)}
+                  onClick={() => {
+                    setShowSetup(true);
+                    if (countdownRef.current) {
+                      clearInterval(countdownRef.current);
+                    }
+                  }}
                   className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-lg text-sm 2xl:text-lg font-medium transition-colors"
                   style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.06)" }}
                 >
@@ -386,12 +555,22 @@ export default function QRCodeProjector() {
                   Voltar
                 </button>
                 <button
-                  onClick={handleCreateSession}
-                  className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-lg text-sm 2xl:text-lg font-medium transition-colors"
+                  onClick={handleRotateToken}
+                  disabled={isRotating}
+                  className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-lg text-sm 2xl:text-lg font-medium transition-colors disabled:opacity-50"
                   style={{ color: ORANGE, backgroundColor: "rgba(247,148,29,0.1)" }}
                 >
-                  <RefreshCw size={16} className="2xl:w-5 2xl:h-5 inline mr-2" />
-                  Gerar Novo QR
+                  {isRotating ? (
+                    <motion.span className="inline-flex items-center gap-2" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                      <RefreshCw size={16} className="2xl:w-5 2xl:h-5 animate-spin" />
+                      Renovando...
+                    </motion.span>
+                  ) : (
+                    <>
+                      <RefreshCw size={16} className="2xl:w-5 2xl:h-5 inline mr-2" />
+                      Renovar QR Agora
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>

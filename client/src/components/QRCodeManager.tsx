@@ -74,7 +74,7 @@ export default function QRCodeManager({ classId }: QRCodeManagerProps) {
 
   const handleExportReport = async () => {
     try {
-      const result = await trpc.qrcode.exportAttendanceReport.useQuery({ classId }).data;
+      const result = await trpc.qrcode.exportAttendanceCSV.useQuery({ classId }).data;
       if (result) {
         // Criar arquivo CSV
         const element = document.createElement("a");

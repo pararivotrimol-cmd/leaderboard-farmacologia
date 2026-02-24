@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Users, Award, Target, BarChart3, ClipboardList, Menu, X,
-  LogOut, Settings, Bell, BookOpen, Gamepad2
+  Calendar, QrCode, BarChart3, BookOpen, Gamepad2,
+  Target, Users, Menu, X, LogOut, Home
 } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
 
 const ORANGE = "#F7941D";
 const DARK_BG = "#0A1628";
-const CARD_BG = "#0D1B2A";
 
 interface StudentNavBarProps {
   activeTab?: string;
@@ -20,17 +17,17 @@ interface StudentNavBarProps {
 }
 
 const NAV_ITEMS = [
-  { key: "leaderboard", label: "Ranking", icon: <Users size={16} /> },
-  { key: "individual", label: "Top 10", icon: <Award size={16} /> },
-  { key: "activities", label: "Atividades", icon: <Target size={16} /> },
-  { key: "game", label: "Jogo", icon: <Gamepad2 size={16} /> },
-  { key: "materials", label: "Materiais", icon: <BookOpen size={16} /> },
-  { key: "calculator", label: "Calcular", icon: <BarChart3 size={16} /> },
-  { key: "rules", label: "Regras", icon: <ClipboardList size={16} /> },
+  { key: "cronograma", label: "Cronograma", icon: <Calendar size={16} /> },
+  { key: "presenca", label: "Presença", icon: <QrCode size={16} /> },
+  { key: "media", label: "Média", icon: <BarChart3 size={16} /> },
+  { key: "materiais", label: "Materiais", icon: <BookOpen size={16} /> },
+  { key: "jogo", label: "Jogo", icon: <Gamepad2 size={16} />, highlight: true },
+  { key: "atividades", label: "Atividades", icon: <Target size={16} /> },
+  { key: "equipes", label: "Equipes", icon: <Users size={16} /> },
 ];
 
 export default function StudentNavBar({
-  activeTab = "leaderboard",
+  activeTab = "cronograma",
   onTabChange,
   selectedClassId,
   onClassChange,
@@ -38,12 +35,12 @@ export default function StudentNavBar({
 }: StudentNavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, logout } = useAuth();
-  const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
 
   const handleTabClick = (key: string) => {
-    if (key === "game") {
+    if (key === "jogo") {
       setLocation("/game/avatar-select");
+    } else if (key === "presenca") {
+      setLocation("/attendance/check-in");
     } else {
       onTabChange?.(key);
     }
@@ -61,14 +58,14 @@ export default function StudentNavBar({
       >
         <div className="container mx-auto px-4 2xl:px-8 py-3 2xl:py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
+            {/* Logo + Home */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <img
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png"
                 alt="Logo"
                 className="h-8 w-auto"
               />
-              <span className="hidden sm:inline font-bold text-white text-sm">
+              <span className="hidden sm:inline font-bold text-white text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Farmacologia
               </span>
             </Link>
@@ -79,84 +76,58 @@ export default function StudentNavBar({
                 <button
                   key={item.key}
                   onClick={() => handleTabClick(item.key)}
-                  className={`flex items-center gap-1.5 px-3 2xl:px-4 py-1.5 2xl:py-2 rounded-md text-xs 2xl:text-sm font-medium transition-all whitespace-nowrap ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
+                  className={`flex items-center gap-1.5 px-3 2xl:px-4 py-1.5 2xl:py-2 rounded-md text-xs 2xl:text-sm font-medium transition-all whitespace-nowrap ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
                   style={{
                     backgroundColor: activeTab === item.key
                       ? ORANGE
-                      : item.key === "game"
+                      : item.highlight
                         ? "rgba(16, 185, 129, 0.15)"
                         : "transparent",
                     color: activeTab === item.key
                       ? "#fff"
-                      : item.key === "game"
+                      : item.highlight
                         ? "#34d399"
                         : "rgba(255,255,255,0.6)",
                   }}
                 >
                   {item.icon}
                   <span>{item.label}</span>
-                  {item.key === "game" && activeTab !== "game" && (
+                  {item.highlight && activeTab !== item.key && (
                     <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   )}
                 </button>
               ))}
             </div>
 
-            {/* Class Selector */}
-            {showClassSelector && classes && classes.length > 0 && (
-              <select
-                value={selectedClassId || ""}
-                onChange={(e) => onClassChange?.(Number(e.target.value))}
-                className="hidden sm:block px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "white",
-                }}
-              >
-                <option value="">Selecione uma turma</option>
-                {classes.map((cls: any) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name}
-                  </option>
-                ))}
-              </select>
-            )}
-
             {/* Right Actions */}
             <div className="flex items-center gap-2 ml-auto">
-              <button
-                className="p-1.5 rounded-lg transition-colors hidden sm:flex"
+              {/* Leaderboard link */}
+              <Link
+                href="/leaderboard"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.05)",
                   color: "rgba(255,255,255,0.6)",
                 }}
-                title="Notificações"
               >
-                <Bell size={18} />
-              </button>
+                <Home size={14} />
+                <span>Leaderboard</span>
+              </Link>
 
+              {/* Logout */}
               <button
-                className="p-1.5 rounded-lg transition-colors hidden sm:flex"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "rgba(255,255,255,0.6)",
+                onClick={() => {
+                  sessionStorage.clear();
+                  setLocation("/");
                 }}
-                title="Configurações"
-              >
-                <Settings size={18} />
-              </button>
-
-              <button
-                onClick={() => logout()}
-                className="p-1.5 rounded-lg transition-colors hidden sm:flex"
+                className="p-1.5 rounded-lg transition-colors hidden sm:flex items-center gap-1"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.05)",
                   color: "rgba(255,255,255,0.6)",
                 }}
                 title="Sair"
               >
-                <LogOut size={18} />
+                <LogOut size={16} />
               </button>
 
               {/* Mobile Menu Toggle */}
@@ -184,73 +155,54 @@ export default function StudentNavBar({
                       handleTabClick(item.key);
                       setMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60" : ""}`}
+                    className={`flex items-center gap-1.5 px-2 py-2 rounded-md text-xs font-medium transition-all ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60" : ""}`}
                     style={{
                       backgroundColor: activeTab === item.key
                         ? ORANGE
-                        : item.key === "game"
+                        : item.highlight
                           ? "rgba(16, 185, 129, 0.15)"
                           : "rgba(255,255,255,0.05)",
                       color: activeTab === item.key
                         ? "#fff"
-                        : item.key === "game"
+                        : item.highlight
                           ? "#34d399"
                           : "rgba(255,255,255,0.6)",
                     }}
                   >
                     {item.icon}
                     <span>{item.label}</span>
-                    {item.key === "game" && activeTab !== "game" && (
+                    {item.highlight && activeTab !== item.key && (
                       <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                     )}
                   </button>
                 ))}
               </div>
 
-              {showClassSelector && classes && classes.length > 0 && (
-                <select
-                  value={selectedClassId || ""}
-                  onChange={(e) => {
-                    onClassChange?.(Number(e.target.value));
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white mb-3"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                  }}
-                >
-                  <option value="">Selecione uma turma</option>
-                  {classes.map((cls: any) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-
               <div className="flex gap-2">
-                <button
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium"
+                <Link
+                  href="/leaderboard"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.05)",
                     color: "rgba(255,255,255,0.6)",
                   }}
-                  title="Notificações"
                 >
-                  <Bell size={16} />
-                  <span>Avisos</span>
-                </button>
+                  <Home size={14} />
+                  <span>Leaderboard</span>
+                </Link>
 
                 <button
-                  onClick={() => logout()}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium"
+                  onClick={() => {
+                    sessionStorage.clear();
+                    setLocation("/");
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.05)",
                     color: "rgba(255,255,255,0.6)",
                   }}
                 >
-                  <LogOut size={16} />
+                  <LogOut size={14} />
                   <span>Sair</span>
                 </button>
               </div>

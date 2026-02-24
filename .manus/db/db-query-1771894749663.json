@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, semester FROM classes ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, semester FROM classes ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Farmacologia 1 - Medicina",
+      "semester": "2026.1"
+    },
+    {
+      "id": "2",
+      "name": "Farmacologia - Nutrição Integral",
+      "semester": "2026.1"
+    },
+    {
+      "id": "3",
+      "name": "Farmacologia 2 - Biomedicina",
+      "semester": "2026.1"
+    },
+    {
+      "id": "4",
+      "name": "Farmacologia 1 - Biomedicina",
+      "semester": "2026.1"
+    },
+    {
+      "id": "5",
+      "name": "Farmacologia - Enfermagem",
+      "semester": "2026.1"
+    },
+    {
+      "id": "6",
+      "name": "Farmacologia 2 - Medicina",
+      "semester": "2026.1"
+    },
+    {
+      "id": "7",
+      "name": "Farmacologia - Nutrição Noturno",
+      "semester": "2026.1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsemester\n1\tFarmacologia 1 - Medicina\t2026.1\n2\tFarmacologia - Nutrição Integral\t2026.1\n3\tFarmacologia 2 - Biomedicina\t2026.1\n4\tFarmacologia 1 - Biomedicina\t2026.1\n5\tFarmacologia - Enfermagem\t2026.1\n6\tFarmacologia 2 - Medicina\t2026.1\n7\tFarmacologia - Nutrição Noturno\t2026.1\n",
+  "stderr": "",
+  "execution_time_ms": 280
+}

@@ -26,6 +26,7 @@ export default function AttendanceCheckIn() {
   const [mode, setMode] = useState<"scan" | "manual">("scan");
   const [sessionId, setSessionId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
+  const [token, setToken] = useState<string>("");
   const [scanning, setScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState<"idle" | "scanning" | "found" | "error">("idle");
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -37,13 +38,15 @@ export default function AttendanceCheckIn() {
   // Parse URL params (from QR code link)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const s = params.get("s"); // sessionId
+    const s = params.get("s") || params.get("sid"); // sessionId
     const c = params.get("c"); // classId
+    const t = params.get("t"); // token
     if (s) setSessionId(s);
     if (c) setClassId(c);
-    // If both params present, auto-submit
-    if (s && c && student) {
-      handleAutoCheckIn(s, c);
+    if (t) setToken(t);
+    // If all params present, auto-submit
+    if (s && c && t && student) {
+      handleAutoCheckIn(s, c, t);
     }
   }, [student]);
 
@@ -75,14 +78,20 @@ export default function AttendanceCheckIn() {
   });
 
   // Auto check-in from URL params
-  const handleAutoCheckIn = async (sid: string, cid: string) => {
+  const handleAutoCheckIn = async (sid: string, cid: string, tkn?: string) => {
     if (!student) return;
+    const tokenToUse = tkn || token;
+    if (!tokenToUse) {
+      setResult({ success: false, message: "Token de presença não encontrado. Escaneie o QR Code novamente." });
+      return;
+    }
     setIsSubmitting(true);
     try {
       await checkInMutation.mutateAsync({
         sessionId: parseInt(sid),
         memberId: student.memberId || 0,
         classId: parseInt(cid),
+        token: tokenToUse,
       });
     } catch {
       // Error handled by mutation
@@ -140,16 +149,18 @@ export default function AttendanceCheckIn() {
       try {
         // Try parsing as URL first (from our QR projector)
         const url = new URL(code.data);
-        const sid = url.searchParams.get("s");
+        const sid = url.searchParams.get("s") || url.searchParams.get("sid");
         const cid = url.searchParams.get("c");
+        const tkn = url.searchParams.get("t");
         if (sid && cid) {
           setScanStatus("found");
           setSessionId(sid);
           setClassId(cid);
+          if (tkn) setToken(tkn);
           stopCamera();
           // Auto-submit
           if (student) {
-            handleAutoCheckIn(sid, cid);
+            handleAutoCheckIn(sid, cid, tkn || undefined);
           }
           return;
         }
@@ -163,9 +174,10 @@ export default function AttendanceCheckIn() {
           setScanStatus("found");
           setSessionId(String(data.sessionId));
           setClassId(String(data.classId));
+          if (data.token) setToken(data.token);
           stopCamera();
           if (student) {
-            handleAutoCheckIn(String(data.sessionId), String(data.classId));
+            handleAutoCheckIn(String(data.sessionId), String(data.classId), data.token);
           }
           return;
         }
@@ -194,13 +206,14 @@ export default function AttendanceCheckIn() {
 
   // Manual check-in
   const handleManualCheckIn = async () => {
-    if (!sessionId || !classId || !student) return;
+    if (!sessionId || !classId || !token || !student) return;
     setIsSubmitting(true);
     try {
       await checkInMutation.mutateAsync({
         sessionId: parseInt(sessionId),
         memberId: student.memberId || 0,
         classId: parseInt(classId),
+        token,
       });
     } catch {
       // Error handled by mutation

@@ -43,6 +43,13 @@
       "when": 1771865616959,
       "tag": "0005_absurd_grim_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1771893753037,
+      "tag": "0006_calm_rattler",
+      "breakpoints": true
     }
   ]
 }

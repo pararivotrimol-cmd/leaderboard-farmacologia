@@ -1116,6 +1116,11 @@ export const qrCodeSessions = mysqlTable("qrCodeSessions", {
   // QR Code data (será gerado dinamicamente)
   qrCodeData: text("qrCodeData"), // JSON com dados da sessão
   
+  // Token rotativo para anti-fraude
+  currentToken: varchar("currentToken", { length: 128 }), // Token HMAC atual
+  tokenExpiresAt: timestamp("tokenExpiresAt"), // Expiração do token (10 min)
+  tokenRotationCount: int("tokenRotationCount").notNull().default(0), // Contador de rotações
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

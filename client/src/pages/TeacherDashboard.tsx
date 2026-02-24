@@ -3,13 +3,13 @@ import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, LineChart, PieChart, TrendingUp, Users, Target, Zap } from "lucide-react";
+import { BarChart, PieChart, TrendingUp, Users, Target, Zap } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "students" | "questions" | "assessments">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "students">("overview");
 
   // Buscar desempenho individual dos alunos
   const { data: studentPerformance } = trpc.analytics.getStudentPerformance.useQuery(
@@ -53,7 +53,7 @@ export default function TeacherDashboard() {
 
         {/* Abas de Navegação */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {["overview", "students", "questions", "assessments"].map((tab) => (
+          {["overview", "students"].map((tab) => (
             <Button
               key={tab}
               variant={activeTab === tab ? "default" : "outline"}
@@ -62,8 +62,6 @@ export default function TeacherDashboard() {
             >
               {tab === "overview" && "Visão Geral"}
               {tab === "students" && "Alunos"}
-              {tab === "questions" && "Questões"}
-              {tab === "assessments" && "Atividades"}
             </Button>
           ))}
         </div>
@@ -203,23 +201,7 @@ export default function TeacherDashboard() {
           </Card>
         )}
 
-        {activeTab === "questions" && (
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Análise de Dificuldade de Questões</h3>
-            <div className="h-64 bg-muted rounded flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">Análise de dificuldade (em desenvolvimento)</p>
-            </div>
-          </Card>
-        )}
 
-        {activeTab === "assessments" && (
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Estatísticas de Atividades</h3>
-            <div className="h-64 bg-muted rounded flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">Estatísticas de atividades (em desenvolvimento)</p>
-            </div>
-          </Card>
-        )}
       </div>
     </div>
   );
