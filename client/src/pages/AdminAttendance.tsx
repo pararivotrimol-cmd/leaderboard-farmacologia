@@ -45,7 +45,7 @@ export default function AdminAttendance() {
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
-            <Link href="/admin">
+            <Link href="/admin/professor">
               <Button variant="ghost" size="sm">
                 <ArrowLeft size={20} />
               </Button>

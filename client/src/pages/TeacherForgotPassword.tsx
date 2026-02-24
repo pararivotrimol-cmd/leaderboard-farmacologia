@@ -35,6 +35,8 @@ export default function TeacherForgotPassword() {
       if (result.success && result.resetLink) {
         setResetLink(window.location.origin + result.resetLink);
         toast.success("Link de redefinição gerado!");
+      } else if (result.success && (result as any).emailSent) {
+        toast.success("Email de redefinição enviado!");
       } else {
         toast.info(result.message);
       }
@@ -110,7 +112,7 @@ export default function TeacherForgotPassword() {
                   <h2 className="text-2xl 2xl:text-3xl font-bold text-white">Esqueci minha senha</h2>
                 </div>
                 <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Digite seu email institucional para gerar um link de redefinição de senha
+                  Digite seu email institucional para receber um link de redefinição de senha
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -230,18 +232,24 @@ export default function TeacherForgotPassword() {
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: ORANGE + "15" }}>
-                    <Mail size={32} style={{ color: ORANGE }} />
+                  <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: "rgba(34,197,94,0.1)" }}>
+                    <Mail size={32} className="text-green-400" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Solicitação Enviada</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">Email Enviado!</h2>
                   <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    Se o email <strong className="text-white">{email}</strong> estiver cadastrado, o coordenador do curso receberá uma notificação com o link de redefinição.
+                    Se o email <strong className="text-white">{email}</strong> estiver cadastrado, você receberá um link de redefinição de senha em breve.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  <p className="text-xs text-green-400">
+                    📧 Verifique sua caixa de entrada e a pasta de spam. O link expira em 1 hora.
                   </p>
                 </div>
 
                 <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
                   <p className="text-xs" style={{ color: ORANGE }}>
-                    Entre em contato com o coordenador do curso para receber o link de redefinição de senha.
+                    Não recebeu? O coordenador do curso também foi notificado e pode enviar o link manualmente.
                   </p>
                 </div>
 

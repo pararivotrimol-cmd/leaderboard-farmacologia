@@ -105,7 +105,7 @@ export default function AdminGamePanel() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation("/admin")}
+              onClick={() => setLocation("/admin/professor")}
               className="text-gray-400 hover:text-white"
             >
               <ArrowLeft size={18} />

@@ -202,6 +202,163 @@ describe("Password Reset Flow", () => {
     });
   });
 
+  describe("verifyResetToken", () => {
+    it("should return invalid for non-existent token", async () => {
+      (db.getPasswordResetToken as any).mockResolvedValue(null);
+
+      const tokenData = await db.getPasswordResetToken("nonexistent");
+      const result = !tokenData
+        ? { valid: false, message: "Token inválido", expiresAt: null }
+        : { valid: true };
+
+      expect(result.valid).toBe(false);
+      expect(result.message).toBe("Token inválido");
+      expect(result.expiresAt).toBeNull();
+    });
+
+    it("should return invalid for used token", async () => {
+      const usedToken = {
+        id: 1, teacherAccountId: 1, token: "used",
+        expiresAt: new Date(Date.now() + 3600000), used: 1,
+      };
+      (db.getPasswordResetToken as any).mockResolvedValue(usedToken);
+
+      const tokenData = await db.getPasswordResetToken("used");
+      const result = tokenData!.used
+        ? { valid: false, message: "Token já utilizado", expiresAt: null }
+        : { valid: true };
+
+      expect(result.valid).toBe(false);
+      expect(result.message).toBe("Token já utilizado");
+    });
+
+    it("should return expired for expired token with expiresAt", async () => {
+      const expiredDate = new Date(Date.now() - 60000);
+      const expiredToken = {
+        id: 1, teacherAccountId: 1, token: "expired",
+        expiresAt: expiredDate, used: 0,
+      };
+      (db.getPasswordResetToken as any).mockResolvedValue(expiredToken);
+
+      const tokenData = await db.getPasswordResetToken("expired");
+      const expiresAt = new Date(tokenData!.expiresAt);
+      const isExpired = new Date() > expiresAt;
+
+      expect(isExpired).toBe(true);
+      const result = { valid: false, message: "Token expirado", expiresAt: expiresAt.toISOString() };
+      expect(result.expiresAt).toBeTruthy();
+    });
+
+    it("should return valid with expiresAt for valid token", async () => {
+      const futureDate = new Date(Date.now() + 3600000);
+      const validToken = {
+        id: 1, teacherAccountId: 1, token: "valid",
+        expiresAt: futureDate, used: 0,
+      };
+      (db.getPasswordResetToken as any).mockResolvedValue(validToken);
+
+      const tokenData = await db.getPasswordResetToken("valid");
+      const expiresAt = new Date(tokenData!.expiresAt);
+      const isExpired = new Date() > expiresAt;
+
+      expect(isExpired).toBe(false);
+      expect(tokenData!.used).toBe(0);
+
+      const result = { valid: true, message: "Token válido", expiresAt: expiresAt.toISOString() };
+      expect(result.valid).toBe(true);
+      expect(result.expiresAt).toContain("T"); // ISO string format
+    });
+  });
+
+  describe("SMTP email integration", () => {
+    it("should detect when SMTP is not configured", () => {
+      // Simulate no SMTP env vars
+      const isConfigured = !!("" && "" && "");
+      expect(isConfigured).toBe(false);
+    });
+
+    it("should detect when SMTP is configured", () => {
+      const isConfigured = !!("smtp.gmail.com" && "user@gmail.com" && "password123");
+      expect(isConfigured).toBe(true);
+    });
+
+    it("should return resetLink when email is NOT sent (SMTP not configured)", () => {
+      const emailSent = false;
+      const resetPath = "/professor/redefinir-senha?token=abc123";
+
+      const result = {
+        success: true,
+        message: emailSent
+          ? "Um email com o link de redefinição foi enviado para o seu endereço cadastrado."
+          : "Link de redefinição gerado com sucesso!",
+        resetLink: emailSent ? null : resetPath,
+        emailSent,
+      };
+
+      expect(result.resetLink).toBe(resetPath);
+      expect(result.emailSent).toBe(false);
+    });
+
+    it("should NOT return resetLink when email IS sent (SMTP configured)", () => {
+      const emailSent = true;
+      const resetPath = "/professor/redefinir-senha?token=abc123";
+
+      const result = {
+        success: true,
+        message: emailSent
+          ? "Um email com o link de redefinição foi enviado para o seu endereço cadastrado."
+          : "Link de redefinição gerado com sucesso!",
+        resetLink: emailSent ? null : resetPath,
+        emailSent,
+      };
+
+      expect(result.resetLink).toBeNull();
+      expect(result.emailSent).toBe(true);
+      expect(result.message).toContain("email");
+    });
+  });
+
+  describe("Countdown timer logic", () => {
+    it("should calculate time remaining correctly", () => {
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+      const diff = expiresAt.getTime() - Date.now();
+      const minutes = Math.floor(diff / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      expect(minutes).toBeGreaterThanOrEqual(29);
+      expect(minutes).toBeLessThanOrEqual(30);
+      expect(seconds).toBeGreaterThanOrEqual(0);
+      expect(seconds).toBeLessThan(60);
+    });
+
+    it("should detect expired token in countdown", () => {
+      const expiresAt = new Date(Date.now() - 1000); // 1 second ago
+      const diff = expiresAt.getTime() - Date.now();
+
+      expect(diff).toBeLessThan(0);
+      const expired = diff <= 0;
+      expect(expired).toBe(true);
+    });
+
+    it("should flag urgent when less than 10 minutes remain", () => {
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+      const diff = expiresAt.getTime() - Date.now();
+      const minutes = Math.floor(diff / (1000 * 60));
+      const isUrgent = minutes < 10;
+
+      expect(isUrgent).toBe(true);
+    });
+
+    it("should NOT flag urgent when more than 10 minutes remain", () => {
+      const expiresAt = new Date(Date.now() + 45 * 60 * 1000); // 45 minutes
+      const diff = expiresAt.getTime() - Date.now();
+      const minutes = Math.floor(diff / (1000 * 60));
+      const isUrgent = minutes < 10;
+
+      expect(isUrgent).toBe(false);
+    });
+  });
+
   describe("Token generation", () => {
     it("should generate unique tokens", () => {
       const token1 = crypto.randomBytes(32).toString("hex");

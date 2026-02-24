@@ -7,6 +7,7 @@ import * as db from "./db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { notifyOwner } from "./_core/notification";
+import { sendPasswordResetEmail, isSmtpConfigured } from "./email";
 import { analyticsRouter } from "./routers/analytics";
 import { jigsawRouter } from "./routers/jigsaw";
 import { jigsawCompleteRouter } from "./routers/jigsaw-complete";
@@ -170,6 +171,17 @@ export const appRouter = router({
 
   // ─── Teacher Authentication ───
   teacherAuth: router({
+    // Get admin password for authenticated teacher (so admin panel works)
+    getAdminPassword: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, password: null } as const;
+        const storedPassword = await db.getSetting(ADMIN_PASSWORD_KEY);
+        const correctPassword = storedPassword || DEFAULT_ADMIN_PASSWORD;
+        return { success: true, password: correctPassword } as const;
+      }),
+
     // Register new teacher account (first access)
     register: publicProcedure
       .input(z.object({
@@ -371,17 +383,53 @@ export const appRouter = router({
         const resetPath = `/professor/redefinir-senha?token=${resetToken}`;
         const fullResetLink = baseUrl + resetPath;
 
-        // Notify owner/coordinator with the full reset link
+        // Try to send email directly to the professor
+        let emailSent = false;
+        if (isSmtpConfigured()) {
+          const emailResult = await sendPasswordResetEmail({
+            to: teacher.email,
+            teacherName: teacher.name,
+            resetLink: fullResetLink,
+            expiresInMinutes: 60,
+          });
+          emailSent = emailResult.success;
+          if (emailSent) {
+            console.log(`[PasswordReset] Email sent to ${teacher.email}`);
+          }
+        }
+
+        // Always notify owner/coordinator as backup
         sendNotificationAsync(
           "🔑 Solicitação de Redefinição de Senha",
-          `Professor(a) ${teacher.name} (${teacher.email}) solicitou redefinição de senha.\n\nLink completo: ${fullResetLink}\n\nEste link expira em 1 hora. Envie ao professor por email ou WhatsApp.`
+          `Professor(a) ${teacher.name} (${teacher.email}) solicitou redefinição de senha.\n\n${emailSent ? '✅ Email enviado automaticamente ao professor.' : '⚠️ Email NÃO enviado (SMTP não configurado). Envie o link manualmente.'}\n\nLink completo: ${fullResetLink}\n\nEste link expira em 1 hora.`
         );
 
         return {
           success: true,
-          message: "Link de redefinição gerado com sucesso!",
-          resetLink: resetPath, // Return relative link for display
+          message: emailSent
+            ? "Um email com o link de redefinição foi enviado para o seu endereço cadastrado."
+            : "Link de redefinição gerado com sucesso!",
+          resetLink: emailSent ? null : resetPath, // Only show link if email was NOT sent
+          emailSent,
         } as const;
+      }),
+
+    // Verify reset token and return expiration info
+    verifyResetToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const tokenData = await db.getPasswordResetToken(input.token);
+        if (!tokenData) {
+          return { valid: false, message: "Token inválido", expiresAt: null } as const;
+        }
+        if (tokenData.used) {
+          return { valid: false, message: "Token já utilizado", expiresAt: null } as const;
+        }
+        const expiresAt = new Date(tokenData.expiresAt);
+        if (new Date() > expiresAt) {
+          return { valid: false, message: "Token expirado", expiresAt: expiresAt.toISOString() } as const;
+        }
+        return { valid: true, message: "Token válido", expiresAt: expiresAt.toISOString() } as const;
       }),
 
     // Reset password with token

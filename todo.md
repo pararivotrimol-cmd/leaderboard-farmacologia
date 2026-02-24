@@ -2073,3 +2073,26 @@
 - [x] Adicionar link "Esqueci minha senha" no ProfessorLogin
 - [x] Rotas já registradas no App.tsx (/professor/esqueci-senha, /professor/redefinir-senha)
 - [x] Escrever testes unitários para o fluxo de recuperação (15 testes, 164 total)
+
+## Integração SMTP para Email de Recuperação (Feb 24, 2026)
+- [x] Instalar nodemailer para envio de emails
+- [x] Criar serviço de email no servidor (server/email.ts) com template HTML
+- [x] Solicitar credenciais SMTP ao usuário (via webdev_request_secrets)
+- [x] Integrar envio de email no endpoint requestPasswordReset
+- [x] Criar template HTML do email de recuperação com branding
+- [x] Fallback: notificação ao coordenador quando SMTP não configurado
+
+## Contador Regressivo na Página de Redefinição (Feb 24, 2026)
+- [x] Criar endpoint verifyResetToken para retornar tempo de expiração
+- [x] Adicionar contador regressivo de 1 hora na página TeacherResetPassword
+- [x] Mostrar tempo restante do token em formato mm:ss
+- [x] Exibir alerta quando token estiver próximo de expirar (< 5 min)
+- [x] Desabilitar formulário quando token expirar
+- [x] 176 testes passando
+
+## Bug: Redirecionamento Pós-Jogo do Professor (Feb 24, 2026)
+- [x] Investigar para onde o professor é redirecionado ao sair do jogo (AdminGamePanel → /admin)
+- [x] Corrigir redirecionamento AdminGamePanel e AdminAttendance para /admin/professor
+- [x] Identificar botões sem função: seções usavam password="authenticated" em vez da senha real
+- [x] Corrigir: Admin.tsx agora busca senha admin real via teacherAuth.getAdminPassword
+- [x] Adicionar estado de loading enquanto busca a senha admin

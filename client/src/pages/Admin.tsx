@@ -3167,7 +3167,7 @@ export default function Admin() {
   // Read tokens synchronously from localStorage to avoid race condition
   const [password, setPassword] = useState<string | null>(() => {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
-    return token ? "authenticated" : null;
+    return token ? "__loading__" : null;
   });
   const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
@@ -3179,6 +3179,21 @@ export default function Admin() {
   const [teacherName, setTeacherName] = useState<string>(() => {
     return localStorage.getItem("teacherName") || localStorage.getItem("adminEmail") || "";
   });
+
+  // Fetch the real admin password using the teacher session token
+  const { data: adminPwData } = trpc.teacherAuth.getAdminPassword.useQuery(
+    { sessionToken: teacherToken || "" },
+    { enabled: !!teacherToken }
+  );
+
+  useEffect(() => {
+    if (adminPwData?.success && adminPwData.password) {
+      setPassword(adminPwData.password);
+    } else if (adminPwData && !adminPwData.success) {
+      // Token is invalid, redirect to login
+      setPassword(null);
+    }
+  }, [adminPwData]);
   
   const handleLogout = () => {
     localStorage.removeItem("teacherSessionToken");
@@ -3197,6 +3212,18 @@ export default function Admin() {
   if (!teacherToken && !password) {
     window.location.href = "/professor/login";
     return null;
+  }
+
+  // Show loading while fetching admin password
+  if (password === "__loading__") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Carregando painel...</p>
+        </div>
+      </div>
+    );
   }
 
   const sections = [

@@ -1,11 +1,74 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { KeyRound, CheckCircle2, XCircle, Loader2, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-react";
+import { KeyRound, CheckCircle2, XCircle, Loader2, Eye, EyeOff, ArrowLeft, AlertTriangle, Clock, Timer } from "lucide-react";
 import { toast } from "sonner";
 
 const ORANGE = "#F7941D";
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
+
+function CountdownTimer({ expiresAt }: { expiresAt: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number; expired: boolean }>({ minutes: 0, seconds: 0, expired: false });
+
+  const calculateTimeLeft = useCallback(() => {
+    const now = new Date().getTime();
+    const expiry = new Date(expiresAt).getTime();
+    const diff = expiry - now;
+
+    if (diff <= 0) {
+      return { minutes: 0, seconds: 0, expired: true };
+    }
+
+    const minutes = Math.floor(diff / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return { minutes, seconds, expired: false };
+  }, [expiresAt]);
+
+  useEffect(() => {
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [calculateTimeLeft]);
+
+  if (timeLeft.expired) {
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-lg" style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <AlertTriangle size={16} className="text-red-400 shrink-0" />
+        <span className="text-sm text-red-400 font-medium">Token expirado. Solicite um novo link.</span>
+      </div>
+    );
+  }
+
+  const isUrgent = timeLeft.minutes < 10;
+  const timerColor = isUrgent ? "#ef4444" : ORANGE;
+  const bgColor = isUrgent ? "rgba(239,68,68,0.08)" : "rgba(247,148,29,0.08)";
+  const borderColor = isUrgent ? "rgba(239,68,68,0.2)" : "rgba(247,148,29,0.2)";
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: bgColor, border: `1px solid ${borderColor}` }}>
+      <Timer size={18} style={{ color: timerColor }} className="shrink-0" />
+      <div className="flex-1">
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Tempo restante para redefinir</p>
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="font-mono font-bold text-lg" style={{ color: timerColor }}>
+            {String(timeLeft.minutes).padStart(2, "0")}
+          </span>
+          <span className="font-mono font-bold text-lg" style={{ color: timerColor, opacity: 0.6 }}>:</span>
+          <span className="font-mono font-bold text-lg" style={{ color: timerColor }}>
+            {String(timeLeft.seconds).padStart(2, "0")}
+          </span>
+        </div>
+      </div>
+      {isUrgent && (
+        <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: "rgba(239,68,68,0.2)", color: "#ef4444" }}>
+          Expirando!
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function TeacherResetPassword() {
   const [, navigate] = useLocation();
@@ -32,6 +95,12 @@ export default function TeacherResetPassword() {
     }
   }, []);
 
+  // Verify token validity and get expiration
+  const { data: tokenInfo, isLoading: tokenLoading } = trpc.teacherAuth.verifyResetToken.useQuery(
+    { token },
+    { enabled: !!token, retry: false }
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -43,6 +112,12 @@ export default function TeacherResetPassword() {
 
     if (newPassword.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    // Check if token is still valid before submitting
+    if (tokenInfo && !tokenInfo.valid) {
+      setError(tokenInfo.message || "Token inválido ou expirado");
       return;
     }
 
@@ -85,37 +160,67 @@ export default function TeacherResetPassword() {
   };
 
   const strength = getPasswordStrength(newPassword);
+  const tokenExpired = tokenInfo && !tokenInfo.valid && tokenInfo.message === "Token expirado";
+  const tokenInvalid = tokenInfo && !tokenInfo.valid && !tokenExpired;
 
   return (
-    <div className="min-h-screen landscape-min-h-auto flex flex-col justify-center items-center p-6 sm:p-12" style={{ backgroundColor: "#0A1628" }}>
+    <div className="min-h-screen landscape-min-h-auto flex flex-col justify-center items-center p-4 sm:p-6 md:p-12" style={{ backgroundColor: "#0A1628" }}>
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <img src={LOGO_URL} alt="Logo" className="w-16 h-16 mx-auto mb-4 object-contain" />
-          <h1 className="text-xl font-bold text-white">Conexão em Farmacologia</h1>
+        <div className="text-center mb-6 sm:mb-8">
+          <img src={LOGO_URL} alt="Logo" className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 object-contain" />
+          <h1 className="text-lg sm:text-xl font-bold text-white">Conexão em Farmacologia</h1>
         </div>
 
         {/* Card */}
-        <div className="rounded-lg p-8" style={{ backgroundColor: "#0D1B2A", border: "1px solid rgba(255,255,255,0.1)" }}>
-          {success ? (
+        <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: "#0D1B2A", border: "1px solid rgba(255,255,255,0.1)" }}>
+          {tokenLoading ? (
+            <div className="text-center py-8">
+              <Loader2 size={32} className="animate-spin mx-auto mb-4" style={{ color: ORANGE }} />
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>Verificando token...</p>
+            </div>
+          ) : success ? (
             <div className="text-center">
               <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: "rgba(34,197,94,0.1)" }}>
                 <CheckCircle2 size={40} className="text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Senha Redefinida!</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Senha Redefinida!</h2>
               <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Sua senha foi alterada com sucesso. Redirecionando para o login...
               </p>
               <div className="w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mx-auto" />
             </div>
-          ) : tokenMissing ? (
+          ) : tokenMissing || tokenInvalid ? (
             <div className="text-center">
               <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>
                 <AlertTriangle size={40} className="text-red-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Token Não Encontrado</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                {tokenMissing ? "Token Não Encontrado" : "Token Inválido"}
+              </h2>
               <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                O link de redefinição é inválido ou está incompleto. Solicite um novo link.
+                {tokenMissing
+                  ? "O link de redefinição é inválido ou está incompleto."
+                  : tokenInfo?.message || "Este token não é válido."}
+                {" "}Solicite um novo link.
+              </p>
+              <button
+                onClick={() => navigate("/professor/esqueci-senha")}
+                className="w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                style={{ backgroundColor: ORANGE }}
+              >
+                <KeyRound size={18} />
+                Solicitar Novo Link
+              </button>
+            </div>
+          ) : tokenExpired ? (
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>
+                <Clock size={40} className="text-red-400" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Token Expirado</h2>
+              <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                O link de redefinição expirou. Solicite um novo link para redefinir sua senha.
               </p>
               <button
                 onClick={() => navigate("/professor/esqueci-senha")}
@@ -130,11 +235,18 @@ export default function TeacherResetPassword() {
             <>
               <div className="flex items-center gap-3 mb-2">
                 <KeyRound size={24} style={{ color: ORANGE }} />
-                <h2 className="text-2xl font-bold text-white">Redefinir Senha</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Redefinir Senha</h2>
               </div>
-              <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Digite sua nova senha abaixo
               </p>
+
+              {/* Countdown Timer */}
+              {tokenInfo?.expiresAt && (
+                <div className="mb-5">
+                  <CountdownTimer expiresAt={tokenInfo.expiresAt} />
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
