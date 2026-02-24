@@ -49,10 +49,10 @@ export default function ProfessorLogin() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row" style={{ backgroundColor: "#0A1628" }}>
       {/* Left Side - Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12" style={{ backgroundColor: "#0D1B2A" }}>
-        <div className="text-center max-w-md">
-          <img src={LOGO_URL} alt="Logo" className="w-32 h-32 mx-auto mb-8 object-contain" />
-          <h1 className="text-4xl font-bold text-white mb-4">Conexão em Farmacologia</h1>
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 2xl:p-16" style={{ backgroundColor: "#0D1B2A" }}>
+        <div className="text-center max-w-md 2xl:max-w-lg">
+          <img src={LOGO_URL} alt="Logo" className="w-32 h-32 2xl:w-40 2xl:h-40 mx-auto mb-8 object-contain" />
+          <h1 className="text-4xl 2xl:text-5xl font-bold text-white mb-4">Conexão em Farmacologia</h1>
           <p className="text-lg mb-2" style={{ color: "rgba(255,255,255,0.7)" }}>
             UNIRIO - Universidade Federal do Estado do Rio de Janeiro
           </p>
@@ -101,8 +101,8 @@ export default function ProfessorLogin() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 2xl:p-16">
+        <div className="w-full max-w-md 2xl:max-w-lg">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <img src={LOGO_URL} alt="Logo" className="w-16 h-16 mx-auto mb-4 object-contain" />
@@ -110,8 +110,8 @@ export default function ProfessorLogin() {
           </div>
 
           {/* Login Card */}
-          <div className="rounded-lg p-8" style={{ backgroundColor: "#0D1B2A", border: `1px solid rgba(255,255,255,0.1)` }}>
-            <h2 className="text-2xl font-bold text-white mb-2">Acesso Professor</h2>
+          <div className="rounded-lg p-8 2xl:p-10" style={{ backgroundColor: "#0D1B2A", border: `1px solid rgba(255,255,255,0.1)` }}>
+            <h2 className="text-2xl 2xl:text-3xl font-bold text-white mb-2">Acesso Professor</h2>
             <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
               Faça login com suas credenciais institucionais
             </p>

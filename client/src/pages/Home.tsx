@@ -86,18 +86,18 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: rank * 0.05 }}
     >
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 text-left hover:bg-white/[0.02] transition-colors min-h-[72px]">
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 2xl:p-6 flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8 text-left hover:bg-white/[0.02] transition-colors min-h-[72px] 2xl:min-h-[88px]">
         <RankBadge rank={rank} />
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{team.emoji}</div>
+        <div className="w-10 h-10 2xl:w-12 2xl:h-12 rounded-lg flex items-center justify-center text-xl 2xl:text-2xl shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{team.emoji}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-display font-semibold text-white truncate">{team.name}</span>
+            <span className="font-display font-semibold 2xl:text-lg text-white truncate">{team.name}</span>
             <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>#{team.id}</span>
           </div>
           <div className="mt-1.5"><PFBar value={totalPF} max={MAX_PF_SEMESTER * team.members.length} color={ORANGE} /></div>
         </div>
         <div className="text-right shrink-0 ml-2">
-          <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>{totalPF.toFixed(1)}</div>
+          <div className="font-mono font-bold text-lg 2xl:text-xl" style={{ color: ORANGE }}>{totalPF.toFixed(1)}</div>
           <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>PF total</div>
         </div>
         <div className="text-right shrink-0 ml-2 hidden sm:block">
@@ -109,7 +109,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-            <div className="px-4 pb-4 pt-0" style={{ borderTop: "1px solid rgba(247,148,29,0.08)" }}>
+            <div className="px-4 2xl:px-6 pb-4 2xl:pb-6 pt-0" style={{ borderTop: "1px solid rgba(247,148,29,0.08)" }}>
               <div className="grid gap-2 mt-3">
                 {[...team.members].sort((a, b) => a.name.localeCompare(b.name)).map((member, idx) => (
                   <div key={member.id} className="flex items-center gap-3 py-1.5">
@@ -120,7 +120,7 @@ function TeamCard({ team, rank }: { team: TeamData; rank: number }) {
                         {member.xp === maxMemberPF && <Star size={12} className="inline ml-1" style={{ color: ORANGE }} />}
                       </span>
                     </div>
-                    <div className="w-24 sm:w-32"><PFBar value={member.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
+                    <div className="w-24 sm:w-32 2xl:w-40"><PFBar value={member.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
                     <span className="font-mono text-sm font-medium w-12 text-right" style={{ color: ORANGE }}>{member.xp.toFixed(1)}</span>
                   </div>
                 ))}
@@ -466,10 +466,10 @@ export default function Home() {
           {/* Title */}
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="flex-1">
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white leading-tight">
+              <h1 className="font-display font-extrabold text-3xl sm:text-5xl 2xl:text-6xl text-white leading-tight">
                 Quadro Geral de<span className="text-gradient-orange"> Pontuação</span>
               </h1>
-              <p className="mt-2 text-sm sm:text-base max-w-xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <p className="mt-2 text-sm sm:text-base 2xl:text-lg max-w-xl 2xl:max-w-2xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
               <div className="flex items-center gap-2 mt-4 flex-wrap">
@@ -503,11 +503,11 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-40 h-40 sm:w-52 sm:h-52 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
+            <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-40 h-40 sm:w-52 sm:h-52 2xl:w-64 2xl:h-64 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
 
           {/* Stats Row */}
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8">
             {[
               { icon: <Users size={18} />, label: "Equipes", value: teamsData.length.toString(), sub: `${totalStudents} alunos` },
               { icon: <Zap size={18} />, label: "PF Total Turma", value: totalPFEarned.toFixed(0), sub: `de ${MAX_PF_SEMESTER * totalStudents}` },
@@ -516,7 +516,7 @@ export default function Home() {
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
-                className="rounded-lg p-3 sm:p-4"
+                className="rounded-lg p-3 sm:p-4 2xl:p-5"
                 style={{ backgroundColor: "rgba(247,148,29,0.05)", border: `1px solid rgba(247,148,29,0.12)` }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -526,8 +526,8 @@ export default function Home() {
                   <span style={{ color: ORANGE }}>{stat.icon}</span>
                   <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>{stat.label}</span>
                 </div>
-                <div className="font-mono font-bold text-lg sm:text-xl text-white truncate">{stat.value}</div>
-                <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>{stat.sub}</div>
+                <div className="font-mono font-bold text-lg sm:text-xl 2xl:text-2xl text-white truncate">{stat.value}</div>
+                <div className="text-[11px] 2xl:text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{stat.sub}</div>
               </motion.div>
             ))}
           </div>
@@ -586,19 +586,19 @@ export default function Home() {
 
 
       {/* Content */}
-      <div className="container pb-16">
+      <div className="container pb-16 2xl:pb-24">
         <AnimatePresence mode="wait">
           {activeTab === "teams" && (
             <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               {rankedTeams.length >= 3 && totalPFEarned > 0 && (
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-8">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8 mb-8">
                   {[rankedTeams[1], rankedTeams[0], rankedTeams[2]].map((team, idx) => {
                     const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
                     const isFirst = actualRank === 1;
                     return (
                       <motion.div
                         key={team.id}
-                        className="rounded-lg p-3 sm:p-5 text-center"
+                        className="rounded-lg p-3 sm:p-5 2xl:p-6 text-center"
                         style={{
                           backgroundColor: isFirst ? ORANGE + "0A" : CARD_BG,
                           border: `1px solid ${isFirst ? ORANGE + "40" : "rgba(255,255,255,0.08)"}`,
@@ -609,10 +609,10 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 + idx * 0.15 }}
                       >
-                        <div className="text-2xl sm:text-3xl mb-2">{team.emoji}</div>
+                        <div className="text-2xl sm:text-3xl 2xl:text-4xl mb-2">{team.emoji}</div>
                         <div className="text-xs font-mono font-bold mb-1" style={{ color: isFirst ? ORANGE : actualRank === 2 ? "#999" : "#8B6914" }}>#{actualRank}</div>
-                        <div className="font-display font-bold text-sm sm:text-base text-white truncate">{team.name}</div>
-                        <div className="font-mono font-bold text-xl sm:text-2xl mt-1" style={{ color: ORANGE }}>{getTeamPF(team).toFixed(1)}</div>
+                        <div className="font-display font-bold text-sm sm:text-base 2xl:text-lg text-white truncate">{team.name}</div>
+                        <div className="font-mono font-bold text-xl sm:text-2xl 2xl:text-3xl mt-1" style={{ color: ORANGE }}>{getTeamPF(team).toFixed(1)}</div>
                         <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>PF total</div>
                       </motion.div>
                     );
@@ -674,10 +674,10 @@ export default function Home() {
                 </motion.div>
               ) : (
                 <>
-                  <div className="flex justify-center gap-6 sm:gap-10 mb-8">
+                  <div className="flex justify-center gap-6 sm:gap-10 2xl:gap-16 mb-8">
                     {topStudents.slice(0, 3).map((student, idx) => (
                       <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
-                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={idx === 0 ? 110 : 90} />
+                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={typeof window !== 'undefined' && window.innerWidth >= 1536 ? (idx === 0 ? 140 : 110) : (idx === 0 ? 110 : 90)} />
                         <div className="mt-2 text-center">
                           <div className="font-display font-semibold text-sm text-white truncate max-w-[100px]">{student.name}</div>
                           <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
@@ -691,7 +691,7 @@ export default function Home() {
                     {topStudents.map((student, idx) => (
                       <motion.div
                         key={student.name}
-                        className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 p-3 sm:p-4"
+                        className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8 p-3 sm:p-4 2xl:p-5"
                         style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -703,7 +703,7 @@ export default function Home() {
                           <div className="font-medium text-sm text-white truncate">{student.name}</div>
                           <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{student.teamName}</div>
                         </div>
-                        <div className="w-20 sm:w-32"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
+                        <div className="w-20 sm:w-32 2xl:w-40"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
                         <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: ORANGE }}>{student.xp.toFixed(1)}</div>
                       </motion.div>
                     ))}
@@ -719,11 +719,11 @@ export default function Home() {
                 <Target size={20} style={{ color: ORANGE }} />
                 Atividades que Geram PF
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-5 mb-10">
                 {activities.map((act, idx) => (
                   <motion.div
                     key={act.id}
-                    className="rounded-lg p-4 flex items-center gap-4"
+                    className="rounded-lg p-4 2xl:p-5 flex items-center gap-4 2xl:gap-5"
                     style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -911,7 +911,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="py-6 px-4" style={{ borderTop: `1px solid rgba(247,148,29,0.1)`, backgroundColor: CARD_BG }}>
+      <footer className="py-6 2xl:py-10 px-4 2xl:px-8" style={{ borderTop: `1px solid rgba(247,148,29,0.1)`, backgroundColor: CARD_BG }}>
         <div className="container text-center">
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">

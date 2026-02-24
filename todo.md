@@ -1867,3 +1867,57 @@
 - [x] Remover botão "Ir ao Painel Administrativo" da Área do Professor - apenas "Fazer Login / Cadastrar" visível
 - [x] Limpar estado teacherLoggedIn não utilizado
 - [x] Adicionar flag vinhetaAudioStopped para garantir sequência correta áudio vinheta → lounge
+
+## Responsividade Completa - TV e Tablets (Feb 23, 2026)
+
+### Auditoria e Planejamento
+- [ ] Auditar Landing page em breakpoints tablet (768px) e TV (1920px, 3840px)
+- [ ] Auditar Admin panel em breakpoints tablet e TV
+- [ ] Auditar Game Portal em breakpoints tablet e TV
+- [ ] Auditar Leaderboard/Home em breakpoints tablet e TV
+- [ ] Auditar Student pages em breakpoints tablet e TV
+
+### Landing Page
+- [ ] Corrigir layout hero section para tablet (grid 2 colunas)
+- [ ] Corrigir layout hero section para TV (escala de fontes e imagens)
+- [ ] Corrigir cards de login para tablet e TV
+- [ ] Corrigir logos institucionais para tablet e TV
+- [ ] Corrigir footer para tablet e TV
+
+### Admin Panel
+- [ ] Corrigir navegação de abas para tablet (scroll horizontal)
+- [ ] Corrigir tabelas de dados para tablet (scroll horizontal)
+- [ ] Corrigir formulários para tablet e TV
+- [ ] Corrigir gráficos para tablet e TV
+- [ ] Escalar layout para TV (fontes, espaçamentos, containers)
+
+### Game Portal
+- [ ] Corrigir mapa de missões para tablet
+- [ ] Corrigir boss battles para tablet e TV
+- [ ] Corrigir HUD/stats para tablet e TV
+- [ ] Escalar elementos do jogo para TV
+
+### Leaderboard e Páginas Públicas
+- [ ] Corrigir ranking de equipes para tablet e TV
+- [ ] Corrigir top 10 individual para tablet e TV
+- [ ] Corrigir atividades XP para tablet e TV
+
+### Utilitários Globais
+- [ ] Adicionar breakpoints customizados para TV (2xl: 1536px, 3xl: 1920px, 4xl: 3840px)
+- [ ] Adicionar escala de fontes responsiva global
+- [ ] Testar em resoluções: 768px, 1024px, 1366px, 1920px, 3840px
+
+## Responsividade TV e Tablet
+- [x] Adicionar breakpoints globais para TV (3xl: 1920px, 4xl: 2560px, 5xl: 3840px)
+- [x] Adicionar escala de fontes progressiva (18px HD, 22px QHD, 28px 4K)
+- [x] Adicionar utilitários TV customizados (tv:text-*, tv:p-*, tv:gap-*, etc.)
+- [x] Expandir container max-width para telas grandes (1680px HD, 2200px QHD, 3200px 4K)
+- [x] Landing page: escalar hero, logos, cards de login para tablet e TV (2xl breakpoints)
+- [x] AdminDashboard: escalar tabs e conteúdo para telas grandes
+- [x] GamePortal: escalar HUD, mapa, marcadores e seção de bosses para TV
+- [x] StudentNavBar: escalar tabs e padding para telas grandes
+- [x] Home/Leaderboard: escalar hero, stats, podium, TeamCards, individual e activities tabs
+- [x] Dashboard do Aluno: escalar header, stats cards e espaçamento
+- [x] StudentLogin: escalar formulário e ícones para TV
+- [x] ProfessorLogin: escalar branding e formulário para TV
+- [x] StudentArea: escalar header e conteúdo para TV

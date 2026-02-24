@@ -303,8 +303,8 @@ export default function GamePortal() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#111638] to-[#0a0e27] text-white">
         {/* Top HUD */}
-        <div className="sticky top-0 z-50 bg-[#0a0e27]/90 backdrop-blur-md border-b border-emerald-500/20 px-4 py-3">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="sticky top-0 z-50 bg-[#0a0e27]/90 backdrop-blur-md border-b border-emerald-500/20 px-4 2xl:px-8 py-3 2xl:py-4">
+          <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -315,8 +315,8 @@ export default function GamePortal() {
                 <ArrowLeft size={18} />
               </Button>
               <div>
-                <h1 className="font-bold text-lg text-emerald-400">⚔️ Caverna do Dragão</h1>
-                <p className="text-xs text-gray-400">Farmacologia I</p>
+                <h1 className="font-bold text-lg 2xl:text-xl text-emerald-400">⚔️ Caverna do Dragão</h1>
+                <p className="text-xs 2xl:text-sm text-gray-400">Farmacologia I</p>
               </div>
             </div>
 
@@ -356,8 +356,8 @@ export default function GamePortal() {
         </div>
 
         {/* Map */}
-        <div className="max-w-6xl mx-auto p-4">
-          <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-2xl shadow-emerald-500/5">
+        <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto p-4 2xl:p-8">
+          <div className="relative w-full aspect-[16/9] rounded-2xl 2xl:rounded-3xl overflow-hidden border-2 border-emerald-500/20 shadow-2xl shadow-emerald-500/5">
             <img
               src={MAP_IMAGE}
               alt="Mapa do Jogo"
@@ -378,7 +378,7 @@ export default function GamePortal() {
                   style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 >
                   <div className={`
-                    relative w-10 h-10 rounded-full flex items-center justify-center
+                    relative w-10 h-10 2xl:w-14 2xl:h-14 rounded-full flex items-center justify-center
                     transition-all duration-300 hover:scale-125
                     ${isCompleted
                       ? "bg-emerald-500 shadow-lg shadow-emerald-500/50"
@@ -423,7 +423,7 @@ export default function GamePortal() {
                   style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 >
                   <div className={`
-                    relative w-12 h-12 rounded-lg flex items-center justify-center text-xl
+                    relative w-12 h-12 2xl:w-16 2xl:h-16 rounded-lg flex items-center justify-center text-xl 2xl:text-2xl
                     transition-all duration-300 hover:scale-125 border-2
                     ${isDefeated
                       ? "bg-emerald-900/80 border-emerald-500/50 shadow-lg shadow-emerald-500/30"
@@ -471,7 +471,7 @@ export default function GamePortal() {
             <h2 className="text-lg font-bold text-red-400 flex items-center gap-2 mb-3">
               <Skull size={20} /> Chefes da Semana
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 2xl:gap-4">
               {BOSSES.map((boss) => {
                 const status = bossStatusMap[boss.weekNumber];
                 const isAvailable = status?.available || false;

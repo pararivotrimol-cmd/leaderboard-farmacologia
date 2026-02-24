@@ -80,15 +80,15 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
       {/* Header */}
-      <div className="border-b border-gray-700 p-4 sm:p-6" style={{ backgroundColor: CARD_BG }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="border-b border-gray-700 p-4 sm:p-6 2xl:p-8" style={{ backgroundColor: CARD_BG }}>
+        <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg" style={{ backgroundColor: `${ORANGE}20` }}>
               <Shield size={28} style={{ color: ORANGE }} />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Painel Administrativo</h1>
-              <p className="text-gray-400 text-sm">Gerenciamento completo da plataforma</p>
+              <h1 className="text-2xl sm:text-3xl 2xl:text-4xl font-bold text-white">Painel Administrativo</h1>
+              <p className="text-gray-400 text-sm 2xl:text-base">Gerenciamento completo da plataforma</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
 
       {/* Navigation Tabs */}
       <div className="border-b border-gray-700 overflow-x-auto" style={{ backgroundColor: CARD_BG }}>
-        <div className="max-w-7xl mx-auto flex gap-1 p-4">
+        <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto flex gap-1 2xl:gap-2 p-4 2xl:p-6">
           {ADMIN_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto p-4 sm:p-6 2xl:p-8">
         {activeTab === "overview" && <OverviewTab sessionToken={sessionToken} />}
         {activeTab === "turmas" && <TurmasAdminTab sessionToken={sessionToken} />}
         {activeTab === "import" && <ImportStudentsTab sessionToken={sessionToken} />}

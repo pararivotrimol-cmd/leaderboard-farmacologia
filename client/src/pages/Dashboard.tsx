@@ -96,14 +96,14 @@ export default function Dashboard() {
               Voltar ao Leaderboard
             </button>
           </Link>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Meu Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-white">Meu Dashboard</h1>
           <p style={{ color: "rgba(255,255,255,0.6)" }} className="mt-1">Olá, {stats.studentName}! Acompanhe seu desempenho.</p>
         </div>
       </div>
 
-      <div className="container px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-10 lg:py-12">
+      <div className="container px-3 sm:px-4 md:px-6 lg:px-8 2xl:px-12 py-6 sm:py-8 md:py-10 lg:py-12 2xl:py-16">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 2xl:gap-8 mb-8">
           {/* Total PF */}
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg border" style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.1)" }}>
             <div className="flex items-center gap-3 mb-3">

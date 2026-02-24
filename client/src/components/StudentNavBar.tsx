@@ -59,7 +59,7 @@ export default function StudentNavBar({
           borderColor: "rgba(255,255,255,0.1)",
         }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 2xl:px-8 py-3 2xl:py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
@@ -74,12 +74,12 @@ export default function StudentNavBar({
             </Link>
 
             {/* Desktop Tabs */}
-            <div className="hidden md:flex gap-1 p-1 rounded-lg flex-wrap" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+            <div className="hidden md:flex gap-1 2xl:gap-2 p-1 2xl:p-1.5 rounded-lg flex-wrap" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
               {NAV_ITEMS.map((item) => (
                 <button
                   key={item.key}
                   onClick={() => handleTabClick(item.key)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
+                  className={`flex items-center gap-1.5 px-3 2xl:px-4 py-1.5 2xl:py-2 rounded-md text-xs 2xl:text-sm font-medium transition-all whitespace-nowrap ${item.key === "game" && activeTab !== "game" ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
                   style={{
                     backgroundColor: activeTab === item.key
                       ? ORANGE

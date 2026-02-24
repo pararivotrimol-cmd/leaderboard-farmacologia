@@ -49,6 +49,10 @@
   --color-navy-deep: oklch(0.178 0.032 264.052);
   --color-navy-mid: oklch(0.228 0.032 264.052);
   --color-navy-light: oklch(0.278 0.032 264.052);
+  /* TV breakpoints */
+  --breakpoint-3xl: 1920px;
+  --breakpoint-4xl: 2560px;
+  --breakpoint-5xl: 3840px;
 }
 
 :root {
@@ -144,6 +148,36 @@
     }
   }
 
+  @media (min-width: 1536px) {
+    .container {
+      max-width: 1440px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .container {
+      max-width: 1680px;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  @media (min-width: 2560px) {
+    .container {
+      max-width: 2200px;
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+  }
+
+  @media (min-width: 3840px) {
+    .container {
+      max-width: 3200px;
+      padding-left: 6rem;
+      padding-right: 6rem;
+    }
+  }
+
   .font-display {
     font-family: "Outfit", sans-serif;
   }
@@ -189,4 +223,57 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+}
+
+/* ═══════ RESPONSIVE TYPOGRAPHY SCALING ═══════ */
+/* Tablet landscape (1024-1366px) */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  html { font-size: 16px; }
+}
+
+/* Desktop HD (1920px) */
+@media (min-width: 1920px) {
+  html { font-size: 18px; }
+}
+
+/* 2K/QHD (2560px) */
+@media (min-width: 2560px) {
+  html { font-size: 22px; }
+}
+
+/* 4K UHD (3840px) */
+@media (min-width: 3840px) {
+  html { font-size: 28px; }
+}
+
+/* ═══════ TV-SPECIFIC UTILITIES ═══════ */
+@media (min-width: 1920px) {
+  .tv\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  .tv\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .tv\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .tv\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .tv\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .tv\:text-5xl { font-size: 3rem; line-height: 1; }
+  .tv\:text-6xl { font-size: 3.75rem; line-height: 1; }
+  .tv\:text-7xl { font-size: 4.5rem; line-height: 1; }
+  .tv\:p-6 { padding: 1.5rem; }
+  .tv\:p-8 { padding: 2rem; }
+  .tv\:p-10 { padding: 2.5rem; }
+  .tv\:gap-6 { gap: 1.5rem; }
+  .tv\:gap-8 { gap: 2rem; }
+  .tv\:gap-10 { gap: 2.5rem; }
+  .tv\:gap-12 { gap: 3rem; }
+  .tv\:w-20 { width: 5rem; }
+  .tv\:h-20 { height: 5rem; }
+  .tv\:w-24 { width: 6rem; }
+  .tv\:h-24 { height: 6rem; }
+  .tv\:w-64 { width: 16rem; }
+  .tv\:h-64 { height: 16rem; }
+  .tv\:mb-8 { margin-bottom: 2rem; }
+  .tv\:mt-8 { margin-top: 2rem; }
+  .tv\:py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+  .tv\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+  .tv\:rounded-2xl { border-radius: 1rem; }
+  .tv\:rounded-3xl { border-radius: 1.5rem; }
+  .tv\:max-w-8xl { max-width: 88rem; }
 }

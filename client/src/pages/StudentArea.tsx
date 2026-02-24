@@ -120,7 +120,7 @@ export default function StudentArea() {
           borderColor: "rgba(255,255,255,0.1)",
         }}
       >
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 2xl:px-8 py-4 2xl:py-6">
           <div className="flex items-center gap-3">
             <Link href="/leaderboard">
               <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
@@ -128,7 +128,7 @@ export default function StudentArea() {
               </button>
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-white">Área da Turma</h1>
+              <h1 className="text-xl 2xl:text-2xl font-bold text-white">Área da Turma</h1>
               <p className="text-sm text-white/60">{classData.name}</p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function StudentArea() {
       />
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 2xl:px-8 py-8 2xl:py-12">
         {/* Leaderboard Tab */}
         {activeTab === "leaderboard" && leaderboardData && (
           <div>

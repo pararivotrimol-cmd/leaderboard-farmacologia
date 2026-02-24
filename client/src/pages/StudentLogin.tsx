@@ -202,7 +202,7 @@ export default function StudentLogin() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0A1628" }}>
       {/* Header */}
       <div className="px-4 py-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
+        <div className="max-w-md 2xl:max-w-lg mx-auto flex items-center justify-between">
           <button
             onClick={() => setLocation("/")}
             className="flex items-center gap-2 text-sm transition-colors"
@@ -223,7 +223,7 @@ export default function StudentLogin() {
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <motion.div
-          className="w-full max-w-md"
+          className="w-full max-w-md 2xl:max-w-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -231,12 +231,12 @@ export default function StudentLogin() {
           {/* Icon */}
           <div className="text-center mb-8">
             <div
-              className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              className="w-20 h-20 2xl:w-24 2xl:h-24 rounded-2xl flex items-center justify-center mx-auto mb-4"
               style={{ backgroundColor: "rgba(247,148,29,0.15)" }}
             >
               <GraduationCap size={40} style={{ color: ORANGE }} />
             </div>
-            <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <h1 className="text-2xl 2xl:text-3xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
               {mode === "login" ? "Entrar na Plataforma" : "Criar Conta"}
             </h1>
             <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.5)" }}>
