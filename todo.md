@@ -2005,3 +2005,8 @@
 - [x] Card "Administrador Geral" restaurado na landing page (roxo, ícone Lock)
 - [x] Grid de login cards agora 3 colunas em lg+ (Aluno, Professor, Admin)
 - [x] Corrigir 3 falhas pré-existentes no student-auth.test.ts (rotas attendance antigas → QR Code)
+
+## Restaurar Login do Administrador Geral
+- [x] Restaurar área de login do Admin Geral com email/senha na landing page
+- [x] Login redireciona para /super-admin/login (email + senha)
+- [x] Manter fluxo como nos checkpoints anteriores (SuperAdminLogin → AdminDashboard)

@@ -649,7 +649,7 @@ export default function Landing() {
                   Acesso restrito. Gerencie turmas, importe alunos, configure equipes, códigos de convite e configurações do sistema.
                 </p>
                 <div className="space-y-3">
-                  {isAuthenticated ? (
+                  {localStorage.getItem("adminRole") === "super_admin" && localStorage.getItem("sessionToken") ? (
                     <button
                       onClick={() => setLocation("/admin")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
@@ -661,7 +661,7 @@ export default function Landing() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => setLocation("/admin")}
+                      onClick={() => setLocation("/super-admin/login")}
                       className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl min-h-[48px]"
                       style={{ backgroundColor: "rgba(139,92,246,0.15)", color: "#fff", border: "1px solid rgba(139,92,246,0.3)" }}
                     >
