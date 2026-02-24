@@ -2004,4 +2004,4 @@
 - [x] Vinheta: mensagem "Toque na tela para ativar o som" como hint sutil
 - [x] Card "Administrador Geral" restaurado na landing page (roxo, ícone Lock)
 - [x] Grid de login cards agora 3 colunas em lg+ (Aluno, Professor, Admin)
-- [ ] Corrigir 3 falhas pré-existentes no student-auth.test.ts (rotas attendance antigas)
+- [x] Corrigir 3 falhas pré-existentes no student-auth.test.ts (rotas attendance antigas → QR Code)

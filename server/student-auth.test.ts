@@ -16,6 +16,28 @@ function createPublicContext(): TrpcContext {
   };
 }
 
+function createAuthenticatedContext(userId: number, email: string): TrpcContext {
+  return {
+    user: {
+      id: userId,
+      openId: "test-open-id",
+      email,
+      name: "Test User",
+      avatarUrl: null,
+      role: "user",
+      createdAt: new Date(),
+    },
+    req: {
+      protocol: "https",
+      headers: {},
+      ip: "127.0.0.1",
+    } as TrpcContext["req"],
+    res: {
+      clearCookie: () => {},
+    } as TrpcContext["res"],
+  };
+}
+
 describe("studentAuth", () => {
   const caller = appRouter.createCaller(createPublicContext());
 
@@ -143,110 +165,90 @@ describe("studentAuth", () => {
   });
 });
 
-describe("attendance", () => {
-  const caller = appRouter.createCaller(createPublicContext());
-
-  describe("checkIn", () => {
-    it("rejects invalid session token", async () => {
-      const result = await caller.attendance.checkIn({
-        sessionToken: "invalid-token",
-        latitude: -22.9176,
-        longitude: -43.1831,
-      });
-      expect(result.success).toBe(false);
-      expect(result.message).toContain("inválida");
-    });
-  });
-
-  describe("myAttendance", () => {
-    it("returns empty array for invalid session", async () => {
-      const result = await caller.attendance.myAttendance({
-        sessionToken: "invalid-token",
-      });
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(0);
-    });
-  });
-
-  describe("getByWeek (admin)", () => {
-    it("rejects invalid admin password", async () => {
+describe("attendance (QR Code system)", () => {
+  describe("checkInWithQRCode", () => {
+    it("rejects unauthenticated users", async () => {
+      const publicCaller = appRouter.createCaller(createPublicContext());
       await expect(
-        caller.attendance.getByWeek({ password: "wrong-password", week: 1 })
+        publicCaller.attendance.checkInWithQRCode({
+          token: "fake-token",
+          classDate: "2026-03-10",
+        })
+      ).rejects.toThrow();
+    });
+
+    it("rejects invalid QR token for authenticated user", async () => {
+      const authCaller = appRouter.createCaller(
+        createAuthenticatedContext(999, "test@edu.unirio.br")
+      );
+      await expect(
+        authCaller.attendance.checkInWithQRCode({
+          token: "invalid-token-that-does-not-exist",
+          classDate: "2026-03-10",
+        })
+      ).rejects.toThrow("QR code não encontrado ou inválido");
+    });
+  });
+
+  describe("getMyAttendance", () => {
+    it("rejects unauthenticated users", async () => {
+      const publicCaller = appRouter.createCaller(createPublicContext());
+      await expect(
+        publicCaller.attendance.getMyAttendance()
+      ).rejects.toThrow();
+    });
+
+    it("returns attendance data for authenticated user", async () => {
+      const authCaller = appRouter.createCaller(
+        createAuthenticatedContext(999, "test@edu.unirio.br")
+      );
+      const result = await authCaller.attendance.getMyAttendance();
+      expect(result).toHaveProperty("success", true);
+      expect(result).toHaveProperty("total");
+      expect(result).toHaveProperty("attendance");
+      expect(Array.isArray(result.attendance)).toBe(true);
+    });
+  });
+
+  describe("getClassAttendance", () => {
+    it("rejects non-admin users", async () => {
+      const authCaller = appRouter.createCaller(
+        createAuthenticatedContext(999, "test@edu.unirio.br")
+      );
+      await expect(
+        authCaller.attendance.getClassAttendance({
+          classDate: "2026-03-10",
+          classId: 1,
+        })
       ).rejects.toThrow();
     });
   });
 
-  describe("getSummary (admin)", () => {
-    it("rejects invalid admin password", async () => {
+  describe("manualCheckIn", () => {
+    it("rejects non-admin users", async () => {
+      const authCaller = appRouter.createCaller(
+        createAuthenticatedContext(999, "test@edu.unirio.br")
+      );
       await expect(
-        caller.attendance.getSummary({ password: "wrong-password" })
-      ).rejects.toThrow();
-    });
-  });
-
-  describe("manualCheckIn (admin)", () => {
-    it("rejects invalid admin password", async () => {
-      await expect(
-        caller.attendance.manualCheckIn({
-          password: "wrong-password",
-          memberId: 1,
-          week: 1,
+        authCaller.attendance.manualCheckIn({
+          studentAccountId: 1,
           classDate: "2026-03-10",
         })
       ).rejects.toThrow();
     });
   });
 
-  describe("delete (admin)", () => {
-    it("rejects invalid admin password", async () => {
+  describe("generateQRCode", () => {
+    it("rejects non-admin users", async () => {
+      const authCaller = appRouter.createCaller(
+        createAuthenticatedContext(999, "test@edu.unirio.br")
+      );
       await expect(
-        caller.attendance.delete({ password: "wrong-password", id: 1 })
+        authCaller.attendance.generateQRCode({
+          classId: 1,
+          classDate: "2026-03-10",
+        })
       ).rejects.toThrow();
-    });
-  });
-
-  describe("getAccounts (admin)", () => {
-    it("rejects invalid admin password", async () => {
-      await expect(
-        caller.attendance.getAccounts({ password: "wrong-password" })
-      ).rejects.toThrow();
-    });
-  });
-
-  describe("deleteAccount (admin)", () => {
-    it("rejects invalid admin password", async () => {
-      await expect(
-        caller.attendance.deleteAccount({ password: "wrong-password", id: 1 })
-      ).rejects.toThrow();
-    });
-  });
-
-  describe("exportReport (admin)", () => {
-    it("rejects invalid admin password", async () => {
-      await expect(
-        caller.attendance.exportReport({ password: "wrong-password" })
-      ).rejects.toThrow();
-    });
-
-    it("returns report data with valid admin password", async () => {
-      const result = await caller.attendance.exportReport({ password: "farmaco2026" });
-      expect(result).toHaveProperty("report");
-      expect(result).toHaveProperty("weeks");
-      expect(Array.isArray(result.report)).toBe(true);
-      expect(Array.isArray(result.weeks)).toBe(true);
-      expect(result.weeks.length).toBe(19);
-      // Each report entry should have expected fields
-      if (result.report.length > 0) {
-        const entry = result.report[0];
-        expect(entry).toHaveProperty("nome");
-        expect(entry).toHaveProperty("equipe");
-        expect(entry).toHaveProperty("matricula");
-        expect(entry).toHaveProperty("email");
-        expect(entry).toHaveProperty("weeklyStatus");
-        expect(entry).toHaveProperty("totalValid");
-        expect(entry).toHaveProperty("totalInvalid");
-        expect(entry).toHaveProperty("totalAusente");
-      }
     });
   });
 });
