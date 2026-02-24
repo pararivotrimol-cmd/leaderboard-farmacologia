@@ -1988,3 +1988,20 @@
 - [x] Atualizar QRCodeProjector com countdown e auto-rotação
 - [x] Atualizar AttendanceCheckIn para validar token rotativo
 - [x] Reescrever StudentArea com 7 abas essenciais (Cronograma, Presença, Média, Materiais, Jogo, Atividades, Equipes)
+
+## Restaurar Acesso Administrador Geral
+- [ ] Recolocar card de acesso do Administrador Geral na landing page
+
+
+## Vinheta Autoplay Mobile + Admin Card
+- [ ] Remover qualquer botão "Iniciar" — vinheta deve auto-iniciar com música
+- [ ] Criar vídeo com áudio embutido para autoplay funcionar no mobile
+- [ ] Recolocar card de acesso do Administrador Geral na landing page
+
+## Correções Vinheta e Admin Card (2026-02-23)
+- [x] Vinheta: vídeo com áudio embutido (ffmpeg merge) - sem botão "Iniciar"
+- [x] Vinheta: autoplay muted + unmute no primeiro gesto do usuário
+- [x] Vinheta: mensagem "Toque na tela para ativar o som" como hint sutil
+- [x] Card "Administrador Geral" restaurado na landing page (roxo, ícone Lock)
+- [x] Grid de login cards agora 3 colunas em lg+ (Aluno, Professor, Admin)
+- [ ] Corrigir 3 falhas pré-existentes no student-auth.test.ts (rotas attendance antigas)

@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Youtube, GraduationCap,
-  ArrowRight, LogIn, Shield
+  ArrowRight, LogIn, Shield, Lock
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -17,7 +17,7 @@ import YouTubeButton from "@/components/YouTubeButton";
 import RecentVideos from "@/components/RecentVideos";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
-const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/UIYIWhxAlKmjxHUH.mp4";
+const INTRO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/yCXpFhcMWFXbhcrj.mp4";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
 const PROFESSOR_AVATAR_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/kmrZlZNcVzNpoWYz.png";
 
@@ -72,7 +72,6 @@ export default function Landing() {
   const { isAuthenticated } = useAuth();
   const { isAuthenticated: isStudentAuth } = useStudentAuth();
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Check if intro was already shown this session
@@ -85,61 +84,83 @@ export default function Landing() {
     }
   }, []);
 
-  // Auto-start vinheta: play audio on any user interaction (click/touch/key)
-  // Browsers block autoplay of audio with sound, so we MUST wait for user gesture
+  // Vinheta: video has embedded audio. Autoplay muted (allowed by all browsers),
+  // then unmute on first user gesture (click/touch/key).
+  // This eliminates the need for a separate <audio> element and any "Iniciar" button.
   useEffect(() => {
     if (!showVinheta || vinhetaComplete) return;
 
-    let audioStarted = false;
+    const video = videoRef.current;
+    if (!video) return;
 
-    const startAudio = () => {
-      if (audioStarted || !audioRef.current) return;
-      audioStarted = true;
-      audioRef.current.volume = 0.5;
-      audioRef.current.play().catch(() => {});
-      // Remove all listeners after first successful play
-      document.removeEventListener("click", startAudio);
-      document.removeEventListener("touchstart", startAudio);
-      document.removeEventListener("keydown", startAudio);
-      document.removeEventListener("pointerdown", startAudio);
+    // Start video muted (autoplay allowed on all platforms)
+    video.muted = true;
+    video.play().catch(() => {});
+
+    let unmuted = false;
+
+    const unmuteVideo = () => {
+      if (unmuted || !videoRef.current) return;
+      unmuted = true;
+      videoRef.current.muted = false;
+      videoRef.current.volume = 0.5;
+      // Remove all listeners after unmuting
+      document.removeEventListener("click", unmuteVideo);
+      document.removeEventListener("touchstart", unmuteVideo);
+      document.removeEventListener("touchend", unmuteVideo);
+      document.removeEventListener("keydown", unmuteVideo);
+      document.removeEventListener("pointerdown", unmuteVideo);
     };
 
-    // Try autoplay first (will work if user already interacted with the page)
-    if (audioRef.current) {
-      audioRef.current.volume = 0.5;
-      audioRef.current.play().then(() => {
-        audioStarted = true;
-      }).catch(() => {
-        // Autoplay blocked — register listeners for first user gesture
-        document.addEventListener("click", startAudio, { once: true });
-        document.addEventListener("touchstart", startAudio, { once: true });
-        document.addEventListener("keydown", startAudio, { once: true });
-        document.addEventListener("pointerdown", startAudio, { once: true });
-      });
-    }
-
-    // Autoplay video (muted videos are allowed by browsers)
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
+    // Try to unmute immediately (works if user navigated from another page with prior interaction)
+    try {
+      video.muted = false;
+      video.volume = 0.5;
+      // Check if browser actually allowed unmuting by trying to play unmuted
+      const playPromise = video.play();
+      if (playPromise) {
+        playPromise.then(() => {
+          unmuted = true;
+        }).catch(() => {
+          // Browser blocked unmuted playback — go back to muted and wait for gesture
+          video.muted = true;
+          video.play().catch(() => {});
+          document.addEventListener("click", unmuteVideo);
+          document.addEventListener("touchstart", unmuteVideo);
+          document.addEventListener("touchend", unmuteVideo);
+          document.addEventListener("keydown", unmuteVideo);
+          document.addEventListener("pointerdown", unmuteVideo);
+        });
+      }
+    } catch {
+      // Fallback: stay muted and register listeners
+      video.muted = true;
+      video.play().catch(() => {});
+      document.addEventListener("click", unmuteVideo);
+      document.addEventListener("touchstart", unmuteVideo);
+      document.addEventListener("touchend", unmuteVideo);
+      document.addEventListener("keydown", unmuteVideo);
+      document.addEventListener("pointerdown", unmuteVideo);
     }
 
     return () => {
-      document.removeEventListener("click", startAudio);
-      document.removeEventListener("touchstart", startAudio);
-      document.removeEventListener("keydown", startAudio);
-      document.removeEventListener("pointerdown", startAudio);
+      document.removeEventListener("click", unmuteVideo);
+      document.removeEventListener("touchstart", unmuteVideo);
+      document.removeEventListener("touchend", unmuteVideo);
+      document.removeEventListener("keydown", unmuteVideo);
+      document.removeEventListener("pointerdown", unmuteVideo);
     };
   }, [showVinheta, vinhetaComplete]);
 
   const handleVinhetaComplete = () => {
     sessionStorage.setItem("intro_shown", "true");
-    // Completely stop and destroy the intro audio to prevent overlap
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.src = ""; // Release the audio resource
-      audioRef.current.load(); // Force release
-      audioRef.current = null;
+    // Completely stop and destroy the video to prevent audio overlap with BackgroundMusic
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      videoRef.current.src = ""; // Release the resource
+      videoRef.current.load(); // Force release
+      videoRef.current = null;
     }
     setVinhetaAudioStopped(true);
     setVinhetaComplete(true);
@@ -156,17 +177,7 @@ export default function Landing() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <audio
-            ref={audioRef}
-            loop
-            preload="auto"
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
-            style={{ display: "none" }}
-          />
-
-
-
-          {/* Video autoplays muted (browsers allow muted autoplay) */}
+          {/* Single video with embedded audio — autoplay muted, unmute on first gesture */}
           <video
             ref={videoRef}
             key="intro-video"
@@ -179,6 +190,17 @@ export default function Landing() {
           >
             <source src={INTRO_VIDEO_URL} type="video/mp4" />
           </video>
+
+          {/* Subtle hint for users to tap to enable sound */}
+          <motion.div
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full z-40"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.5 }}
+          >
+            <span className="text-white/80 text-xs sm:text-sm">🔊 Toque na tela para ativar o som</span>
+          </motion.div>
 
           <motion.button
               onClick={handleVinhetaComplete}
@@ -513,7 +535,7 @@ export default function Landing() {
           </motion.div>
 
           {/* Login Cards */}
-          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 2xl:gap-12">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
             {/* Student Login Card */}
             <motion.div
               className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
@@ -601,6 +623,55 @@ export default function Landing() {
               </div>
             </motion.div>
 
+
+            {/* Admin Card */}
+            <motion.div
+              className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group sm:col-span-2 lg:col-span-1"
+              style={{
+                backgroundColor: "rgba(139,92,246,0.06)",
+                borderColor: "rgba(139,92,246,0.2)",
+              }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              whileHover={{ borderColor: "rgba(139,92,246,0.5)", boxShadow: "0 0 40px rgba(139,92,246,0.1)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#8B5CF6" }} />
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(139,92,246,0.15)" }}>
+                  <Lock size={32} style={{ color: "#8B5CF6" }} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Administrador Geral
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Acesso restrito. Gerencie turmas, importe alunos, configure equipes, códigos de convite e configurações do sistema.
+                </p>
+                <div className="space-y-3">
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => setLocation("/admin")}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02]"
+                      style={{ backgroundColor: "#8B5CF6", color: "#fff" }}
+                    >
+                      <Shield size={18} />
+                      Acessar Painel
+                      <ArrowRight size={18} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setLocation("/admin")}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl min-h-[48px]"
+                      style={{ backgroundColor: "rgba(139,92,246,0.15)", color: "#fff", border: "1px solid rgba(139,92,246,0.3)" }}
+                    >
+                      <LogIn size={18} />
+                      Fazer Login
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
 
           </div>
 
