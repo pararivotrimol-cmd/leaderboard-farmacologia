@@ -201,7 +201,7 @@ export default function StudentLogin() {
   return (
     <div className="min-h-screen landscape-min-h-auto flex flex-col" style={{ backgroundColor: "#0A1628" }}>
       {/* Header */}
-      <div className="px-4 py-4">
+      <div className="px-3 sm:px-4 py-3 sm:py-4">
         <div className="max-w-md 2xl:max-w-lg mx-auto flex items-center justify-between">
           <button
             onClick={() => setLocation("/")}
@@ -221,7 +221,7 @@ export default function StudentLogin() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="flex-1 flex items-center justify-center px-3 sm:px-4 py-4 sm:py-8">
         <motion.div
           className="w-full max-w-md 2xl:max-w-lg"
           initial={{ opacity: 0, y: 20 }}
@@ -236,7 +236,7 @@ export default function StudentLogin() {
             >
               <GraduationCap size={40} style={{ color: ORANGE }} />
             </div>
-            <h1 className="text-2xl 2xl:text-3xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <h1 className="text-xl sm:text-2xl 2xl:text-3xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
               {mode === "login" ? "Entrar na Plataforma" : "Criar Conta"}
             </h1>
             <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.5)" }}>

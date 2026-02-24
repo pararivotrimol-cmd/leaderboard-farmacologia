@@ -388,10 +388,10 @@ export default function Home() {
             <img
               src={LOGO_URL}
               alt="Conexao em Farmacologia"
-              className="w-40 h-40 object-contain"
+              className="w-28 h-28 sm:w-40 sm:h-40 object-contain"
             />
           </motion.div>
-          <div className="flex items-center gap-4 px-8">
+          <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-8">
             <span className="text-white text-sm font-medium">Volume:</span>
             <input
               type="range"
@@ -466,38 +466,38 @@ export default function Home() {
           {/* Title */}
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="flex-1">
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl 2xl:text-6xl text-white leading-tight">
+              <h1 className="font-display font-extrabold text-2xl sm:text-5xl 2xl:text-6xl text-white leading-tight">
                 Quadro Geral de<span className="text-gradient-orange"> Pontuação</span>
               </h1>
               <p className="mt-2 text-sm sm:text-base 2xl:text-lg max-w-xl 2xl:max-w-2xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
-              <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 flex-wrap">
                 <Link href="/meu-progresso">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
-                    <Users size={15} />
+                    <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
+                    <Users size={14} />
                     Meu Progresso
                   </span>
                 </Link>
                 <Link href="/avisos">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <Bell size={15} />
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                    <Bell size={14} />
                     Avisos
                   </span>
                 </Link>
                 <Link href="/presenca">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <MapPin size={15} />
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                    <MapPin size={14} />
                     Presença
                   </span>
                 </Link>
                 <Link href="/dashboard">
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <BarChart3 size={15} />
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                    <BarChart3 size={14} />
                     Dashboard
                   </span>
                 </Link>
-                <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
                   <Youtube size={15} />
                   YouTube
                 </a>
@@ -538,7 +538,7 @@ export default function Home() {
       {latestHighlight && totalPFEarned > 0 && (
         <div className="container -mt-2 mb-6">
           <motion.div
-            className="rounded-lg p-4 flex items-start gap-3"
+            className="rounded-lg p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3"
             style={{ backgroundColor: ORANGE + "0A", border: `1px solid ${ORANGE}25` }}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -552,7 +552,7 @@ export default function Home() {
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: ORANGE + "15", color: ORANGE }}>{latestHighlight.activity}</span>
               </div>
               <p className="text-sm text-white mt-1">{latestHighlight.description}</p>
-              <div className="flex gap-4 mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
                 <span>Equipe destaque: <strong className="text-white">{latestHighlight.topTeam}</strong></span>
                 <span>Aluno(a) destaque: <strong className="text-white">{latestHighlight.topStudent}</strong></span>
               </div>
@@ -674,12 +674,12 @@ export default function Home() {
                 </motion.div>
               ) : (
                 <>
-                  <div className="flex justify-center gap-6 sm:gap-10 2xl:gap-16 mb-8">
+                  <div className="flex justify-center gap-3 sm:gap-10 2xl:gap-16 mb-6 sm:mb-8">
                     {topStudents.slice(0, 3).map((student, idx) => (
                       <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
-                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={typeof window !== 'undefined' && window.innerWidth >= 1536 ? (idx === 0 ? 140 : 110) : (idx === 0 ? 110 : 90)} />
+                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={typeof window !== 'undefined' && window.innerWidth >= 1536 ? (idx === 0 ? 140 : 110) : typeof window !== 'undefined' && window.innerWidth < 400 ? (idx === 0 ? 90 : 72) : (idx === 0 ? 110 : 90)} />
                         <div className="mt-2 text-center">
-                          <div className="font-display font-semibold text-sm text-white truncate max-w-[100px]">{student.name}</div>
+                          <div className="font-display font-semibold text-xs sm:text-sm text-white truncate max-w-[80px] sm:max-w-[100px]">{student.name}</div>
                           <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
                             <span>{student.teamEmoji}</span><span>{student.teamName}</span>
                           </div>
@@ -723,7 +723,7 @@ export default function Home() {
                 {activities.map((act, idx) => (
                   <motion.div
                     key={act.id}
-                    className="rounded-lg p-4 2xl:p-5 flex items-center gap-4 2xl:gap-5"
+                    className="rounded-lg p-3 sm:p-4 2xl:p-5 flex items-center gap-3 sm:gap-4 2xl:gap-5"
                     style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -734,7 +734,7 @@ export default function Home() {
                       <div className="font-display font-semibold text-sm text-white">{act.name}</div>
                       <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Até {act.maxXP} PF por sessão</div>
                     </div>
-                    <div className="font-mono font-bold text-lg" style={{ color: ORANGE }}>+{act.maxXP} PF</div>
+                    <div className="font-mono font-bold text-base sm:text-lg" style={{ color: ORANGE }}>+{act.maxXP}</div>
                   </motion.div>
                 ))}
               </div>
@@ -746,15 +746,15 @@ export default function Home() {
                 <div className="absolute left-4 top-0 bottom-0 w-px" style={{ backgroundColor: ORANGE + "25" }} />
                 <div className="grid gap-4">
                   {highlights.map((highlight, idx) => (
-                    <motion.div key={highlight.id} className="relative pl-10" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: idx * 0.08 }}>
+                    <motion.div key={highlight.id} className="relative pl-8 sm:pl-10" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: idx * 0.08 }}>
                       <div
-                        className="absolute left-2.5 top-3 w-3 h-3 rounded-full"
+                        className="absolute left-2 sm:left-2.5 top-3 w-3 h-3 rounded-full"
                         style={{
                           backgroundColor: idx === highlights.length - 1 ? ORANGE : "rgba(255,255,255,0.1)",
                           border: `2px solid ${idx === highlights.length - 1 ? ORANGE : "rgba(255,255,255,0.15)"}`,
                         }}
                       />
-                      <div className="rounded-lg p-4" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
+                      <div className="rounded-lg p-3 sm:p-4" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="font-mono text-xs font-bold" style={{ color: ORANGE }}>SEM {highlight.week}</span>
                           <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{highlight.date}</span>
@@ -762,7 +762,7 @@ export default function Home() {
                         </div>
                         <p className="text-sm text-white">{highlight.description}</p>
                         {highlight.topTeam !== "—" && (
-                          <div className="flex gap-4 mt-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 mt-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
                             <span>🏆 {highlight.topTeam}</span>
                             <span>⭐ {highlight.topStudent}</span>
                           </div>

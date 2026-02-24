@@ -59,7 +59,7 @@ export default function StudentNavBar({
           borderColor: "rgba(255,255,255,0.1)",
         }}
       >
-        <div className="container mx-auto px-4 2xl:px-8 py-3 2xl:py-4">
+        <div className="container mx-auto px-3 sm:px-4 2xl:px-8 py-2.5 sm:py-3 2xl:py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Logo + Home */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
@@ -171,7 +171,7 @@ export default function StudentNavBar({
                       handleTabClick(item.key);
                       setMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-1.5 px-2 py-2 rounded-md text-xs font-medium transition-all ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60" : ""}`}
+                    className={`flex items-center gap-1.5 px-2.5 py-2.5 rounded-md text-xs font-medium transition-all min-h-[44px] ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60" : ""}`}
                     style={{
                       backgroundColor: activeTab === item.key
                         ? ORANGE
@@ -197,7 +197,7 @@ export default function StudentNavBar({
               <div className="flex gap-2">
                 <Link
                   href="/leaderboard"
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 rounded-lg text-xs font-medium min-h-[44px]"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.05)",
                     color: "rgba(255,255,255,0.6)",
@@ -212,7 +212,7 @@ export default function StudentNavBar({
                     sessionStorage.clear();
                     setLocation("/");
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 rounded-lg text-xs font-medium min-h-[44px]"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.05)",
                     color: "rgba(255,255,255,0.6)",

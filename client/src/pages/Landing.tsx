@@ -288,7 +288,7 @@ export default function Landing() {
                 <motion.img
                   src={LOGO_URL}
                   alt="Conexão em Farmacologia"
-                  className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 2xl:w-64 2xl:h-64 object-contain drop-shadow-2xl"
+                  className="relative w-28 h-28 sm:w-44 sm:h-44 md:w-52 md:h-52 2xl:w-64 2xl:h-64 object-contain drop-shadow-2xl"
                   initial={{ scale: 0, rotate: -180, opacity: 0 }}
                   animate={{ scale: 1, rotate: 0, opacity: 1 }}
                   transition={{ duration: 1, delay: 0.5, type: "spring", stiffness: 150, damping: 20 }}
@@ -485,7 +485,7 @@ export default function Landing() {
               <motion.img
                 src={PROFESSOR_AVATAR_URL}
                 alt="Prof. Pedro Braga"
-                className="relative w-64 h-80 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] 2xl:w-[440px] 2xl:h-[560px] object-contain drop-shadow-2xl"
+                className="relative w-48 h-64 sm:w-80 sm:h-[400px] md:w-96 md:h-[480px] 2xl:w-[440px] 2xl:h-[560px] object-contain drop-shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0, y: 40, filter: "blur(10px)" }}
                 animate={{ scale: 1, opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 1.2, delay: 0.8, type: "spring", stiffness: 80, damping: 20 }}
@@ -515,7 +515,7 @@ export default function Landing() {
       </div>
 
       {/* ═══════ CTA + LOGIN SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 2xl:py-32 landscape-compact-y px-4 sm:px-6 2xl:px-12" style={{ backgroundColor: "#0D1B2A" }}>
+      <div className="relative py-10 sm:py-24 2xl:py-32 landscape-compact-y px-4 sm:px-6 2xl:px-12" style={{ backgroundColor: "#0D1B2A" }}>
         {/* Divider decorativo */}
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.3), transparent)" }} />
 
@@ -535,10 +535,10 @@ export default function Landing() {
           </motion.div>
 
           {/* Login Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 2xl:gap-12">
             {/* Student Login Card */}
             <motion.div
-              className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
+              className="relative p-5 sm:p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
               style={{
                 backgroundColor: "rgba(247,148,29,0.04)",
                 borderColor: "rgba(247,148,29,0.2)",
@@ -551,13 +551,14 @@ export default function Landing() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#F7941D" }} />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
-                  <GraduationCap size={32} style={{ color: "#F7941D" }} />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                  <GraduationCap size={28} className="sm:hidden" style={{ color: "#F7941D" }} />
+                  <GraduationCap size={32} className="hidden sm:block" style={{ color: "#F7941D" }} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   Área do Aluno
                 </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm mb-4 sm:mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
                   Acesse o leaderboard, acompanhe seus Pontos Farmacológicos, veja o ranking da sua equipe e confira os avisos.
                 </p>
                 <div className="space-y-3">
@@ -587,7 +588,7 @@ export default function Landing() {
 
             {/* Professor Card */}
             <motion.div
-              className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
+              className="relative p-5 sm:p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
               style={{
                 backgroundColor: "rgba(74,74,74,0.08)",
                 borderColor: "rgba(255,255,255,0.1)",
@@ -600,13 +601,14 @@ export default function Landing() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5" style={{ backgroundColor: "#fff" }} />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                  <Shield size={32} style={{ color: "#ccc" }} />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                  <Shield size={28} className="sm:hidden" style={{ color: "#ccc" }} />
+                  <Shield size={32} className="hidden sm:block" style={{ color: "#ccc" }} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   Área do Professor
                 </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm mb-4 sm:mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
                   Gerencie equipes, atualize PF dos alunos, publique avisos, controle atividades e configure o sistema.
                 </p>
                 <div className="space-y-3">
@@ -626,7 +628,7 @@ export default function Landing() {
 
             {/* Admin Card */}
             <motion.div
-              className="relative p-8 2xl:p-10 rounded-2xl border overflow-hidden group sm:col-span-2 lg:col-span-1"
+              className="relative p-5 sm:p-8 2xl:p-10 rounded-2xl border overflow-hidden group sm:col-span-2 lg:col-span-1"
               style={{
                 backgroundColor: "rgba(139,92,246,0.06)",
                 borderColor: "rgba(139,92,246,0.2)",
@@ -639,13 +641,14 @@ export default function Landing() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#8B5CF6" }} />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(139,92,246,0.15)" }}>
-                  <Lock size={32} style={{ color: "#8B5CF6" }} />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(139,92,246,0.15)" }}>
+                  <Lock size={28} className="sm:hidden" style={{ color: "#8B5CF6" }} />
+                  <Lock size={32} className="hidden sm:block" style={{ color: "#8B5CF6" }} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   Administrador Geral
                 </h3>
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm mb-4 sm:mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
                   Acesso restrito. Gerencie turmas, importe alunos, configure equipes, códigos de convite e configurações do sistema.
                 </p>
                 <div className="space-y-3">
@@ -694,9 +697,9 @@ export default function Landing() {
             <img src={LOGO_URL} alt="Logo" className="w-8 h-8 object-contain" />
             <span className="text-sm font-semibold text-white/70">Conexão em Farmacologia</span>
           </div>
-          <div className="flex items-center gap-4 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
             <span>UNIRIO — Farmacologia I — 2026.1</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>Prof. Pedro Braga</span>
           </div>
         </div>

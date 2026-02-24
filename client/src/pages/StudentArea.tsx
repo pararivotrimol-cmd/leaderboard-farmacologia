@@ -157,7 +157,7 @@ export default function StudentArea() {
           borderColor: "rgba(255,255,255,0.1)",
         }}
       >
-        <div className="container mx-auto px-4 2xl:px-8 py-4 2xl:py-6">
+        <div className="container mx-auto px-3 sm:px-4 2xl:px-8 py-3 sm:py-4 2xl:py-6">
           <div className="flex items-center gap-3">
             <Link href="/leaderboard">
               <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
@@ -165,7 +165,7 @@ export default function StudentArea() {
               </button>
             </Link>
             <div>
-              <h1 className="text-xl 2xl:text-2xl font-bold text-white">Portal do Aluno</h1>
+              <h1 className="text-lg sm:text-xl 2xl:text-2xl font-bold text-white">Portal do Aluno</h1>
               <p className="text-sm text-white/60">{classData.name}</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function StudentArea() {
       />
 
       {/* Content */}
-      <div className="container mx-auto px-4 2xl:px-8 py-8 2xl:py-12">
+      <div className="container mx-auto px-3 sm:px-4 2xl:px-8 py-4 sm:py-8 2xl:py-12">
 
         {/* Notification Banner */}
         {memberId && (
@@ -192,15 +192,16 @@ export default function StudentArea() {
         {/* ═══ CRONOGRAMA ═══ */}
         {activeTab === "cronograma" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <Calendar size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Cronograma da Disciplina</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Calendar size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <Calendar size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Cronograma da Disciplina</h2>
             </div>
             <div className="space-y-2">
               {cronograma.map((item) => (
                 <div
                   key={item.semana}
-                  className="rounded-lg p-4 flex items-center gap-4"
+                  className="rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4"
                   style={{
                     backgroundColor: CARD_BG,
                     border: item.tipo === "Avaliação"
@@ -211,7 +212,7 @@ export default function StudentArea() {
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
                       backgroundColor: item.tipo === "Avaliação"
                         ? `${ORANGE}20`
@@ -254,25 +255,27 @@ export default function StudentArea() {
         {/* ═══ PRESENÇA ═══ */}
         {activeTab === "presenca" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <QrCode size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Presença</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <QrCode size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <QrCode size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Presença</h2>
             </div>
             <div
-              className="rounded-lg p-8 text-center"
+              className="rounded-lg p-5 sm:p-8 text-center"
               style={{
                 backgroundColor: CARD_BG,
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
-              <QrCode size={64} className="mx-auto mb-4" style={{ color: ORANGE }} />
-              <h3 className="text-xl font-bold text-white mb-2">Registrar Presença via QR Code</h3>
+              <QrCode size={48} className="sm:hidden mx-auto mb-4" style={{ color: ORANGE }} />
+              <QrCode size={64} className="hidden sm:block mx-auto mb-4" style={{ color: ORANGE }} />
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Registrar Presença via QR Code</h3>
               <p className="text-white/60 mb-6 max-w-md mx-auto">
                 Escaneie o QR Code projetado pelo professor para registrar sua presença na aula.
               </p>
               <button
                 onClick={() => setLocation("/attendance/check-in")}
-                className="px-8 py-3 rounded-lg font-bold text-white text-lg transition-all hover:scale-105"
+                className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-bold text-white text-base sm:text-lg transition-all hover:scale-105"
                 style={{ backgroundColor: ORANGE }}
               >
                 Escanear QR Code
@@ -284,12 +287,13 @@ export default function StudentArea() {
         {/* ═══ CÁLCULO DA MÉDIA ═══ */}
         {activeTab === "media" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <BarChart3 size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Cálculo da Média</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <BarChart3 size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <BarChart3 size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Cálculo da Média</h2>
             </div>
             <div
-              className="rounded-lg p-6 max-w-lg"
+              className="rounded-lg p-4 sm:p-6 max-w-lg"
               style={{
                 backgroundColor: CARD_BG,
                 border: "1px solid rgba(255,255,255,0.1)",
@@ -378,9 +382,10 @@ export default function StudentArea() {
         {/* ═══ MATERIAIS ═══ */}
         {activeTab === "materiais" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <BookOpen size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Materiais da Turma</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <BookOpen size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <BookOpen size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Materiais da Turma</h2>
             </div>
             {materialsData && materialsData.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -434,25 +439,27 @@ export default function StudentArea() {
         {/* ═══ JOGO ═══ */}
         {activeTab === "jogo" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <Gamepad2 size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Jogo — Caverna do Dragão Farmacológico</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Gamepad2 size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <Gamepad2 size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Jogo — Caverna do Dragão</h2>
             </div>
             <div
-              className="rounded-lg p-8 text-center"
+              className="rounded-lg p-5 sm:p-8 text-center"
               style={{
                 backgroundColor: CARD_BG,
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
-              <Gamepad2 size={64} className="mx-auto mb-4" style={{ color: ORANGE }} />
-              <h3 className="text-xl font-bold text-white mb-2">Caverna do Dragão Farmacológico</h3>
+              <Gamepad2 size={48} className="sm:hidden mx-auto mb-4" style={{ color: ORANGE }} />
+              <Gamepad2 size={64} className="hidden sm:block mx-auto mb-4" style={{ color: ORANGE }} />
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Caverna do Dragão Farmacológico</h3>
               <p className="text-white/60 mb-6 max-w-md mx-auto">
                 Explore a caverna, responda questões de farmacologia e derrote os bosses para ganhar PF!
               </p>
               <button
                 onClick={() => setLocation(`/game-portal/${classId}`)}
-                className="px-8 py-3 rounded-lg font-bold text-white text-lg transition-all hover:scale-105"
+                className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-bold text-white text-base sm:text-lg transition-all hover:scale-105"
                 style={{ backgroundColor: ORANGE }}
               >
                 Entrar no Jogo
@@ -464,15 +471,16 @@ export default function StudentArea() {
         {/* ═══ ATIVIDADES ═══ */}
         {activeTab === "atividades" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <Target size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Atividades</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Target size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <Target size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Atividades</h2>
             </div>
             <div className="space-y-3">
               {cronograma.filter(c => c.tipo !== "Aula Teórica").map((item) => (
                 <div
                   key={item.semana}
-                  className="rounded-lg p-4 flex items-center gap-4"
+                  className="rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4"
                   style={{
                     backgroundColor: CARD_BG,
                     border: item.tipo === "Avaliação"
@@ -481,7 +489,7 @@ export default function StudentArea() {
                   }}
                 >
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
                       backgroundColor: item.tipo === "Avaliação" ? `${ORANGE}20` : "rgba(16,185,129,0.15)",
                     }}
@@ -514,16 +522,17 @@ export default function StudentArea() {
         {/* ═══ EQUIPES ═══ */}
         {activeTab === "equipes" && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <Users size={24} style={{ color: ORANGE }} />
-              <h2 className="text-2xl font-bold text-white">Equipes de Seminário</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Users size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <Users size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Equipes de Seminário</h2>
             </div>
             {jigsawGroups && jigsawGroups.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {jigsawGroups.map((group: any) => (
                   <div
                     key={group.id}
-                    className="rounded-lg p-5"
+                    className="rounded-lg p-4 sm:p-5"
                     style={{
                       backgroundColor: CARD_BG,
                       border: "1px solid rgba(255,255,255,0.1)",

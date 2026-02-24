@@ -97,10 +97,10 @@ export default function StudentNotificationBanner({ memberId, classId }: Student
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-4 sm:mb-6">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 rounded-t-lg cursor-pointer"
+        className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-t-lg cursor-pointer"
         style={{
           backgroundColor: unreadCount > 0 ? "rgba(247, 148, 29, 0.12)" : "rgba(255, 255, 255, 0.03)",
           border: `1px solid ${unreadCount > 0 ? "rgba(247, 148, 29, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
@@ -109,7 +109,7 @@ export default function StudentNotificationBanner({ memberId, classId }: Student
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative">
             <Bell size={20} style={{ color: unreadCount > 0 ? ORANGE : "rgba(255,255,255,0.5)" }} />
             {unreadCount > 0 && (
@@ -171,7 +171,7 @@ export default function StudentNotificationBanner({ memberId, classId }: Student
             return (
               <div
                 key={notification.id}
-                className="px-4 py-3 flex items-start gap-3 transition-colors"
+                className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-start gap-2.5 sm:gap-3 transition-colors"
                 style={{
                   backgroundColor: isUnread ? priority.bg : "rgba(255,255,255,0.01)",
                   borderBottom: idx < visibleNotifications.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",

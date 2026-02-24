@@ -338,6 +338,27 @@
   }
 }
 
+/* ═══════ MOBILE-FIRST GLOBAL FIXES ═══════ */
+@media (max-width: 639px) {
+  /* Ensure touch targets are at least 44px */
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  .container {
+    overflow-x: hidden;
+  }
+
+  /* Better text sizing for small screens */
+  h1 { font-size: clamp(1.25rem, 5vw, 2rem); }
+  h2 { font-size: clamp(1.1rem, 4vw, 1.5rem); }
+
+  /* Reduce spacing on mobile */
+  .space-y-4 > * + * { margin-top: 0.75rem; }
+  .space-y-6 > * + * { margin-top: 1rem; }
+}
+
 /* ═══════ FULLSCREEN QR CODE PROJECTOR ═══════ */
 :fullscreen {
   background-color: #0A1628;

@@ -2031,3 +2031,13 @@
 - [x] Escrever 12 testes unitários para o router de notificações (149 testes totais passando)
 - [ ] Distribuir os 85 alunos nas 6 equipes de seminário (equipes criadas mas vazias)
 - [ ] Definir temas dos seminários para cada equipe
+
+## Ajuste de Responsividade Mobile (Feb 24, 2026)
+- [x] Auditar todas as páginas em viewport mobile (375px)
+- [x] Adicionar CSS global para mobile (overflow-x, font-size base, touch targets 44px)
+- [x] Corrigir Landing Page para mobile (hero avatar, CTA, login cards grid 1-col, footer)
+- [x] Corrigir StudentNavBar para mobile (menu hamburger, touch targets, notification bell)
+- [x] Corrigir Home/Leaderboard para mobile (hero title, stats row, tabs, podium, highlight banner, individual gauges, activities, timeline)
+- [x] Corrigir StudentArea para mobile (header padding, section headings, content spacing)
+- [x] Corrigir StudentLogin para mobile (header, form layout)
+- [x] Corrigir StudentNotificationBanner para mobile (padding, layout, dismiss buttons)
