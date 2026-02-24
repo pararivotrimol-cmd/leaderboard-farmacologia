@@ -343,13 +343,15 @@ export const appRouter = router({
     requestPasswordReset: publicProcedure
       .input(z.object({
         email: z.string().email(),
+        origin: z.string().optional(), // Frontend origin for building full URL
       }))
       .mutation(async ({ input }) => {
         // Check if teacher exists
-        const teacher = await db.getTeacherAccountByEmail(input.email);
+        const teacher = await db.getTeacherAccountByEmail(input.email.toLowerCase().trim());
         if (!teacher) {
           // Don't reveal if email exists or not for security
-          return { success: true, message: "Se o email existir, um link de redefinição será enviado" } as const;
+          // Return same success message to prevent email enumeration
+          return { success: true, message: "Se o email estiver cadastrado, um link de redefinição será gerado. Verifique com o coordenador do curso.", resetLink: null } as const;
         }
 
         // Generate reset token
@@ -364,20 +366,21 @@ export const appRouter = router({
           used: 0,
         });
 
-        // In a real system, send email here
-        // For now, we'll return the reset link that can be copied
-        const resetLink = `/professor/redefinir-senha?token=${resetToken}`;
+        // Build full reset link using origin from frontend
+        const baseUrl = input.origin || '';
+        const resetPath = `/professor/redefinir-senha?token=${resetToken}`;
+        const fullResetLink = baseUrl + resetPath;
 
-        // Notify owner with reset link
+        // Notify owner/coordinator with the full reset link
         sendNotificationAsync(
           "🔑 Solicitação de Redefinição de Senha",
-          `${teacher.name} (${teacher.email}) solicitou redefinição de senha.\n\nLink: ${resetLink}\n\nEnvie este link para o email do professor.`
+          `Professor(a) ${teacher.name} (${teacher.email}) solicitou redefinição de senha.\n\nLink completo: ${fullResetLink}\n\nEste link expira em 1 hora. Envie ao professor por email ou WhatsApp.`
         );
 
         return {
           success: true,
-          message: "Link de redefinição gerado. Verifique as notificações do sistema.",
-          resetLink, // Return link so it can be displayed to admin/coordinator
+          message: "Link de redefinição gerado com sucesso!",
+          resetLink: resetPath, // Return relative link for display
         } as const;
       }),
 

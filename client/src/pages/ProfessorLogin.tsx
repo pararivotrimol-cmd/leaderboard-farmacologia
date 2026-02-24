@@ -132,7 +132,8 @@ export default function ProfessorLogin() {
                     <p className="text-sm text-red-400 font-medium">{error}</p>
                     {error.includes("incorretos") && (
                       <p className="text-xs text-red-400/70 mt-1">
-                        Verifique seu email e senha. Se esqueceu a senha, clique em "Criar conta" para registrar uma nova.
+                        Verifique seu email e senha. Se esqueceu a senha, clique em{" "}
+                        <button type="button" onClick={() => navigate("/professor/esqueci-senha")} className="underline text-red-300 hover:text-red-200">Redefinir senha</button>.
                       </p>
                     )}
                   </div>
@@ -215,8 +216,19 @@ export default function ProfessorLogin() {
             </form>
 
             {/* Footer */}
-            <div className="mt-8 pt-6 border-t border-gray-700">
-              <p className="text-xs text-center mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <div className="mt-8 pt-6 border-t border-gray-700 space-y-3">
+              <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Esqueceu a senha?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/professor/esqueci-senha")}
+                  className="hover:underline font-semibold"
+                  style={{ color: ORANGE }}
+                >
+                  Redefinir senha
+                </button>
+              </p>
+              <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Não tem uma conta?{" "}
                 <button
                   type="button"
@@ -228,10 +240,14 @@ export default function ProfessorLogin() {
                 </button>
               </p>
               <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Problemas para fazer login?{" "}
-                <a href="/" className="hover:underline" style={{ color: ORANGE }}>
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                  className="hover:underline"
+                  style={{ color: ORANGE }}
+                >
                   Voltar para início
-                </a>
+                </button>
               </p>
             </div>
           </div>

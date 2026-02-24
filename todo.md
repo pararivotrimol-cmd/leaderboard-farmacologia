@@ -2062,3 +2062,14 @@
 - [x] Corrigir lógica de autenticação: ler localStorage sincronamente no useState initializer
 - [x] Corrigir condição de redirect: usar && em vez de || (ambos devem ser falsy)
 - [x] Testar fluxo completo: login → painel sem loop (149 testes passando)
+
+## Esqueci Minha Senha - Recuperação para Professores (Feb 24, 2026)
+- [x] Criar tabela passwordResetTokens no schema (já existia)
+- [x] Criar endpoint teacherAuth.requestPasswordReset (gera token + notifica coordenador)
+- [x] Criar endpoint teacherAuth.resetPassword (valida token + atualiza senha)
+- [x] Integrar envio de notificação ao coordenador com link completo
+- [x] Reescrever página TeacherForgotPassword com design dark theme
+- [x] Reescrever página TeacherResetPassword com indicador de força de senha
+- [x] Adicionar link "Esqueci minha senha" no ProfessorLogin
+- [x] Rotas já registradas no App.tsx (/professor/esqueci-senha, /professor/redefinir-senha)
+- [x] Escrever testes unitários para o fluxo de recuperação (15 testes, 164 total)
