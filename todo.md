@@ -2041,3 +2041,9 @@
 - [x] Corrigir StudentArea para mobile (header padding, section headings, content spacing)
 - [x] Corrigir StudentLogin para mobile (header, form layout)
 - [x] Corrigir StudentNotificationBanner para mobile (padding, layout, dismiss buttons)
+
+## Correção Vinheta de Entrada Mobile (Feb 24, 2026)
+- [x] Analisar componente da vinheta (IntroVignette) para overflow em mobile
+- [x] Corrigir imagem/vídeo para caber dentro do viewport do celular
+- [x] Garantir que não há desproporção ou fuga dos limites da tela
+- [x] Testar em viewport 375px (iPhone) e 390px (iPhone 14)

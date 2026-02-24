@@ -172,7 +172,8 @@ export default function Landing() {
       {/* ═══════ ANIMATED INTRO VINHETA ═══════ */}
       {showVinheta && !vinhetaComplete && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden"
+          style={{ width: "100vw", height: "100vh", maxWidth: "100vw", maxHeight: "100vh" }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
@@ -185,26 +186,35 @@ export default function Landing() {
             muted
             playsInline
             onEnded={handleVinhetaComplete}
-            className="w-full h-full object-cover"
-            style={{ backgroundColor: "#000" }}
+            className="w-full h-full object-contain"
+            style={{
+              backgroundColor: "#000",
+              maxWidth: "100vw",
+              maxHeight: "100vh",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <source src={INTRO_VIDEO_URL} type="video/mp4" />
           </video>
 
           {/* Subtle hint for users to tap to enable sound */}
           <motion.div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full z-40"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full z-40"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", maxWidth: "90vw" }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.5 }}
           >
-            <span className="text-white/80 text-xs sm:text-sm">🔊 Toque na tela para ativar o som</span>
+            <span className="text-white/80 text-[11px] sm:text-sm">🔊 Toque na tela para ativar o som</span>
           </motion.div>
 
           <motion.button
               onClick={handleVinhetaComplete}
-              className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
+              className="absolute top-3 right-3 sm:top-8 sm:right-8 px-4 sm:px-8 py-2 sm:py-4 rounded-lg font-bold text-sm sm:text-lg transition-all hover:scale-110 z-50 shadow-lg"
               style={{
                 backgroundColor: "#F7941D",
                 color: "#fff",
