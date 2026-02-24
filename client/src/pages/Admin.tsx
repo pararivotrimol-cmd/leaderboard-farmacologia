@@ -21,7 +21,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2, User
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -3254,9 +3254,11 @@ export default function Admin() {
           <a href="/leaderboard" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mr-3">
             <ArrowLeft size={12} /> Ranking
           </a>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{teacherName}</span>
-            <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a href="/professor/perfil" className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors">
+              <User size={12} /> <span className="hidden sm:inline">{teacherName || "Perfil"}</span><span className="sm:hidden">Perfil</span>
+            </a>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20">
               <LogOut size={12} /> Sair
             </button>
           </div>

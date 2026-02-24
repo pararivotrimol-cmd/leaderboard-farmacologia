@@ -2096,3 +2096,13 @@
 - [x] Identificar botões sem função: seções usavam password="authenticated" em vez da senha real
 - [x] Corrigir: Admin.tsx agora busca senha admin real via teacherAuth.getAdminPassword
 - [x] Adicionar estado de loading enquanto busca a senha admin
+
+## Página de Perfil do Professor (Feb 24, 2026)
+- [ ] Analisar schema teacherAccounts e planejar campos adicionais
+- [ ] Adicionar campos de perfil ao schema (telefone, bio, especialidade, lattes, foto)
+- [ ] Criar db helpers para getTeacherProfile e updateTeacherProfile
+- [ ] Criar endpoints tRPC teacherAuth.getProfile e teacherAuth.updateProfile
+- [ ] Criar página TeacherProfile.tsx com formulário de edição
+- [ ] Adicionar rota /professor/perfil no App.tsx
+- [ ] Integrar link de perfil no header do painel admin
+- [ ] Escrever testes unitários para os endpoints de perfil

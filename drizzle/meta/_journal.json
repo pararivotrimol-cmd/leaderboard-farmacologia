@@ -57,6 +57,13 @@
       "when": 1771925402944,
       "tag": "0007_mysterious_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771970375438,
+      "tag": "0008_thick_leopardon",
+      "breakpoints": true
     }
   ]
 }

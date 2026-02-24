@@ -314,6 +314,14 @@ export const teacherAccounts = mysqlTable("teacherAccounts", {
   // Session token for login persistence
   sessionToken: varchar("sessionToken", { length: 255 }),
   lastLoginAt: timestamp("lastLoginAt"),
+  // Profile fields
+  phone: varchar("phone", { length: 30 }),
+  bio: text("bio"),
+  specialty: varchar("specialty", { length: 200 }),
+  lattesUrl: varchar("lattesUrl", { length: 500 }),
+  photoUrl: text("photoUrl"),
+  department: varchar("department", { length: 200 }),
+  title: varchar("title", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

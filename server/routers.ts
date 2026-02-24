@@ -535,6 +535,97 @@ export const appRouter = router({
 
         return { success: true, message: "Super admin criado com sucesso" } as const;
       }),
+
+    // Get teacher profile
+    getProfile: publicProcedure
+      .input(z.object({ sessionToken: z.string() }))
+      .query(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, profile: null } as const;
+        const profile = await db.getTeacherProfile(teacher.id);
+        return { success: true, profile } as const;
+      }),
+
+    // Update teacher profile
+    updateProfile: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(200).optional(),
+        phone: z.string().max(30).nullable().optional(),
+        bio: z.string().max(2000).nullable().optional(),
+        specialty: z.string().max(200).nullable().optional(),
+        lattesUrl: z.string().max(500).nullable().optional(),
+        photoUrl: z.string().nullable().optional(),
+        department: z.string().max(200).nullable().optional(),
+        title: z.string().max(100).nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Sessão inválida" } as const;
+
+        const { sessionToken, ...updateData } = input;
+        // Remove undefined fields
+        const cleanData: Record<string, any> = {};
+        for (const [key, value] of Object.entries(updateData)) {
+          if (value !== undefined) cleanData[key] = value;
+        }
+
+        if (Object.keys(cleanData).length === 0) {
+          return { success: false, message: "Nenhum campo para atualizar" } as const;
+        }
+
+        await db.updateTeacherProfile(teacher.id, cleanData);
+        const updatedProfile = await db.getTeacherProfile(teacher.id);
+        return { success: true, message: "Perfil atualizado com sucesso", profile: updatedProfile } as const;
+      }),
+
+    // Change password (requires current password)
+    changePassword: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        currentPassword: z.string(),
+        newPassword: z.string().min(6, "Nova senha deve ter pelo menos 6 caracteres"),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Sessão inválida" } as const;
+
+        // Verify current password
+        const valid = await bcrypt.compare(input.currentPassword, teacher.passwordHash);
+        if (!valid) return { success: false, message: "Senha atual incorreta" } as const;
+
+        // Hash and update new password
+        const passwordHash = await bcrypt.hash(input.newPassword, 10);
+        await db.updateTeacherAccount(teacher.id, { passwordHash });
+
+        return { success: true, message: "Senha alterada com sucesso" } as const;
+      }),
+
+    // Upload profile photo (receives base64 data)
+    uploadPhoto: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        photoData: z.string(), // base64 encoded image
+        mimeType: z.string().default("image/jpeg"),
+      }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher) return { success: false, message: "Sessão inválida" } as const;
+
+        try {
+          const { storagePut } = await import("./storage");
+          const buffer = Buffer.from(input.photoData, "base64");
+          const ext = input.mimeType.includes("png") ? "png" : "jpg";
+          const randomSuffix = crypto.randomBytes(8).toString("hex");
+          const fileKey = `teacher-photos/${teacher.id}-${randomSuffix}.${ext}`;
+          const { url } = await storagePut(fileKey, buffer, input.mimeType);
+          await db.updateTeacherProfile(teacher.id, { photoUrl: url });
+          return { success: true, message: "Foto atualizada", photoUrl: url } as const;
+        } catch (error) {
+          console.error("[Profile] Photo upload error:", error);
+          return { success: false, message: "Erro ao enviar foto" } as const;
+        }
+      }),
   }),
 
   // ─── Super Admin Profile & Stats ───

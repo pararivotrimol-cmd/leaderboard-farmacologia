@@ -21,6 +21,7 @@ import TeacherForgotPassword from "./pages/TeacherForgotPassword";
 import TeacherResetPassword from "./pages/TeacherResetPassword";
 import SuperAdminSetup from "./pages/SuperAdminSetup";
 import SuperAdminProfile from "./pages/SuperAdminProfile";
+import TeacherProfile from "./pages/TeacherProfile";
 import ProfessorLogin from "./pages/ProfessorLogin";
 import Game from "@/pages/Game";
 import GameMain from "@/pages/GameMain";
@@ -90,6 +91,7 @@ function Router() {
       <Route path={"/performance"} component={PerformanceReport} />
       <Route path={"/grupos-jigsaw"} component={GruposJigsaw} />
       <Route path={"/cronograma"} component={Cronograma} />
+      <Route path={"/professor/perfil"} component={TeacherProfile} />
       <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />

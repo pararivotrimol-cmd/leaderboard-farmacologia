@@ -856,6 +856,48 @@ export async function deleteTeacherAccount(id: number) {
   await db.delete(teacherAccounts).where(eq(teacherAccounts.id, id));
 }
 
+/**
+ * Get teacher profile (public fields only, no passwordHash or sessionToken)
+ */
+export async function getTeacherProfile(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select({
+    id: teacherAccounts.id,
+    email: teacherAccounts.email,
+    name: teacherAccounts.name,
+    role: teacherAccounts.role,
+    phone: teacherAccounts.phone,
+    bio: teacherAccounts.bio,
+    specialty: teacherAccounts.specialty,
+    lattesUrl: teacherAccounts.lattesUrl,
+    photoUrl: teacherAccounts.photoUrl,
+    department: teacherAccounts.department,
+    title: teacherAccounts.title,
+    createdAt: teacherAccounts.createdAt,
+    lastLoginAt: teacherAccounts.lastLoginAt,
+  }).from(teacherAccounts).where(eq(teacherAccounts.id, id)).limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Update teacher profile fields
+ */
+export async function updateTeacherProfile(id: number, data: {
+  name?: string;
+  phone?: string | null;
+  bio?: string | null;
+  specialty?: string | null;
+  lattesUrl?: string | null;
+  photoUrl?: string | null;
+  department?: string | null;
+  title?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(teacherAccounts).set(data).where(eq(teacherAccounts.id, id));
+}
+
 // ─── Password Reset Tokens ───
 
 /**
