@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name, email, isActive, role, createdAt FROM teacherAccounts ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, email, isActive, role, createdAt FROM teacherAccounts ORDER BY id;",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "THAIANA DA CUNHA FERREIRA MENDES",
+      "email": "thaiana.mendes@unirio.br",
+      "isActive": "1",
+      "role": "coordenador",
+      "createdAt": "2026-02-18 22:12:51"
+    },
+    {
+      "id": "120005",
+      "name": "Prof. Pedro Alexandre",
+      "email": "pedro.alexandre@unirio.br",
+      "isActive": "1",
+      "role": "super_admin",
+      "createdAt": "2026-02-19 02:10:50"
+    },
+    {
+      "id": "210001",
+      "name": "Guilherme Rapozeiro França ",
+      "email": "guilherme.franca@unirio.br",
+      "isActive": "1",
+      "role": "coordenador",
+      "createdAt": "2026-02-19 12:46:49"
+    },
+    {
+      "id": "540001",
+      "name": "Monique Moss",
+      "email": "monique.moss@unirio.br",
+      "isActive": "1",
+      "role": "coordenador",
+      "createdAt": "2026-02-20 21:40:04"
+    },
+    {
+      "id": "990001",
+      "name": "Ingryd Sanches ",
+      "email": "ingryd.rebello@unirio.br",
+      "isActive": "1",
+      "role": "professor",
+      "createdAt": "2026-02-24 00:12:34"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tisActive\trole\tcreatedAt\n30001\tTHAIANA DA CUNHA FERREIRA MENDES\tthaiana.mendes@unirio.br\t1\tcoordenador\t2026-02-18 22:12:51\n120005\tProf. Pedro Alexandre\tpedro.alexandre@unirio.br\t1\tsuper_admin\t2026-02-19 02:10:50\n210001\tGuilherme Rapozeiro França \tguilherme.franca@unirio.br\t1\tcoordenador\t2026-02-19 12:46:49\n540001\tMonique Moss\tmonique.moss@unirio.br\t1\tcoordenador\t2026-02-20 21:40:04\n990001\tIngryd Sanches \tingryd.rebello@unirio.br\t1\tprofessor\t2026-02-24 00:12:34\n",
+  "stderr": "",
+  "execution_time_ms": 1046
+}

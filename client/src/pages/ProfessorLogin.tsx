@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const ORANGE = "#F7941D";
@@ -13,21 +13,27 @@ export default function ProfessorLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const loginMutation = trpc.teacherAuth.login.useMutation({
     onSuccess: (result) => {
       if (result.success) {
-        // Save session token to localStorage
+        // Save session token and teacher info to localStorage
         localStorage.setItem("teacherSessionToken", result.sessionToken);
+        localStorage.setItem("teacherName", result.teacher.name);
+        localStorage.setItem("teacherEmail", result.teacher.email);
+        setError("");
         toast.success("Login realizado com sucesso!");
-        // Redirect to home
-        setTimeout(() => navigate("/home"), 500);
+        // Redirect to admin panel
+        setTimeout(() => navigate("/admin/professor"), 500);
       } else {
+        setError(result.message || "Erro ao fazer login");
         toast.error(result.message || "Erro ao fazer login");
         setIsLoading(false);
       }
     },
     onError: (error) => {
+      setError("Erro ao conectar com o servidor. Tente novamente.");
       toast.error("Erro ao conectar com o servidor");
       console.error(error);
       setIsLoading(false);
@@ -36,14 +42,15 @@ export default function ProfessorLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos");
+      setError("Por favor, preencha todos os campos");
       return;
     }
 
     setIsLoading(true);
-    loginMutation.mutate({ email, password });
+    loginMutation.mutate({ email: email.toLowerCase().trim(), password });
   };
 
   return (
@@ -117,18 +124,33 @@ export default function ProfessorLogin() {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Error Message - Inline */}
+              {error && (
+                <div className="p-3 rounded-lg flex items-start gap-3" style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                  <XCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-400 font-medium">{error}</p>
+                    {error.includes("incorretos") && (
+                      <p className="text-xs text-red-400/70 mt-1">
+                        Verifique seu email e senha. Se esqueceu a senha, clique em "Criar conta" para registrar uma nova.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Email Institucional</label>
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   placeholder="seu.email@unirio.br"
                   className="w-full px-4 py-3 rounded-lg text-white text-sm"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.08)",
-                    border: `1px solid rgba(255,255,255,0.1)`,
+                    border: error ? `1px solid rgba(239,68,68,0.5)` : `1px solid rgba(255,255,255,0.1)`,
                   }}
                   disabled={isLoading}
                 />
@@ -141,12 +163,12 @@ export default function ProfessorLogin() {
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setError(""); }}
                     placeholder="••••••••"
                     className="w-full px-4 py-3 rounded-lg text-white text-sm"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.08)",
-                      border: `1px solid rgba(255,255,255,0.1)`,
+                      border: error ? `1px solid rgba(239,68,68,0.5)` : `1px solid rgba(255,255,255,0.1)`,
                     }}
                     disabled={isLoading}
                   />
@@ -165,7 +187,7 @@ export default function ProfessorLogin() {
               <div className="p-3 rounded-lg flex gap-3" style={{ backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
                 <AlertCircle size={18} style={{ color: ORANGE, flexShrink: 0 }} />
                 <p className="text-xs" style={{ color: ORANGE }}>
-                  Use suas credenciais institucionais UNIRIO (@unirio.br)
+                  Use suas credenciais institucionais UNIRIO (@unirio.br ou @edu.unirio.br)
                 </p>
               </div>
 

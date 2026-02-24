@@ -2047,3 +2047,12 @@
 - [x] Corrigir imagem/vídeo para caber dentro do viewport do celular
 - [x] Garantir que não há desproporção ou fuga dos limites da tela
 - [x] Testar em viewport 375px (iPhone) e 390px (iPhone 14)
+
+## Correção Acesso do Professor (Feb 24, 2026)
+- [x] Investigar validação de email no login do professor (domínios aceitos)
+- [x] Corrigir validação para aceitar emails @unirio.br e outros domínios institucionais
+- [x] Corrigir redirecionamento pós-login (404 após autenticação → /admin/professor)
+- [x] Garantir que o fluxo login → dashboard do professor funciona end-to-end
+- [x] Melhorar feedback visual de erro no login (mensagem inline + dica)
+- [x] Normalizar email (lowercase, trim) antes de enviar
+- [x] Testar registro de novo professor e login de professor existente
