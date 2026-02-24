@@ -13,7 +13,7 @@ import {
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
   Copy, ExternalLink, FlaskConical, ArrowLeft, UserPlus,
   Upload, Download, AlertCircle, GraduationCap as StudentIcon,
-  Database, Bell, FileText, Lock, Save, RotateCcw, Mail, Key
+  Database, Bell, FileText, Lock, Save, RotateCcw, Mail, Key, QrCode
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -92,6 +92,15 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.location.href = "/professor/qrcode"}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"
+              style={{ backgroundColor: "rgba(16,185,129,0.15)", color: "#10B981", border: "1px solid rgba(16,185,129,0.3)" }}
+              title="Projetar QR Code de Presença na TV"
+            >
+              <QrCode size={16} />
+              <span className="hidden sm:inline">QR Presença</span>
+            </button>
             <button
               onClick={() => window.location.href = "/admin/professor"}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105 text-sm"

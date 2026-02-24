@@ -199,7 +199,7 @@ export default function StudentLogin() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0A1628" }}>
+    <div className="min-h-screen landscape-min-h-auto flex flex-col" style={{ backgroundColor: "#0A1628" }}>
       {/* Header */}
       <div className="px-4 py-4">
         <div className="max-w-md 2xl:max-w-lg mx-auto flex items-center justify-between">

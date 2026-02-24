@@ -182,7 +182,7 @@ export default function Landing() {
       {vinhetaComplete && vinhetaAudioStopped && <BackgroundMusic />}
 
       {/* ═══════ HERO SECTION — Logo + Professor Pedro ═══════ */}
-      <div className="relative min-h-screen flex items-center overflow-hidden">
+      <div className="relative min-h-screen landscape-min-h-auto flex items-center overflow-hidden">
         {/* Animated radial gradient background */}
         <motion.div
           className="absolute inset-0"
@@ -221,7 +221,7 @@ export default function Landing() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 2xl:gap-20 items-center min-h-screen py-12 lg:py-0">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 2xl:gap-20 items-center min-h-screen landscape-min-h-auto py-12 lg:py-8 landscape-compact-y">
             
             {/* ═══ LEFT SIDE: Logo + Título + Logos Institucionais ═══ */}
             <motion.div
@@ -471,7 +471,7 @@ export default function Landing() {
       </div>
 
       {/* ═══════ CTA + LOGIN SECTION ═══════ */}
-      <div className="relative py-16 sm:py-24 2xl:py-32 px-4 sm:px-6 2xl:px-12" style={{ backgroundColor: "#0D1B2A" }}>
+      <div className="relative py-16 sm:py-24 2xl:py-32 landscape-compact-y px-4 sm:px-6 2xl:px-12" style={{ backgroundColor: "#0D1B2A" }}>
         {/* Divider decorativo */}
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(247,148,29,0.3), transparent)" }} />
 

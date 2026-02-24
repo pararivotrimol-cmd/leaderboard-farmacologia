@@ -47,7 +47,7 @@ export default function ProfessorLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row" style={{ backgroundColor: "#0A1628" }}>
+    <div className="min-h-screen landscape-min-h-auto flex flex-col lg:flex-row" style={{ backgroundColor: "#0A1628" }}>
       {/* Left Side - Branding (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 2xl:p-16" style={{ backgroundColor: "#0D1B2A" }}>
         <div className="text-center max-w-md 2xl:max-w-lg">

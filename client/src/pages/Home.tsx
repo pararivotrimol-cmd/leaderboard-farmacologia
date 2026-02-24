@@ -435,7 +435,7 @@ export default function Home() {
         {/* Orange accent line at top */}
         <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${ORANGE}, transparent 50%, ${ORANGE})` }} />
 
-        <div className="relative container pt-6 pb-10 sm:pt-10 sm:pb-14">
+        <div className="relative container pt-6 pb-10 sm:pt-10 sm:pb-14 landscape-compact-y">
           {/* Top Nav */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

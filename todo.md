@@ -1921,3 +1921,29 @@
 - [x] StudentLogin: escalar formulário e ícones para TV
 - [x] ProfessorLogin: escalar branding e formulário para TV
 - [x] StudentArea: escalar header e conteúdo para TV
+
+## Teste de Responsividade em Dispositivos
+- [x] Testar Landing page em resolução TV (1920x1080)
+- [x] Testar Landing page em resolução tablet landscape (1024x768)
+- [x] Testar Landing page em resolução tablet portrait (768x1024)
+- [x] Testar Leaderboard em resolução TV
+- [x] Testar Leaderboard em resolução tablet
+- [x] Corrigir problemas visuais encontrados
+
+## Sistema de Presença por QR Code
+- [x] Verificar schema existente de presença no banco de dados
+- [x] Criar/atualizar rotas tRPC para gerar sessão de presença com QR Code
+- [x] Criar/atualizar rotas tRPC para check-in do aluno via QR Code
+- [x] Implementar página do professor para gerar QR Code de presença (QRCodeProjector)
+- [x] Implementar página do aluno para escanear QR Code (AttendanceCheckIn melhorado)
+- [ ] Adicionar expiração automática do QR Code (ex: 10 minutos)
+- [x] Escrever testes para o sistema de presença por QR Code (26 testes)
+
+## Modo Landscape para Tablets
+- [x] Otimizar Landing page para tablet landscape (1024x768, 1366x1024)
+- [x] Otimizar Leaderboard para tablet landscape
+- [x] Otimizar GamePortal para tablet landscape
+- [x] Otimizar formulários de login para tablet landscape
+- [x] Adicionar CSS utilities para landscape (landscape-compact-y, landscape-min-h-auto, etc.)
+- [x] Adicionar CSS utilities para tablet portrait
+- [x] Adicionar fullscreen support para QR Code Projector

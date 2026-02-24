@@ -1,353 +1,547 @@
-import { useState, useRef, useEffect } from "react";
+/**
+ * Attendance Check-In — Conexão em Farmacologia
+ * Student scans QR Code projected by teacher to register attendance
+ * Supports: camera scan, URL params (from QR link), manual entry
+ */
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  QrCode, Camera, CheckCircle, XCircle, AlertCircle,
+  ArrowLeft, FlaskConical, Scan, Hash, LogOut
+} from "lucide-react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { QrCode, Camera, CheckCircle, AlertCircle } from "lucide-react";
+import { useStudentAuth, clearStudentSession } from "./StudentLogin";
 import jsQR from "jsqr";
 
-interface CheckInResult {
-  success: boolean;
-  message: string;
-  type: "success" | "error" | "warning";
-}
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
+const ORANGE = "#F7941D";
+const DARK_BG = "#0A1628";
+const CARD_BG = "#0D1B2A";
 
 export default function AttendanceCheckIn() {
-  const [mode, setMode] = useState<"camera" | "manual">("camera");
+  const [, setLocation] = useLocation();
+  const { student, isAuthenticated, isLoading, sessionToken } = useStudentAuth();
+
+  const [mode, setMode] = useState<"scan" | "manual">("scan");
   const [sessionId, setSessionId] = useState<string>("");
-  const [memberId, setMemberId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
-  const [result, setResult] = useState<CheckInResult | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [scanStatus, setScanStatus] = useState<"idle" | "scanning" | "found" | "error">("idle");
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Parse URL params (from QR code link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("s"); // sessionId
+    const c = params.get("c"); // classId
+    if (s) setSessionId(s);
+    if (c) setClassId(c);
+    // If both params present, auto-submit
+    if (s && c && student) {
+      handleAutoCheckIn(s, c);
+    }
+  }, [student]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // Save return URL
+      const returnUrl = window.location.pathname + window.location.search;
+      localStorage.setItem("attendance_return_url", returnUrl);
+      setLocation("/login-aluno");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
+
+  // Check-in mutation
   const checkInMutation = trpc.qrcode.checkIn.useMutation({
     onSuccess: () => {
       setResult({
         success: true,
-        message: "✅ Presença registrada com sucesso!",
-        type: "success",
+        message: "Presença registrada com sucesso!",
       });
-      // Limpar após 3 segundos
-      setTimeout(() => {
-        setResult(null);
-        setSessionId("");
-        setMemberId("");
-        setClassId("");
-      }, 3000);
+      stopCamera();
     },
     onError: (error) => {
       setResult({
         success: false,
-        message: `❌ Erro: ${error.message || "Erro ao registrar presença"}`,
-        type: "error",
+        message: error.message || "Erro ao registrar presença",
       });
     },
   });
 
-  // Iniciar câmera
+  // Auto check-in from URL params
+  const handleAutoCheckIn = async (sid: string, cid: string) => {
+    if (!student) return;
+    setIsSubmitting(true);
+    try {
+      await checkInMutation.mutateAsync({
+        sessionId: parseInt(sid),
+        memberId: student.memberId || 0,
+        classId: parseInt(cid),
+      });
+    } catch {
+      // Error handled by mutation
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Start camera
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 640 } },
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setScanning(true);
+        setScanStatus("scanning");
       }
-    } catch (err) {
-      alert("❌ Erro ao acessar câmera: " + (err as Error).message);
+    } catch {
+      setScanStatus("error");
     }
   };
 
-  // Parar câmera
-  const stopCamera = () => {
+  // Stop camera
+  const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
-      setScanning(false);
+      videoRef.current.srcObject = null;
     }
-  };
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    setScanning(false);
+  }, []);
 
-  // Escanear QR Code
-  const scanQRCode = () => {
+  // Scan QR code from video frame
+  const scanFrame = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
-
+    const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx || video.videoWidth === 0) return;
 
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
 
-    context.drawImage(videoRef.current, 0, 0);
-
-    const imageData = context.getImageData(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-    if (code) {
+    if (code && code.data) {
+      try {
+        // Try parsing as URL first (from our QR projector)
+        const url = new URL(code.data);
+        const sid = url.searchParams.get("s");
+        const cid = url.searchParams.get("c");
+        if (sid && cid) {
+          setScanStatus("found");
+          setSessionId(sid);
+          setClassId(cid);
+          stopCamera();
+          // Auto-submit
+          if (student) {
+            handleAutoCheckIn(sid, cid);
+          }
+          return;
+        }
+      } catch {
+        // Not a URL, try JSON
+      }
+
       try {
         const data = JSON.parse(code.data);
-        setSessionId(data.sessionId);
-        setClassId(data.classId);
-        stopCamera();
-        alert("✅ QR Code lido com sucesso!");
-      } catch (err) {
-        console.error("Erro ao parsear QR Code:", err);
+        if (data.sessionId && data.classId) {
+          setScanStatus("found");
+          setSessionId(String(data.sessionId));
+          setClassId(String(data.classId));
+          stopCamera();
+          if (student) {
+            handleAutoCheckIn(String(data.sessionId), String(data.classId));
+          }
+          return;
+        }
+      } catch {
+        // Not valid JSON either
       }
     }
-  };
+  }, [student, stopCamera]);
 
-  // Loop de escaneamento
+  // Scanning loop
   useEffect(() => {
     if (!scanning) return;
+    scanIntervalRef.current = setInterval(scanFrame, 300);
+    return () => {
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+    };
+  }, [scanning, scanFrame]);
 
-    const interval = setInterval(scanQRCode, 500);
-    return () => clearInterval(interval);
-  }, [scanning]);
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => stopCamera();
+  }, [stopCamera]);
 
-  const handleCheckIn = async () => {
-    if (!sessionId || !memberId || !classId) {
-      alert("❌ Preencha todos os campos");
-      return;
+  // Manual check-in
+  const handleManualCheckIn = async () => {
+    if (!sessionId || !classId || !student) return;
+    setIsSubmitting(true);
+    try {
+      await checkInMutation.mutateAsync({
+        sessionId: parseInt(sessionId),
+        memberId: student.memberId || 0,
+        classId: parseInt(classId),
+      });
+    } catch {
+      // Error handled by mutation
+    } finally {
+      setIsSubmitting(false);
     }
-
-    await checkInMutation.mutateAsync({
-      sessionId: parseInt(sessionId),
-      memberId: parseInt(memberId),
-      classId: parseInt(classId),
-    });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+          <FlaskConical size={40} style={{ color: ORANGE }} />
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <QrCode size={32} className="text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">
-              Registro de Presença
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            Escaneie o QR Code ou insira os dados manualmente
-          </p>
-        </div>
-
-        {/* Mode selector */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={mode === "camera" ? "default" : "outline"}
+    <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
+      {/* Header */}
+      <div className="px-4 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: CARD_BG }}>
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <button
             onClick={() => {
-              setMode("camera");
-              setResult(null);
-            }}
-            className="flex-1 flex items-center justify-center gap-2"
-          >
-            <Camera size={18} />
-            Câmera
-          </Button>
-          <Button
-            variant={mode === "manual" ? "default" : "outline"}
-            onClick={() => {
-              setMode("manual");
               stopCamera();
-              setResult(null);
+              setLocation("/leaderboard");
             }}
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex items-center gap-2 text-sm transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}
           >
-            <QrCode size={18} />
-            Manual
-          </Button>
-        </div>
-
-        {/* Result message */}
-        {result && (
-          <Card
-            className={`p-4 mb-6 flex items-center gap-3 ${
-              result.type === "success"
-                ? "bg-green-50 border-green-200"
-                : "bg-red-50 border-red-200"
-            }`}
-          >
-            {result.type === "success" ? (
-              <CheckCircle className="text-green-600" size={24} />
-            ) : (
-              <AlertCircle className="text-red-600" size={24} />
-            )}
-            <span
-              className={
-                result.type === "success" ? "text-green-700" : "text-red-700"
-              }
-            >
-              {result.message}
+            <ArrowLeft size={16} />
+            Voltar
+          </button>
+          <div className="flex items-center gap-2">
+            <img src={LOGO_URL} alt="Logo" className="w-7 h-7 object-contain" />
+            <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Presença QR
             </span>
-          </Card>
+          </div>
+          <button
+            onClick={() => {
+              stopCamera();
+              clearStudentSession();
+              setLocation("/");
+            }}
+            className="flex items-center gap-1 text-xs transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)" }}
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 py-6">
+        {/* Student Info */}
+        {student && (
+          <motion.div
+            className="p-4 rounded-lg mb-6 flex items-center gap-3"
+            style={{ backgroundColor: CARD_BG, border: "1px solid rgba(255,255,255,0.08)" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+              {student.teamEmoji || "🧪"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white truncate">{student.memberName}</div>
+              <div className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {student.teamName} • {student.email}
+              </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* Camera mode */}
-        {mode === "camera" && (
-          <Card className="p-6 bg-card border-border">
-            {!scanning ? (
-              <div className="text-center">
-                <Camera size={48} className="mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">
-                  Clique para ativar a câmera e escanear o QR Code
-                </p>
-                <Button
-                  onClick={startCamera}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        {/* Result Display */}
+        <AnimatePresence>
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="rounded-xl p-6 mb-6 text-center"
+              style={{
+                backgroundColor: result.success ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                border: `1px solid ${result.success ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+              }}
+            >
+              {result.success ? (
+                <CheckCircle size={56} className="mx-auto mb-3" style={{ color: "#22c55e" }} />
+              ) : (
+                <XCircle size={56} className="mx-auto mb-3" style={{ color: "#ef4444" }} />
+              )}
+              <p className="text-lg font-bold text-white mb-1">
+                {result.success ? "Presença Registrada!" : "Erro no Check-in"}
+              </p>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+                {result.message}
+              </p>
+              {result.success && (
+                <button
+                  onClick={() => setLocation("/leaderboard")}
+                  className="mt-4 px-6 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: ORANGE }}
                 >
-                  Ativar Câmera
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative bg-black rounded-lg overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full aspect-square object-cover"
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={stopCamera}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Parar
-                  </Button>
-                  <Button
-                    onClick={scanQRCode}
-                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    Escanear Agora
-                  </Button>
-                </div>
+                  Voltar ao Leaderboard
+                </button>
+              )}
+              {!result.success && (
+                <button
+                  onClick={() => {
+                    setResult(null);
+                    setScanStatus("idle");
+                  }}
+                  className="mt-4 px-6 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+                >
+                  Tentar Novamente
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                {/* Dados do QR Code lido */}
-                {sessionId && (
-                  <div className="space-y-3 pt-4 border-t border-border">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 text-foreground">
-                        ID da Sessão
-                      </label>
-                      <Input
-                        value={sessionId}
-                        readOnly
-                        className="bg-background text-foreground border-border"
-                      />
+        {/* Main Content - only show if no result */}
+        {!result && (
+          <>
+            {/* Mode Tabs */}
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => {
+                  setMode("scan");
+                  setScanStatus("idle");
+                }}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: mode === "scan" ? ORANGE : "rgba(255,255,255,0.06)",
+                  color: mode === "scan" ? "white" : "rgba(255,255,255,0.5)",
+                }}
+              >
+                <Camera size={16} />
+                Escanear QR
+              </button>
+              <button
+                onClick={() => {
+                  setMode("manual");
+                  stopCamera();
+                  setScanStatus("idle");
+                }}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: mode === "manual" ? ORANGE : "rgba(255,255,255,0.06)",
+                  color: mode === "manual" ? "white" : "rgba(255,255,255,0.5)",
+                }}
+              >
+                <Hash size={16} />
+                Manual
+              </button>
+            </div>
+
+            {/* Camera Scanner */}
+            {mode === "scan" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl overflow-hidden"
+                style={{ backgroundColor: CARD_BG, border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                {!scanning ? (
+                  <div className="p-8 text-center">
+                    <div className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                      <Scan size={36} style={{ color: ORANGE }} />
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 text-foreground">
-                        ID da Turma
-                      </label>
-                      <Input
-                        value={classId}
-                        readOnly
-                        className="bg-background text-foreground border-border"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 text-foreground">
-                        ID do Aluno (Matrícula)
-                      </label>
-                      <Input
-                        type="number"
-                        value={memberId}
-                        onChange={(e) => setMemberId(e.target.value)}
-                        placeholder="Digite sua matrícula"
-                        className="bg-background text-foreground border-border"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleCheckIn}
-                      disabled={checkInMutation.isPending}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    <h3 className="text-lg font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                      Escanear QR Code
+                    </h3>
+                    <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      Aponte a câmera para o QR Code projetado na TV
+                    </p>
+                    <button
+                      onClick={startCamera}
+                      className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-3 transition-all hover:opacity-90"
+                      style={{ backgroundColor: ORANGE }}
                     >
-                      {checkInMutation.isPending
-                        ? "Registrando..."
-                        : "Registrar Presença"}
-                    </Button>
+                      <Camera size={20} />
+                      Ativar Câmera
+                    </button>
+                    {scanStatus === "error" && (
+                      <p className="text-xs mt-3" style={{ color: "#ef4444" }}>
+                        Erro ao acessar a câmera. Verifique as permissões do navegador.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    {/* Camera viewfinder */}
+                    <div className="relative">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full aspect-square object-cover"
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+
+                      {/* Scan overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-56 h-56 relative">
+                          {/* Corner brackets */}
+                          <div className="absolute top-0 left-0 w-8 h-8 border-t-3 border-l-3 rounded-tl-lg" style={{ borderColor: ORANGE }} />
+                          <div className="absolute top-0 right-0 w-8 h-8 border-t-3 border-r-3 rounded-tr-lg" style={{ borderColor: ORANGE }} />
+                          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-3 border-l-3 rounded-bl-lg" style={{ borderColor: ORANGE }} />
+                          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-3 border-r-3 rounded-br-lg" style={{ borderColor: ORANGE }} />
+
+                          {/* Scanning line animation */}
+                          <motion.div
+                            className="absolute left-2 right-2 h-0.5"
+                            style={{ backgroundColor: ORANGE, opacity: 0.8 }}
+                            animate={{ top: ["10%", "90%", "10%"] }}
+                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Status bar */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.8))" }}>
+                        <div className="flex items-center justify-center gap-2">
+                          <motion.div
+                            animate={{ opacity: [1, 0.3, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            <QrCode size={16} style={{ color: ORANGE }} />
+                          </motion.div>
+                          <span className="text-xs text-white font-medium">Procurando QR Code...</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stop button */}
+                    <div className="p-4">
+                      <button
+                        onClick={stopCamera}
+                        className="w-full py-3 rounded-xl text-sm font-medium text-white transition-colors"
+                        style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
-          </Card>
+
+            {/* Manual Entry */}
+            {mode === "manual" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl p-6"
+                style={{ backgroundColor: CARD_BG, border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(247,148,29,0.15)" }}>
+                    <Hash size={24} style={{ color: ORANGE }} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                      Entrada Manual
+                    </h3>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      Insira os dados fornecidos pelo professor
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      ID da Sessão
+                    </label>
+                    <input
+                      type="number"
+                      value={sessionId}
+                      onChange={(e) => setSessionId(e.target.value)}
+                      placeholder="Ex: 1"
+                      className="w-full px-4 py-3 rounded-lg text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      ID da Turma
+                    </label>
+                    <input
+                      type="number"
+                      value={classId}
+                      onChange={(e) => setClassId(e.target.value)}
+                      placeholder="Ex: 1"
+                      className="w-full px-4 py-3 rounded-lg text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleManualCheckIn}
+                    disabled={isSubmitting || !sessionId || !classId}
+                    className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-3 transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{ backgroundColor: ORANGE }}
+                  >
+                    {isSubmitting ? (
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                        <FlaskConical size={20} />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <CheckCircle size={20} />
+                        Registrar Presença
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Info */}
+            <div className="mt-6 p-4 rounded-xl" style={{ backgroundColor: "rgba(247,148,29,0.06)", border: "1px solid rgba(247,148,29,0.15)" }}>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <strong style={{ color: ORANGE }}>Como funciona:</strong> O professor projeta um QR Code na TV da sala.
+                Escaneie com a câmera ou insira os dados manualmente. A presença é registrada automaticamente
+                durante o horário de aula.
+              </p>
+            </div>
+          </>
         )}
-
-        {/* Manual mode */}
-        {mode === "manual" && (
-          <Card className="p-6 bg-card border-border space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-foreground">
-                ID da Sessão
-              </label>
-              <Input
-                type="number"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Digite o ID da sessão"
-                className="bg-background text-foreground border-border"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-foreground">
-                ID da Turma
-              </label>
-              <Input
-                type="number"
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
-                placeholder="Digite o ID da turma"
-                className="bg-background text-foreground border-border"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-foreground">
-                ID do Aluno (Matrícula)
-              </label>
-              <Input
-                type="number"
-                value={memberId}
-                onChange={(e) => setMemberId(e.target.value)}
-                placeholder="Digite sua matrícula"
-                className="bg-background text-foreground border-border"
-              />
-            </div>
-
-            <Button
-              onClick={handleCheckIn}
-              disabled={checkInMutation.isPending}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {checkInMutation.isPending
-                ? "Registrando..."
-                : "Registrar Presença"}
-            </Button>
-          </Card>
-        )}
-
-        {/* Info */}
-        <Card className="mt-6 p-4 bg-blue-50 border-blue-200">
-          <p className="text-sm text-blue-700">
-            <strong>ℹ️ Informação:</strong> Você pode escanear o QR Code fornecido
-            pelo professor ou inserir os dados manualmente. O registro será feito
-            apenas durante o horário de aula.
-          </p>
-        </Card>
       </div>
     </div>
   );

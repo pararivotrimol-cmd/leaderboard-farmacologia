@@ -49,6 +49,7 @@ import GameMission from "./pages/GameMission";
 import GameHintsShop from "./pages/GameHintsShop";
 import AdminGamePanel from "./pages/AdminGamePanel";
 import GameAchievements from "./pages/GameAchievements";
+import QRCodeProjector from "./pages/QRCodeProjector";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -63,6 +64,7 @@ function Router() {
       <Route path={"/admin/attendance"} component={AdminAttendance} />
       <Route path={"/admin/attendance/dashboard"} component={AttendanceDashboard} />
       <Route path={"/attendance/check-in"} component={AttendanceCheckIn} />
+      <Route path={"/professor/qrcode"} component={QRCodeProjector} />
       <Route path={"/professor/dashboard"} component={TeacherDashboard} />
       <Route path={"/admin/professor"} component={Admin} />
       <Route path={"/professor/questoes"} component={QuestionsManager} />

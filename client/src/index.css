@@ -277,3 +277,74 @@
   .tv\:rounded-3xl { border-radius: 1.5rem; }
   .tv\:max-w-8xl { max-width: 88rem; }
 }
+
+/* ═══════ TABLET LANDSCAPE OPTIMIZATIONS ═══════ */
+/* iPad landscape (1024x768), iPad Pro landscape (1366x1024), Galaxy Tab (1280x800) */
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: landscape) {
+  /* Reduce vertical spacing to fit landscape viewport */
+  .landscape-compact-y {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .landscape-compact-gap {
+    gap: 0.5rem !important;
+  }
+
+  /* Smaller hero sections in landscape */
+  .landscape-hero-sm {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .landscape-hero-sm h1 {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+
+  /* Two-column layout for forms in landscape */
+  .landscape-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Reduce card padding in landscape */
+  .landscape-card-compact {
+    padding: 0.75rem !important;
+  }
+
+  /* Reduce margins */
+  .landscape-my-2 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Reduce min-height for landscape */
+  .landscape-min-h-auto {
+    min-height: auto !important;
+  }
+}
+
+/* ═══════ TABLET PORTRAIT OPTIMIZATIONS ═══════ */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .portrait-tablet-text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .portrait-tablet-p-6 {
+    padding: 1.5rem;
+  }
+}
+
+/* ═══════ FULLSCREEN QR CODE PROJECTOR ═══════ */
+:fullscreen {
+  background-color: #0A1628;
+}
+
+:fullscreen .qr-projector-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
