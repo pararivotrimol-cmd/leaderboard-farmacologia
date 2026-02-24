@@ -1771,7 +1771,7 @@
 - [ ] Mover seção Professor Pedro para lado esquerdo
 - [ ] Mover login e YouTube para lado direito
 - [ ] Ajustar responsividade mobile
-- [ ] Testar layout em diferentes resoluções
+- [x] Testar layout em diferentes resoluções
 
 ## Correção Números YouTube (Feb 22, 2026 - Concluído)
 - [x] Pesquisar números reais de inscritos do canal (4.31K)
@@ -2106,3 +2106,11 @@
 - [ ] Adicionar rota /professor/perfil no App.tsx
 - [ ] Integrar link de perfil no header do painel admin
 - [ ] Escrever testes unitários para os endpoints de perfil
+
+
+## Reorganização da Navegação do Portal do Aluno (Feb 24, 2026)
+- [x] Mover botões da barra superior (Cronograma, Presença, Média, Materiais, Jogo, Atividades, Equipes) para abaixo do quadro geral de pontuação
+- [x] Unificar com os botões existentes (Meu Progresso, Avisos, Presença, Dashboard, YouTube)
+- [x] Remover ou simplificar a barra de navegação superior
+- [x] Verificar responsividade mobile
+- [x] Testar layout em diferentes resoluções

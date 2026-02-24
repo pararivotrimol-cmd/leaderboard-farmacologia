@@ -8,10 +8,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
   Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
-  ArrowLeft, BookOpen, ClipboardList, LogOut, MapPin, BarChart3
+  ArrowLeft, BookOpen, ClipboardList, LogOut, MapPin, BarChart3,
+  Calendar, QrCode, Gamepad2, Calculator
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import StudentNavBar from "@/components/StudentNavBar";
 
@@ -279,6 +280,7 @@ export default function Home() {
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
   const { logout } = useAuth();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const hasSeenVinheta = localStorage.getItem("hasSeenVinheta");
@@ -472,36 +474,7 @@ export default function Home() {
               <p className="mt-2 text-sm sm:text-base 2xl:text-lg max-w-xl 2xl:max-w-2xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 flex-wrap">
-                <Link href="/meu-progresso">
-                    <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
-                    <Users size={14} />
-                    Meu Progresso
-                  </span>
-                </Link>
-                <Link href="/avisos">
-                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <Bell size={14} />
-                    Avisos
-                  </span>
-                </Link>
-                <Link href="/presenca">
-                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <MapPin size={14} />
-                    Presença
-                  </span>
-                </Link>
-                <Link href="/dashboard">
-                  <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                    <BarChart3 size={14} />
-                    Dashboard
-                  </span>
-                </Link>
-                <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <Youtube size={15} />
-                  YouTube
-                </a>
-              </div>
+
             </div>
             <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-40 h-40 sm:w-52 sm:h-52 2xl:w-64 2xl:h-64 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
@@ -530,6 +503,87 @@ export default function Home() {
                 <div className="text-[11px] 2xl:text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{stat.sub}</div>
               </motion.div>
             ))}
+          </div>
+
+          {/* Navigation Buttons — All unified below the scoring section */}
+          <div className="mt-6 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {/* Page navigation buttons (formerly in top navbar) */}
+            <Link href="/cronograma">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
+                <Calendar size={14} />
+                Cronograma
+              </span>
+            </Link>
+            <Link href="/attendance/check-in">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <QrCode size={14} />
+                Presença
+              </span>
+            </Link>
+            <button onClick={() => setActiveTab("calculator")}>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${activeTab === "calculator" ? "" : ""}`} style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }}>
+                <Calculator size={14} />
+                Média
+              </span>
+            </button>
+            <Link href="/materiais">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <BookOpen size={14} />
+                Materiais
+              </span>
+            </Link>
+            <Link href="/game/avatar-select">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
+                <Gamepad2 size={14} />
+                Jogo
+                <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              </span>
+            </Link>
+            <button onClick={() => setActiveTab("activities")}>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors`} style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }}>
+                <Target size={14} />
+                Atividades
+              </span>
+            </button>
+            <button onClick={() => setActiveTab("teams")}>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors`} style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }}>
+                <Users size={14} />
+                Equipes
+              </span>
+            </button>
+
+            {/* Separator */}
+            <span className="hidden sm:inline text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>|</span>
+
+            {/* Original action buttons */}
+            <Link href="/meu-progresso">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <TrendingUp size={14} />
+                Meu Progresso
+              </span>
+            </Link>
+            <Link href="/avisos">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <Bell size={14} />
+                Avisos
+              </span>
+            </Link>
+            <Link href="/dashboard">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <BarChart3 size={14} />
+                Dashboard
+              </span>
+            </Link>
+            <button onClick={() => setActiveTab("rules")}>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors`} style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }}>
+                <ClipboardList size={14} />
+                Regras
+              </span>
+            </button>
+            <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <Youtube size={15} />
+              YouTube
+            </a>
           </div>
         </div>
       </div>

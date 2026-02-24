@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Calendar, QrCode, BarChart3, BookOpen, Gamepad2,
-  Target, Users, Menu, X, LogOut, Home
+  Menu, X, LogOut, Home
 } from "lucide-react";
 import { NotificationBell } from "./StudentNotificationBanner";
 
-const ORANGE = "#F7941D";
 const DARK_BG = "#0A1628";
 
 interface StudentNavBarProps {
@@ -18,40 +16,14 @@ interface StudentNavBarProps {
   memberId?: number | null;
 }
 
-const NAV_ITEMS = [
-  { key: "cronograma", label: "Cronograma", icon: <Calendar size={16} /> },
-  { key: "presenca", label: "Presença", icon: <QrCode size={16} /> },
-  { key: "media", label: "Média", icon: <BarChart3 size={16} /> },
-  { key: "materiais", label: "Materiais", icon: <BookOpen size={16} /> },
-  { key: "jogo", label: "Jogo", icon: <Gamepad2 size={16} />, highlight: true },
-  { key: "atividades", label: "Atividades", icon: <Target size={16} /> },
-  { key: "equipes", label: "Equipes", icon: <Users size={16} /> },
-];
-
 export default function StudentNavBar({
-  activeTab = "cronograma",
-  onTabChange,
-  selectedClassId,
-  onClassChange,
-  showClassSelector = true,
   memberId,
 }: StudentNavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
 
-  const handleTabClick = (key: string) => {
-    if (key === "jogo") {
-      setLocation("/game/avatar-select");
-    } else if (key === "presenca") {
-      setLocation("/attendance/check-in");
-    } else {
-      onTabChange?.(key);
-    }
-  };
-
   return (
     <>
-      {/* Desktop Navigation */}
       <nav
         className="sticky top-0 z-40 border-b"
         style={{
@@ -68,39 +40,10 @@ export default function StudentNavBar({
                 alt="Logo"
                 className="h-8 w-auto"
               />
-              <span className="hidden sm:inline font-bold text-white text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <span className="font-bold text-white text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Farmacologia
               </span>
             </Link>
-
-            {/* Desktop Tabs */}
-            <div className="hidden md:flex gap-1 2xl:gap-2 p-1 2xl:p-1.5 rounded-lg flex-wrap" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-              {NAV_ITEMS.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => handleTabClick(item.key)}
-                  className={`flex items-center gap-1.5 px-3 2xl:px-4 py-1.5 2xl:py-2 rounded-md text-xs 2xl:text-sm font-medium transition-all whitespace-nowrap ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60 animate-pulse" : ""}`}
-                  style={{
-                    backgroundColor: activeTab === item.key
-                      ? ORANGE
-                      : item.highlight
-                        ? "rgba(16, 185, 129, 0.15)"
-                        : "transparent",
-                    color: activeTab === item.key
-                      ? "#fff"
-                      : item.highlight
-                        ? "#34d399"
-                        : "rgba(255,255,255,0.6)",
-                  }}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                  {item.highlight && activeTab !== item.key && (
-                    <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  )}
-                </button>
-              ))}
-            </div>
 
             {/* Right Actions */}
             <div className="flex items-center gap-2 ml-auto">
@@ -136,20 +79,21 @@ export default function StudentNavBar({
                   sessionStorage.clear();
                   setLocation("/");
                 }}
-                className="p-1.5 rounded-lg transition-colors hidden sm:flex items-center gap-1"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.05)",
                   color: "rgba(255,255,255,0.6)",
                 }}
                 title="Sair"
               >
-                <LogOut size={16} />
+                <LogOut size={14} />
+                <span>Sair</span>
               </button>
 
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-1.5 rounded-lg"
+                className="sm:hidden p-1.5 rounded-lg"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.05)",
                   color: "rgba(255,255,255,0.6)",
@@ -162,38 +106,7 @@ export default function StudentNavBar({
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-3 pt-3 border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {NAV_ITEMS.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      handleTabClick(item.key);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-2.5 rounded-md text-xs font-medium transition-all min-h-[44px] ${item.highlight && activeTab !== item.key ? "ring-1 ring-emerald-400/60" : ""}`}
-                    style={{
-                      backgroundColor: activeTab === item.key
-                        ? ORANGE
-                        : item.highlight
-                          ? "rgba(16, 185, 129, 0.15)"
-                          : "rgba(255,255,255,0.05)",
-                      color: activeTab === item.key
-                        ? "#fff"
-                        : item.highlight
-                          ? "#34d399"
-                          : "rgba(255,255,255,0.6)",
-                    }}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                    {item.highlight && activeTab !== item.key && (
-                      <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
+            <div className="sm:hidden mt-3 pt-3 border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
               <div className="flex gap-2">
                 <Link
                   href="/leaderboard"
