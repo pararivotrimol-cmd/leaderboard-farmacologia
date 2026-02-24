@@ -20,6 +20,7 @@ import { questionsRouter } from "./routers/questions";
 import { resultsRouter } from "./routers/results";
 import { gameRouter } from "./routers/game";
 import { qrcodeRouter } from "./routers/qrcode";
+import { studentNotificationsRouter } from "./routers/student-notifications";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -134,6 +135,7 @@ export const appRouter = router({
   results: resultsRouter,
   game: gameRouter,
   qrcode: qrcodeRouter,
+  studentNotifications: studentNotificationsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

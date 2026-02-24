@@ -2010,3 +2010,24 @@
 - [x] Restaurar área de login do Admin Geral com email/senha na landing page
 - [x] Login redireciona para /super-admin/login (email + senha)
 - [x] Manter fluxo como nos checkpoints anteriores (SuperAdminLogin → AdminDashboard)
+
+## Notificação de Alocação em Equipe
+- [ ] Criar tabela de notificações no banco de dados (ou usar existente)
+- [ ] Implementar backend para gerar notificação quando aluno é alocado em equipe
+- [ ] Implementar componente de notificação no portal do aluno
+- [ ] Mostrar banner/toast com informação da equipe alocada
+- [ ] Permitir marcar notificação como lida
+
+## Sistema de Notificações Individuais para Alunos
+- [x] Criar tabela studentNotifications no schema (memberId, classId, title, message, type, priority, isRead, isDismissed)
+- [x] Executar migração do banco (pnpm db:push)
+- [x] Criar funções helper no db.ts para CRUD de notificações individuais
+- [x] Criar router tRPC studentNotifications (getMyNotifications, getUnreadCount, markAsRead, markAllAsRead, dismiss, notifyTeamAllocation, notifyGroupMembers)
+- [x] Integrar notificação automática no fluxo de alocação de equipes (jigsaw-complete: addMember expert + home)
+- [x] Criar componente StudentNotificationBanner com banner expansível, badges de prioridade, dismiss/mark-as-read
+- [x] Criar componente NotificationBell para navbar com badge de contagem
+- [x] Integrar banner de notificações no StudentArea (portal do aluno)
+- [x] Integrar NotificationBell no StudentNavBar
+- [x] Escrever 12 testes unitários para o router de notificações (149 testes totais passando)
+- [ ] Distribuir os 85 alunos nas 6 equipes de seminário (equipes criadas mas vazias)
+- [ ] Definir temas dos seminários para cada equipe

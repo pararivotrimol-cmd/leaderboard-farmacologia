@@ -3,6 +3,8 @@ import { useRoute, useLocation, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import StudentNavBar from "@/components/StudentNavBar";
+import StudentNotificationBanner from "@/components/StudentNotificationBanner";
+import { useStudentAuth } from "@/pages/StudentLogin";
 import {
   ArrowLeft, AlertCircle, Lock, Calendar, QrCode,
   BarChart3, BookOpen, Gamepad2, Target, Users,
@@ -20,6 +22,9 @@ export default function StudentArea() {
   const [, setLocation] = useLocation();
 
   const { user } = useAuth();
+  const { student: studentData } = useStudentAuth();
+  const memberId = studentData?.memberId || null;
+
   const { data: classData } = trpc.classes.getById.useQuery(
     { classId: classId || 0, sessionToken: "" },
     { enabled: !!classId }
@@ -173,10 +178,16 @@ export default function StudentArea() {
         onTabChange={setActiveTab}
         selectedClassId={classId}
         showClassSelector={false}
+        memberId={memberId}
       />
 
       {/* Content */}
       <div className="container mx-auto px-4 2xl:px-8 py-8 2xl:py-12">
+
+        {/* Notification Banner */}
+        {memberId && (
+          <StudentNotificationBanner memberId={memberId} classId={classId || undefined} />
+        )}
 
         {/* ═══ CRONOGRAMA ═══ */}
         {activeTab === "cronograma" && (

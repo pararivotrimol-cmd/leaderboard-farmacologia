@@ -33,6 +33,7 @@ import {
   systemSettings,
   backupRecords, InsertBackupRecord,
   restoreHistory, InsertRestoreHistory, RestoreHistory,
+  studentNotifications, InsertStudentNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -275,6 +276,56 @@ export async function deleteNotification(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(notifications).where(eq(notifications.id, id));
+}
+
+// ─── Student Notifications (Individual) ───
+
+export async function getStudentNotifications(memberId: number, classId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(studentNotifications.memberId, memberId), eq(studentNotifications.isDismissed, false)];
+  if (classId) conditions.push(eq(studentNotifications.classId, classId));
+  return db.select().from(studentNotifications).where(and(...conditions)).orderBy(desc(studentNotifications.createdAt));
+}
+
+export async function getUnreadStudentNotificationCount(memberId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ count: sql<number>`COUNT(*)` }).from(studentNotifications)
+    .where(and(
+      eq(studentNotifications.memberId, memberId),
+      eq(studentNotifications.isRead, false),
+      eq(studentNotifications.isDismissed, false)
+    ));
+  return result[0]?.count || 0;
+}
+
+export async function createStudentNotification(data: InsertStudentNotification) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(studentNotifications).values(data);
+  return result[0].insertId;
+}
+
+export async function markStudentNotificationRead(id: number, memberId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentNotifications).set({ isRead: true, readAt: new Date() })
+    .where(and(eq(studentNotifications.id, id), eq(studentNotifications.memberId, memberId)));
+}
+
+export async function markAllStudentNotificationsRead(memberId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentNotifications).set({ isRead: true, readAt: new Date() })
+    .where(and(eq(studentNotifications.memberId, memberId), eq(studentNotifications.isRead, false)));
+}
+
+export async function dismissStudentNotification(id: number, memberId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentNotifications).set({ isDismissed: true })
+    .where(and(eq(studentNotifications.id, id), eq(studentNotifications.memberId, memberId)));
 }
 
 // ─── Materials ───

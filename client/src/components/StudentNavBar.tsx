@@ -4,6 +4,7 @@ import {
   Calendar, QrCode, BarChart3, BookOpen, Gamepad2,
   Target, Users, Menu, X, LogOut, Home
 } from "lucide-react";
+import { NotificationBell } from "./StudentNotificationBanner";
 
 const ORANGE = "#F7941D";
 const DARK_BG = "#0A1628";
@@ -14,6 +15,7 @@ interface StudentNavBarProps {
   selectedClassId?: number;
   onClassChange?: (classId: number) => void;
   showClassSelector?: boolean;
+  memberId?: number | null;
 }
 
 const NAV_ITEMS = [
@@ -32,6 +34,7 @@ export default function StudentNavBar({
   selectedClassId,
   onClassChange,
   showClassSelector = true,
+  memberId,
 }: StudentNavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
@@ -101,6 +104,19 @@ export default function StudentNavBar({
 
             {/* Right Actions */}
             <div className="flex items-center gap-2 ml-auto">
+              {/* Notification Bell */}
+              {memberId && (
+                <div
+                  className="p-1.5 rounded-lg"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                  }}
+                  title="Notificações"
+                >
+                  <NotificationBell memberId={memberId} />
+                </div>
+              )}
+
               {/* Leaderboard link */}
               <Link
                 href="/leaderboard"

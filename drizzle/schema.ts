@@ -1356,3 +1356,35 @@ export const bossBattles = mysqlTable("bossBattles", {
 });
 export type BossBattle = typeof bossBattles.$inferSelect;
 export type InsertBossBattle = typeof bossBattles.$inferInsert;
+
+
+/**
+ * Student Notifications - Individual notifications for students
+ * Used for team allocation alerts, grade updates, reminders, etc.
+ */
+export const studentNotifications = mysqlTable("studentNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull(), // Target student (member)
+  classId: int("classId"), // Optional: related class
+  
+  // Notification content
+  title: varchar("title", { length: 300 }).notNull(),
+  message: text("message").notNull(),
+  type: mysqlEnum("type", ["team_allocation", "grade_update", "attendance", "announcement", "reminder"]).notNull(),
+  priority: mysqlEnum("priority", ["low", "normal", "high"]).default("normal").notNull(),
+  
+  // Related entity (e.g., jigsawGroupId, teamId)
+  relatedEntityType: varchar("relatedEntityType", { length: 50 }), // e.g., "jigsaw_group", "team"
+  relatedEntityId: int("relatedEntityId"),
+  
+  // Read status
+  isRead: boolean("isRead").notNull().default(false),
+  readAt: timestamp("readAt"),
+  
+  // Dismissal
+  isDismissed: boolean("isDismissed").notNull().default(false),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type StudentNotification = typeof studentNotifications.$inferSelect;
+export type InsertStudentNotification = typeof studentNotifications.$inferInsert;

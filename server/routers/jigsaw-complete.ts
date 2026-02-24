@@ -18,6 +18,7 @@ import {
   members,
 } from "../../drizzle/schema";
 import { sendJigsawNotification } from "../_core/jigsawNotifications";
+import { createStudentNotification } from "../db";
 
 /**
  * Input validation schemas
@@ -379,7 +380,7 @@ export const jigsawCompleteRouter = router({
             .where(eq(jigsawTopics.id, groupData[0]?.topicId))
             .limit(1);
           
-          // Enviar notificação
+          // Enviar notificação (owner)
           if (memberData[0] && groupData[0]) {
             await sendJigsawNotification({
               type: "member_added_expert",
@@ -387,6 +388,22 @@ export const jigsawCompleteRouter = router({
               groupName: groupData[0].name,
               topicName: topicData[0]?.name || "Tópico desconhecido",
             });
+            
+            // Enviar notificação individual para o aluno
+            try {
+              await createStudentNotification({
+                memberId: input.memberId,
+                classId: groupData[0].classId,
+                title: `Você foi alocado(a) na equipe de Seminário!`,
+                message: `Você foi designado(a) para a equipe "${groupData[0].name}" (Tópico: ${topicData[0]?.name || "A definir"}). Acesse a aba Equipes no seu portal para ver mais detalhes.`,
+                type: "team_allocation",
+                priority: "high",
+                relatedEntityType: "jigsaw_expert_group",
+                relatedEntityId: groupData[0].id,
+              });
+            } catch (notifErr) {
+              console.warn("[StudentNotification] Failed to send:", notifErr);
+            }
           }
           
           return { success: true, memberId: input.memberId };
@@ -660,6 +677,36 @@ export const jigsawCompleteRouter = router({
             memberId: input.memberId,
             topicId: input.topicId,
           });
+
+          // Enviar notificação individual para o aluno
+          try {
+            const groupData = await db
+              .select()
+              .from(jigsawHomeGroups)
+              .where(eq(jigsawHomeGroups.id, input.homeGroupId))
+              .limit(1);
+            
+            const topicData = await db
+              .select()
+              .from(jigsawTopics)
+              .where(eq(jigsawTopics.id, input.topicId))
+              .limit(1);
+            
+            if (groupData[0]) {
+              await createStudentNotification({
+                memberId: input.memberId,
+                classId: groupData[0].classId,
+                title: `Você foi alocado(a) em um Grupo Jigsaw!`,
+                message: `Você foi designado(a) para o grupo "${groupData[0].name}" (Tópico: ${topicData[0]?.name || "A definir"}). Acesse a aba Equipes no seu portal para ver mais detalhes.`,
+                type: "team_allocation",
+                priority: "high",
+                relatedEntityType: "jigsaw_home_group",
+                relatedEntityId: groupData[0].id,
+              });
+            }
+          } catch (notifErr) {
+            console.warn("[StudentNotification] Failed to send:", notifErr);
+          }
 
           return { success: true, memberId: input.memberId };
         } catch (error) {
