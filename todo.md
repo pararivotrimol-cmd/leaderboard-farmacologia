@@ -2120,3 +2120,8 @@
 - [x] Badge de notificação no botão Presença (indicador de check-in pendente)
 - [x] Scroll suave ao clicar em Equipes, Atividades e Regras
 - [x] Feedback tátil com efeito scale nos botões mobile
+
+## Melhorias UX - Navegação v4
+- [x] Criar endpoint qrcode.hasActiveSession no backend
+- [x] Condicionar badge vermelho de Presença a sessão QR ativa
+- [x] Implementar toast de confirmação ao trocar de aba

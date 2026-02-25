@@ -15,6 +15,7 @@ import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import StudentNavBar from "@/components/StudentNavBar";
+import { toast } from "sonner";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
 const YOUTUBE_URL = "https://www.youtube.com/@Conex%C3%A3oemCi%C3%AAncia-Farmacol%C3%B3gica";
@@ -282,6 +283,10 @@ export default function Home() {
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Check if there's an active QR code session for the Presença badge
+  const { data: activeSessionData } = trpc.qrcode.hasActiveSession.useQuery();
+  const hasActiveQRSession = activeSessionData?.hasActive ?? false;
+
   // Scroll to content section smoothly
   const scrollToContent = useCallback(() => {
     setTimeout(() => {
@@ -289,10 +294,32 @@ export default function Home() {
     }, 100);
   }, []);
 
-  // Tab change with smooth scroll
+  // Tab labels for toast
+  const tabLabels: Record<string, string> = {
+    teams: "Ranking de Equipes",
+    individual: "Top 10 Individual",
+    activities: "Atividades XP",
+    calculator: "Calculadora de M\u00e9dia",
+    rules: "Regras do Jogo",
+  };
+
+  // Tab change with smooth scroll and toast
   const handleTabChange = useCallback((tab: typeof activeTab) => {
     setActiveTab(tab);
     scrollToContent();
+    const label = tabLabels[tab];
+    if (label) {
+      toast(label, {
+        duration: 1500,
+        style: {
+          background: "#0D1B2A",
+          color: "#fff",
+          border: `1px solid ${ORANGE}40`,
+          fontSize: "13px",
+        },
+        icon: "\u{1F4CB}",
+      });
+    }
   }, [scrollToContent]);
 
   useEffect(() => {
@@ -538,7 +565,9 @@ export default function Home() {
                   <QrCode className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Presença
                 </span>
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#0A1628]" title="Check-in disponível" />
+                {hasActiveQRSession && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#0A1628] animate-pulse" title="Check-in disponível" />
+                )}
               </Link>
               <button onClick={() => handleTabChange("calculator")} className="w-full sm:w-auto">
                 <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }}>

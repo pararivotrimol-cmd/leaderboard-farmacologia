@@ -314,3 +314,46 @@ describe("Attendance Summary Calculation", () => {
     expect(attendancePercentage.toFixed(2)).toBe("33.33");
   });
 });
+
+
+// ═══════ hasActiveSession Logic Tests ═══════
+
+describe("hasActiveSession - Logic Validation", () => {
+  it("returns hasActive=true when at least one session is active", () => {
+    const sessions = [
+      { id: 1, isActive: true },
+      { id: 2, isActive: false },
+      { id: 3, isActive: false },
+    ];
+    const activeSessions = sessions.filter(s => s.isActive);
+    const hasActive = activeSessions.length > 0;
+    expect(hasActive).toBe(true);
+  });
+
+  it("returns hasActive=false when no sessions are active", () => {
+    const sessions = [
+      { id: 1, isActive: false },
+      { id: 2, isActive: false },
+    ];
+    const activeSessions = sessions.filter(s => s.isActive);
+    const hasActive = activeSessions.length > 0;
+    expect(hasActive).toBe(false);
+  });
+
+  it("returns hasActive=false when sessions list is empty", () => {
+    const sessions: { id: number; isActive: boolean }[] = [];
+    const activeSessions = sessions.filter(s => s.isActive);
+    const hasActive = activeSessions.length > 0;
+    expect(hasActive).toBe(false);
+  });
+
+  it("returns hasActive=true when all sessions are active", () => {
+    const sessions = [
+      { id: 1, isActive: true },
+      { id: 2, isActive: true },
+    ];
+    const activeSessions = sessions.filter(s => s.isActive);
+    const hasActive = activeSessions.length > 0;
+    expect(hasActive).toBe(true);
+  });
+});

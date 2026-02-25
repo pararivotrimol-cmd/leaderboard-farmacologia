@@ -689,6 +689,20 @@ export const qrcodeRouter = router({
     }),
 
   /**
+   * Verificar se existe alguma sessão de QR Code ativa (para badge no botão Presença)
+   */
+  hasActiveSession: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { hasActive: false };
+    const activeSessions = await db
+      .select({ id: qrCodeSessions.id })
+      .from(qrCodeSessions)
+      .where(eq(qrCodeSessions.isActive, true))
+      .limit(1);
+    return { hasActive: activeSessions.length > 0 };
+  }),
+
+  /**
    * Validar/invalidar presença (professor)
    */
   validateAttendance: protectedProcedure
