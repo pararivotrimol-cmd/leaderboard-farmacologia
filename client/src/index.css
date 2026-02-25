@@ -369,3 +369,29 @@
   flex-direction: column;
   height: 100vh;
 }
+
+
+/* ═══════ NAVIGATION BUTTON TACTILE FEEDBACK ═══════ */
+.nav-btn-touch {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn-touch:hover {
+  transform: scale(1.03);
+}
+
+.nav-btn-touch:active {
+  transform: scale(0.93);
+  opacity: 0.85;
+}
+
+@media (min-width: 640px) {
+  .nav-btn-touch:hover {
+    transform: scale(1.02);
+  }
+  .nav-btn-touch:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+}

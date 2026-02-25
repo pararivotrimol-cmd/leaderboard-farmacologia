@@ -2114,3 +2114,9 @@
 - [x] Remover ou simplificar a barra de navegação superior
 - [x] Verificar responsividade mobile
 - [x] Testar layout em diferentes resoluções
+
+## Melhorias UX - Navegação v3
+- [x] Badge de notificação no botão Avisos (contador de avisos não lidos)
+- [x] Badge de notificação no botão Presença (indicador de check-in pendente)
+- [x] Scroll suave ao clicar em Equipes, Atividades e Regras
+- [x] Feedback tátil com efeito scale nos botões mobile
