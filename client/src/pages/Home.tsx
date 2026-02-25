@@ -283,9 +283,17 @@ export default function Home() {
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Check if there's an active QR code session for the Presença badge
-  const { data: activeSessionData } = trpc.qrcode.hasActiveSession.useQuery();
+  // Check if there's an active QR code session for the Presença badge (with polling every 30s)
+  const { data: activeSessionData } = trpc.qrcode.hasActiveSession.useQuery(undefined, {
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
   const hasActiveQRSession = activeSessionData?.hasActive ?? false;
+
+  // Get count of new materials from last week
+  const { data: newMaterialsData } = trpc.materials.getNewCount.useQuery(undefined, {
+    refetchInterval: 60000, // Poll every 60 seconds
+  });
+  const newMaterialsCount = newMaterialsData?.count ?? 0;
 
   // Scroll to content section smoothly
   const scrollToContent = useCallback(() => {
@@ -575,11 +583,16 @@ export default function Home() {
                   Média
                 </span>
               </button>
-              <Link href="/materiais" className="w-full sm:w-auto">
+              <Link href="/materiais" className="w-full sm:w-auto relative">
                 <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
                   <BookOpen className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Materiais
                 </span>
+                {newMaterialsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-bold text-white border border-[#0A1628]">
+                    {newMaterialsCount > 9 ? "9+" : newMaterialsCount}
+                  </span>
+                )}
               </Link>
               <Link href="/game/avatar-select" className="w-full sm:w-auto">
                 <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>

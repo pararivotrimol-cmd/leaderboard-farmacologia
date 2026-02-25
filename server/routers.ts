@@ -1582,6 +1582,12 @@ export const appRouter = router({
       return db.getVisibleMaterials();
     }),
 
+    // Public: get count of new materials from last week
+    getNewCount: publicProcedure.query(async () => {
+      const count = await db.getNewMaterialsCount();
+      return { count };
+    }),
+
     // Public: get materials by class
     getByClass: publicProcedure
       .input(z.object({ classId: z.number() }))

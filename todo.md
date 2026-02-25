@@ -2125,3 +2125,10 @@
 - [x] Criar endpoint qrcode.hasActiveSession no backend
 - [x] Condicionar badge vermelho de Presença a sessão QR ativa
 - [x] Implementar toast de confirmação ao trocar de aba
+
+## Melhorias UX - Navegação v5
+- [x] Adicionar polling refetchInterval 30s ao badge de Presença
+- [x] Criar endpoint materials.getNewCount para materiais da última semana
+- [x] Implementar badge de materiais novos no botão Materiais
+- [x] Criar página /avisos com lista de notificações
+- [x] Implementar marcação de lido/não lido nas notificações

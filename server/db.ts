@@ -1602,3 +1602,18 @@ export async function createRestoreRecord(data: InsertRestoreHistory): Promise<n
   const result = await db.insert(restoreHistory).values(data);
   return result[0].insertId;
 }
+
+
+export async function getNewMaterialsCount() {
+  const db = await getDb();
+  if (!db) return 0;
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(materials)
+    .where(and(
+      eq(materials.isVisible, 1),
+      gte(materials.createdAt, oneWeekAgo)
+    ));
+  return result[0]?.count ?? 0;
+}

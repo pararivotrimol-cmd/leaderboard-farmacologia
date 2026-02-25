@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import StudentProgress from "./pages/StudentProgress";
 import Avisos from "./pages/Avisos";
+import StudentNotifications from "./pages/StudentNotifications";
 import Materiais from "./pages/Materiais";
 import Conquistas from "./pages/Conquistas";
 import StudentLogin from "./pages/StudentLogin";
@@ -82,7 +83,8 @@ function Router() {
       <Route path="/jogo/conquistas" component={GameAchievements} />
       <Route path={"/aluno/:classId"} component={StudentArea} />
       <Route path={"/meu-progresso"} component={StudentProgress} />
-      <Route path={"/avisos"} component={Avisos} />
+      <Route path={"/avisos"} component={StudentNotifications} />
+      <Route path={"/avisos-legado"} component={Avisos} />
       <Route path={"/materiais"} component={Materiais} />
       <Route path={"/conquistas"} component={Conquistas} />
       <Route path={"/login-aluno"} component={StudentLogin} />
