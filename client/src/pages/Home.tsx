@@ -505,79 +505,93 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Navigation Buttons — Grid 3-col on mobile, flex-wrap on desktop */}
-          <div className="mt-6 grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
-            <Link href="/cronograma" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
-                <Calendar size={14} />
-                Cronograma
-              </span>
-            </Link>
-            <Link href="/attendance/check-in" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                <QrCode size={14} />
-                Presença
-              </span>
-            </Link>
-            <button onClick={() => setActiveTab("calculator")} className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }}>
-                <Calculator size={14} />
-                Média
-              </span>
-            </button>
-            <Link href="/materiais" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                <BookOpen size={14} />
-                Materiais
-              </span>
-            </Link>
-            <Link href="/game/avatar-select" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
-                <Gamepad2 size={14} />
-                Jogo
-                <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              </span>
-            </Link>
-            <button onClick={() => setActiveTab("activities")} className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }}>
-                <Target size={14} />
-                Atividades
-              </span>
-            </button>
-            <button onClick={() => setActiveTab("teams")} className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }}>
-                <Users size={14} />
-                Equipes
-              </span>
-            </button>
-            <Link href="/meu-progresso" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                <TrendingUp size={14} />
-                Progresso
-              </span>
-            </Link>
-            <Link href="/avisos" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                <Bell size={14} />
-                Avisos
-              </span>
-            </Link>
-            <Link href="/dashboard" className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                <BarChart3 size={14} />
-                Dashboard
-              </span>
-            </Link>
-            <button onClick={() => setActiveTab("rules")} className="w-full sm:w-auto">
-              <span className="w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }}>
-                <ClipboardList size={14} />
-                Regras
-              </span>
-            </button>
-            <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <Youtube size={14} />
-              YouTube
-            </a>
+          {/* Navigation Buttons — Sticky, grouped, responsive grid */}
+          <div className="sticky top-0 z-30 mt-6 -mx-4 px-4 sm:mx-0 sm:px-0 py-3 sm:py-0 sm:relative sm:z-auto" style={{ backgroundColor: "oklch(0.165 0.03 264.052 / 0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            {/* Category: Conteúdo */}
+            <div className="mb-1.5 sm:hidden">
+              <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Conteúdo</span>
+            </div>
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
+              <Link href="/cronograma" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-all hover:scale-[1.02]" style={{ backgroundColor: ORANGE, color: "#fff" }}>
+                  <Calendar className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Cronograma
+                </span>
+              </Link>
+              <Link href="/attendance/check-in" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                  <QrCode className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Presença
+                </span>
+              </Link>
+              <button onClick={() => setActiveTab("calculator")} className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }}>
+                  <Calculator className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Média
+                </span>
+              </button>
+              <Link href="/materiais" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                  <BookOpen className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Materiais
+                </span>
+              </Link>
+              <Link href="/game/avatar-select" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
+                  <Gamepad2 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Jogo
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                </span>
+              </Link>
+              <button onClick={() => setActiveTab("activities")} className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }}>
+                  <Target className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Atividades
+                </span>
+              </button>
+            </div>
+            {/* Divider — mobile only */}
+            <div className="my-2 sm:hidden" style={{ borderTop: `1px solid ${ORANGE}18` }} />
+            {/* Category: Ferramentas */}
+            <div className="mb-1.5 sm:hidden">
+              <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Ferramentas</span>
+            </div>
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
+              <button onClick={() => setActiveTab("teams")} className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }}>
+                  <Users className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Equipes
+                </span>
+              </button>
+              <Link href="/meu-progresso" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                  <TrendingUp className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Progresso
+                </span>
+              </Link>
+              <Link href="/avisos" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                  <Bell className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Avisos
+                </span>
+              </Link>
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                  <BarChart3 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Dashboard
+                </span>
+              </Link>
+              <button onClick={() => setActiveTab("rules")} className="w-full sm:w-auto">
+                <span className="w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }}>
+                  <ClipboardList className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                  Regras
+                </span>
+              </button>
+              <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <Youtube className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
+                YouTube
+              </a>
+            </div>
           </div>
         </div>
       </div>
