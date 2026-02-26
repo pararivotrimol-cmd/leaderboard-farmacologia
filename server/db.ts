@@ -1,4 +1,4 @@
-import { eq, desc, asc, and, gte, lte, or, sql } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, or, sql, not } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -35,6 +35,10 @@ import {
   restoreHistory, InsertRestoreHistory, RestoreHistory,
   studentNotifications, InsertStudentNotification,
   notificationPreferences, InsertNotificationPreference,
+  studentActivities, InsertStudentActivity,
+  activitySubmissions, InsertActivitySubmission,
+  chatMessages, InsertChatMessage,
+  chatConversations, InsertChatConversation,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1665,4 +1669,197 @@ export async function updateNotificationPreferences(
       quietHoursEnd: data.quietHoursEnd,
     });
   }
+}
+
+
+// ─── Student Activities Helpers ───
+
+export async function createStudentActivity(data: {
+  name: string;
+  description?: string;
+  type: string;
+  maxXP: string;
+  dueDate?: Date;
+  createdBy: number;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(studentActivities).values({
+    name: data.name,
+    description: data.description,
+    type: data.type,
+    maxXP: parseFloat(data.maxXP) as any,
+    dueDate: data.dueDate,
+    createdBy: data.createdBy,
+  });
+  
+  return result[0].insertId;
+}
+
+export async function getStudentActivities(isActive: boolean = true) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (isActive) {
+    return await db.select().from(studentActivities).where(eq(studentActivities.isActive, true)).orderBy(desc(studentActivities.createdAt));
+  } else {
+    return await db.select().from(studentActivities).orderBy(desc(studentActivities.createdAt));
+  }
+}
+
+export async function getActivitySubmissions(activityId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(activitySubmissions).where(eq(activitySubmissions.activityId, activityId));
+}
+
+export async function getStudentSubmissions(memberId: number, activityId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (activityId) {
+    return await db.select().from(activitySubmissions).where(
+      and(eq(activitySubmissions.memberId, memberId), eq(activitySubmissions.activityId, activityId))
+    );
+  } else {
+    return await db.select().from(activitySubmissions).where(eq(activitySubmissions.memberId, memberId));
+  }
+}
+
+export async function submitActivityResponse(data: {
+  activityId: number;
+  memberId: number;
+  content?: string;
+  fileUrl?: string;
+  linkUrl?: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(activitySubmissions).values({
+    activityId: data.activityId,
+    memberId: data.memberId,
+    content: data.content,
+    fileUrl: data.fileUrl,
+    linkUrl: data.linkUrl,
+    status: "submitted",
+  });
+  
+  return result[0].insertId;
+}
+
+export async function updateActivityFeedback(submissionId: number, data: {
+  feedback: string;
+  xpAwarded: number;
+  feedbackBy: number;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(activitySubmissions)
+    .set({
+      feedback: data.feedback,
+      xpAwarded: (data.xpAwarded as any),
+      feedbackBy: data.feedbackBy,
+      status: "graded",
+      reviewedAt: new Date(),
+    })
+    .where(eq(activitySubmissions.id, submissionId));
+}
+
+// ─── Chat Helpers ───
+
+export async function createChatConversation(studentId: number, teacherId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if conversation already exists
+  const existing = await db.select().from(chatConversations).where(
+    and(
+      eq(chatConversations.studentId, studentId),
+      eq(chatConversations.teacherId, teacherId)
+    )
+  ).limit(1);
+  
+  if (existing.length > 0) return existing[0].id;
+  
+  const result = await db.insert(chatConversations).values({
+    studentId,
+    teacherId,
+  });
+  
+  return result[0].insertId;
+}
+
+export async function getChatConversations(userId: number, userType: "student" | "teacher") {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (userType === "student") {
+    return await db.select().from(chatConversations).where(eq(chatConversations.studentId, userId)).orderBy(desc(chatConversations.lastMessageAt));
+  } else {
+    return await db.select().from(chatConversations).where(eq(chatConversations.teacherId, userId)).orderBy(desc(chatConversations.lastMessageAt));
+  }
+}
+
+export async function getChatMessages(conversationId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(chatMessages).where(eq(chatMessages.conversationId, conversationId)).orderBy(desc(chatMessages.createdAt)).limit(limit);
+}
+
+export async function sendChatMessage(data: {
+  conversationId: number;
+  senderId: number;
+  senderType: "student" | "teacher";
+  content: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(chatMessages).values({
+    conversationId: data.conversationId,
+    senderId: data.senderId,
+    senderType: data.senderType,
+    content: data.content,
+  });
+  
+  // Update conversation's lastMessageAt
+  await db.update(chatConversations)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(chatConversations.id, data.conversationId));
+  
+  return result[0].insertId;
+}
+
+export async function markChatMessagesAsRead(conversationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(chatMessages)
+    .set({ isRead: true })
+    .where(
+      and(
+        eq(chatMessages.conversationId, conversationId),
+        not(eq(chatMessages.senderId, userId))
+      )
+    );
+}
+
+export async function getUnreadMessageCount(conversationId: number, userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db.select().from(chatMessages).where(
+    and(
+      eq(chatMessages.conversationId, conversationId),
+      eq(chatMessages.isRead, false),
+      not(eq(chatMessages.senderId, userId))
+    )
+  );
+  
+  return result.length;
 }

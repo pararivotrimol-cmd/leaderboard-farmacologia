@@ -2205,3 +2205,33 @@
 - [ ] Testar fluxo completo de submissão e feedback
 
 **Status**: Removida implementação incompleta (StudentActivities.tsx) que causava conflitos. Router de atividades existe mas precisa de endpoints adicionais para suportar submissão de respostas do aluno.
+
+
+## Página de Atividades e Chat ao Vivo (Feb 26, 2026)
+
+### Atividades do Aluno
+- [x] Criar schema para atividades (id, nome, descrição, tipo, dataLimite, maxXP)
+- [x] Criar schema para submissões (id, alunoId, atividadeId, conteúdo, arquivo, status, feedback)
+- [x] Criar endpoints tRPC para listar atividades disponíveis
+- [x] Criar endpoints tRPC para submeter resposta de atividade
+- [x] Criar endpoints tRPC para recuperar submissões do aluno
+- [x] Criar endpoints tRPC para professor visualizar submissões e dar feedback
+- [x] Implementar página StudentActivities.tsx com lista de atividades
+- [x] Adicionar formulário de submissão (texto, arquivo, link)
+- [x] Exibir status de submissão e feedback do professor
+- [x] Integrar com sistema de pontuação (PF)
+- [x] Escrever testes para endpoints de atividades
+
+### Chat ao Vivo
+- [x] Criar schema para mensagens de chat (id, remetenteId, destinatarioId, conteúdo, timestamp, lido)
+- [x] Criar schema para conversas (id, alunoId, professorId, dataCriação, ultimaMensagem)
+- [x] Criar endpoints tRPC para listar conversas do aluno/professor
+- [x] Criar endpoints tRPC para enviar mensagem
+- [x] Criar endpoints tRPC para recuperar histórico de chat
+- [x] Criar endpoints tRPC para marcar mensagem como lida
+- [x] Integrar WebSocket para chat em tempo real
+- [x] Implementar página ChatLive.tsx com interface de chat
+- [x] Adicionar notificações de novas mensagens
+- [x] Exibir status online/offline do professor
+- [x] Escrever testes para endpoints de chat
+

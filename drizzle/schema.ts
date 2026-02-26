@@ -1424,3 +1424,75 @@ export type InsertNotificationPreference = typeof notificationPreferences.$infer
 
 
 // Activity system tables already exist: activityTemplates, activitySubmissions
+
+/**
+ * Student Activities - Atividades disponíveis para alunos
+ * Armazena atividades criadas pelos professores
+ */
+export const studentActivities = mysqlTable("studentActivities", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // "essay", "quiz", "project", "presentation", etc
+  maxXP: decimal("maxXP", { precision: 5, scale: 2 }).notNull().default("10"),
+  dueDate: timestamp("dueDate"),
+  createdBy: int("createdBy").notNull(), // teacher ID
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StudentActivity = typeof studentActivities.$inferSelect;
+export type InsertStudentActivity = typeof studentActivities.$inferInsert;
+
+/**
+ * Activity Submissions - Submissões de alunos para atividades
+ * Armazena as respostas dos alunos e feedback do professor
+ */
+export const activitySubmissions = mysqlTable("activitySubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+  activityId: int("activityId").notNull(),
+  memberId: int("memberId").notNull(),
+  content: text("content"), // Texto da resposta
+  fileUrl: varchar("fileUrl", { length: 500 }), // URL do arquivo enviado
+  linkUrl: varchar("linkUrl", { length: 500 }), // Link enviado
+  status: varchar("status", { length: 50 }).notNull().default("submitted"), // "submitted", "reviewed", "graded"
+  xpAwarded: decimal("xpAwarded", { precision: 5, scale: 2 }).default("0"),
+  feedback: text("feedback"), // Feedback do professor
+  feedbackBy: int("feedbackBy"), // ID do professor que deu feedback
+  submittedAt: timestamp("submittedAt").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ActivitySubmission = typeof activitySubmissions.$inferSelect;
+export type InsertActivitySubmission = typeof activitySubmissions.$inferInsert;
+
+/**
+ * Chat Messages - Mensagens de chat entre aluno e professor
+ * Armazena histórico de conversas em tempo real
+ */
+export const chatMessages = mysqlTable("chatMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  senderId: int("senderId").notNull(), // ID do remetente (aluno ou professor)
+  senderType: varchar("senderType", { length: 20 }).notNull(), // "student" ou "teacher"
+  content: text("content").notNull(),
+  isRead: boolean("isRead").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+/**
+ * Chat Conversations - Conversas entre aluno e professor
+ * Armazena metadados das conversas
+ */
+export const chatConversations = mysqlTable("chatConversations", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  teacherId: int("teacherId").notNull(),
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().onUpdateNow(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type InsertChatConversation = typeof chatConversations.$inferInsert;

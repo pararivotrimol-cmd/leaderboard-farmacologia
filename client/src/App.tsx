@@ -53,6 +53,8 @@ import GameHintsShop from "./pages/GameHintsShop";
 import AdminGamePanel from "./pages/AdminGamePanel";
 import GameAchievements from "./pages/GameAchievements";
 import QRCodeProjector from "./pages/QRCodeProjector";
+import StudentActivities from "./pages/StudentActivities";
+import ChatLive from "./pages/ChatLive";
 
 
 function Router() {
@@ -94,6 +96,8 @@ function Router() {
       <Route path={"/performance"} component={PerformanceReport} />
       <Route path={"/grupos-jigsaw"} component={GruposJigsaw} />
       <Route path={"/cronograma"} component={Cronograma} />
+      <Route path={"/atividades"} component={StudentActivities} />
+      <Route path={"/chat"} component={ChatLive} />
 
       <Route path={"/professor/perfil"} component={TeacherProfile} />      <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
