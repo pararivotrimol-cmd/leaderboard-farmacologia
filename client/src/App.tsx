@@ -54,6 +54,7 @@ import AdminGamePanel from "./pages/AdminGamePanel";
 import GameAchievements from "./pages/GameAchievements";
 import QRCodeProjector from "./pages/QRCodeProjector";
 
+
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -93,8 +94,8 @@ function Router() {
       <Route path={"/performance"} component={PerformanceReport} />
       <Route path={"/grupos-jigsaw"} component={GruposJigsaw} />
       <Route path={"/cronograma"} component={Cronograma} />
-      <Route path={"/professor/perfil"} component={TeacherProfile} />
-      <Route path={"/professor/login"} component={ProfessorLogin} />
+
+      <Route path={"/professor/perfil"} component={TeacherProfile} />      <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
       <Route path={"/professor/cadastro"} component={TeacherRegister} />
       <Route path={"/professor/esqueci-senha"} component={TeacherForgotPassword} />

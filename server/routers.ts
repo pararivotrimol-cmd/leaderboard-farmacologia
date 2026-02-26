@@ -22,6 +22,7 @@ import { resultsRouter } from "./routers/results";
 import { gameRouter } from "./routers/game";
 import { qrcodeRouter } from "./routers/qrcode";
 import { studentNotificationsRouter } from "./routers/student-notifications";
+import { activitiesRouter } from "./routers/activities";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -2881,6 +2882,7 @@ export const appRouter = router({
 
   jigsawGroups: jigsawRouter,
   settings: settingsRouter,
+
 
 });
 

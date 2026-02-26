@@ -427,11 +427,26 @@ function ActivitiesManager({ password }: { password: string }) {
   const utils = trpc.useUtils();
 
   const createActivity = trpc.activities.create.useMutation({
-    onSuccess: () => { utils.leaderboard.getData.invalidate(); toast.success("Atividade criada!"); setNewName(""); setNewIcon("🎯"); setNewMaxXP("1"); },
+    onSuccess: () => {
+      toast.success("Atividade criada com sucesso!");
+      setNewName("");
+      setNewIcon("🎯");
+      setNewMaxXP("1");
+      utils.leaderboard.getData.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Erro: ${error.message}`);
+    },
   });
-
+  
   const deleteActivity = trpc.activities.delete.useMutation({
-    onSuccess: () => { utils.leaderboard.getData.invalidate(); toast.success("Atividade removida!"); },
+    onSuccess: () => {
+      toast.success("Atividade removida com sucesso!");
+      utils.leaderboard.getData.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Erro: ${error.message}`);
+    },
   });
 
   return (
@@ -444,7 +459,7 @@ function ActivitiesManager({ password }: { password: string }) {
           <input value={newIcon} onChange={e => setNewIcon(e.target.value)} className="w-12 px-2 py-2 rounded-md bg-secondary border border-border text-foreground text-center text-sm" />
           <input value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 min-w-[150px] px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Nome da atividade..." />
           <input value={newMaxXP} onChange={e => setNewMaxXP(e.target.value)} type="number" step="0.5" className="w-20 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm text-right font-mono" placeholder="XP" />
-          <button onClick={() => createActivity.mutate({ password, name: newName, icon: newIcon, maxXP: newMaxXP })} disabled={!newName} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50">Criar</button>
+          <button onClick={() => createActivity.mutate({ password, name: newName, icon: newIcon, maxXP: newMaxXP })} disabled={!newName || createActivity.isPending} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50">{createActivity.isPending ? "Criando..." : "Criar"}</button>
         </div>
       </div>
 
@@ -454,7 +469,7 @@ function ActivitiesManager({ password }: { password: string }) {
             <span className="text-xl">{act.icon}</span>
             <span className="flex-1 text-sm text-foreground font-medium">{act.name}</span>
             <span className="font-mono text-sm text-primary font-bold">+{act.maxXP}</span>
-            <button onClick={() => { if (confirm(`Remover "${act.name}"?`)) deleteActivity.mutate({ password, id: act.id }); }} className="p-1.5 rounded hover:bg-destructive/20 text-destructive"><Trash2 size={14} /></button>
+            <button onClick={() => { if (confirm(`Remover "${act.name}"?`)) deleteActivity.mutate({ password, id: act.id }); }} disabled={deleteActivity.isPending} className="p-1.5 rounded hover:bg-destructive/20 text-destructive disabled:opacity-50"><Trash2 size={14} /></button>
           </div>
         ))}
         {(!leaderboard?.activities || leaderboard.activities.length === 0) && (

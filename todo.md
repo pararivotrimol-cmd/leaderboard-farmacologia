@@ -2191,3 +2191,17 @@
 - [x] Implementar portal do aluno para visualizar atividades
 - [x] Integrar pontuação com leaderboard existente
 - [x] Testar sistema de pontuação end-to-end
+
+
+## Página de Atividades - Portal do Aluno (Feb 26, 2026)
+
+- [ ] Criar endpoints tRPC para listar atividades disponíveis
+- [ ] Criar endpoints para submeter respostas (texto, arquivo, link)
+- [ ] Criar endpoints para recuperar submissões do aluno
+- [ ] Implementar página StudentActivities.tsx no portal do aluno
+- [ ] Adicionar formulário de submissão com upload de arquivo
+- [ ] Integrar com sistema de pontuação existente
+- [ ] Criar painel de feedback do professor
+- [ ] Testar fluxo completo de submissão e feedback
+
+**Status**: Removida implementação incompleta (StudentActivities.tsx) que causava conflitos. Router de atividades existe mas precisa de endpoints adicionais para suportar submissão de respostas do aluno.

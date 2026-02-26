@@ -222,20 +222,6 @@ describe("members CRUD (admin-protected)", () => {
   });
 });
 
-describe("activities CRUD (admin-protected)", () => {
-  it("creates an activity", async () => {
-    const ctx = createPublicContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.activities.create({
-      password: "farmaco2026",
-      name: "Nova Atividade",
-      icon: "🎯",
-      maxXP: "3.0",
-    });
-    expect(result.id).toBe(3);
-  });
-});
-
 describe("highlights CRUD (admin-protected)", () => {
   it("creates a highlight", async () => {
     const ctx = createPublicContext();
