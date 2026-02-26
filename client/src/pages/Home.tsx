@@ -564,11 +564,11 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Navigation Buttons — Sticky, grouped, responsive grid */}
-          <div className="sticky top-0 z-30 mt-6 -mx-4 px-4 sm:mx-0 sm:px-0 py-3 sm:py-0 sm:relative sm:z-auto" style={{ backgroundColor: "oklch(0.165 0.03 264.052 / 0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          {/* Navigation Buttons — Below stats, grouped, responsive grid */}
+          <div className="mt-8 -mx-4 px-4 sm:mx-0 sm:px-0 py-4 sm:py-0" style={{ backgroundColor: "transparent" }}>
             {/* Category: Conteúdo */}
-            <div className="mb-1.5 sm:hidden">
-              <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Conteúdo</span>
+            <div className="mb-3 sm:mb-4">
+              <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Conteúdo</span>
             </div>
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
               <Link href="/cronograma" className="w-full sm:w-auto">
