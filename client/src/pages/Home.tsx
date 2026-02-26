@@ -452,6 +452,21 @@ export default function Home() {
               }}
             />
             <span className="text-white text-sm font-medium w-8 text-right">{Math.round(vinhetaVolume * 100)}%</span>
+            <button
+              onClick={() => {
+                if (vinhetaAudioRef.current) {
+                  if (vinhetaAudioRef.current.paused) {
+                    vinhetaAudioRef.current.play();
+                  } else {
+                    vinhetaAudioRef.current.pause();
+                  }
+                }
+              }}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+              style={{ backgroundColor: ORANGE, color: "#fff" }}
+            >
+              Pausar
+            </button>
           </div>
         </motion.div>
       )}
@@ -577,17 +592,7 @@ export default function Home() {
                   Média
                 </span>
               </button>
-              <Link href="/materiais" className="w-full sm:w-auto relative">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
-                  <BookOpen className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Materiais
-                </span>
-                {newMaterialsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-bold text-white border border-[#0A1628]">
-                    {newMaterialsCount > 9 ? "9+" : newMaterialsCount}
-                  </span>
-                )}
-              </Link>
+              {/* Materiais button removed */}
               <Link href="/game/avatar-select" className="w-full sm:w-auto">
                 <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
                   <Gamepad2 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
@@ -709,130 +714,7 @@ export default function Home() {
       {/* Content */}
       <div id="content-section" className="container pb-16 2xl:pb-24">
         <AnimatePresence mode="wait">
-          {activeTab === "teams" && (
-            <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              {rankedTeams.length >= 3 && totalPFEarned > 0 && (
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8 mb-8">
-                  {[rankedTeams[1], rankedTeams[0], rankedTeams[2]].map((team, idx) => {
-                    const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
-                    const isFirst = actualRank === 1;
-                    return (
-                      <motion.div
-                        key={team.id}
-                        className="rounded-lg p-3 sm:p-5 2xl:p-6 text-center"
-                        style={{
-                          backgroundColor: isFirst ? ORANGE + "0A" : CARD_BG,
-                          border: `1px solid ${isFirst ? ORANGE + "40" : "rgba(255,255,255,0.08)"}`,
-                          marginTop: isFirst ? 0 : "1.5rem",
-                          boxShadow: isFirst ? `0 0 30px ${ORANGE}15` : "none",
-                        }}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 + idx * 0.15 }}
-                      >
-                        <div className="text-2xl sm:text-3xl 2xl:text-4xl mb-2">{team.emoji}</div>
-                        <div className="text-xs font-mono font-bold mb-1" style={{ color: isFirst ? ORANGE : actualRank === 2 ? "#999" : "#8B6914" }}>#{actualRank}</div>
-                        <div className="font-display font-bold text-sm sm:text-base 2xl:text-lg text-white truncate">{team.name}</div>
-                        <div className="font-mono font-bold text-xl sm:text-2xl 2xl:text-3xl mt-1" style={{ color: ORANGE }}>{getTeamPF(team).toFixed(1)}</div>
-                        <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>PF total</div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <Trophy size={20} style={{ color: ORANGE }} />
-                Ranking Completo das Equipes
-              </h2>
-              <div className="grid gap-2">{paginatedTeams.map((team, idx) => {
-                const actualRank = (currentPage - 1) * TEAMS_PER_PAGE + idx + 1;
-                return <TeamCard key={team.id} team={team} rank={actualRank} />;
-              })}</div>
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 hover:opacity-80"
-                    style={{ backgroundColor: ORANGE, color: "white" }}
-                  >
-                    ← Anterior
-                  </button>
-                  <span className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 hover:opacity-80"
-                    style={{ backgroundColor: ORANGE, color: "white" }}
-                  >
-                    Próximo →
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {activeTab === "individual" && (
-            <motion.div key="individual" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              <h2 className="font-display font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <Award size={20} style={{ color: ORANGE }} />
-                Top 10 — Alunos com Maior PF
-              </h2>
-              {totalPFEarned === 0 ? (
-                <motion.div
-                  className="rounded-lg p-12 text-center"
-                  style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <Award size={48} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.15)" }} />
-                  <h3 className="font-display font-bold text-lg text-white mb-2">Aguardando Início do Semestre</h3>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-                    O ranking individual será exibido assim que as pontuações começarem a ser registradas.
-                  </p>
-                </motion.div>
-              ) : (
-                <>
-                  <div className="flex justify-center gap-3 sm:gap-10 2xl:gap-16 mb-6 sm:mb-8">
-                    {topStudents.slice(0, 3).map((student, idx) => (
-                      <motion.div key={student.name} className="flex flex-col items-center" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: idx * 0.15 }}>
-                        <CircularGauge value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} size={typeof window !== 'undefined' && window.innerWidth >= 1536 ? (idx === 0 ? 140 : 110) : typeof window !== 'undefined' && window.innerWidth < 400 ? (idx === 0 ? 90 : 72) : (idx === 0 ? 110 : 90)} />
-                        <div className="mt-2 text-center">
-                          <div className="font-display font-semibold text-xs sm:text-sm text-white truncate max-w-[80px] sm:max-w-[100px]">{student.name}</div>
-                          <div className="text-[11px] flex items-center gap-1 justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>
-                            <span>{student.teamEmoji}</span><span>{student.teamName}</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="rounded-lg overflow-hidden" style={{ backgroundColor: CARD_BG, border: `1px solid rgba(247,148,29,0.12)` }}>
-                    {topStudents.map((student, idx) => (
-                      <motion.div
-                        key={student.name}
-                        className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 2xl:gap-8 p-3 sm:p-4 2xl:p-5"
-                        style={{ borderBottom: idx < topStudents.length - 1 ? "1px solid rgba(247,148,29,0.08)" : "none" }}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      >
-                        <RankBadge rank={idx + 1} />
-                        <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: ORANGE + "15", border: `1px solid ${ORANGE}33` }}>{student.teamEmoji}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm text-white truncate">{student.name}</div>
-                          <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{student.teamName}</div>
-                        </div>
-                        <div className="w-20 sm:w-32 2xl:w-40"><PFBar value={student.xp} max={MAX_PF_SEMESTER} color={ORANGE} /></div>
-                        <div className="font-mono font-bold text-sm w-12 text-right" style={{ color: ORANGE }}>{student.xp.toFixed(1)}</div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </motion.div>
-          )}
+          {/* Ranking sections removed - only show activities, calculator, and rules */}
 
           {activeTab === "activities" && (
             <motion.div key="activities" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>

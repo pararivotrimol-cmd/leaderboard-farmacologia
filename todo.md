@@ -2169,3 +2169,13 @@
 - [x] Apagar materiais fictícios do portal do aluno
 - [x] Corrigir redirecionamento do admin para home page em vez de dashboard
 - [x] Testar layout sem barra superior em diferentes resoluções
+
+
+## Correções Portal do Aluno (Feb 26, 2026 - Noite)
+
+- [x] Subir botões para ficar abaixo da descrição do quadro geral
+- [x] Remover seção de ranking de equipes
+- [x] Remover seção de ranking individual (Top 10)
+- [x] Remover seção de materiais de estudo
+- [x] Corrigir erro 404 do botão Avisos (rota /avisos)
+- [x] Adicionar botão para pausar música da vinheta
