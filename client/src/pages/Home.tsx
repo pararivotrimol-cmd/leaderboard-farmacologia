@@ -278,6 +278,8 @@ export default function Home() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [showIntro, setShowIntro] = useState(true);
   const [vinhetaVolume, setVinhetaVolume] = useState(0.7);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"xp" | "name" | "week">("xp");
   const vinhetaAudioRef = useRef<HTMLAudioElement>(null);
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
@@ -368,8 +370,27 @@ export default function Home() {
     }
     return teams;
   }, [leaderboard, selectedClassId]);
-  const rankedTeams = useMemo(() => [...teamsData].sort((a, b) => getTeamPF(b) - getTeamPF(a)), [teamsData]);
-  const totalPages = Math.ceil(rankedTeams.length / TEAMS_PER_PAGE);
+  const rankedTeams = useMemo(() => {
+    let sorted = [...teamsData];
+    
+    // Apply sorting
+    if (sortBy === "xp") {
+      sorted.sort((a, b) => getTeamPF(b) - getTeamPF(a));
+    } else if (sortBy === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      sorted = sorted.filter(t => 
+        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.members.some(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    return sorted;
+  }, [teamsData, sortBy, searchQuery]);
+  const totalPages = Math.ceil(Math.max(1, rankedTeams.length / TEAMS_PER_PAGE));
   const paginatedTeams = useMemo(() => {
     const start = (currentPage - 1) * TEAMS_PER_PAGE;
     return rankedTeams.slice(start, start + TEAMS_PER_PAGE);
@@ -719,7 +740,68 @@ export default function Home() {
       {/* Content */}
       <div id="content-section" className="container pb-16 2xl:pb-24">
         <AnimatePresence mode="wait">
-          {/* Ranking sections removed - only show activities, calculator, and rules */}
+          {/* Teams tab with search and sort */}
+          {activeTab === "teams" && (
+            <motion.div key="teams" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              {/* Search and Sort Controls */}
+              <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Buscar equipe ou aluno..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-4 py-2 rounded-lg text-sm text-white placeholder-white/40"
+                    style={{ backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}33` }}
+                  />
+                </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-4 py-2 rounded-lg text-sm text-white"
+                  style={{ backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}33` }}
+                >
+                  <option value="xp">Ordenar por XP</option>
+                  <option value="name">Ordenar por Nome</option>
+                </select>
+              </div>
+
+              {/* Teams List */}
+              <div className="space-y-3 mb-6">
+                {paginatedTeams.map((team, idx) => (
+                  <TeamCard key={team.id} team={team} rank={(currentPage - 1) * TEAMS_PER_PAGE + idx + 1} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+                    style={{ backgroundColor: ORANGE }}
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-white/60 text-sm">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+                    style={{ backgroundColor: ORANGE }}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
 
           {activeTab === "activities" && (
             <motion.div key="activities" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>

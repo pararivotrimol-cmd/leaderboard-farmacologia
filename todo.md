@@ -2260,3 +2260,63 @@
 - [x] Notificar sobre mensagens de chat
 - [x] Adicionar badge de contagem de notificações não lidas
 - [x] Testar fluxo completo
+
+
+## Integração de Dados Reais e Painéis Avançados (Feb 26, 2026)
+
+### Painel de Estatísticas com Dados Reais
+- [ ] Criar endpoint tRPC para obter XP do aluno
+- [ ] Criar endpoint tRPC para listar atividades completadas
+- [ ] Criar endpoint tRPC para obter taxa de presença
+- [ ] Criar endpoint tRPC para ranking do aluno
+- [ ] Integrar endpoints no StudentStats.tsx
+- [ ] Exibir dados em tempo real com loading states
+- [ ] Adicionar gráficos dinâmicos com dados reais
+
+### Painel do Professor para Feedback
+- [ ] Criar página TeacherFeedback.tsx (/professor/avaliar-atividades)
+- [ ] Criar endpoint tRPC para listar submissões pendentes
+- [ ] Criar endpoint tRPC para enviar feedback
+- [ ] Criar endpoint tRPC para atribuir pontos
+- [ ] Implementar formulário de feedback com editor de texto
+- [ ] Adicionar visualização de submissão do aluno
+- [ ] Integrar com sistema de XP
+- [ ] Testar fluxo de avaliação
+
+### Filtros e Busca no Leaderboard
+- [ ] Adicionar filtro por equipe
+- [ ] Adicionar filtro por semana
+- [ ] Adicionar filtro por tipo de atividade
+- [ ] Implementar busca por nome de aluno
+- [ ] Adicionar ordenação por XP, presença, atividades
+- [ ] Salvar preferências de filtro no localStorage
+- [ ] Testar performance com muitos dados
+
+
+## Integração de Dados Reais e Painel do Professor (Feb 26, 2026)
+
+### Dados Reais no Painel de Estatísticas
+- [x] Criar endpoints tRPC para XP total do aluno
+- [x] Criar endpoints tRPC para XP semanal
+- [x] Criar endpoints tRPC para resumo de atividades
+- [x] Criar endpoints tRPC para taxa de presença
+- [x] Criar endpoints tRPC para ranking do aluno
+- [x] Integrar dados reais no StudentStats.tsx
+- [x] Exibir gráficos com dados reais
+
+### Painel do Professor
+- [x] Criar página TeacherFeedback.tsx
+- [x] Listar submissões pendentes de avaliação
+- [x] Formulario para fornecer feedback
+- [x] Campo para atribuir pontos automaticamente
+- [x] Exibir feedback anterior
+- [x] Criar endpoints tRPC para salvar feedback
+- [x] Integrar com sistema de XP
+
+### Filtros e Busca no Leaderboard
+- [x] Adicionar campo de busca por equipe/aluno
+- [x] Implementar filtro por semana
+- [x] Implementar ordenação por XP/Nome
+- [x] Adicionar paginação
+- [x] Testar filtros em mobile
+- [x] Testar busca com caracteres especiais

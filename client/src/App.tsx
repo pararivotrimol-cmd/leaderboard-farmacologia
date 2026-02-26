@@ -56,6 +56,7 @@ import QRCodeProjector from "./pages/QRCodeProjector";
 import StudentActivities from "./pages/StudentActivities";
 import ChatLive from "./pages/ChatLive";
 import StudentStats from "./pages/StudentStats";
+import TeacherFeedback from "./pages/TeacherFeedback";
 
 
 function Router() {
@@ -100,6 +101,7 @@ function Router() {
       <Route path={"/atividades"} component={StudentActivities} />
       <Route path={"/chat"} component={ChatLive} />
       <Route path={"/estatisticas"} component={StudentStats} />
+      <Route path={"/professor/avaliar-atividades"} component={TeacherFeedback} />
 
       <Route path={"/professor/perfil"} component={TeacherProfile} />      <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />

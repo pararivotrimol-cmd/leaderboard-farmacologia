@@ -23,16 +23,23 @@ export default function StudentStats() {
   const { user } = useAuth();
   const [timeRange, setTimeRange] = useState<"week" | "month" | "semester">("semester");
 
-  // Mock data - in production, fetch from API
+  // Fetch real data from tRPC endpoints
+  const { data: xpData } = trpc.studentStats.getTotalXP.useQuery();
+  const { data: weeklyData } = trpc.studentStats.getWeeklyXP.useQuery({ weeks: 7 });
+  const { data: activitiesData } = trpc.studentStats.getActivitiesSummary.useQuery();
+  const { data: attendanceData } = trpc.studentStats.getAttendanceRate.useQuery();
+  const { data: rankingData } = trpc.studentStats.getStudentRanking.useQuery();
+  const { data: teamData } = trpc.studentStats.getTeamInfo.useQuery();
+
   const statsData: StudentStatData = useMemo(() => ({
-    totalXP: 28.5,
-    weeklyXP: [4.2, 3.8, 5.1, 4.5, 3.2, 4.1, 3.6],
-    activitiesCompleted: 12,
-    activitiesPending: 5,
-    attendanceRate: 92,
-    rank: 15,
-    totalStudents: 85,
-  }), []);
+    totalXP: xpData?.totalXP ?? 0,
+    weeklyXP: weeklyData?.weeklyXP ?? [0, 0, 0, 0, 0, 0, 0],
+    activitiesCompleted: activitiesData?.completed ?? 0,
+    activitiesPending: activitiesData?.pending ?? 0,
+    attendanceRate: attendanceData?.attendanceRate ?? 0,
+    rank: rankingData?.rank ?? 0,
+    totalStudents: rankingData?.totalStudents ?? 0,
+  }), [xpData, weeklyData, activitiesData, attendanceData, rankingData]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -46,6 +53,8 @@ export default function StudentStats() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
+
+  const isLoading = !xpData || !weeklyData || !activitiesData || !attendanceData || !rankingData;
 
   if (!user) {
     return (
@@ -251,15 +260,10 @@ export default function StudentStats() {
               <h3 className="font-bold text-white">Sua Equipe</h3>
             </div>
             <div className="space-y-2">
-              {[
-                { name: "Você", xp: 28.5, role: "Membro" },
-                { name: "João Silva", xp: 32.1, role: "Membro" },
-                { name: "Maria Santos", xp: 29.8, role: "Membro" },
-              ].map((member, idx) => (
+              {(teamData?.members ?? []).map((member: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
                   <div>
                     <div className="text-sm text-white">{member.name}</div>
-                    <div className="text-xs text-white/40">{member.role}</div>
                   </div>
                   <div className="font-mono font-bold text-sm" style={{ color: ORANGE }}>
                     {member.xp} XP
