@@ -14,6 +14,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 import { toast } from "sonner";
 
@@ -280,7 +281,7 @@ export default function Home() {
   const vinhetaAudioRef = useRef<HTMLAudioElement>(null);
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [, setLocation] = useLocation();
 
   // Check if there's an active QR code session for the Presença badge (with polling every 30s)
@@ -394,9 +395,13 @@ export default function Home() {
   const courseName = leaderboard?.settings?.courseName || "Farmacologia I";
   const semester = leaderboard?.settings?.semester || "2026.1";
 
+  // Use real-time notifications hook
+  const { unreadCount: notificationCount } = useNotifications(user?.id);
+  
+  // Fallback to tRPC for initial notifications
   const { data: notifications } = trpc.notifications.getActive.useQuery();
-  // Notification badge: count of active (unread) notifications
-  const notificationCount = (notifications ?? []).length;
+  const initialNotificationCount = (notifications ?? []).length;
+  const displayNotificationCount = notificationCount > 0 ? notificationCount : initialNotificationCount;
 
   if (isLoading) {
     return (
@@ -572,39 +577,39 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
               <Link href="/cronograma" className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ backgroundColor: ORANGE, color: "#fff" }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ backgroundColor: ORANGE, color: "#fff" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Calendar className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Cronograma
-                </span>
+                </motion.span>
               </Link>
               <Link href="/attendance/check-in" className="w-full sm:w-auto relative">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <QrCode className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Presença
-                </span>
+                </motion.span>
                 {hasActiveQRSession && (
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#0A1628] animate-pulse" title="Check-in disponível" />
                 )}
               </Link>
               <button onClick={() => handleTabChange("calculator")} className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Calculator className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Média
-                </span>
+                </motion.span>
               </button>
               {/* Materiais button removed */}
               <Link href="/game/avatar-select" className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Gamepad2 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Jogo
                   <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                </span>
+                </motion.span>
               </Link>
               <button onClick={() => handleTabChange("activities")} className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Target className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Atividades
-                </span>
+                </motion.span>
               </button>
             </div>
             {/* Divider — mobile only */}
@@ -615,45 +620,45 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
               <button onClick={() => handleTabChange("teams")} className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Users className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Equipes
-                </span>
+                </motion.span>
               </button>
               <Link href="/meu-progresso" className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <TrendingUp className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Progresso
-                </span>
+                </motion.span>
               </Link>
               <Link href="/avisos" className="w-full sm:w-auto relative">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Bell className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Avisos
-                </span>
-                {notificationCount > 0 && (
+                </motion.span>
+                {displayNotificationCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#0A1628]">
-                    {notificationCount > 9 ? "9+" : notificationCount}
+                    {displayNotificationCount > 9 ? "9+" : displayNotificationCount}
                   </span>
                 )}
               </Link>
               <Link href="/dashboard" className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <BarChart3 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Dashboard
-                </span>
+                </motion.span>
               </Link>
               <button onClick={() => handleTabChange("rules")} className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <ClipboardList className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   Regras
-                </span>
+                </motion.span>
               </button>
               <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-                <span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                   <Youtube className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
                   YouTube
-                </span>
+                </motion.span>
               </a>
             </div>
           </div>

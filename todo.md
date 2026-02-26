@@ -2235,3 +2235,28 @@
 - [x] Exibir status online/offline do professor
 - [x] Escrever testes para endpoints de chat
 
+
+
+## Melhorias de UX e Notificações (Feb 26, 2026)
+
+### Animações nos Botões
+- [x] Adicionar efeito hover com escala (scale-105)
+- [x] Implementar transição suave de cor
+- [x] Adicionar shadow ao passar do mouse
+- [x] Testar em mobile e desktop
+
+### Painel de Estatísticas do Aluno
+- [x] Criar página StudentStats.tsx
+- [x] Exibir XP ganho por semana
+- [x] Mostrar atividades completadas vs. pendentes
+- [x] Exibir taxa de presença
+- [x] Integrar com dados do leaderboard
+- [x] Adicionar gráficos de progresso
+
+### Notificações em Tempo Real
+- [x] Integrar WebSocket para notificações
+- [x] Criar toast notifications para novas atividades
+- [x] Alertar sobre feedback do professor
+- [x] Notificar sobre mensagens de chat
+- [x] Adicionar badge de contagem de notificações não lidas
+- [x] Testar fluxo completo
