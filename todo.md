@@ -2161,3 +2161,11 @@
 - [ ] Auditar StudentNavBar para remover links para painel admin geral
 - [ ] Auditar TeacherProfile para remover links para painel admin geral
 - [ ] Auditar Home.tsx para remover links para painel admin geral
+
+
+## Melhorias de Layout - Portal do Aluno (Feb 26, 2026)
+
+- [x] Remover barra superior (StudentNavBar) completamente do portal do aluno
+- [x] Apagar materiais fictícios do portal do aluno
+- [x] Corrigir redirecionamento do admin para home page em vez de dashboard
+- [x] Testar layout sem barra superior em diferentes resoluções

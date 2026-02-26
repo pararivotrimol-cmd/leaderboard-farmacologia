@@ -14,7 +14,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import StudentNavBar from "@/components/StudentNavBar";
+
 import { toast } from "sonner";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/TYglakFwBNwpBXzT.png";
@@ -411,13 +411,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>
-      <StudentNavBar
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as any)}
-        selectedClassId={selectedClassId || undefined}
-        onClassChange={setSelectedClassId}
-        showClassSelector={true}
-      />
+
       <audio
         ref={vinhetaAudioRef}
         src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/dyTXKdfarsaUsmEI.mp3"
