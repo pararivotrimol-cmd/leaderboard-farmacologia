@@ -1050,11 +1050,7 @@ export default function Home() {
             <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="text-xs flex items-center gap-1 transition-colors" style={{ color: "rgba(255,255,255,0.3)" }}>
               <Youtube size={10} /> YouTube
             </a>
-            <Link href="/admin">
-              <span className="text-xs flex items-center gap-1 transition-colors" style={{ color: "rgba(255,255,255,0.2)" }}>
-                <Settings size={10} /> Admin
-              </span>
-            </Link>
+
           </div>
           <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>
             Conexão em Farmacologia • Semana {currentWeek} • Prof. Pedro Braga • Sistema de Gamificação

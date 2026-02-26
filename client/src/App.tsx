@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import StudentProgress from "./pages/StudentProgress";
 import Avisos from "./pages/Avisos";
 import StudentNotifications from "./pages/StudentNotifications";
+import NotificationPreferences from "./pages/NotificationPreferences";
 import Materiais from "./pages/Materiais";
 import Conquistas from "./pages/Conquistas";
 import StudentLogin from "./pages/StudentLogin";
@@ -82,10 +83,9 @@ function Router() {
       <Route path="/game/progress" component={StudentProgressDashboard} />
       <Route path="/jogo/conquistas" component={GameAchievements} />
       <Route path={"/aluno/:classId"} component={StudentArea} />
-      <Route path={"/meu-progresso"} component={StudentProgress} />
-      <Route path={"/avisos"} component={StudentNotifications} />
-      <Route path={"/avisos-legado"} component={Avisos} />
-      <Route path={"/materiais"} component={Materiais} />
+      <Route path={"/meu-progresso"} component={StudentProgress} />      <Route path={"/ avisos"} component={StudentNotifications} />
+      <Route path={"/ avisos-legado"} component={Avisos} />
+      <Route path={"/ avisos/preferencias"} component={NotificationPreferences} />      <Route path={"/materiais"} component={Materiais} />
       <Route path={"/conquistas"} component={Conquistas} />
       <Route path={"/login-aluno"} component={StudentLogin} />
       <Route path={"/presenca"} component={Presenca} />

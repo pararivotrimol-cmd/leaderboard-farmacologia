@@ -84,7 +84,7 @@ export default function TeacherProfile() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Perfil não encontrado</p>
-          <Link href="/admin/professor" className="text-primary hover:underline">Voltar ao painel</Link>
+
         </div>
       </div>
     );
@@ -204,14 +204,7 @@ export default function TeacherProfile() {
       {/* Header */}
       <div className="border-b border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <div className="container py-4 sm:py-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/admin/professor">
-              <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={16} />
-                Voltar ao Painel
-              </button>
-            </Link>
-          </div>
+
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Photo */}
             <div className="relative group">

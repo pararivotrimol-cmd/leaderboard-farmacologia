@@ -1396,3 +1396,28 @@ export const studentNotifications = mysqlTable("studentNotifications", {
 });
 export type StudentNotification = typeof studentNotifications.$inferSelect;
 export type InsertStudentNotification = typeof studentNotifications.$inferInsert;
+
+
+/**
+ * Notification Preferences - Student notification settings
+ * Stores user preferences for notifications, quiet hours, and notification types
+ */
+export const notificationPreferences = mysqlTable("notificationPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  memberId: int("memberId").notNull().unique(),
+  
+  // Global enable/disable
+  enabled: boolean("enabled").notNull().default(true),
+  
+  // Enabled notification types (JSON array)
+  enabledTypes: text("enabledTypes").notNull().default(JSON.stringify(["team_allocation", "grade_update", "announcement", "reminder", "attendance"])),
+  
+  // Quiet hours (24-hour format, 0-23)
+  quietHoursStart: int("quietHoursStart").notNull().default(22),
+  quietHoursEnd: int("quietHoursEnd").notNull().default(8),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;

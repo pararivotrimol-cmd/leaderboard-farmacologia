@@ -119,4 +119,42 @@ export const studentNotificationsRouter = router({
 
       return { results, totalSent: results.filter(r => r.success).length };
     }),
+
+  // Get notification preferences for a student
+  getPreferences: publicProcedure
+    .input(z.object({
+      memberId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const prefs = await db.getNotificationPreferences(input.memberId);
+      if (!prefs) {
+        return {
+          memberId: input.memberId,
+          enabled: true,
+          enabledTypes: ["team_allocation", "grade_update", "announcement", "reminder", "attendance"],
+          quietHoursStart: 22,
+          quietHoursEnd: 8,
+        };
+      }
+      return prefs;
+    }),
+
+  // Update notification preferences
+  updatePreferences: publicProcedure
+    .input(z.object({
+      memberId: z.number(),
+      enabled: z.boolean(),
+      enabledTypes: z.array(z.string()),
+      quietHoursStart: z.number().min(0).max(23),
+      quietHoursEnd: z.number().min(0).max(23),
+    }))
+    .mutation(async ({ input }) => {
+      await db.updateNotificationPreferences(input.memberId, {
+        enabled: input.enabled,
+        enabledTypes: input.enabledTypes,
+        quietHoursStart: input.quietHoursStart,
+        quietHoursEnd: input.quietHoursEnd,
+      });
+      return { success: true };
+    }),
 });

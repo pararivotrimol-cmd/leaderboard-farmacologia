@@ -34,6 +34,7 @@ import {
   backupRecords, InsertBackupRecord,
   restoreHistory, InsertRestoreHistory, RestoreHistory,
   studentNotifications, InsertStudentNotification,
+  notificationPreferences, InsertNotificationPreference,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1616,4 +1617,52 @@ export async function getNewMaterialsCount() {
       gte(materials.createdAt, oneWeekAgo)
     ));
   return result[0]?.count ?? 0;
+}
+
+// Notification Preferences
+export async function getNotificationPreferences(memberId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(notificationPreferences).where(eq(notificationPreferences.memberId, memberId)).limit(1);
+  if (result.length > 0) {
+    return {
+      ...result[0],
+      enabledTypes: JSON.parse(result[0].enabledTypes || "[]"),
+    };
+  }
+  return null;
+}
+
+export async function updateNotificationPreferences(
+  memberId: number,
+  data: {
+    enabled: boolean;
+    enabledTypes: string[];
+    quietHoursStart: number;
+    quietHoursEnd: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await getNotificationPreferences(memberId);
+  if (existing) {
+    await db
+      .update(notificationPreferences)
+      .set({
+        enabled: data.enabled,
+        enabledTypes: JSON.stringify(data.enabledTypes),
+        quietHoursStart: data.quietHoursStart,
+        quietHoursEnd: data.quietHoursEnd,
+        updatedAt: new Date(),
+      })
+      .where(eq(notificationPreferences.memberId, memberId));
+  } else {
+    await db.insert(notificationPreferences).values({
+      memberId,
+      enabled: data.enabled,
+      enabledTypes: JSON.stringify(data.enabledTypes),
+      quietHoursStart: data.quietHoursStart,
+      quietHoursEnd: data.quietHoursEnd,
+    });
+  }
 }

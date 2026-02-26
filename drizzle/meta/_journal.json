@@ -64,6 +64,13 @@
       "when": 1771970375438,
       "tag": "0008_thick_leopardon",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1772066229112,
+      "tag": "0009_long_corsair",
+      "breakpoints": true
     }
   ]
 }

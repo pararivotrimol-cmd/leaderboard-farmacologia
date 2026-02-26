@@ -3169,7 +3169,7 @@ export default function Admin() {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
     return token ? "__loading__" : null;
   });
-  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "auditoria" | "rebalanceamento" | "qr-code">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication - read synchronously to prevent redirect loop
@@ -3238,7 +3238,6 @@ export default function Admin() {
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
-    { key: "auditoria" as const, label: "Auditoria", icon: <Clock size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
     { key: "settings" as const, label: "Configurações", icon: <Settings size={16} /> },
@@ -3315,7 +3314,7 @@ export default function Admin() {
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
-        {activeSection === "auditoria" && teacherToken && <AuditLogManager teacherToken={teacherToken} />}
+
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}
         {activeSection === "qr-code" && <AttendanceQRCodeManager />}
         {activeSection === "settings" && password && <SettingsManager password={password} />}

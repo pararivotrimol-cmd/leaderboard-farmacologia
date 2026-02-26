@@ -2141,3 +2141,23 @@
 - [x] Adicionar filtro por tipo de notificacao (team_allocation, grade_update, announcement, etc.)
 - [x] Implementar toast do sistema ao receber nova notificacao
 - [x] Testar WebSocket em multiplas abas do navegador
+
+
+## Notificações Push e Preferências
+- [ ] Implementar Notification API para alertas do sistema operacional
+- [ ] Criar página de preferências de notificação do aluno
+- [ ] Permitir desativar notificações por tipo (team_allocation, grade_update, etc.)
+- [ ] Implementar horário silencioso (quiet hours) - ex: sem notificações após 22h
+- [ ] Salvar preferências no banco de dados
+
+## Portal do Professor - Melhorias
+- [ ] Remover seção de auditoria do portal do professor
+- [ ] Implementar barra de ações dinâmica (não fixa) no portal do professor
+- [ ] Remover todos os links para painel admin geral do portal do professor
+- [ ] Remover todos os links para painel admin geral do portal do aluno
+
+## Isolamento de Portais
+- [ ] Auditar Admin.tsx para remover links para painel admin geral
+- [ ] Auditar StudentNavBar para remover links para painel admin geral
+- [ ] Auditar TeacherProfile para remover links para painel admin geral
+- [ ] Auditar Home.tsx para remover links para painel admin geral
