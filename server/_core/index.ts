@@ -10,6 +10,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { initializeWebSocket } from "./websocket";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -33,6 +34,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  
+  initializeWebSocket(server);
   
   // Security headers with Helmet
   app.use(helmet({
@@ -141,6 +144,7 @@ async function startServer() {
     console.log('[Security] Helmet enabled');
     console.log('[Security] CORS configured');
     console.log('[Security] Rate limiting enabled');
+    console.log('[WebSocket] Real-time notifications enabled');
   });
 }
 

@@ -2132,3 +2132,12 @@
 - [x] Implementar badge de materiais novos no botão Materiais
 - [x] Criar página /avisos com lista de notificações
 - [x] Implementar marcação de lido/não lido nas notificações
+
+
+## Notificações em Tempo Real - WebSocket
+- [x] Implementar servidor WebSocket para push de notificacoes
+- [x] Criar hook useNotificationSocket para conectar cliente ao WebSocket
+- [x] Adicionar busca por texto na pagina /avisos
+- [x] Adicionar filtro por tipo de notificacao (team_allocation, grade_update, announcement, etc.)
+- [x] Implementar toast do sistema ao receber nova notificacao
+- [x] Testar WebSocket em multiplas abas do navegador
