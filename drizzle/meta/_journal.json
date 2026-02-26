@@ -71,6 +71,20 @@
       "when": 1772066229112,
       "tag": "0009_long_corsair",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1772068283480,
+      "tag": "0010_white_shriek",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1772068481986,
+      "tag": "0011_lucky_karnak",
+      "breakpoints": true
     }
   ]
 }

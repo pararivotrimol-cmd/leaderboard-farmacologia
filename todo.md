@@ -2179,3 +2179,15 @@
 - [x] Remover seção de materiais de estudo
 - [x] Corrigir erro 404 do botão Avisos (rota /avisos)
 - [x] Adicionar botão para pausar música da vinheta
+
+
+## Sistema de Atividades - Pontuação PF (Feb 26, 2026)
+
+- [x] Criar tabelas: activities, submissions, xpHistory
+- [x] Criar endpoints tRPC para CRUD de atividades
+- [x] Criar endpoints para submissão de respostas
+- [x] Criar endpoints para cálculo de pontuação
+- [x] Implementar painel admin para gerenciar atividades
+- [x] Implementar portal do aluno para visualizar atividades
+- [x] Integrar pontuação com leaderboard existente
+- [x] Testar sistema de pontuação end-to-end

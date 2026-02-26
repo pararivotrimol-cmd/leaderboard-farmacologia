@@ -1421,3 +1421,6 @@ export const notificationPreferences = mysqlTable("notificationPreferences", {
 });
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+
+// Activity system tables already exist: activityTemplates, activitySubmissions
