@@ -15,6 +15,7 @@ import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useStudentAuth } from "@/pages/StudentLogin";
 
 import { toast } from "sonner";
 
@@ -284,6 +285,7 @@ export default function Home() {
   const { data: leaderboard, isLoading } = trpc.leaderboard.getData.useQuery();
   const { data: classes } = trpc.classes.list.useQuery({ sessionToken: "" });
   const { logout, user } = useAuth();
+  const { student: studentData } = useStudentAuth();
   const [, setLocation] = useLocation();
 
   // Check if there's an active QR code session for the Presença badge (with polling every 30s)
@@ -550,16 +552,49 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Title */}
+          {/* Title + Student Avatar */}
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="flex-1">
+              {/* Student greeting with avatar */}
+              {studentData && (
+                <motion.div
+                  className="flex items-center gap-3 mb-4 p-3 rounded-xl"
+                  style={{ backgroundColor: "rgba(247,148,29,0.08)", border: `1px solid rgba(247,148,29,0.18)` }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {/* Avatar circle with initials */}
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 shadow-lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${ORANGE}, #FFD700)`,
+                      color: "#fff",
+                      boxShadow: `0 0 16px ${ORANGE}55`,
+                    }}
+                  >
+                    {studentData.memberName
+                      ? studentData.memberName.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
+                      : "?"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.45)" }}>Bem-vindo(a) de volta,</p>
+                    <p className="text-sm font-display font-bold text-white truncate">
+                      {studentData.memberName?.split(" ")[0] ?? "Aluno"}
+                      {studentData.teamEmoji && <span className="ml-1.5">{studentData.teamEmoji}</span>}
+                    </p>
+                    {studentData.teamName && (
+                      <p className="text-[11px]" style={{ color: ORANGE }}>Equipe: {studentData.teamName}</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
               <h1 className="font-display font-extrabold text-2xl sm:text-5xl 2xl:text-6xl text-white leading-tight">
                 Quadro Geral de<span className="text-gradient-orange"> Pontuação</span>
               </h1>
               <p className="mt-2 text-sm sm:text-base 2xl:text-lg max-w-xl 2xl:max-w-2xl font-body" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Acompanhe os Pontos Farmacológicos (PF) das equipes e dos alunos em tempo real. Semana {currentWeek} de 16 do semestre.
               </p>
-
             </div>
             <img src={LOGO_URL} alt="Conexão em Farmacologia" className="w-40 h-40 sm:w-52 sm:h-52 2xl:w-64 2xl:h-64 object-contain shrink-0 drop-shadow-lg hidden sm:block" />
           </div>
@@ -590,96 +625,198 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Navigation Buttons — Below stats, grouped, responsive grid */}
-          <div className="mt-4 sm:mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 py-4 sm:py-0" style={{ backgroundColor: "transparent" }}>
-            {/* Category: Conteúdo */}
-            <div className="mb-3 sm:mb-4">
-              <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Conteúdo</span>
+          {/* Navigation Cards — Dynamic grid below stats */}
+          <div className="mt-6">
+            {/* Section label */}
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${ORANGE}40, transparent)` }} />
+              <span className="text-[10px] uppercase tracking-widest font-semibold px-2" style={{ color: ORANGE + "90" }}>Navegação Rápida</span>
+              <div className="h-px flex-1" style={{ background: `linear-gradient(270deg, ${ORANGE}40, transparent)` }} />
             </div>
-            <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
-              <Link href="/cronograma" className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ backgroundColor: ORANGE, color: "#fff" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Calendar className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Cronograma
-                </motion.span>
+
+            {/* Primary action cards - large on desktop, compact on mobile */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+              {/* Cronograma */}
+              <Link href="/cronograma">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: ORANGE, color: "#fff", boxShadow: `0 4px 20px ${ORANGE}40` }}
+                  whileHover={{ scale: 1.06, y: -3, boxShadow: `0 8px 28px ${ORANGE}60` }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Calendar className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Cronograma</span>
+                </motion.div>
               </Link>
-              <Link href="/attendance/check-in" className="w-full sm:w-auto relative">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <QrCode className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Presença
-                </motion.span>
+
+              {/* Presença */}
+              <Link href="/attendance/check-in" className="relative">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: ORANGE + "15", color: ORANGE, border: `1px solid ${ORANGE}35` }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: ORANGE + "25", boxShadow: `0 6px 20px ${ORANGE}30` }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <QrCode className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Presença</span>
+                </motion.div>
                 {hasActiveQRSession && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#0A1628] animate-pulse" title="Check-in disponível" />
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#0A1628] animate-pulse" />
                 )}
               </Link>
-              <button onClick={() => handleTabChange("calculator")} className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "calculator" ? "#fff" : ORANGE, backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Calculator className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Média
-                </motion.span>
+
+              {/* Média */}
+              <button onClick={() => handleTabChange("calculator")} className="text-left">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === "calculator" ? ORANGE : ORANGE + "15",
+                    color: activeTab === "calculator" ? "#fff" : ORANGE,
+                    border: `1px solid ${activeTab === "calculator" ? ORANGE : ORANGE + "35"}`,
+                    boxShadow: activeTab === "calculator" ? `0 4px 20px ${ORANGE}40` : "none",
+                  }}
+                  whileHover={{ scale: 1.06, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Calculator className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Média</span>
+                </motion.div>
               </button>
-              {/* Materiais button removed */}
-              <Link href="/game/avatar-select" className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium ring-1 ring-emerald-400/60" style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.15)" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Gamepad2 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Jogo
-                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                </motion.span>
+
+              {/* Jogo */}
+              <Link href="/game/avatar-select">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer relative overflow-hidden"
+                  style={{ backgroundColor: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(52,211,153,0.35)" }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: "rgba(16,185,129,0.25)", boxShadow: "0 6px 20px rgba(52,211,153,0.25)" }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Gamepad2 className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Jogo</span>
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                </motion.div>
               </Link>
-              <button onClick={() => handleTabChange("activities")} className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "activities" ? "#fff" : ORANGE, backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Target className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Atividades
-                </motion.span>
+
+              {/* Atividades */}
+              <button onClick={() => handleTabChange("activities")} className="text-left">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === "activities" ? ORANGE : ORANGE + "15",
+                    color: activeTab === "activities" ? "#fff" : ORANGE,
+                    border: `1px solid ${activeTab === "activities" ? ORANGE : ORANGE + "35"}`,
+                    boxShadow: activeTab === "activities" ? `0 4px 20px ${ORANGE}40` : "none",
+                  }}
+                  whileHover={{ scale: 1.06, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Target className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Atividades</span>
+                </motion.div>
               </button>
-            </div>
-            {/* Divider — mobile only */}
-            <div className="my-2 sm:hidden" style={{ borderTop: `1px solid ${ORANGE}18` }} />
-            {/* Category: Ferramentas */}
-            <div className="mb-1.5 sm:hidden">
-              <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Ferramentas</span>
-            </div>
-            <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-1.5 sm:gap-2">
-              <button onClick={() => handleTabChange("teams")} className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "teams" ? "#fff" : ORANGE, backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Users className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Equipes
-                </motion.span>
+
+              {/* Equipes */}
+              <button onClick={() => handleTabChange("teams")} className="text-left">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === "teams" ? ORANGE : ORANGE + "15",
+                    color: activeTab === "teams" ? "#fff" : ORANGE,
+                    border: `1px solid ${activeTab === "teams" ? ORANGE : ORANGE + "35"}`,
+                    boxShadow: activeTab === "teams" ? `0 4px 20px ${ORANGE}40` : "none",
+                  }}
+                  whileHover={{ scale: 1.06, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Equipes</span>
+                </motion.div>
               </button>
-              <Link href="/meu-progresso" className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <TrendingUp className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Progresso
-                </motion.span>
+
+              {/* Progresso */}
+              <Link href="/meu-progresso">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: ORANGE + "15", color: ORANGE, border: `1px solid ${ORANGE}35` }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: ORANGE + "25", boxShadow: `0 6px 20px ${ORANGE}30` }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Progresso</span>
+                </motion.div>
               </Link>
-              <Link href="/avisos" className="w-full sm:w-auto relative">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Bell className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Avisos
-                </motion.span>
+
+              {/* Avisos */}
+              <Link href="/avisos" className="relative">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: ORANGE + "15", color: ORANGE, border: `1px solid ${ORANGE}35` }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: ORANGE + "25", boxShadow: `0 6px 20px ${ORANGE}30` }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Bell className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Avisos</span>
+                </motion.div>
                 {displayNotificationCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#0A1628]">
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-[#0A1628]">
                     {displayNotificationCount > 9 ? "9+" : displayNotificationCount}
                   </span>
                 )}
               </Link>
-              <Link href="/dashboard" className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: ORANGE, backgroundColor: ORANGE + "10", border: `1px solid ${ORANGE}30` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <BarChart3 className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Dashboard
-                </motion.span>
+
+              {/* Dashboard */}
+              <Link href="/dashboard">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: ORANGE + "15", color: ORANGE, border: `1px solid ${ORANGE}35` }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: ORANGE + "25", boxShadow: `0 6px 20px ${ORANGE}30` }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Dashboard</span>
+                </motion.div>
               </Link>
-              <button onClick={() => handleTabChange("rules")} className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: activeTab === "rules" ? "#fff" : ORANGE, backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "10", border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "30"}` }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <ClipboardList className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  Regras
-                </motion.span>
+
+              {/* Regras */}
+              <button onClick={() => handleTabChange("rules")} className="text-left">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === "rules" ? ORANGE : ORANGE + "15",
+                    color: activeTab === "rules" ? "#fff" : ORANGE,
+                    border: `1px solid ${activeTab === "rules" ? ORANGE : ORANGE + "35"}`,
+                    boxShadow: activeTab === "rules" ? `0 4px 20px ${ORANGE}40` : "none",
+                  }}
+                  whileHover={{ scale: 1.06, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <ClipboardList className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Regras</span>
+                </motion.div>
               </button>
-              <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-                <motion.span className="nav-btn-touch w-full inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 sm:py-2 rounded-lg text-[11px] sm:text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }} whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Youtube className="w-[18px] h-[18px] sm:w-[14px] sm:h-[14px]" />
-                  YouTube
-                </motion.span>
+
+              {/* YouTube */}
+              <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{ backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  whileHover={{ scale: 1.06, y: -3, backgroundColor: "rgba(255,0,0,0.12)", color: "#ff4444", borderColor: "rgba(255,68,68,0.3)" }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Youtube className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">YouTube</span>
+                </motion.div>
               </a>
             </div>
           </div>
