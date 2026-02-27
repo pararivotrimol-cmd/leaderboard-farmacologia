@@ -2346,3 +2346,15 @@
 - [ ] Permitir justificar faltas (motivo, data)
 - [ ] Adicionar confirmação antes de salvar presença manual
 - [ ] Registrar quem marcou a presença manual (auditoria)
+
+## Portal de Monitores (Feb 27, 2026)
+
+- [ ] Analisar estrutura atual de contas de alunos/monitores
+- [ ] Criar campo isMonitor na tabela studentAccounts ou tabela separada monitorAccounts
+- [ ] Criar endpoints tRPC para listar, cadastrar e remover monitores
+- [ ] Criar página MonitorPortal.tsx com acesso a: Jogo, Turmas, Equipes, Frequências, Recursos, Seminários
+- [ ] Criar página MonitorManagement.tsx no portal do professor para gerenciar monitores
+- [ ] Adicionar rota /monitor no App.tsx
+- [ ] Adicionar link "Monitores" no painel do professor
+- [ ] Migrar monitores existentes nas contas de alunos para a nova área
+- [ ] Testar fluxo completo de cadastro e acesso do monitor

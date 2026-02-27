@@ -3,7 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, PieChart, TrendingUp, Users, Target, Zap } from "lucide-react";
+import { BarChart, PieChart, TrendingUp, Users, Target, Zap, GraduationCap, ChevronRight } from "lucide-react";
+import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function TeacherDashboard() {
@@ -201,7 +202,37 @@ export default function TeacherDashboard() {
           </Card>
         )}
 
-
+        {/* Seção de Monitores */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              Monitores da Disciplina
+            </h3>
+            <Link href="/monitor">
+              <Button variant="outline" size="sm" className="gap-1">
+                Portal do Monitor <ChevronRight size={14} />
+              </Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Acesso do Monitor</p>
+              <p className="text-sm font-medium">Portal dedicado em <code className="text-primary">/monitor</code></p>
+              <p className="text-xs text-muted-foreground mt-1">Login com email e senha cadastrados</p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Funcionalidades</p>
+              <p className="text-sm font-medium">Jogo, Turmas, Equipes</p>
+              <p className="text-xs text-muted-foreground mt-1">Frequências, Recursos, Seminários</p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Gerenciar Monitores</p>
+              <p className="text-sm font-medium">Cadastro via Contas de Alunos</p>
+              <p className="text-xs text-muted-foreground mt-1">Promova alunos externos a monitores</p>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

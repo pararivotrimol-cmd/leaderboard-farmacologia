@@ -198,6 +198,10 @@ export const studentAccounts = mysqlTable("studentAccounts", {
   matricula: varchar("matricula", { length: 30 }).notNull().unique(),
   // Hashed password (bcrypt)
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  // Account type: student (regular), monitor (teaching assistant), external (outside UNIRIO)
+  accountType: mysqlEnum("accountType", ["student", "monitor", "external"]).notNull().default("student"),
+  // Monitor-specific: name for display (monitors may not have a memberId)
+  displayName: varchar("displayName", { length: 200 }),
   // Whether the account is verified/active
   isActive: int("isActive").notNull().default(1),
   // Session token for login persistence
