@@ -2320,3 +2320,29 @@
 - [x] Adicionar paginação
 - [x] Testar filtros em mobile
 - [x] Testar busca com caracteres especiais
+
+
+## Relatório de Presença e Presença Manual (Feb 27, 2026)
+
+### Relatório de Presença por Aluno
+- [ ] Criar endpoints tRPC para obter taxa de presença por aluno
+- [ ] Criar endpoints tRPC para obter faltas justificadas vs. injustificadas
+- [ ] Criar endpoints tRPC para tendências semanais de presença
+- [ ] Implementar página `/professor/relatorios-presenca`
+- [ ] Adicionar gráficos de presença semanal
+- [ ] Adicionar filtros por equipe e período
+- [ ] Exportar relatório em PDF/CSV
+
+### Notificações de Presença
+- [ ] Integrar WebSocket para notificações em tempo real
+- [ ] Criar toast notification quando aluno registra presença
+- [ ] Salvar log de check-ins com timestamp
+- [ ] Exibir lista de presentes em tempo real no painel do professor
+- [ ] Adicionar som de notificação (opcional)
+
+### Presença Manual
+- [ ] Criar endpoint tRPC para marcar presença manualmente
+- [ ] Adicionar interface no painel do professor para marcar presença
+- [ ] Permitir justificar faltas (motivo, data)
+- [ ] Adicionar confirmação antes de salvar presença manual
+- [ ] Registrar quem marcou a presença manual (auditoria)

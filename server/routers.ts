@@ -26,6 +26,7 @@ import { activitiesRouter } from "./routers/activities";
 import { studentActivitiesRouter } from "./routers/studentActivities";
 import { chatRouter } from "./routers/chat";
 import { studentStatsRouter } from "./routers/student-stats";
+import { attendanceReportsDetailedRouter } from "./routers/attendance-reports-detailed";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -134,6 +135,7 @@ export const appRouter = router({
   jigsawComplete: jigsawCompleteRouter,
   attendance: attendanceRouter,
   attendanceReport: attendanceReportRouter,
+  attendanceReportsDetailed: attendanceReportsDetailedRouter,
   audit: auditRouter,
   assessments: assessmentRouter,
   questions: questionsRouter,
