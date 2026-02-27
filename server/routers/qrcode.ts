@@ -306,33 +306,8 @@ export const qrcodeRouter = router({
         );
       }
 
-      // Verificar horário (com tolerância de 5 minutos)
-      const now = new Date();
-      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-        now.getMinutes()
-      ).padStart(2, "0")}`;
-      const currentDay = now.getDay();
-
-      // Permitir check-in no dia correto, com tolerância de horário
-      if (currentDay !== session[0].dayOfWeek) {
-        throw new Error("Fora do dia de aula para esta sessão");
-      }
-
-      // Adicionar 5 min de tolerância no início e fim
-      const addMinutes = (time: string, mins: number) => {
-        const [h, m] = time.split(":").map(Number);
-        const totalMins = h * 60 + m + mins;
-        return `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
-      };
-
-      const startWithTolerance = addMinutes(session[0].startTime, -5);
-      const endWithTolerance = addMinutes(session[0].endTime, 5);
-
-      if (currentTime < startWithTolerance || currentTime > endWithTolerance) {
-        throw new Error(
-          `Fora do horário de presença (${session[0].startTime} - ${session[0].endTime})`
-        );
-      }
+      // Permitir check-in a qualquer hora e dia (sem restrições)
+      // O professor controla quando o QR code está ativo
 
       // Verificar se aluno já registrou presença nesta sessão
       const existingRecord = await db

@@ -591,7 +591,7 @@ export default function Home() {
           </div>
 
           {/* Navigation Buttons — Below stats, grouped, responsive grid */}
-          <div className="mt-16 sm:mt-12 -mx-4 px-4 sm:mx-0 sm:px-0 py-4 sm:py-0" style={{ backgroundColor: "transparent" }}>
+          <div className="mt-4 sm:mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 py-4 sm:py-0" style={{ backgroundColor: "transparent" }}>
             {/* Category: Conteúdo */}
             <div className="mb-3 sm:mb-4">
               <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: ORANGE + "90" }}>Conteúdo</span>

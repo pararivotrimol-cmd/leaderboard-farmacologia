@@ -76,7 +76,7 @@ export default function AttendanceQRCodeManager() {
             Configurar QR Code
           </CardTitle>
           <CardDescription>
-            Selecione a data da aula (terças-feiras de 8h às 12h)
+            Selecione qualquer data para gerar um QR code de presença
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -93,12 +93,6 @@ export default function AttendanceQRCodeManager() {
                 <Badge variant="default" className="mt-2">
                   Hoje
                 </Badge>
-              )}
-              {!isTuesday && (
-                <div className="text-orange-600 mt-2 flex items-center gap-1">
-                  <AlertCircle size={14} />
-                  Esta data não é uma terça-feira
-                </div>
               )}
             </div>
           </div>
