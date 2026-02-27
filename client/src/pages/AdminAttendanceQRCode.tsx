@@ -99,7 +99,7 @@ export default function AttendanceQRCodeManager() {
 
           <Button
             onClick={handleGenerateQRCode}
-            disabled={isGenerating || !isTuesday}
+            disabled={isGenerating}
             className="w-full"
             size="lg"
           >
