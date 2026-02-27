@@ -57,6 +57,8 @@ import StudentActivities from "./pages/StudentActivities";
 import ChatLive from "./pages/ChatLive";
 import StudentStats from "./pages/StudentStats";
 import TeacherFeedback from "./pages/TeacherFeedback";
+import AttendanceReports from "./pages/AttendanceReports";
+import ManualAttendance from "./pages/ManualAttendance";
 
 
 function Router() {
@@ -102,6 +104,8 @@ function Router() {
       <Route path={"/chat"} component={ChatLive} />
       <Route path={"/estatisticas"} component={StudentStats} />
       <Route path={"/professor/avaliar-atividades"} component={TeacherFeedback} />
+      <Route path={"/professor/relatorios-presenca"} component={AttendanceReports} />
+      <Route path={"/professor/presenca-manual"} component={ManualAttendance} />
 
       <Route path={"/professor/perfil"} component={TeacherProfile} />      <Route path={"/professor/login"} component={ProfessorLogin} />
       <Route path={"/professor/signup"} component={ProfessorSignup} />
