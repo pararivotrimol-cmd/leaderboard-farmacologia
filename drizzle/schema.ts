@@ -1534,6 +1534,7 @@ export const scheduleEntries = mysqlTable("scheduleEntries", {
   highlight: boolean("highlight").notNull().default(false), // destaque visual (provas)
   sortOrder: int("sortOrder").notNull().default(0), // ordem de exibição
   isActive: boolean("isActive").notNull().default(true),
+  gameWeekNumber: int("gameWeekNumber"), // Vinculação com semana do jogo (1-16, nullable)
   createdBy: int("createdBy"), // ID do professor que criou/editou
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

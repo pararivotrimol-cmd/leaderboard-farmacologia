@@ -566,13 +566,15 @@ function CronogramaManager() {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula" as "aula" | "tbl" | "caso" | "jigsaw" | "prova", highlight: false, sortOrder: 0, isActive: true });
+  const [form, setForm] = useState({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula" as "aula" | "tbl" | "caso" | "jigsaw" | "prova", highlight: false, sortOrder: 0, isActive: true, gameWeekNumber: null as number | null });
 
-  const resetForm = () => setForm({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula", highlight: false, sortOrder: entries.length + 1, isActive: true });
+  const { data: gameWeeks = [] } = trpc.schedule.getGameWeeks.useQuery(undefined);
+
+  const resetForm = () => setForm({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula", highlight: false, sortOrder: entries.length + 1, isActive: true, gameWeekNumber: null });
 
   const startEdit = (entry: typeof entries[0]) => {
     setEditingId(entry.id);
-    setForm({ weekLabel: entry.weekLabel, weekDate: entry.weekDate ?? "", title: entry.title, detail: entry.detail ?? "", type: entry.type as any, highlight: entry.highlight, sortOrder: entry.sortOrder, isActive: entry.isActive });
+    setForm({ weekLabel: entry.weekLabel, weekDate: entry.weekDate ?? "", title: entry.title, detail: entry.detail ?? "", type: entry.type as any, highlight: entry.highlight, sortOrder: entry.sortOrder, isActive: entry.isActive, gameWeekNumber: (entry as any).gameWeekNumber ?? null });
   };
 
   const moveEntry = (id: number, direction: "up" | "down") => {
@@ -623,6 +625,23 @@ function CronogramaManager() {
         <label className="text-xs text-muted-foreground mb-1 block">Ordem</label>
         <input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
       </div>
+      <div>
+        <label className="text-xs text-muted-foreground mb-1 block">Semana do Jogo (vinculação)</label>
+        <select value={form.gameWeekNumber ?? ""} onChange={e => setForm(f => ({ ...f, gameWeekNumber: e.target.value ? parseInt(e.target.value) : null }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+          <option value="">— Sem vínculo —</option>
+          {gameWeeks.length > 0
+            ? gameWeeks.map(w => (
+                <option key={w.weekNumber} value={w.weekNumber}>
+                  Semana {w.weekNumber}{w.title ? ` — ${w.title}` : ""}{w.isReleased ? " ✅" : " 🔒"}
+                </option>
+              ))
+            : Array.from({ length: 16 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>Semana {i + 1}</option>
+              ))
+          }
+        </select>
+        <p className="text-[10px] text-muted-foreground mt-1">Quando esta semana do jogo for liberada, esta entrada do cronograma será destacada automaticamente para os alunos.</p>
+      </div>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.highlight} onChange={e => setForm(f => ({ ...f, highlight: e.target.checked }))} className="w-4 h-4" />
@@ -660,7 +679,7 @@ function CronogramaManager() {
       </div>
 
       {showAddForm && !editingId && (
-        <EntryForm onSubmit={() => createMutation.mutate({ ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined })} submitLabel="Adicionar Semana" />
+        <EntryForm onSubmit={() => createMutation.mutate({ ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined, gameWeekNumber: form.gameWeekNumber })} submitLabel="Adicionar Semana" />
       )}
 
       {isLoading ? (
@@ -670,7 +689,7 @@ function CronogramaManager() {
           {sortedEntries.map((entry, idx) => (
             <div key={entry.id}>
               {editingId === entry.id ? (
-                <EntryForm onSubmit={() => updateMutation.mutate({ id: entry.id, ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined })} submitLabel="Salvar Alterações" />
+                <EntryForm onSubmit={() => updateMutation.mutate({ id: entry.id, ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined, gameWeekNumber: form.gameWeekNumber })} submitLabel="Salvar Alterações" />
               ) : (
                 <div className="flex items-start gap-3 p-3 rounded-lg border border-border" style={{ backgroundColor: entry.isActive ? "oklch(0.195 0.03 264.052)" : "oklch(0.165 0.02 264.052)", opacity: entry.isActive ? 1 : 0.6 }}>
                   <div className="flex flex-col gap-1 shrink-0">
@@ -684,6 +703,11 @@ function CronogramaManager() {
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: typeColors[entry.type] + "22", color: typeColors[entry.type] }}>{typeLabels[entry.type] || entry.type}</span>
                       {entry.highlight && <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-orange-500/20 text-orange-400">⭐ Destaque</span>}
                       {!entry.isActive && <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">Oculto</span>}
+                      {(entry as any).gameWeekNumber != null && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: (entry as any).gameWeekInfo?.isReleased ? "#22c55e22" : "#94a3b822", color: (entry as any).gameWeekInfo?.isReleased ? "#22c55e" : "#94a3b8" }}>
+                          {(entry as any).gameWeekInfo?.isReleased ? "✅" : "🔒"} Jogo S{(entry as any).gameWeekNumber}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm font-semibold text-foreground mt-0.5 truncate">{entry.title}</p>
                     {entry.detail && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{entry.detail}</p>}

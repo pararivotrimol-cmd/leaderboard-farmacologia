@@ -70,6 +70,7 @@ export default function Cronograma() {
   });
 
   // Use DB data if available, otherwise fall back to static data
+  // DB entries include isCurrentGameWeek and isGameWeekUnlocked flags from the server
   const timeline = (dbEntries && dbEntries.length > 0) ? dbEntries.map(e => ({
     weekLabel: e.weekLabel,
     weekDate: e.weekDate ?? undefined,
@@ -77,7 +78,10 @@ export default function Cronograma() {
     detail: e.detail ?? undefined,
     type: e.type,
     highlight: e.highlight,
-  })) : staticTimeline;
+    isCurrentGameWeek: (e as any).isCurrentGameWeek ?? false,
+    isGameWeekUnlocked: (e as any).isGameWeekUnlocked ?? null,
+    gameWeekNumber: (e as any).gameWeekNumber ?? null,
+  })) : staticTimeline.map(e => ({ ...e, isCurrentGameWeek: false, isGameWeekUnlocked: null, gameWeekNumber: null }));
 
   const filteredTimeline = filter === "all"
     ? timeline
@@ -211,6 +215,22 @@ export default function Cronograma() {
                       <span className="text-xs font-mono font-bold" style={{ color: ORANGE }}>{item.weekLabel}</span>
                       {item.weekDate && (
                         <span className="text-xs font-mono" style={{ color: "rgba(247,148,29,0.5)" }}>{item.weekDate}</span>
+                      )}
+                      {(item as any).isCurrentGameWeek && (
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse"
+                          style={{ backgroundColor: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)" }}
+                        >
+                          ● Semana Atual
+                        </span>
+                      )}
+                      {(item as any).isGameWeekUnlocked === true && !(item as any).isCurrentGameWeek && (
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                          style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "rgba(34,197,94,0.6)" }}
+                        >
+                          ✓ Liberada
+                        </span>
                       )}
                       <span
                         className="text-[10px] px-2 py-0.5 rounded-full font-semibold"

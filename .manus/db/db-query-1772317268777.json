@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE scheduleEntries ADD COLUMN gameWeekNumber INT NULL COMMENT 'Vinculação com semana do jogo (1-16, nullable)';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute ALTER TABLE scheduleEntries ADD COLUMN gameWeekNumber INT NULL COMMENT 'Vinculação com semana do jogo (1-16, nullable)';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 468
+}

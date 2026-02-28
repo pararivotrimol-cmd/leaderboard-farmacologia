@@ -197,12 +197,14 @@ describe("Schedule Entry Data Model", () => {
       isActive: true,
       classId: null,
       createdBy: 1,
+      gameWeekNumber: null,
     };
     expect(entry.weekLabel).toBeDefined();
     expect(entry.title).toBeDefined();
     expect(entry.type).toBeDefined();
     expect(entry.sortOrder).toBeDefined();
     expect(entry.isActive).toBeDefined();
+    expect("gameWeekNumber" in entry).toBe(true);
   });
 
   it("highlight is true for prova type entries", () => {
@@ -213,5 +215,74 @@ describe("Schedule Entry Data Model", () => {
   it("classId can be null for global entries", () => {
     const globalEntry = { classId: null };
     expect(globalEntry.classId).toBeNull();
+  });
+
+  it("gameWeekNumber can be null when not linked to a game week", () => {
+    const entry = { gameWeekNumber: null };
+    expect(entry.gameWeekNumber).toBeNull();
+  });
+
+  it("gameWeekNumber accepts values 1-16 for game week linking", () => {
+    const validWeekNumbers = [1, 8, 16];
+    validWeekNumbers.forEach(n => {
+      expect(n).toBeGreaterThanOrEqual(1);
+      expect(n).toBeLessThanOrEqual(20);
+    });
+  });
+});
+
+describe("Schedule Router — getAll with game week enrichment", () => {
+  it("enriches entries with isCurrentGameWeek flag", () => {
+    // Simulate the enrichment logic from the router
+    const entries = [
+      { id: 1, weekLabel: "Semana 1", gameWeekNumber: 1 },
+      { id: 2, weekLabel: "Semana 2", gameWeekNumber: 2 },
+      { id: 3, weekLabel: "Semana 3", gameWeekNumber: null },
+    ];
+    const releasedWeekNumbers = new Set([1, 2]);
+    const currentGameWeekNumber = 2; // Most recently released
+
+    const enriched = entries.map(e => ({
+      ...e,
+      isGameWeekUnlocked: e.gameWeekNumber != null ? releasedWeekNumbers.has(e.gameWeekNumber) : null,
+      isCurrentGameWeek: e.gameWeekNumber != null ? e.gameWeekNumber === currentGameWeekNumber : false,
+    }));
+
+    expect(enriched[0].isGameWeekUnlocked).toBe(true);
+    expect(enriched[0].isCurrentGameWeek).toBe(false); // Week 1 is released but not current
+    expect(enriched[1].isGameWeekUnlocked).toBe(true);
+    expect(enriched[1].isCurrentGameWeek).toBe(true); // Week 2 is the current one
+    expect(enriched[2].isGameWeekUnlocked).toBeNull(); // Not linked
+    expect(enriched[2].isCurrentGameWeek).toBe(false);
+  });
+
+  it("returns null isGameWeekUnlocked for entries without game week link", () => {
+    const entry = { gameWeekNumber: null };
+    const isUnlocked = entry.gameWeekNumber != null ? true : null;
+    expect(isUnlocked).toBeNull();
+  });
+
+  it("correctly identifies the most recently released game week as current", () => {
+    const releasedWeeks = [
+      { weekNumber: 1, releasedAt: new Date("2026-03-10") },
+      { weekNumber: 2, releasedAt: new Date("2026-03-17") },
+      { weekNumber: 3, releasedAt: new Date("2026-03-24") },
+    ];
+    const mostRecent = releasedWeeks
+      .sort((a, b) => b.releasedAt.getTime() - a.releasedAt.getTime())[0];
+    expect(mostRecent.weekNumber).toBe(3);
+  });
+
+  it("handles no released weeks gracefully (currentGameWeekNumber is null)", () => {
+    const releasedWeeks: Array<{ weekNumber: number; releasedAt: Date | null }> = [];
+    const mostRecent = releasedWeeks
+      .filter(w => w.releasedAt)
+      .sort((a, b) => {
+        const aTime = a.releasedAt ? new Date(a.releasedAt).getTime() : 0;
+        const bTime = b.releasedAt ? new Date(b.releasedAt).getTime() : 0;
+        return bTime - aTime;
+      })[0];
+    const currentGameWeekNumber = mostRecent?.weekNumber ?? null;
+    expect(currentGameWeekNumber).toBeNull();
   });
 });

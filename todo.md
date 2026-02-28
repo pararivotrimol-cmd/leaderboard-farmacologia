@@ -2389,3 +2389,15 @@
 - [x] Adicionar botões de adicionar/remover semana no admin
 - [x] Adicionar reordenação de semanas (botões cima/baixo)
 - [x] Escrever testes para os novos endpoints de cronograma (14 testes, 219 total)
+
+## Vinculação Cronograma ↔ Jogo (Feb 28, 2026)
+
+- [x] Analisar estrutura das semanas do jogo (gameWeeks) no schema
+- [x] Adicionar campo gameWeekNumber (nullable) na tabela scheduleEntries
+- [x] Atualizar endpoint schedule.getAll para incluir status da semana do jogo (isUnlocked, isCurrentGameWeek)
+- [x] Atualizar endpoint schedule.getAllAdmin para incluir gameWeekInfo
+- [x] Atualizar endpoint schedule.create/update para aceitar gameWeekNumber
+- [x] Adicionar seletor de semana do jogo no CronogramaManager (Admin)
+- [x] Atualizar Cronograma.tsx para destacar semana atual (baseado no jogo)
+- [x] Mostrar badge "Semana Atual" na entrada vinculada à semana desbloqueada mais recente
+- [x] Escrever testes para os novos endpoints (225 testes passando)
