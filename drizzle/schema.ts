@@ -1500,3 +1500,21 @@ export const chatConversations = mysqlTable("chatConversations", {
 });
 export type ChatConversation = typeof chatConversations.$inferSelect;
 export type InsertChatConversation = typeof chatConversations.$inferInsert;
+
+/**
+ * Monitor Activity Logs - Registro de ações dos monitores
+ * Armazena todas as ações realizadas pelos monitores para supervisão do professor
+ */
+export const monitorActivityLogs = mysqlTable("monitorActivityLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  monitorId: int("monitorId").notNull(), // ID do monitor (studentAccounts.id)
+  monitorName: varchar("monitorName", { length: 200 }).notNull(), // Nome do monitor para referência rápida
+  actionType: varchar("actionType", { length: 100 }).notNull(), // Tipo de ação
+  actionDescription: text("actionDescription").notNull(), // Descrição detalhada da ação
+  targetEntity: varchar("targetEntity", { length: 100 }), // Entidade afetada (ex: "attendance", "resource", "seminar")
+  targetId: int("targetId"), // ID da entidade afetada (opcional)
+  metadata: text("metadata"), // JSON com dados adicionais
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MonitorActivityLog = typeof monitorActivityLogs.$inferSelect;
+export type InsertMonitorActivityLog = typeof monitorActivityLogs.$inferInsert;

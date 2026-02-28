@@ -21,7 +21,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2, User
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2, User, GraduationCap, BookOpen, History
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -539,6 +539,430 @@ function HighlightsManager({ password }: { password: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Monitores Manager ───
+function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedMonitorId, setSelectedMonitorId] = useState<number | null>(null);
+  const [newMonitor, setNewMonitor] = useState({ email: "", matricula: "", displayName: "", password: "" });
+  const [editPassword, setEditPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<"monitors" | "logs">("monitors");
+  const [logFilterMonitorId, setLogFilterMonitorId] = useState<number | undefined>(undefined);
+
+  const utils = trpc.useUtils();
+
+  const { data: monitors, isLoading } = trpc.monitors.list.useQuery(
+    { teacherSessionToken: teacherToken || "" },
+    { enabled: !!teacherToken }
+  );
+
+  const { data: activitySummary } = trpc.monitors.getActivitySummary.useQuery(
+    { teacherSessionToken: teacherToken || "" },
+    { enabled: !!teacherToken && activeTab === "logs" }
+  );
+
+  const { data: activityLogs } = trpc.monitors.getActivityLogs.useQuery(
+    { teacherSessionToken: teacherToken || "", monitorId: logFilterMonitorId, limit: 100 },
+    { enabled: !!teacherToken && activeTab === "logs" }
+  );
+
+  const registerMutation = trpc.monitors.register.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Monitor cadastrado com sucesso!");
+        setShowAddForm(false);
+        setNewMonitor({ email: "", matricula: "", displayName: "", password: "" });
+        utils.monitors.list.invalidate();
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError: () => toast.error("Erro ao cadastrar monitor"),
+  });
+
+  const updateMutation = trpc.monitors.update.useMutation({
+    onSuccess: () => {
+      toast.success("Monitor atualizado!");
+      setSelectedMonitorId(null);
+      setEditPassword("");
+      utils.monitors.list.invalidate();
+    },
+    onError: () => toast.error("Erro ao atualizar monitor"),
+  });
+
+  const removeMutation = trpc.monitors.remove.useMutation({
+    onSuccess: () => {
+      toast.success("Monitor removido!");
+      utils.monitors.list.invalidate();
+    },
+    onError: () => toast.error("Erro ao remover monitor"),
+  });
+
+  const filteredMonitors = (monitors || []).filter((m) =>
+    (m.displayName || m.email).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getActionTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      attendance_marked: "Presença marcada",
+      resource_added: "Recurso adicionado",
+      resource_deleted: "Recurso removido",
+      seminar_updated: "Seminário atualizado",
+      leaderboard_viewed: "Leaderboard visualizado",
+      chat_message_sent: "Mensagem enviada",
+      login: "Login realizado",
+      logout: "Logout realizado",
+    };
+    return labels[type] || type;
+  };
+
+  const getActionTypeColor = (type: string) => {
+    if (type.includes("delete") || type.includes("removed")) return "text-red-400";
+    if (type.includes("add") || type.includes("marked") || type.includes("sent")) return "text-emerald-400";
+    if (type.includes("login")) return "text-blue-400";
+    return "text-slate-300";
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <GraduationCap size={22} className="text-violet-400" />
+            Gerenciar Monitores
+          </h2>
+          <p className="text-slate-400 text-sm mt-1">Gerencie os monitores e acompanhe suas atividades</p>
+        </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="flex items-center gap-1 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-sm rounded-md font-medium transition-colors"
+        >
+          <UserPlus size={15} />
+          Novo Monitor
+        </button>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-1 p-1 rounded-lg bg-slate-800/60 w-fit">
+        {(["monitors", "logs"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeTab === tab
+                ? "bg-violet-600 text-white"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            {tab === "monitors" ? (
+              <span className="flex items-center gap-1.5"><Users size={14} /> Monitores ({monitors?.length ?? 0})</span>
+            ) : (
+              <span className="flex items-center gap-1.5"><History size={14} /> Log de Atividades</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Add Monitor Form */}
+      {showAddForm && activeTab === "monitors" && (
+        <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-4">
+          <h3 className="text-white font-semibold flex items-center gap-2"><UserPlus size={16} className="text-violet-400" /> Cadastrar Novo Monitor</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-slate-400 text-xs mb-1 block">Email institucional</label>
+              <input
+                value={newMonitor.email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMonitor((p) => ({ ...p, email: e.target.value }))}
+                placeholder="monitor@edu.unirio.br"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs mb-1 block">Matrícula</label>
+              <input
+                value={newMonitor.matricula}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMonitor((p) => ({ ...p, matricula: e.target.value }))}
+                placeholder="123456"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs mb-1 block">Nome de exibição</label>
+              <input
+                value={newMonitor.displayName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMonitor((p) => ({ ...p, displayName: e.target.value }))}
+                placeholder="Nome Sobrenome"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs mb-1 block">Senha inicial</label>
+              <input
+                type="password"
+                value={newMonitor.password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMonitor((p) => ({ ...p, password: e.target.value }))}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setShowAddForm(false)} className="px-3 py-1.5 text-slate-400 hover:text-slate-200 text-sm rounded-md transition-colors">
+              Cancelar
+            </button>
+            <button
+              className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-sm rounded-md font-medium transition-colors disabled:opacity-50"
+              disabled={registerMutation.isPending}
+              onClick={() =>
+                registerMutation.mutate({
+                  teacherSessionToken: teacherToken || "",
+                  ...newMonitor,
+                })
+              }
+            >
+              {registerMutation.isPending ? "Cadastrando..." : "Cadastrar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Monitors Tab */}
+      {activeTab === "monitors" && (
+        <div className="space-y-3">
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+              placeholder="Buscar monitor..."
+              className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+            />
+          </div>
+          {isLoading ? (
+            <div className="text-slate-400 text-center py-8">Carregando monitores...</div>
+          ) : filteredMonitors.length === 0 ? (
+            <div className="text-slate-400 text-center py-8">
+              <GraduationCap size={32} className="mx-auto mb-2 opacity-40" />
+              <p>Nenhum monitor encontrado</p>
+            </div>
+          ) : (
+            filteredMonitors.map((monitor) => {
+              const summary = activitySummary?.find((s) => s.monitor.id === monitor.id);
+              return (
+                <div
+                  key={monitor.id}
+                  className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-300 font-bold text-sm">
+                        {(monitor.displayName || monitor.email).charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-white font-medium text-sm">{monitor.displayName || "—"}</div>
+                        <div className="text-slate-400 text-xs">{monitor.email}</div>
+                        <div className="text-slate-500 text-xs">Matrícula: {monitor.matricula}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          monitor.isActive
+                            ? "bg-emerald-900/40 text-emerald-400 border border-emerald-700/40"
+                            : "bg-red-900/40 text-red-400 border border-red-700/40"
+                        }`}
+                      >
+                        {monitor.isActive ? "Ativo" : "Inativo"}
+                      </span>
+                      <button
+                        className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                        onClick={() => setSelectedMonitorId(selectedMonitorId === monitor.id ? null : monitor.id)}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors"
+                        onClick={() => {
+                          if (confirm(`Remover monitor ${monitor.displayName || monitor.email}?`)) {
+                            removeMutation.mutate({ teacherSessionToken: teacherToken || "", monitorId: monitor.id });
+                          }
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="flex gap-4 text-xs text-slate-400 border-t border-slate-700/50 pt-2">
+                    <span>Ações: <span className="text-violet-300 font-medium">{summary?.totalActions ?? 0}</span></span>
+                    <span>Último login: <span className="text-slate-300">{monitor.lastLoginAt ? new Date(monitor.lastLoginAt).toLocaleDateString("pt-BR") : "Nunca"}</span></span>
+                    <button
+                      className="text-violet-400 hover:text-violet-300 underline"
+                      onClick={() => { setLogFilterMonitorId(monitor.id); setActiveTab("logs"); }}
+                    >
+                      Ver logs
+                    </button>
+                  </div>
+
+                  {/* Edit form */}
+                  {selectedMonitorId === monitor.id && (
+                    <div className="border-t border-slate-700/50 pt-3 space-y-3">
+                      <p className="text-slate-400 text-xs font-medium">Editar monitor</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-slate-500 text-xs mb-1 block">Nova senha (opcional)</label>
+                          <input
+                            type="password"
+                            value={editPassword}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditPassword(e.target.value)}
+                            placeholder="Nova senha..."
+                            className="w-full px-2 py-1 bg-slate-900 border border-slate-600 text-white text-xs rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-500 text-xs mb-1 block">Status</label>
+                          <select
+                            className="w-full bg-slate-900 border border-slate-600 text-white text-xs h-8 rounded-md px-2"
+                            defaultValue={monitor.isActive ? "1" : "0"}
+                            onChange={(e) =>
+                              updateMutation.mutate({
+                                teacherSessionToken: teacherToken || "",
+                                monitorId: monitor.id,
+                                isActive: parseInt(e.target.value),
+                              })
+                            }
+                          >
+                            <option value="1">Ativo</option>
+                            <option value="0">Inativo</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button className="px-2 py-1 text-slate-400 hover:text-slate-200 text-xs rounded transition-colors" onClick={() => { setSelectedMonitorId(null); setEditPassword(""); }}>
+                          Cancelar
+                        </button>
+                        {editPassword && (
+                          <button
+                            className="px-2 py-1 bg-violet-600 hover:bg-violet-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50"
+                            disabled={updateMutation.isPending}
+                            onClick={() =>
+                              updateMutation.mutate({
+                                teacherSessionToken: teacherToken || "",
+                                monitorId: monitor.id,
+                                newPassword: editPassword,
+                              })
+                            }
+                          >
+                            Salvar senha
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Logs Tab */}
+      {activeTab === "logs" && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <select
+              className="bg-slate-800 border border-slate-700 text-white text-sm rounded-md px-3 py-1.5"
+              value={logFilterMonitorId ?? ""}
+              onChange={(e) => setLogFilterMonitorId(e.target.value ? parseInt(e.target.value) : undefined)}
+            >
+              <option value="">Todos os monitores</option>
+              {(monitors || []).map((m) => (
+                <option key={m.id} value={m.id}>{m.displayName || m.email}</option>
+              ))}
+            </select>
+            {logFilterMonitorId && (
+              <button className="flex items-center gap-1 px-2 py-1 text-slate-400 hover:text-slate-200 text-xs rounded transition-colors" onClick={() => setLogFilterMonitorId(undefined)}>
+                <X size={13} /> Limpar filtro
+              </button>
+            )}
+          </div>
+
+          {/* Summary cards */}
+          {!logFilterMonitorId && activitySummary && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {activitySummary.map(({ monitor, totalActions, recentLogs }) => (
+                <div key={monitor.id} className="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-300 font-bold text-xs">
+                      {(monitor.displayName || monitor.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-medium">{monitor.displayName || monitor.email}</div>
+                      <div className="text-slate-500 text-xs">{totalActions} ações registradas</div>
+                    </div>
+                  </div>
+                  {recentLogs.length > 0 ? (
+                    <div className="space-y-1">
+                      {recentLogs.slice(0, 3).map((log) => (
+                        <div key={log.id} className="text-xs text-slate-400 flex items-start gap-1.5">
+                          <span className={`mt-0.5 shrink-0 ${getActionTypeColor(log.actionType)}`}>•</span>
+                          <span className="truncate">{log.actionDescription}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 text-xs">Nenhuma ação registrada</p>
+                  )}
+                  <button
+                    className="mt-2 text-xs text-violet-400 hover:text-violet-300 underline"
+                    onClick={() => setLogFilterMonitorId(monitor.id)}
+                  >
+                    Ver todos os logs
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Detailed logs */}
+          {activityLogs && activityLogs.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-slate-400 text-sm">{activityLogs.length} registros encontrados</p>
+              {activityLogs.map((log) => (
+                <div key={log.id} className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-3 flex items-start gap-3">
+                  <div className={`mt-0.5 shrink-0 ${getActionTypeColor(log.actionType)}`}>
+                    <BookOpen size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white text-sm font-medium">{log.monitorName}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                        {getActionTypeLabel(log.actionType)}
+                      </span>
+                      {log.targetEntity && (
+                        <span className="text-xs text-slate-500">{log.targetEntity}</span>
+                      )}
+                    </div>
+                    <p className="text-slate-400 text-xs mt-0.5">{log.actionDescription}</p>
+                    <p className="text-slate-600 text-xs mt-0.5">{new Date(log.createdAt).toLocaleString("pt-BR")}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activityLogs && activityLogs.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <History size={32} className="mx-auto mb-2 opacity-40" />
+              <p>Nenhuma atividade registrada ainda</p>
+              <p className="text-xs mt-1">As ações dos monitores aparecerão aqui</p>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -3184,7 +3608,7 @@ export default function Admin() {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
     return token ? "__loading__" : null;
   });
-  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication - read synchronously to prevent redirect loop
@@ -3252,6 +3676,7 @@ export default function Admin() {
     { key: "badges" as const, label: "Conquistas", icon: <Award size={16} /> },
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
+    { key: "monitores" as const, label: "Monitores", icon: <GraduationCap size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
@@ -3328,6 +3753,7 @@ export default function Admin() {
         {activeSection === "badges" && password && <BadgesManager password={password} />}
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
+        {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
 
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}

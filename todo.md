@@ -2358,3 +2358,12 @@
 - [ ] Adicionar link "Monitores" no painel do professor
 - [ ] Migrar monitores existentes nas contas de alunos para a nova área
 - [ ] Testar fluxo completo de cadastro e acesso do monitor
+
+## Tab Monitores e Log de Atividades (Feb 27, 2026)
+
+- [x] Adicionar tab "Monitores" no Admin.tsx junto com Jogo, Turmas, Equipes
+- [x] Embutir gerenciamento de monitores diretamente na aba (listar, cadastrar, remover)
+- [x] Criar tabela monitorActivityLog no schema (monitorId, action, details, timestamp)
+- [x] Criar endpoints tRPC para registrar e listar atividades dos monitores
+- [x] Exibir log de atividades na aba Monitores do admin
+- [x] Registrar automaticamente ações como login, presença marcada, recurso adicionado

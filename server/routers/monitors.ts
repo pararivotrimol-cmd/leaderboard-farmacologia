@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../_core/trpc";
 import { getDb, getTeacherAccountBySessionToken } from "../db";
-import { studentAccounts } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { studentAccounts, monitorActivityLogs } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export const monitorsRouter = router({
@@ -12,10 +12,8 @@ export const monitorsRouter = router({
     .query(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
-
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       const monitors = await db
         .select({
           id: studentAccounts.id,
@@ -29,7 +27,6 @@ export const monitorsRouter = router({
         })
         .from(studentAccounts)
         .where(eq(studentAccounts.accountType, "monitor"));
-
       return monitors;
     }),
 
@@ -47,22 +44,16 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
-
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
-      // Check if email already exists
       const existing = await db
         .select({ id: studentAccounts.id })
         .from(studentAccounts)
         .where(eq(studentAccounts.email, input.email));
-
       if (existing.length > 0) {
         return { success: false, message: "Email já cadastrado" } as const;
       }
-
       const passwordHash = await bcrypt.hash(input.password, 10);
-
       await db.insert(studentAccounts).values({
         email: input.email,
         matricula: input.matricula,
@@ -71,7 +62,6 @@ export const monitorsRouter = router({
         accountType: "monitor",
         isActive: 1,
       });
-
       return { success: true, message: "Monitor cadastrado com sucesso" } as const;
     }),
 
@@ -89,21 +79,17 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
-
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       const updates: Record<string, unknown> = {};
       if (input.displayName !== undefined) updates.displayName = input.displayName;
       if (input.isActive !== undefined) updates.isActive = input.isActive;
       if (input.newPassword) {
         updates.passwordHash = await bcrypt.hash(input.newPassword, 10);
       }
-
       if (Object.keys(updates).length === 0) {
         return { success: false, message: "Nenhum campo para atualizar" } as const;
       }
-
       await db
         .update(studentAccounts)
         .set(updates)
@@ -113,7 +99,6 @@ export const monitorsRouter = router({
             eq(studentAccounts.accountType, "monitor")
           )
         );
-
       return { success: true, message: "Monitor atualizado com sucesso" } as const;
     }),
 
@@ -128,10 +113,8 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
-
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       await db
         .delete(studentAccounts)
         .where(
@@ -140,7 +123,6 @@ export const monitorsRouter = router({
             eq(studentAccounts.accountType, "monitor")
           )
         );
-
       return { success: true, message: "Monitor removido com sucesso" } as const;
     }),
 
@@ -155,7 +137,6 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       const account = await db
         .select()
         .from(studentAccounts)
@@ -166,30 +147,22 @@ export const monitorsRouter = router({
           )
         )
         .limit(1);
-
       if (account.length === 0) {
         return { success: false, message: "Monitor não encontrado" } as const;
       }
-
       const monitor = account[0];
-
       if (!monitor.isActive) {
         return { success: false, message: "Conta desativada" } as const;
       }
-
       const passwordMatch = await bcrypt.compare(input.password, monitor.passwordHash);
       if (!passwordMatch) {
         return { success: false, message: "Senha incorreta" } as const;
       }
-
-      // Generate session token
       const sessionToken = `monitor_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
       await db
         .update(studentAccounts)
         .set({ sessionToken, lastLoginAt: new Date() })
         .where(eq(studentAccounts.id, monitor.id));
-
       return {
         success: true,
         sessionToken,
@@ -207,10 +180,8 @@ export const monitorsRouter = router({
     .input(z.object({ sessionToken: z.string() }))
     .query(async ({ input }) => {
       if (!input.sessionToken) return null;
-
       const db = await getDb();
       if (!db) return null;
-
       const account = await db
         .select({
           id: studentAccounts.id,
@@ -227,7 +198,6 @@ export const monitorsRouter = router({
           )
         )
         .limit(1);
-
       return account[0] ?? null;
     }),
 
@@ -237,12 +207,10 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       await db
         .update(studentAccounts)
         .set({ sessionToken: null })
         .where(eq(studentAccounts.sessionToken, input.sessionToken));
-
       return { success: true } as const;
     }),
 
@@ -258,10 +226,8 @@ export const monitorsRouter = router({
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
-
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       await db
         .update(studentAccounts)
         .set({
@@ -269,7 +235,123 @@ export const monitorsRouter = router({
           displayName: input.displayName,
         })
         .where(eq(studentAccounts.id, input.studentAccountId));
-
       return { success: true, message: "Conta promovida a monitor" } as const;
+    }),
+
+  // ─── Activity Log Endpoints ───
+
+  // Log a monitor action (called by monitor portal)
+  logAction: publicProcedure
+    .input(
+      z.object({
+        monitorSessionToken: z.string(),
+        actionType: z.string().min(1),
+        actionDescription: z.string().min(1),
+        targetEntity: z.string().optional(),
+        targetId: z.number().optional(),
+        metadata: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const accounts = await db
+        .select({
+          id: studentAccounts.id,
+          displayName: studentAccounts.displayName,
+          email: studentAccounts.email,
+        })
+        .from(studentAccounts)
+        .where(
+          and(
+            eq(studentAccounts.sessionToken, input.monitorSessionToken),
+            eq(studentAccounts.accountType, "monitor")
+          )
+        )
+        .limit(1);
+      const monitor = accounts[0];
+      if (!monitor) throw new Error("Monitor não autenticado");
+      await db.insert(monitorActivityLogs).values({
+        monitorId: monitor.id,
+        monitorName: monitor.displayName ?? monitor.email,
+        actionType: input.actionType,
+        actionDescription: input.actionDescription,
+        targetEntity: input.targetEntity ?? null,
+        targetId: input.targetId ?? null,
+        metadata: input.metadata ?? null,
+      });
+      return { success: true } as const;
+    }),
+
+  // Get activity logs (teacher only)
+  getActivityLogs: publicProcedure
+    .input(
+      z.object({
+        teacherSessionToken: z.string(),
+        monitorId: z.number().optional(),
+        limit: z.number().min(1).max(200).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      if (input.monitorId) {
+        return await db
+          .select()
+          .from(monitorActivityLogs)
+          .where(eq(monitorActivityLogs.monitorId, input.monitorId))
+          .orderBy(desc(monitorActivityLogs.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
+      }
+      return await db
+        .select()
+        .from(monitorActivityLogs)
+        .orderBy(desc(monitorActivityLogs.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
+
+  // Get activity summary per monitor (teacher only)
+  getActivitySummary: publicProcedure
+    .input(z.object({ teacherSessionToken: z.string() }))
+    .query(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const monitors = await db
+        .select({
+          id: studentAccounts.id,
+          email: studentAccounts.email,
+          displayName: studentAccounts.displayName,
+          isActive: studentAccounts.isActive,
+          lastLoginAt: studentAccounts.lastLoginAt,
+        })
+        .from(studentAccounts)
+        .where(eq(studentAccounts.accountType, "monitor"));
+      const result = await Promise.all(
+        monitors.map(async (monitor) => {
+          const recentLogs = await db
+            .select()
+            .from(monitorActivityLogs)
+            .where(eq(monitorActivityLogs.monitorId, monitor.id))
+            .orderBy(desc(monitorActivityLogs.createdAt))
+            .limit(5);
+          const allLogs = await db
+            .select({ id: monitorActivityLogs.id })
+            .from(monitorActivityLogs)
+            .where(eq(monitorActivityLogs.monitorId, monitor.id));
+          return {
+            monitor,
+            recentLogs,
+            totalActions: allLogs.length,
+          };
+        })
+      );
+      return result;
     }),
 });

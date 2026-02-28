@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `monitorActivityLogs` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `monitorId` int NOT NULL,\n  `monitorName` varchar(200) NOT NULL,\n  `actionType` varchar(100) NOT NULL,\n  `actionDescription` text NOT NULL,\n  `targetEntity` varchar(100),\n  `targetId` int,\n  `metadata` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `monitorActivityLogs_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute CREATE TABLE IF NOT EXISTS `monitorActivityLogs` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `monitorId` int NOT NULL,\n  `monitorName` varchar(200) NOT NULL,\n  `actionType` varchar(100) NOT NULL,\n  `actionDescription` text NOT NULL,\n  `targetEntity` varchar(100),\n  `targetId` int,\n  `metadata` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `monitorActivityLogs_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 200
+}
