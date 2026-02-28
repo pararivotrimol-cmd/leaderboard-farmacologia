@@ -545,7 +545,7 @@ export default function Landing() {
           </motion.div>
 
           {/* Login Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 2xl:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 2xl:gap-8">
             {/* Student Login Card */}
             <motion.div
               className="relative p-5 sm:p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
@@ -635,6 +635,44 @@ export default function Landing() {
               </div>
             </motion.div>
 
+
+            {/* Monitor Card */}
+            <motion.div
+              className="relative p-5 sm:p-8 2xl:p-10 rounded-2xl border overflow-hidden group"
+              style={{
+                backgroundColor: "rgba(16,185,129,0.06)",
+                borderColor: "rgba(16,185,129,0.2)",
+              }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              whileHover={{ borderColor: "rgba(16,185,129,0.5)", boxShadow: "0 0 40px rgba(16,185,129,0.1)" }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10" style={{ backgroundColor: "#10B981" }} />
+              <div className="relative z-10">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(16,185,129,0.15)" }}>
+                  <GraduationCap size={28} className="sm:hidden" style={{ color: "#10B981" }} />
+                  <GraduationCap size={32} className="hidden sm:block" style={{ color: "#10B981" }} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Área do Monitor
+                </h3>
+                <p className="text-sm mb-4 sm:mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Acesso exclusivo para monitores da disciplina. Gerencie frequências, equipes, recursos e seminários.
+                </p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setLocation("/monitor")}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-2xl min-h-[48px]"
+                    style={{ backgroundColor: "rgba(16,185,129,0.2)", color: "#10B981", border: "1px solid rgba(16,185,129,0.4)" }}
+                  >
+                    <LogIn size={18} />
+                    Fazer Login
+                  </button>
+                </div>
+              </div>
+            </motion.div>
 
             {/* Admin Card */}
             <motion.div

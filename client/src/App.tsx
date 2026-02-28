@@ -61,6 +61,7 @@ import AttendanceReports from "./pages/AttendanceReports";
 import ManualAttendance from "./pages/ManualAttendance";
 import AttendanceAlerts from "./pages/AttendanceAlerts";
 import MonitorPortal from "./pages/MonitorPortal";
+import AdminMonitors from "./pages/AdminMonitors";
 
 
 function Router() {
@@ -109,6 +110,7 @@ function Router() {
       <Route path={"/professor/relatorios-presenca"} component={AttendanceReports} />
       <Route path={"/professor/presenca-manual"} component={ManualAttendance} />
       <Route path={"/professor/alertas-presenca"} component={AttendanceAlerts} />
+      <Route path={"/admin/monitores"} component={AdminMonitors} />
       <Route path={"/monitor"} component={MonitorPortal} />
 
       <Route path={"/professor/perfil"} component={TeacherProfile} />      <Route path={"/professor/login"} component={ProfessorLogin} />

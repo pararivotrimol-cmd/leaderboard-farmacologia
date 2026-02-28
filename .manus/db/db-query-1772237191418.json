@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, email, accountType FROM studentAccounts WHERE email IN ('esther.morado@edu.unirio.br', 'mlcerqueira21@edu.unirio.br', 'rebecagedro@edu.unirio.br', 'rodrigo.flor@edu.unirio.br', 'thayna.oliveira@edu.unirio.br');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, email, accountType FROM studentAccounts WHERE email IN ('esther.morado@edu.unirio.br', 'mlcerqueira21@edu.unirio.br', 'rebecagedro@edu.unirio.br', 'rodrigo.flor@edu.unirio.br', 'thayna.oliveira@edu.unirio.br');",
+  "rows": [
+    {
+      "id": "1",
+      "email": "esther.morado@edu.unirio.br",
+      "accountType": "monitor"
+    },
+    {
+      "id": "30001",
+      "email": "mlcerqueira21@edu.unirio.br",
+      "accountType": "monitor"
+    },
+    {
+      "id": "2",
+      "email": "rebecagedro@edu.unirio.br",
+      "accountType": "monitor"
+    },
+    {
+      "id": "90001",
+      "email": "rodrigo.flor@edu.unirio.br",
+      "accountType": "monitor"
+    },
+    {
+      "id": "120001",
+      "email": "thayna.oliveira@edu.unirio.br",
+      "accountType": "monitor"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\taccountType\n1\testher.morado@edu.unirio.br\tmonitor\n30001\tmlcerqueira21@edu.unirio.br\tmonitor\n2\trebecagedro@edu.unirio.br\tmonitor\n90001\trodrigo.flor@edu.unirio.br\tmonitor\n120001\tthayna.oliveira@edu.unirio.br\tmonitor\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

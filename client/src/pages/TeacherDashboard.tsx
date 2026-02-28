@@ -226,11 +226,13 @@ export default function TeacherDashboard() {
               <p className="text-sm font-medium">Jogo, Turmas, Equipes</p>
               <p className="text-xs text-muted-foreground mt-1">Frequências, Recursos, Seminários</p>
             </div>
-            <div className="p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Gerenciar Monitores</p>
-              <p className="text-sm font-medium">Cadastro via Contas de Alunos</p>
-              <p className="text-xs text-muted-foreground mt-1">Promova alunos externos a monitores</p>
-            </div>
+            <Link href="/admin/monitores">
+              <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 cursor-pointer transition-colors">
+                <p className="text-xs text-emerald-400 mb-1">Gerenciar Monitores</p>
+                <p className="text-sm font-medium">Cadastrar, Promover e Remover</p>
+                <p className="text-xs text-muted-foreground mt-1">5 monitores ativos</p>
+              </div>
+            </Link>
           </div>
         </Card>
       </div>
