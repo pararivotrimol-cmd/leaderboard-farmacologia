@@ -4,7 +4,7 @@
  * Contém timeline semanal, feriados e detalhes de cada semana
  * Dados carregados do banco de dados (editável pelo professor/admin)
  */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, Users, Trophy, Zap, BookOpen,
@@ -62,6 +62,8 @@ export default function Cronograma() {
   const [, setLocation] = useLocation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const currentWeekRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch schedule from database
   const { data: dbEntries, isLoading } = trpc.schedule.getAll.useQuery(undefined, {
@@ -82,6 +84,27 @@ export default function Cronograma() {
     isGameWeekUnlocked: (e as any).isGameWeekUnlocked ?? null,
     gameWeekNumber: (e as any).gameWeekNumber ?? null,
   })) : staticTimeline.map(e => ({ ...e, isCurrentGameWeek: false, isGameWeekUnlocked: null, gameWeekNumber: null }));
+
+  // Find the index of the current game week in the full timeline
+  const currentWeekIndex = timeline.findIndex(item => (item as any).isCurrentGameWeek);
+
+  // Auto-scroll to the current week entry once data is loaded and the filter is "all"
+  useEffect(() => {
+    if (isLoading || hasScrolled) return;
+    if (currentWeekIndex === -1) return;
+    // Auto-expand the current week's detail
+    setExpandedWeek(currentWeekIndex);
+    // Wait for the DOM to render the entries before scrolling
+    const timer = setTimeout(() => {
+      if (currentWeekRef.current) {
+        const HEADER_HEIGHT = 80; // sticky header height in px
+        const elementTop = currentWeekRef.current.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: elementTop - HEADER_HEIGHT - 16, behavior: "smooth" });
+        setHasScrolled(true);
+      }
+    }, 600); // wait for framer-motion entrance animations
+    return () => clearTimeout(timer);
+  }, [isLoading, currentWeekIndex, hasScrolled]);
 
   const filteredTimeline = filter === "all"
     ? timeline
@@ -193,6 +216,7 @@ export default function Cronograma() {
               return (
                 <motion.div
                   key={`${item.weekLabel}-${i}`}
+                  ref={(item as any).isCurrentGameWeek ? currentWeekRef : undefined}
                   className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}

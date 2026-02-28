@@ -2401,3 +2401,10 @@
 - [x] Atualizar Cronograma.tsx para destacar semana atual (baseado no jogo)
 - [x] Mostrar badge "Semana Atual" na entrada vinculada à semana desbloqueada mais recente
 - [x] Escrever testes para os novos endpoints (225 testes passando)
+
+## Rolagem Automática no Cronograma (Feb 28, 2026)
+
+- [x] Adicionar useRef nas entradas do cronograma para identificar a semana atual
+- [x] Adicionar useEffect para rolar automaticamente até a semana atual após carregar dados do banco
+- [x] Offset de scroll para não ficar colado no topo (considerar header fixo de 80px)
+- [x] Expandir automaticamente o detalhe da semana atual ao rolar
