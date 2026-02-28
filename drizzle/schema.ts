@@ -1518,3 +1518,25 @@ export const monitorActivityLogs = mysqlTable("monitorActivityLogs", {
 });
 export type MonitorActivityLog = typeof monitorActivityLogs.$inferSelect;
 export type InsertMonitorActivityLog = typeof monitorActivityLogs.$inferInsert;
+
+/**
+ * Schedule Entries - Entradas do cronograma do semestre
+ * Permite que professores e admins editem o cronograma diretamente na plataforma
+ */
+export const scheduleEntries = mysqlTable("scheduleEntries", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId"), // null = global (todas as turmas)
+  weekLabel: varchar("weekLabel", { length: 50 }).notNull(), // "Semana 1", "Semana 2", etc.
+  weekDate: varchar("weekDate", { length: 30 }), // "11/03/2026" (data da aula)
+  title: varchar("title", { length: 300 }).notNull(),
+  detail: text("detail"),
+  type: varchar("type", { length: 50 }).notNull().default("aula"), // "aula", "tbl", "caso", "jigsaw", "prova"
+  highlight: boolean("highlight").notNull().default(false), // destaque visual (provas)
+  sortOrder: int("sortOrder").notNull().default(0), // ordem de exibição
+  isActive: boolean("isActive").notNull().default(true),
+  createdBy: int("createdBy"), // ID do professor que criou/editou
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ScheduleEntry = typeof scheduleEntries.$inferSelect;
+export type InsertScheduleEntry = typeof scheduleEntries.$inferInsert;

@@ -28,6 +28,7 @@ import { chatRouter } from "./routers/chat";
 import { studentStatsRouter } from "./routers/student-stats";
 import { attendanceReportsDetailedRouter } from "./routers/attendance-reports-detailed";
 import { monitorsRouter } from "./routers/monitors";
+import { scheduleRouter } from "./routers/schedule";
 
 // Helper: fire-and-forget notification (never blocks the main operation)
 function sendNotificationAsync(title: string, content: string) {
@@ -146,6 +147,7 @@ export const appRouter = router({
   studentNotifications: studentNotificationsRouter,
   studentStats: studentStatsRouter,
   monitors: monitorsRouter,
+  schedule: scheduleRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

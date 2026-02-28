@@ -2,8 +2,9 @@
  * Cronograma — Jornada do Semestre
  * Página separada acessível por alunos, professores e admin
  * Contém timeline semanal, feriados e detalhes de cada semana
+ * Dados carregados do banco de dados (editável pelo professor/admin)
  */
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, Users, Trophy, Zap, BookOpen,
@@ -11,27 +12,29 @@ import {
   Target, AlertTriangle, ArrowLeft, Calendar
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 const ORANGE = "#F7941D";
 
-const timeline = [
-  { week: "Semana 1", title: "Introdução à Farmacologia & Farmacocinética 1", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes. Absorção e Distribuição — vias de administração, biodisponibilidade, volume de distribuição.", icon: <GraduationCap size={18} />, type: "aula" },
-  { week: "Semana 2", title: "Farmacocinética 2 — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. TBL 1.", icon: <Pill size={18} />, type: "tbl" },
-  { week: "Semana 3", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. Caso Clínico 1.", icon: <Brain size={18} />, type: "caso" },
-  { week: "Semana 4", title: "Boas Práticas de Prescrição", detail: "Prescrição racional, farmacovigilância, interações medicamentosas. TBL 2.", icon: <Activity size={18} />, type: "tbl" },
-  { week: "Semana 5", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", icon: <Activity size={18} />, type: "caso" },
-  { week: "Semana 6", title: "Bloqueadores Colinérgicos e Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", icon: <Activity size={18} />, type: "jigsaw" },
-  { week: "Semana 7", title: "Primeiro Dia de Seminários Jigsaw", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", icon: <Target size={18} />, type: "jigsaw" },
-  { week: "Semana 8", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático.", icon: <Zap size={18} />, type: "prova", highlight: true },
-  { week: "Semana 9", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", icon: <FlaskConical size={18} />, type: "tbl" },
-  { week: "Semana 10", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", icon: <FlaskConical size={18} />, type: "caso" },
-  { week: "Semana 11", title: "AINEs e Corticoides", detail: "Anti-inflamatórios Não Esteroidais (inibidores de COX), corticosteroides, mecanismo anti-inflamatório, efeitos adversos. TBL 4.", icon: <Brain size={18} />, type: "tbl" },
-  { week: "Semana 12", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Bloqueio nervoso, aplicações em odontologia e cirurgia.", icon: <Pill size={18} />, type: "aula" },
-  { week: "Semana 13", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias e gastrite. Caso Clínico 4.", icon: <Pill size={18} />, type: "caso" },
-  { week: "Semana 14", title: "Seminários Jigsaw 2", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa dos temas anteriores.", icon: <Target size={18} />, type: "jigsaw" },
-  { week: "Semana 15", title: "P2 — Prova Individual", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Avaliação de aprendizado.", icon: <Zap size={18} />, type: "prova", highlight: true },
-  { week: "Semana 16", title: "Segunda Chamada", detail: "Oportunidade para alunos que faltaram na P1 ou P2 realizarem a avaliação. Revisão de conteúdo.", icon: <Target size={18} />, type: "aula" },
-  { week: "Semana 17", title: "Prova Final + Premiação", detail: "Prova final integrativa (PF): conteúdo completo do semestre. Cerimônia de premiação das equipes campeãs.", icon: <Trophy size={18} />, type: "prova", highlight: true },
+// Static fallback data (used if DB is empty or loading fails)
+const staticTimeline = [
+  { weekLabel: "Semana 1", weekDate: "10/03/2026", title: "Introdução à Farmacologia & Farmacocinética 1", detail: "Apresentação da disciplina, regras de gamificação, formação das equipes. Absorção e Distribuição — vias de administração, biodisponibilidade, volume de distribuição.", type: "aula", highlight: false },
+  { weekLabel: "Semana 2", weekDate: "17/03/2026", title: "Farmacocinética 2 — Metabolismo e Excreção", detail: "Biotransformação hepática, citocromo P450, depuração renal. TBL 1.", type: "tbl", highlight: false },
+  { weekLabel: "Semana 3", weekDate: "24/03/2026", title: "Farmacodinâmica — Receptores e Mecanismos", detail: "Agonistas, antagonistas, dose-resposta, potência e eficácia. Caso Clínico 1.", type: "caso", highlight: false },
+  { weekLabel: "Semana 4", weekDate: "31/03/2026", title: "Boas Práticas de Prescrição", detail: "Prescrição racional, farmacovigilância, interações medicamentosas. TBL 2.", type: "tbl", highlight: false },
+  { weekLabel: "Semana 5", weekDate: "07/04/2026", title: "SNA — Transmissão Colinérgica", detail: "Agonistas e antagonistas muscarínicos, inibidores da colinesterase. Caso Clínico 2.", type: "caso", highlight: false },
+  { weekLabel: "Semana 6", weekDate: "14/04/2026", title: "Bloqueadores Colinérgicos e Neuromusculares", detail: "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.", type: "jigsaw", highlight: false },
+  { weekLabel: "Semana 7", weekDate: "28/04/2026", title: "Primeiro Dia de Seminários Jigsaw", detail: "Apresentações dos grupos especialistas. Revisão integrativa pré-P1.", type: "jigsaw", highlight: false },
+  { weekLabel: "Semana 8", weekDate: "05/05/2026", title: "Prova P1 + Escape Room Farmacológico", detail: "Avaliação individual (P1): conteúdo até colinérgicos/BNM + 3 primeiros Jigsaw. Escape Room temático.", type: "prova", highlight: true },
+  { weekLabel: "Semana 9", weekDate: "12/05/2026", title: "SNA — Transmissão Adrenérgica", detail: "Agonistas alfa e beta-adrenérgicos, catecolaminas. TBL 3.", type: "tbl", highlight: false },
+  { weekLabel: "Semana 10", weekDate: "19/05/2026", title: "SNA — Anti-adrenérgicos", detail: "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 3.", type: "caso", highlight: false },
+  { weekLabel: "Semana 11", weekDate: "26/05/2026", title: "AINEs e Corticoides", detail: "Anti-inflamatórios Não Esteroidais (inibidores de COX), corticosteroides, mecanismo anti-inflamatório, efeitos adversos. TBL 4.", type: "tbl", highlight: false },
+  { weekLabel: "Semana 12", weekDate: "02/06/2026", title: "Anestésicos Locais", detail: "Mecanismo de ação, classificação, uso clínico. Bloqueio nervoso, aplicações em odontologia e cirurgia.", type: "aula", highlight: false },
+  { weekLabel: "Semana 13", weekDate: "09/06/2026", title: "Anti-histamínicos", detail: "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias e gastrite. Caso Clínico 4.", type: "caso", highlight: false },
+  { weekLabel: "Semana 14", weekDate: "16/06/2026", title: "Seminários Jigsaw 2", detail: "Segundo dia de apresentações dos seminários Jigsaw. Revisão integrativa dos temas anteriores.", type: "jigsaw", highlight: false },
+  { weekLabel: "Semana 15", weekDate: "23/06/2026", title: "P2 — Prova Individual", detail: "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Avaliação de aprendizado.", type: "prova", highlight: true },
+  { weekLabel: "Semana 16", weekDate: "30/06/2026", title: "Segunda Chamada", detail: "Oportunidade para alunos que faltaram na P1 ou P2 realizarem a avaliação. Revisão de conteúdo.", type: "aula", highlight: false },
+  { weekLabel: "Semana 17", weekDate: "07/07/2026", title: "Prova Final + Premiação", detail: "Prova final integrativa (PF): conteúdo completo do semestre. Cerimônia de premiação das equipes campeãs.", type: "prova", highlight: true },
 ];
 
 const holidays = [
@@ -47,10 +50,34 @@ const typeColors: Record<string, { bg: string; text: string; label: string }> = 
   prova: { bg: "rgba(247,148,29,0.15)", text: "#F7941D", label: "Prova" },
 };
 
+const typeIcons: Record<string, React.ReactElement> = {
+  aula: <GraduationCap size={18} />,
+  tbl: <Brain size={18} />,
+  caso: <Activity size={18} />,
+  jigsaw: <Target size={18} />,
+  prova: <Zap size={18} />,
+};
+
 export default function Cronograma() {
   const [, setLocation] = useLocation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("all");
+
+  // Fetch schedule from database
+  const { data: dbEntries, isLoading } = trpc.schedule.getAll.useQuery(undefined, {
+    retry: 1,
+    staleTime: 60_000,
+  });
+
+  // Use DB data if available, otherwise fall back to static data
+  const timeline = (dbEntries && dbEntries.length > 0) ? dbEntries.map(e => ({
+    weekLabel: e.weekLabel,
+    weekDate: e.weekDate ?? undefined,
+    title: e.title,
+    detail: e.detail ?? undefined,
+    type: e.type,
+    highlight: e.highlight,
+  })) : staticTimeline;
 
   const filteredTimeline = filter === "all"
     ? timeline
@@ -90,7 +117,8 @@ export default function Cronograma() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          17 semanas de aprendizado intensivo e gamificado
+          {timeline.length} semanas de aprendizado intensivo e gamificado
+          {isLoading && <span className="ml-2 text-xs opacity-50">(carregando...)</span>}
         </motion.p>
 
         {/* Filter tabs */}
@@ -156,10 +184,11 @@ export default function Cronograma() {
           <div className="space-y-4">
             {filteredTimeline.map((item, i) => {
               const typeInfo = typeColors[item.type] || typeColors.aula;
+              const icon = typeIcons[item.type] || <GraduationCap size={18} />;
               const originalIndex = timeline.indexOf(item);
               return (
                 <motion.div
-                  key={item.week}
+                  key={`${item.weekLabel}-${i}`}
                   className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -169,17 +198,20 @@ export default function Cronograma() {
                   <div
                     className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                     style={{
-                      backgroundColor: (item as any).highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.15)",
-                      color: (item as any).highlight || expandedWeek === originalIndex ? "#fff" : ORANGE,
-                      border: `2px solid ${(item as any).highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.3)"}`,
+                      backgroundColor: item.highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.15)",
+                      color: item.highlight || expandedWeek === originalIndex ? "#fff" : ORANGE,
+                      border: `2px solid ${item.highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.3)"}`,
                     }}
                   >
-                    {item.icon}
+                    {icon}
                   </div>
 
                   <div className="pt-1.5 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-bold" style={{ color: ORANGE }}>{item.week}</span>
+                      <span className="text-xs font-mono font-bold" style={{ color: ORANGE }}>{item.weekLabel}</span>
+                      {item.weekDate && (
+                        <span className="text-xs font-mono" style={{ color: "rgba(247,148,29,0.5)" }}>{item.weekDate}</span>
+                      )}
                       <span
                         className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                         style={{ backgroundColor: typeInfo.bg, color: typeInfo.text }}
@@ -189,7 +221,7 @@ export default function Cronograma() {
                     </div>
                     <h3 className="text-base sm:text-lg font-semibold text-white mt-0.5">{item.title}</h3>
                     <AnimatePresence>
-                      {expandedWeek === originalIndex && (
+                      {expandedWeek === originalIndex && item.detail && (
                         <motion.p
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
