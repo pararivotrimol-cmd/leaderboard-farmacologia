@@ -552,6 +552,8 @@ function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
   const [editPassword, setEditPassword] = useState("");
   const [activeTab, setActiveTab] = useState<"monitors" | "logs">("monitors");
   const [logFilterMonitorId, setLogFilterMonitorId] = useState<number | undefined>(undefined);
+  const [logDateFrom, setLogDateFrom] = useState<string>("");
+  const [logDateTo, setLogDateTo] = useState<string>("");
 
   const utils = trpc.useUtils();
 
@@ -566,7 +568,13 @@ function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
   );
 
   const { data: activityLogs } = trpc.monitors.getActivityLogs.useQuery(
-    { teacherSessionToken: teacherToken || "", monitorId: logFilterMonitorId, limit: 100 },
+    {
+      teacherSessionToken: teacherToken || "",
+      monitorId: logFilterMonitorId,
+      dateFrom: logDateFrom || undefined,
+      dateTo: logDateTo || undefined,
+      limit: 500,
+    },
     { enabled: !!teacherToken && activeTab === "logs" }
   );
 
@@ -874,20 +882,103 @@ function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
       {/* Logs Tab */}
       {activeTab === "logs" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <select
-              className="bg-slate-800 border border-slate-700 text-white text-sm rounded-md px-3 py-1.5"
-              value={logFilterMonitorId ?? ""}
-              onChange={(e) => setLogFilterMonitorId(e.target.value ? parseInt(e.target.value) : undefined)}
-            >
-              <option value="">Todos os monitores</option>
-              {(monitors || []).map((m) => (
-                <option key={m.id} value={m.id}>{m.displayName || m.email}</option>
+          {/* Filters row */}
+          <div className="flex flex-wrap items-end gap-2">
+            {/* Monitor filter */}
+            <div>
+              <label className="text-slate-500 text-xs mb-1 block">Monitor</label>
+              <select
+                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-md px-3 py-1.5"
+                value={logFilterMonitorId ?? ""}
+                onChange={(e) => setLogFilterMonitorId(e.target.value ? parseInt(e.target.value) : undefined)}
+              >
+                <option value="">Todos os monitores</option>
+                {(monitors || []).map((m) => (
+                  <option key={m.id} value={m.id}>{m.displayName || m.email}</option>
+                ))}
+              </select>
+            </div>
+            {/* Date from */}
+            <div>
+              <label className="text-slate-500 text-xs mb-1 block">De</label>
+              <input
+                type="date"
+                value={logDateFrom}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLogDateFrom(e.target.value)}
+                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            {/* Date to */}
+            <div>
+              <label className="text-slate-500 text-xs mb-1 block">Até</label>
+              <input
+                type="date"
+                value={logDateTo}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLogDateTo(e.target.value)}
+                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            {/* Quick period shortcuts */}
+            <div className="flex gap-1">
+              {[
+                { label: "Esta semana", days: 7 },
+                { label: "Este mês", days: 30 },
+                { label: "Semestre", days: 180 },
+              ].map(({ label, days }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    const to = new Date();
+                    const from = new Date();
+                    from.setDate(from.getDate() - days);
+                    setLogDateFrom(from.toISOString().split("T")[0]);
+                    setLogDateTo(to.toISOString().split("T")[0]);
+                  }}
+                  className="px-2 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md transition-colors"
+                >
+                  {label}
+                </button>
               ))}
-            </select>
-            {logFilterMonitorId && (
-              <button className="flex items-center gap-1 px-2 py-1 text-slate-400 hover:text-slate-200 text-xs rounded transition-colors" onClick={() => setLogFilterMonitorId(undefined)}>
-                <X size={13} /> Limpar filtro
+            </div>
+            {/* Clear filters */}
+            {(logFilterMonitorId || logDateFrom || logDateTo) && (
+              <button
+                className="flex items-center gap-1 px-2 py-1.5 text-slate-400 hover:text-slate-200 text-xs rounded-md border border-slate-700 transition-colors"
+                onClick={() => { setLogFilterMonitorId(undefined); setLogDateFrom(""); setLogDateTo(""); }}
+              >
+                <X size={13} /> Limpar filtros
+              </button>
+            )}
+            {/* CSV Export */}
+            {activityLogs && activityLogs.length > 0 && (
+              <button
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-md transition-colors"
+                onClick={() => {
+                  const header = ["ID", "Monitor", "Tipo de Ação", "Descrição", "Entidade", "ID Entidade", "Metadados", "Data/Hora"];
+                  const rows = activityLogs.map((log) => [
+                    log.id,
+                    log.monitorName,
+                    log.actionType,
+                    log.actionDescription,
+                    log.targetEntity || "",
+                    log.targetId ?? "",
+                    log.metadata || "",
+                    new Date(log.createdAt).toLocaleString("pt-BR"),
+                  ]);
+                  const csv = [header, ...rows]
+                    .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+                    .join("\n");
+                  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `log_monitores_${new Date().toISOString().split("T")[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success(`${activityLogs.length} registros exportados!`);
+                }}
+              >
+                <Download size={14} /> Exportar CSV
               </button>
             )}
           </div>

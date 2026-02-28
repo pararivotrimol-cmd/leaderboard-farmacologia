@@ -215,8 +215,16 @@ function MonitorDashboard({ monitor, sessionToken, onLogout }: {
   sessionToken: string;
   onLogout: () => void;
 }) {
+  const logActionMutation = trpc.monitors.logAction.useMutation();
+
   const logoutMutation = trpc.monitors.logout.useMutation({
     onSuccess: () => {
+      // Log logout action before clearing session
+      logActionMutation.mutate({
+        monitorSessionToken: sessionToken,
+        actionType: "logout",
+        actionDescription: "Sessão encerrada no portal do monitor",
+      });
       localStorage.removeItem(MONITOR_SESSION_KEY);
       onLogout();
       toast.success("Sessão encerrada");
@@ -284,7 +292,18 @@ function MonitorDashboard({ monitor, sessionToken, onLogout }: {
               whileHover={{ scale: 1.04, y: -2 }}
               whileTap={{ scale: 0.97 }}
             >
-              <Link href={feature.href}>
+              <Link
+                href={feature.href}
+                onClick={() => {
+                  logActionMutation.mutate({
+                    monitorSessionToken: sessionToken,
+                    actionType: "navigation",
+                    actionDescription: `Acessou o módulo: ${feature.label}`,
+                    targetEntity: feature.label,
+                    metadata: JSON.stringify({ href: feature.href }),
+                  });
+                }}
+              >
                 <div
                   className={`rounded-xl border border-border/50 p-4 cursor-pointer bg-gradient-to-br ${feature.bg} hover:border-primary/30 transition-all`}
                   style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}

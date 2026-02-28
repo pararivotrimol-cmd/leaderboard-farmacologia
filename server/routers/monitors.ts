@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, publicProcedure } from "../_core/trpc";
 import { getDb, getTeacherAccountBySessionToken } from "../db";
 import { studentAccounts, monitorActivityLogs } from "../../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export const monitorsRouter = router({
@@ -163,6 +163,13 @@ export const monitorsRouter = router({
         .update(studentAccounts)
         .set({ sessionToken, lastLoginAt: new Date() })
         .where(eq(studentAccounts.id, monitor.id));
+      // Auto-log login action
+      await db.insert(monitorActivityLogs).values({
+        monitorId: monitor.id,
+        monitorName: monitor.displayName ?? monitor.email,
+        actionType: "login",
+        actionDescription: `Login realizado no portal do monitor`,
+      }).catch(() => {}); // Non-blocking
       return {
         success: true,
         sessionToken,
@@ -289,7 +296,9 @@ export const monitorsRouter = router({
       z.object({
         teacherSessionToken: z.string(),
         monitorId: z.number().optional(),
-        limit: z.number().min(1).max(200).default(50),
+        dateFrom: z.string().optional(), // ISO date string e.g. "2026-02-01"
+        dateTo: z.string().optional(),   // ISO date string e.g. "2026-02-28"
+        limit: z.number().min(1).max(500).default(100),
         offset: z.number().min(0).default(0),
       })
     )
@@ -298,21 +307,33 @@ export const monitorsRouter = router({
       if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
+
+      // Build where conditions
+      const conditions = [];
       if (input.monitorId) {
-        return await db
-          .select()
-          .from(monitorActivityLogs)
-          .where(eq(monitorActivityLogs.monitorId, input.monitorId))
-          .orderBy(desc(monitorActivityLogs.createdAt))
-          .limit(input.limit)
-          .offset(input.offset);
+        conditions.push(eq(monitorActivityLogs.monitorId, input.monitorId));
       }
-      return await db
+      if (input.dateFrom) {
+        conditions.push(gte(monitorActivityLogs.createdAt, new Date(input.dateFrom)));
+      }
+      if (input.dateTo) {
+        // Include the full end day by setting time to end of day
+        const endDate = new Date(input.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        conditions.push(lte(monitorActivityLogs.createdAt, endDate));
+      }
+
+      const query = db
         .select()
         .from(monitorActivityLogs)
         .orderBy(desc(monitorActivityLogs.createdAt))
         .limit(input.limit)
         .offset(input.offset);
+
+      if (conditions.length > 0) {
+        return await query.where(conditions.length === 1 ? conditions[0] : and(...conditions));
+      }
+      return await query;
     }),
 
   // Get activity summary per monitor (teacher only)

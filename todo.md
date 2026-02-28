@@ -2367,3 +2367,12 @@
 - [x] Criar endpoints tRPC para registrar e listar atividades dos monitores
 - [x] Exibir log de atividades na aba Monitores do admin
 - [x] Registrar automaticamente ações como login, presença marcada, recurso adicionado
+
+## Log de Monitores - Melhorias (Feb 28, 2026)
+
+- [x] Adicionar filtro por período (semana/mês) no endpoint getActivityLogs
+- [x] Adicionar seletor de período na aba de logs do Admin (Monitores)
+- [x] Adicionar botão de exportação CSV do log de atividades
+- [x] Registrar login automático no portal do monitor
+- [x] Registrar logout automático no portal do monitor
+- [x] Registrar navegação para módulos automática no portal do monitor
