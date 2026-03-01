@@ -1811,6 +1811,8 @@ export const appRouter = router({
         week: z.number().nullable().optional(),
         criteria: z.string().optional(),
         isActive: z.number().optional(),
+        autoAssign: z.number().optional(),
+        autoAssignRule: z.string().nullable().optional(),
       }))
       .mutation(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
@@ -1928,6 +1930,123 @@ export const appRouter = router({
           const member = allMembers.find(m => m.id === e.memberId);
           return { ...e, memberName: member?.name || "Desconhecido" };
         });
+      }),
+
+    // Admin: auto-assign badges based on XP ranking rules
+    autoAssign: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        badgeId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+
+        const [allBadges, allMembers, allTeams, allMemberBadges] = await Promise.all([
+          db.getAllBadges(),
+          db.getAllMembers(),
+          db.getAllTeams(),
+          db.getAllMemberBadges(),
+        ]);
+
+        const targetBadges = allBadges.filter(b =>
+          b.autoAssign === 1 && b.isActive === 1 &&
+          (input.badgeId === undefined || b.id === input.badgeId)
+        );
+
+        let totalAwarded = 0;
+        let totalRevoked = 0;
+        const results: Array<{ badgeId: number; badgeName: string; awarded: number; revoked: number; members: string[] }> = [];
+
+        for (const badge of targetBadges) {
+          if (!badge.autoAssignRule) continue;
+          let rule: { type: string; n?: number; xp?: number };
+          try { rule = JSON.parse(badge.autoAssignRule); } catch { continue; }
+
+          let targetMemberIds: number[] = [];
+
+          if (rule.type === "top_individual") {
+            const n = rule.n ?? 1;
+            targetMemberIds = [...allMembers]
+              .sort((a, b) => parseFloat(String(b.xp)) - parseFloat(String(a.xp)))
+              .slice(0, n)
+              .map(m => m.id);
+          } else if (rule.type === "top_team") {
+            const n = rule.n ?? 1;
+            const teamXP = allTeams.map(t => ({
+              teamId: t.id,
+              totalXP: allMembers.filter(m => m.teamId === t.id).reduce((sum, m) => sum + parseFloat(String(m.xp)), 0),
+            }));
+            const topTeamIds = teamXP.sort((a, b) => b.totalXP - a.totalXP).slice(0, n).map(t => t.teamId);
+            targetMemberIds = allMembers.filter(m => topTeamIds.includes(m.teamId)).map(m => m.id);
+          } else if (rule.type === "min_xp") {
+            const minXP = rule.xp ?? 0;
+            targetMemberIds = allMembers.filter(m => parseFloat(String(m.xp)) >= minXP).map(m => m.id);
+          }
+
+          const currentEarnerIds = allMemberBadges.filter(mb => mb.badgeId === badge.id).map(mb => mb.memberId);
+          const toAward = targetMemberIds.filter(id => !currentEarnerIds.includes(id));
+          const toRevoke = currentEarnerIds.filter(id => !targetMemberIds.includes(id));
+
+          for (const memberId of toAward) {
+            await db.awardBadge({ badgeId: badge.id, memberId, note: "Auto-atribu\u00eddo por regra de XP" });
+          }
+          for (const memberId of toRevoke) {
+            await db.revokeBadge(memberId, badge.id);
+          }
+
+          totalAwarded += toAward.length;
+          totalRevoked += toRevoke.length;
+          results.push({
+            badgeId: badge.id,
+            badgeName: badge.name,
+            awarded: toAward.length,
+            revoked: toRevoke.length,
+            members: toAward.map(id => allMembers.find(m => m.id === id)?.name ?? String(id)),
+          });
+
+          if (toAward.length > 0) {
+            try {
+              createStudentNotification(
+                `\uD83C\uDFC5 Conquista Desbloqueada: ${badge.name}`,
+                `${toAward.length} aluno(s) conquistaram "${badge.name}" automaticamente!`,
+                "important"
+              );
+              sendNotificationAsync("\uD83C\uDFC5 Auto-Conquista", `${toAward.length} aluno(s) receberam "${badge.name}" por regra de XP`);
+            } catch {}
+          }
+        }
+
+        return { success: true, totalAwarded, totalRevoked, results };
+      }),
+
+    // Admin: preview which members would receive a badge based on a rule (dry run)
+    previewAutoAssign: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        rule: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("N\u00e3o autorizado");
+
+        let rule: { type: string; n?: number; xp?: number };
+        try { rule = JSON.parse(input.rule); } catch { return []; }
+
+        const [allMembers, allTeams] = await Promise.all([db.getAllMembers(), db.getAllTeams()]);
+        let targetMemberIds: number[] = [];
+
+        if (rule.type === "top_individual") {
+          targetMemberIds = [...allMembers].sort((a, b) => parseFloat(String(b.xp)) - parseFloat(String(a.xp))).slice(0, rule.n ?? 1).map(m => m.id);
+        } else if (rule.type === "top_team") {
+          const teamXP = allTeams.map(t => ({ teamId: t.id, totalXP: allMembers.filter(m => m.teamId === t.id).reduce((s, m) => s + parseFloat(String(m.xp)), 0) }));
+          const topTeamIds = teamXP.sort((a, b) => b.totalXP - a.totalXP).slice(0, rule.n ?? 1).map(t => t.teamId);
+          targetMemberIds = allMembers.filter(m => topTeamIds.includes(m.teamId)).map(m => m.id);
+        } else if (rule.type === "min_xp") {
+          targetMemberIds = allMembers.filter(m => parseFloat(String(m.xp)) >= (rule.xp ?? 0)).map(m => m.id);
+        }
+
+        return allMembers.filter(m => targetMemberIds.includes(m.id)).map(m => ({ id: m.id, name: m.name, xp: m.xp }));
       }),
   }),
 

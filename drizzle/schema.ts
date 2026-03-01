@@ -161,10 +161,18 @@ export const badges = mysqlTable("badges", {
   criteria: text("criteria"),
   // Whether the badge is active and can be earned
   isActive: int("isActive").notNull().default(1),
+  // Auto-assign: if 1, badge is automatically assigned based on autoAssignRule
+  autoAssign: int("autoAssign").notNull().default(0),
+  // Auto-assign rule: JSON string with rule type and parameters
+  // Examples:
+  //   {"type":"top_individual","n":1}  -> top 1 student by XP
+  //   {"type":"top_individual","n":3}  -> top 3 students by XP
+  //   {"type":"top_team","n":1}        -> top 1 team by total XP (all members)
+  //   {"type":"min_xp","xp":50}        -> all students with XP >= 50
+  autoAssignRule: text("autoAssignRule"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
-
 export type Badge = typeof badges.$inferSelect;
 export type InsertBadge = typeof badges.$inferInsert;
 

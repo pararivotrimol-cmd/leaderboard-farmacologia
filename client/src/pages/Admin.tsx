@@ -2239,17 +2239,43 @@ function MaterialsManager({ password }: { password: string }) {
 // ─── Badges Manager ───
 function BadgesManager({ password }: { password: string }) {
   const [showCreate, setShowCreate] = useState(false);
-  const [newBadge, setNewBadge] = useState({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" });
+  const [newBadge, setNewBadge] = useState({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "", autoAssign: false, autoAssignRuleType: "top_individual", autoAssignN: 3, autoAssignXP: 50 });
   const [assignBadgeId, setAssignBadgeId] = useState<number | null>(null);
   const [assignMemberId, setAssignMemberId] = useState<number | null>(null);
   const [assignNote, setAssignNote] = useState("");
+  const [editingAutoRuleBadgeId, setEditingAutoRuleBadgeId] = useState<number | null>(null);
+  const [editRuleType, setEditRuleType] = useState("top_individual");
+  const [editRuleN, setEditRuleN] = useState(3);
+  const [editRuleXP, setEditRuleXP] = useState(50);
+  const [autoAssignResult, setAutoAssignResult] = useState<{ totalAwarded: number; totalRevoked: number; results: any[] } | null>(null);
+  const [previewRule, setPreviewRule] = useState<string | null>(null);
 
   const { data: badges, refetch: refetchBadges } = trpc.badges.getWithMembers.useQuery();
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
-  const createBadge = trpc.badges.create.useMutation({ onSuccess: () => { refetchBadges(); setShowCreate(false); setNewBadge({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "" }); toast.success("Badge criado!"); } });
+  const createBadge = trpc.badges.create.useMutation({ onSuccess: () => { refetchBadges(); setShowCreate(false); setNewBadge({ name: "", description: "", category: "Semana 1", week: 1, criteria: "", iconUrl: "", autoAssign: false, autoAssignRuleType: "top_individual", autoAssignN: 3, autoAssignXP: 50 }); toast.success("Badge criado!"); } });
   const assignBadge = trpc.badges.award.useMutation({ onSuccess: () => { refetchBadges(); setAssignBadgeId(null); setAssignMemberId(null); setAssignNote(""); toast.success("Badge atribuído!"); } });
   const removeBadge = trpc.badges.revoke.useMutation({ onSuccess: () => { refetchBadges(); toast.success("Badge removido!"); } });
   const deleteBadge = trpc.badges.delete.useMutation({ onSuccess: () => { refetchBadges(); toast.success("Badge excluído!"); } });
+  const updateBadge = trpc.badges.update.useMutation({ onSuccess: () => { refetchBadges(); setEditingAutoRuleBadgeId(null); toast.success("Regra de auto-atribuição salva!"); } });
+  const autoAssignMutation = trpc.badges.autoAssign.useMutation({
+    onSuccess: (data) => {
+      refetchBadges();
+      setAutoAssignResult(data);
+      if (data.totalAwarded > 0) toast.success(`✅ ${data.totalAwarded} conquista(s) atribuída(s) automaticamente!`);
+      else toast.info("Nenhuma nova conquista para atribuir.");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const previewRuleStr = useMemo(() => {
+    if (!previewRule) return null;
+    return previewRule;
+  }, [previewRule]);
+
+  const { data: previewMembers } = trpc.badges.previewAutoAssign.useQuery(
+    { password, rule: previewRuleStr ?? "" },
+    { enabled: !!previewRuleStr && previewRuleStr.length > 2 }
+  );
 
   const allMembers = useMemo(() => {
     if (!leaderboard?.teams) return [];
@@ -2340,6 +2366,40 @@ function BadgesManager({ password }: { password: string }) {
         )}
       </AnimatePresence>
 
+      {/* Auto-Assign Section */}
+      <div className="border border-primary/30 rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Zap size={14} className="text-primary" /> Atribuição Automática por XP
+          </h3>
+          <button
+            onClick={() => autoAssignMutation.mutate({ password })}
+            disabled={autoAssignMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+          >
+            <Zap size={12} />
+            {autoAssignMutation.isPending ? "Processando..." : "Executar Todas as Regras"}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">Configure regras de auto-atribuição em cada badge abaixo. Ao executar, o sistema avalia todos os badges com regra ativa e atribui/revoga automaticamente com base no ranking de XP.</p>
+        {autoAssignResult && (
+          <div className="rounded-md p-3 space-y-2" style={{ backgroundColor: "oklch(0.15 0.02 264.052)" }}>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-emerald-400 font-semibold">✅ {autoAssignResult.totalAwarded} atribuída(s)</span>
+              <span className="text-orange-400 font-semibold">↩ {autoAssignResult.totalRevoked} revogada(s)</span>
+            </div>
+            {autoAssignResult.results.filter(r => r.awarded > 0 || r.revoked > 0).map((r: any) => (
+              <div key={r.badgeId} className="text-xs text-muted-foreground">
+                <span className="text-foreground font-medium">{r.badgeName}:</span> {r.awarded > 0 && <span className="text-emerald-400">{r.members.join(", ")} receberam</span>}{r.revoked > 0 && <span className="text-orange-400"> · {r.revoked} revogada(s)</span>}
+              </div>
+            ))}
+            {autoAssignResult.results.every(r => r.awarded === 0 && r.revoked === 0) && (
+              <p className="text-xs text-muted-foreground italic">Nenhuma alteração necessária — todos os badges já estão corretos.</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Assign Badge */}
       <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -2381,46 +2441,174 @@ function BadgesManager({ password }: { password: string }) {
       {/* Badges List */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Badges Existentes ({badges?.length ?? 0})</h3>
-        {badges?.map(badge => (
-          <div key={badge.id} className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{badge.iconUrl ? "🏅" : "🏆"}</span>
-                <span className="font-semibold text-foreground text-sm">{badge.name}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{badge.category}</span>
-                {badge.week && <span className="text-[10px] text-muted-foreground">Sem {badge.week}</span>}
+        {badges?.map(badge => {
+          const hasAutoRule = (badge as any).autoAssign === 1;
+          const ruleObj = (() => { try { return JSON.parse((badge as any).autoAssignRule ?? ""); } catch { return null; } })();
+          const isEditingRule = editingAutoRuleBadgeId === badge.id;
+
+          return (
+            <div key={badge.id} className={`border rounded-lg p-4 ${hasAutoRule ? "border-primary/40" : "border-border"}`} style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg">{badge.iconUrl ? "🏅" : "🏆"}</span>
+                  <span className="font-semibold text-foreground text-sm">{badge.name}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{badge.category}</span>
+                  {badge.week && <span className="text-[10px] text-muted-foreground">Sem {badge.week}</span>}
+                  {hasAutoRule && ruleObj && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+                      <Zap size={9} />
+                      {ruleObj.type === "top_individual" ? `Top ${ruleObj.n} individual` : ruleObj.type === "top_team" ? `Top ${ruleObj.n} equipe(s)` : `XP ≥ ${ruleObj.xp}`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (isEditingRule) { setEditingAutoRuleBadgeId(null); return; }
+                      setEditingAutoRuleBadgeId(badge.id);
+                      setEditRuleType(ruleObj?.type ?? "top_individual");
+                      setEditRuleN(ruleObj?.n ?? 3);
+                      setEditRuleXP(ruleObj?.xp ?? 50);
+                      const rule = ruleObj ?? { type: "top_individual", n: 3 };
+                      setPreviewRule(JSON.stringify(rule));
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-secondary/80"
+                    title="Configurar regra de auto-atribuição"
+                  >
+                    <Zap size={12} className={hasAutoRule ? "text-emerald-400" : "text-muted-foreground"} />
+                  </button>
+                  <button
+                    onClick={() => autoAssignMutation.mutate({ password, badgeId: badge.id })}
+                    disabled={!hasAutoRule || autoAssignMutation.isPending}
+                    className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-30"
+                    title={hasAutoRule ? "Executar regra agora" : "Configure uma regra primeiro"}
+                  >
+                    <Play size={12} className="text-primary" />
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Excluir badge "${badge.name}"?`)) deleteBadge.mutate({ password, id: badge.id }); }}
+                    className="text-destructive hover:text-destructive/80 p-1"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => { if (confirm(`Excluir badge "${badge.name}"?`)) deleteBadge.mutate({ password, id: badge.id }); }}
-                className="text-destructive hover:text-destructive/80 p-1"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-            {badge.description && <p className="text-xs text-muted-foreground mb-2">{badge.description}</p>}
-            {badge.members.length > 0 ? (
-              <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Alunos ({badge.members.length}):</span>
-                {badge.members.map((m, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-1 px-2 rounded bg-background/50 text-xs">
-                    <span className="text-foreground">{m.memberName}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{new Date(m.earnedAt).toLocaleDateString("pt-BR")}</span>
-                      <button
-                        onClick={() => removeBadge.mutate({ password, badgeId: badge.id, memberId: (m as any).memberId })}
-                        className="text-destructive hover:text-destructive/80 p-0.5"
-                      >
-                        <X size={12} />
-                      </button>
+
+              {/* Auto-assign rule editor */}
+              <AnimatePresence>
+                {isEditingRule && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 pt-3 border-t border-border/50 space-y-3">
+                      <h4 className="text-xs font-semibold text-foreground flex items-center gap-1"><Zap size={11} className="text-primary" /> Regra de Auto-Atribuição</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <select
+                          value={editRuleType}
+                          onChange={e => {
+                            setEditRuleType(e.target.value);
+                            const rule = e.target.value === "min_xp" ? { type: e.target.value, xp: editRuleXP } : { type: e.target.value, n: editRuleN };
+                            setPreviewRule(JSON.stringify(rule));
+                          }}
+                          className="px-2 py-1.5 rounded bg-background border border-border text-xs text-foreground"
+                        >
+                          <option value="top_individual">Top N individual (por XP)</option>
+                          <option value="top_team">Top N equipe(s) (por XP total)</option>
+                          <option value="min_xp">XP mínimo</option>
+                        </select>
+                        {editRuleType !== "min_xp" ? (
+                          <input
+                            type="number" min={1} max={100}
+                            value={editRuleN}
+                            onChange={e => {
+                              const n = parseInt(e.target.value) || 1;
+                              setEditRuleN(n);
+                              setPreviewRule(JSON.stringify({ type: editRuleType, n }));
+                            }}
+                            placeholder="N (quantidade)"
+                            className="px-2 py-1.5 rounded bg-background border border-border text-xs text-foreground"
+                          />
+                        ) : (
+                          <input
+                            type="number" min={0}
+                            value={editRuleXP}
+                            onChange={e => {
+                              const xp = parseFloat(e.target.value) || 0;
+                              setEditRuleXP(xp);
+                              setPreviewRule(JSON.stringify({ type: editRuleType, xp }));
+                            }}
+                            placeholder="XP mínimo"
+                            className="px-2 py-1.5 rounded bg-background border border-border text-xs text-foreground"
+                          />
+                        )}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const rule = editRuleType === "min_xp" ? { type: editRuleType, xp: editRuleXP } : { type: editRuleType, n: editRuleN };
+                              updateBadge.mutate({ password, id: badge.id, autoAssign: 1, autoAssignRule: JSON.stringify(rule) });
+                            }}
+                            disabled={updateBadge.isPending}
+                            className="flex-1 px-2 py-1.5 rounded bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            onClick={() => updateBadge.mutate({ password, id: badge.id, autoAssign: 0, autoAssignRule: null })}
+                            disabled={updateBadge.isPending}
+                            className="px-2 py-1.5 rounded bg-destructive/20 text-destructive text-xs"
+                            title="Desativar auto-atribuição"
+                          >
+                            Desativar
+                          </button>
+                        </div>
+                      </div>
+                      {/* Preview */}
+                      {previewMembers && previewMembers.length > 0 && (
+                        <div className="rounded p-2 space-y-1" style={{ backgroundColor: "oklch(0.15 0.02 264.052)" }}>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Prévia — alunos que receberiam este badge:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {previewMembers.map((m: any) => (
+                              <span key={m.id} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{m.name} ({m.xp} XP)</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {previewMembers && previewMembers.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground italic">Nenhum aluno se qualifica com esta regra ainda.</p>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground italic">Nenhum aluno conquistou ainda</p>
-            )}
-          </div>
-        ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {badge.description && <p className="text-xs text-muted-foreground mb-2 mt-2">{badge.description}</p>}
+              {badge.members.length > 0 ? (
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Alunos ({badge.members.length}):</span>
+                  {badge.members.map((m, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1 px-2 rounded bg-background/50 text-xs">
+                      <span className="text-foreground">{m.memberName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{new Date(m.earnedAt).toLocaleDateString("pt-BR")}</span>
+                        <button
+                          onClick={() => removeBadge.mutate({ password, badgeId: badge.id, memberId: (m as any).memberId })}
+                          className="text-destructive hover:text-destructive/80 p-0.5"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Nenhum aluno conquistou ainda</p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -2406,3 +2406,15 @@
 - [x] Baixar logo e salvar como /logo-qr.png em client/public
 - [x] Fazer upload do logo para CDN (cross-origin seguro para canvas export)
 - [x] Atualizar QRCodeAcessoManager para usar o logo no centro do QR code (22% do tamanho, excavate: true)
+
+## Atribuição Automática de Conquistas (Mar 1, 2026)
+
+- [x] Analisar estrutura atual de badges/conquistas e XP no banco
+- [x] Adicionar campos autoAssign e autoAssignRule na tabela badges
+- [x] Criar endpoint tRPC badges.autoAssign (top N individual, top N equipe, XP mínimo)
+- [x] Criar endpoint tRPC badges.previewAutoAssign para prévia dos alunos elegíveis
+- [x] Atualizar badges.update para aceitar autoAssign e autoAssignRule
+- [x] Adicionar seção "Atribuição Automática por XP" no BadgesManager do Admin
+- [x] Botão global "Executar Todas as Regras" com painel de resultado
+- [x] Editor de regra por badge com prévia dinâmica dos alunos elegíveis
+- [x] Botão individual por badge para executar apenas aquela regra (205 testes passando)
