@@ -543,189 +543,6 @@ function HighlightsManager({ password }: { password: string }) {
   );
 }
 
-// ─── Cronograma Manager ───
-function CronogramaManager() {
-  const utils = trpc.useUtils();
-  const { data: entries = [], isLoading } = trpc.schedule.getAllAdmin.useQuery(undefined);
-  const createMutation = trpc.schedule.create.useMutation({
-    onSuccess: () => { utils.schedule.getAllAdmin.invalidate(); toast.success("Semana adicionada!"); setShowAddForm(false); resetForm(); },
-    onError: (e) => toast.error(e.message),
-  });
-  const updateMutation = trpc.schedule.update.useMutation({
-    onSuccess: () => { utils.schedule.getAllAdmin.invalidate(); toast.success("Semana atualizada!"); setEditingId(null); },
-    onError: (e) => toast.error(e.message),
-  });
-  const deleteMutation = trpc.schedule.delete.useMutation({
-    onSuccess: () => { utils.schedule.getAllAdmin.invalidate(); toast.success("Semana removida!"); },
-    onError: (e) => toast.error(e.message),
-  });
-  const reorderMutation = trpc.schedule.reorder.useMutation({
-    onSuccess: () => { utils.schedule.getAllAdmin.invalidate(); toast.success("Ordem salva!"); },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula" as "aula" | "tbl" | "caso" | "jigsaw" | "prova", highlight: false, sortOrder: 0, isActive: true, gameWeekNumber: null as number | null });
-
-  const { data: gameWeeks = [] } = trpc.schedule.getGameWeeks.useQuery(undefined);
-
-  const resetForm = () => setForm({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula", highlight: false, sortOrder: entries.length + 1, isActive: true, gameWeekNumber: null });
-
-  const startEdit = (entry: typeof entries[0]) => {
-    setEditingId(entry.id);
-    setForm({ weekLabel: entry.weekLabel, weekDate: entry.weekDate ?? "", title: entry.title, detail: entry.detail ?? "", type: entry.type as any, highlight: entry.highlight, sortOrder: entry.sortOrder, isActive: entry.isActive, gameWeekNumber: (entry as any).gameWeekNumber ?? null });
-  };
-
-  const moveEntry = (id: number, direction: "up" | "down") => {
-    const sorted = [...entries].sort((a, b) => a.sortOrder - b.sortOrder);
-    const idx = sorted.findIndex(e => e.id === id);
-    if (direction === "up" && idx === 0) return;
-    if (direction === "down" && idx === sorted.length - 1) return;
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    const newOrder = sorted.map(e => e.id);
-    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
-    reorderMutation.mutate({ orderedIds: newOrder });
-  };
-
-  const typeColors: Record<string, string> = { aula: "#94a3b8", tbl: "#60a5fa", caso: "#34d399", jigsaw: "#c084fc", prova: "#F7941D" };
-  const typeLabels: Record<string, string> = { aula: "Aula", tbl: "TBL", caso: "Caso Clínico", jigsaw: "Jigsaw", prova: "Prova" };
-
-  const sortedEntries = [...entries].sort((a, b) => a.sortOrder - b.sortOrder);
-
-  const EntryForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-lg border border-border" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
-      <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Rótulo da Semana *</label>
-        <input value={form.weekLabel} onChange={e => setForm(f => ({ ...f, weekLabel: e.target.value }))} placeholder="ex: Semana 1" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
-      </div>
-      <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Data da Aula</label>
-        <input value={form.weekDate} onChange={e => setForm(f => ({ ...f, weekDate: e.target.value }))} placeholder="ex: 10/03/2026" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="text-xs text-muted-foreground mb-1 block">Título *</label>
-        <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Título da semana" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="text-xs text-muted-foreground mb-1 block">Detalhes / Descrição</label>
-        <textarea value={form.detail} onChange={e => setForm(f => ({ ...f, detail: e.target.value }))} placeholder="Descrição dos conteúdos e atividades" rows={3} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm resize-none" />
-      </div>
-      <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Tipo</label>
-        <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as any }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
-          <option value="aula">Aula</option>
-          <option value="tbl">TBL</option>
-          <option value="caso">Caso Clínico</option>
-          <option value="jigsaw">Jigsaw</option>
-          <option value="prova">Prova</option>
-        </select>
-      </div>
-      <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Ordem</label>
-        <input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
-      </div>
-      <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Semana do Jogo (vinculação)</label>
-        <select value={form.gameWeekNumber ?? ""} onChange={e => setForm(f => ({ ...f, gameWeekNumber: e.target.value ? parseInt(e.target.value) : null }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
-          <option value="">— Sem vínculo —</option>
-          {gameWeeks.length > 0
-            ? gameWeeks.map(w => (
-                <option key={w.weekNumber} value={w.weekNumber}>
-                  Semana {w.weekNumber}{w.title ? ` — ${w.title}` : ""}{w.isReleased ? " ✅" : " 🔒"}
-                </option>
-              ))
-            : Array.from({ length: 16 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>Semana {i + 1}</option>
-              ))
-          }
-        </select>
-        <p className="text-[10px] text-muted-foreground mt-1">Quando esta semana do jogo for liberada, esta entrada do cronograma será destacada automaticamente para os alunos.</p>
-      </div>
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.highlight} onChange={e => setForm(f => ({ ...f, highlight: e.target.checked }))} className="w-4 h-4" />
-          <span className="text-sm text-foreground">Destaque (prova/evento especial)</span>
-        </label>
-      </div>
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="w-4 h-4" />
-          <span className="text-sm text-foreground">Ativo (visível para alunos)</span>
-        </label>
-      </div>
-      <div className="sm:col-span-2 flex gap-2 pt-2">
-        <button onClick={onSubmit} disabled={!form.weekLabel || !form.title} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium disabled:opacity-50 hover:bg-primary/90">{submitLabel}</button>
-        <button onClick={() => { setShowAddForm(false); setEditingId(null); }} className="px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary">Cancelar</button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display font-bold text-xl text-foreground">Cronograma do Semestre</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">{sortedEntries.length} semanas cadastradas</p>
-        </div>
-        <div className="flex gap-2">
-          <a href="/cronograma" target="_blank" className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary flex items-center gap-1.5">
-            <Eye size={14} /> Ver Cronograma
-          </a>
-          <button onClick={() => { setShowAddForm(true); setEditingId(null); resetForm(); }} className="px-3 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 flex items-center gap-1.5">
-            <Plus size={14} /> Adicionar Semana
-          </button>
-        </div>
-      </div>
-
-      {showAddForm && !editingId && (
-        <EntryForm onSubmit={() => createMutation.mutate({ ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined, gameWeekNumber: form.gameWeekNumber })} submitLabel="Adicionar Semana" />
-      )}
-
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground text-sm">Carregando cronograma...</div>
-      ) : (
-        <div className="space-y-2">
-          {sortedEntries.map((entry, idx) => (
-            <div key={entry.id}>
-              {editingId === entry.id ? (
-                <EntryForm onSubmit={() => updateMutation.mutate({ id: entry.id, ...form, weekDate: form.weekDate || undefined, detail: form.detail || undefined, gameWeekNumber: form.gameWeekNumber })} submitLabel="Salvar Alterações" />
-              ) : (
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border" style={{ backgroundColor: entry.isActive ? "oklch(0.195 0.03 264.052)" : "oklch(0.165 0.02 264.052)", opacity: entry.isActive ? 1 : 0.6 }}>
-                  <div className="flex flex-col gap-1 shrink-0">
-                    <button onClick={() => moveEntry(entry.id, "up")} disabled={idx === 0} className="p-1 rounded hover:bg-secondary disabled:opacity-30 text-muted-foreground"><ChevronUp size={14} /></button>
-                    <button onClick={() => moveEntry(entry.id, "down")} disabled={idx === sortedEntries.length - 1} className="p-1 rounded hover:bg-secondary disabled:opacity-30 text-muted-foreground"><ChevronDown size={14} /></button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-bold text-primary">{entry.weekLabel}</span>
-                      {entry.weekDate && <span className="text-xs text-muted-foreground font-mono">{entry.weekDate}</span>}
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: typeColors[entry.type] + "22", color: typeColors[entry.type] }}>{typeLabels[entry.type] || entry.type}</span>
-                      {entry.highlight && <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-orange-500/20 text-orange-400">⭐ Destaque</span>}
-                      {!entry.isActive && <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">Oculto</span>}
-                      {(entry as any).gameWeekNumber != null && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: (entry as any).gameWeekInfo?.isReleased ? "#22c55e22" : "#94a3b822", color: (entry as any).gameWeekInfo?.isReleased ? "#22c55e" : "#94a3b8" }}>
-                          {(entry as any).gameWeekInfo?.isReleased ? "✅" : "🔒"} Jogo S{(entry as any).gameWeekNumber}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-semibold text-foreground mt-0.5 truncate">{entry.title}</p>
-                    {entry.detail && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{entry.detail}</p>}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <button onClick={() => startEdit(entry)} className="p-1.5 rounded hover:bg-secondary text-muted-foreground"><Edit2 size={14} /></button>
-                    <button onClick={() => { if (confirm(`Remover "${entry.title}"?`)) deleteMutation.mutate({ id: entry.id }); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 size={14} /></button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Monitores Manager ───
 function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -3882,7 +3699,7 @@ export default function Admin() {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
     return token ? "__loading__" : null;
   });
-  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores" | "cronograma">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication - read synchronously to prevent redirect loop
@@ -3951,7 +3768,6 @@ export default function Admin() {
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "monitores" as const, label: "Monitores", icon: <GraduationCap size={16} /> },
-    { key: "cronograma" as const, label: "Cronograma", icon: <Calendar size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
@@ -4029,7 +3845,6 @@ export default function Admin() {
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
-        {activeSection === "cronograma" && <CronogramaManager />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
 
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}

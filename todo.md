@@ -2377,34 +2377,9 @@
 - [x] Registrar logout automático no portal do monitor
 - [x] Registrar navegação para módulos automática no portal do monitor
 
-## Edição de Cronograma pelo Professor/Admin (Feb 28, 2026)
+## Botão Flutuante "Semana Atual" no Cronograma (Feb 28, 2026)
 
-- [x] Criar tabela `scheduleEntries` no schema (week, date, title, detail, type, highlight, classId, order)
-- [x] Executar migração do banco (pnpm db:push)
-- [x] Criar seed inicial populando tabela com entradas atuais do cronograma estático
-- [x] Criar endpoints tRPC: getAll, create, update, delete, reorder (protectedProcedure)
-- [x] Atualizar Cronograma.tsx para buscar dados do banco (com fallback para dados estáticos)
-- [x] Adicionar aba "Cronograma" no Admin.tsx com CRUD completo
-- [x] Permitir edição inline de semana, data, título, detalhe, tipo e destaque
-- [x] Adicionar botões de adicionar/remover semana no admin
-- [x] Adicionar reordenação de semanas (botões cima/baixo)
-- [x] Escrever testes para os novos endpoints de cronograma (14 testes, 219 total)
-
-## Vinculação Cronograma ↔ Jogo (Feb 28, 2026)
-
-- [x] Analisar estrutura das semanas do jogo (gameWeeks) no schema
-- [x] Adicionar campo gameWeekNumber (nullable) na tabela scheduleEntries
-- [x] Atualizar endpoint schedule.getAll para incluir status da semana do jogo (isUnlocked, isCurrentGameWeek)
-- [x] Atualizar endpoint schedule.getAllAdmin para incluir gameWeekInfo
-- [x] Atualizar endpoint schedule.create/update para aceitar gameWeekNumber
-- [x] Adicionar seletor de semana do jogo no CronogramaManager (Admin)
-- [x] Atualizar Cronograma.tsx para destacar semana atual (baseado no jogo)
-- [x] Mostrar badge "Semana Atual" na entrada vinculada à semana desbloqueada mais recente
-- [x] Escrever testes para os novos endpoints (225 testes passando)
-
-## Rolagem Automática no Cronograma (Feb 28, 2026)
-
-- [x] Adicionar useRef nas entradas do cronograma para identificar a semana atual
-- [x] Adicionar useEffect para rolar automaticamente até a semana atual após carregar dados do banco
-- [x] Offset de scroll para não ficar colado no topo (considerar header fixo de 80px)
-- [x] Expandir automaticamente o detalhe da semana atual ao rolar
+- [ ] Adicionar botão flutuante no canto inferior direito do cronograma
+- [ ] Botão visível apenas quando há semana atual definida e o usuário rolou para fora dela
+- [ ] Clicar no botão rola suavemente até a semana atual e a expande
+- [ ] Ícone de alvo/calendário com label "Semana Atual"

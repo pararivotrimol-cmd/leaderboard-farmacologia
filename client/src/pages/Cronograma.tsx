@@ -4,12 +4,12 @@
  * Contém timeline semanal, feriados e detalhes de cada semana
  * Dados carregados do banco de dados (editável pelo professor/admin)
  */
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FlaskConical, Users, Trophy, Zap, BookOpen,
   ChevronDown, GraduationCap, Brain, Pill, Activity,
-  Target, AlertTriangle, ArrowLeft, Calendar
+  Target, AlertTriangle, ArrowLeft, Calendar, Navigation
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -63,6 +63,7 @@ export default function Cronograma() {
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [showFloatingBtn, setShowFloatingBtn] = useState(false);
   const currentWeekRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch schedule from database
@@ -72,43 +73,78 @@ export default function Cronograma() {
   });
 
   // Use DB data if available, otherwise fall back to static data
-  // DB entries include isCurrentGameWeek and isGameWeekUnlocked flags from the server
-  const timeline = (dbEntries && dbEntries.length > 0) ? dbEntries.map(e => ({
-    weekLabel: e.weekLabel,
-    weekDate: e.weekDate ?? undefined,
-    title: e.title,
-    detail: e.detail ?? undefined,
-    type: e.type,
-    highlight: e.highlight,
-    isCurrentGameWeek: (e as any).isCurrentGameWeek ?? false,
-    isGameWeekUnlocked: (e as any).isGameWeekUnlocked ?? null,
-    gameWeekNumber: (e as any).gameWeekNumber ?? null,
-  })) : staticTimeline.map(e => ({ ...e, isCurrentGameWeek: false, isGameWeekUnlocked: null, gameWeekNumber: null }));
+  type TimelineEntry = {
+    weekLabel: string;
+    weekDate?: string;
+    title: string;
+    detail?: string;
+    type: string;
+    highlight: boolean;
+    isCurrentGameWeek: boolean;
+    isGameWeekUnlocked: boolean | null;
+    gameWeekNumber: number | null;
+  };
+
+  const timeline: TimelineEntry[] = (dbEntries && dbEntries.length > 0)
+    ? dbEntries.map((e: any) => ({
+        weekLabel: e.weekLabel,
+        weekDate: e.weekDate ?? undefined,
+        title: e.title,
+        detail: e.detail ?? undefined,
+        type: e.type,
+        highlight: e.highlight,
+        isCurrentGameWeek: e.isCurrentGameWeek ?? false,
+        isGameWeekUnlocked: e.isGameWeekUnlocked ?? null,
+        gameWeekNumber: e.gameWeekNumber ?? null,
+      }))
+    : staticTimeline.map((e) => ({ ...e, isCurrentGameWeek: false, isGameWeekUnlocked: null, gameWeekNumber: null }));
 
   // Find the index of the current game week in the full timeline
-  const currentWeekIndex = timeline.findIndex(item => (item as any).isCurrentGameWeek);
+  const currentWeekIndex = timeline.findIndex(item => item.isCurrentGameWeek);
+  const hasCurrentWeek = currentWeekIndex !== -1;
 
-  // Auto-scroll to the current week entry once data is loaded and the filter is "all"
-  useEffect(() => {
-    if (isLoading || hasScrolled) return;
-    if (currentWeekIndex === -1) return;
-    // Auto-expand the current week's detail
+  // Scroll helper — scrolls to the current week entry and expands it
+  const scrollToCurrentWeek = () => {
+    if (!currentWeekRef.current) return;
     setExpandedWeek(currentWeekIndex);
-    // Wait for the DOM to render the entries before scrolling
+    const HEADER_HEIGHT = 80;
+    const elementTop = currentWeekRef.current.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: elementTop - HEADER_HEIGHT - 16, behavior: "smooth" });
+  };
+
+  // Auto-scroll once after DB data loads (only when filter is "all")
+  useEffect(() => {
+    if (isLoading || hasScrolled || !hasCurrentWeek) return;
+    setExpandedWeek(currentWeekIndex);
     const timer = setTimeout(() => {
       if (currentWeekRef.current) {
-        const HEADER_HEIGHT = 80; // sticky header height in px
-        const elementTop = currentWeekRef.current.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: elementTop - HEADER_HEIGHT - 16, behavior: "smooth" });
+        scrollToCurrentWeek();
         setHasScrolled(true);
       }
-    }, 600); // wait for framer-motion entrance animations
+    }, 600);
     return () => clearTimeout(timer);
-  }, [isLoading, currentWeekIndex, hasScrolled]);
+  }, [isLoading, currentWeekIndex, hasScrolled, hasCurrentWeek]);
 
-  const filteredTimeline = filter === "all"
+  // Show floating button when user has scrolled away from the current week
+  useEffect(() => {
+    if (!hasCurrentWeek) return;
+    const onScroll = () => {
+      if (!currentWeekRef.current) {
+        setShowFloatingBtn(true);
+        return;
+      }
+      const rect = currentWeekRef.current.getBoundingClientRect();
+      // Show button when the current week entry is out of the visible viewport
+      const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      setShowFloatingBtn(!isVisible);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hasCurrentWeek]);
+
+  const filteredTimeline: TimelineEntry[] = filter === "all"
     ? timeline
-    : timeline.filter(item => item.type === filter);
+    : timeline.filter((item: TimelineEntry) => item.type === filter);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
@@ -209,26 +245,39 @@ export default function Cronograma() {
         <div className="relative">
           <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: "rgba(247,148,29,0.2)" }} />
           <div className="space-y-4">
-            {filteredTimeline.map((item, i) => {
+            {filteredTimeline.map((item: TimelineEntry, i: number) => {
               const typeInfo = typeColors[item.type] || typeColors.aula;
               const icon = typeIcons[item.type] || <GraduationCap size={18} />;
               const originalIndex = timeline.indexOf(item);
+              const isCurrent = item.isCurrentGameWeek;
               return (
                 <motion.div
                   key={`${item.weekLabel}-${i}`}
-                  ref={(item as any).isCurrentGameWeek ? currentWeekRef : undefined}
+                  ref={isCurrent ? currentWeekRef : undefined}
                   className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04, duration: 0.3 }}
                   onClick={() => setExpandedWeek(expandedWeek === originalIndex ? null : originalIndex)}
                 >
+                  {/* Current week glow ring */}
+                  {isCurrent && (
+                    <div
+                      className="absolute inset-0 rounded-xl pointer-events-none"
+                      style={{
+                        border: "1px solid rgba(34,197,94,0.35)",
+                        backgroundColor: "rgba(34,197,94,0.04)",
+                        borderRadius: "12px",
+                      }}
+                    />
+                  )}
+
                   <div
                     className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                     style={{
-                      backgroundColor: item.highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.15)",
-                      color: item.highlight || expandedWeek === originalIndex ? "#fff" : ORANGE,
-                      border: `2px solid ${item.highlight || expandedWeek === originalIndex ? ORANGE : "rgba(247,148,29,0.3)"}`,
+                      backgroundColor: item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.2)" : "rgba(247,148,29,0.15)",
+                      color: item.highlight || expandedWeek === originalIndex ? "#fff" : isCurrent ? "#22c55e" : ORANGE,
+                      border: `2px solid ${item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.6)" : "rgba(247,148,29,0.3)"}`,
                     }}
                   >
                     {icon}
@@ -236,11 +285,11 @@ export default function Cronograma() {
 
                   <div className="pt-1.5 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-bold" style={{ color: ORANGE }}>{item.weekLabel}</span>
+                      <span className="text-xs font-mono font-semibold" style={{ color: ORANGE }}>{item.weekLabel}</span>
                       {item.weekDate && (
                         <span className="text-xs font-mono" style={{ color: "rgba(247,148,29,0.5)" }}>{item.weekDate}</span>
                       )}
-                      {(item as any).isCurrentGameWeek && (
+                      {isCurrent && (
                         <span
                           className="text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse"
                           style={{ backgroundColor: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)" }}
@@ -248,7 +297,7 @@ export default function Cronograma() {
                           ● Semana Atual
                         </span>
                       )}
-                      {(item as any).isGameWeekUnlocked === true && !(item as any).isCurrentGameWeek && (
+                      {(item as any).isGameWeekUnlocked === true && !isCurrent && (
                         <span
                           className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                           style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "rgba(34,197,94,0.6)" }}
@@ -314,6 +363,32 @@ export default function Cronograma() {
           </div>
         </motion.div>
       </div>
+
+      {/* Floating "Ir para a semana atual" button */}
+      <AnimatePresence>
+        {hasCurrentWeek && showFloatingBtn && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            onClick={() => {
+              setFilter("all");
+              // Small delay to let filter re-render before scrolling
+              setTimeout(scrollToCurrentWeek, 50);
+            }}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full font-semibold text-sm shadow-lg"
+            style={{
+              backgroundColor: "#22c55e",
+              color: "#fff",
+              boxShadow: "0 4px 24px rgba(34,197,94,0.4)",
+            }}
+          >
+            <Navigation size={16} />
+            Semana Atual
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

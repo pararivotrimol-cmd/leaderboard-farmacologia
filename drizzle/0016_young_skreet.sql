@@ -1,1 +1,0 @@
-ALTER TABLE `scheduleEntries` ADD `gameWeekNumber` int;

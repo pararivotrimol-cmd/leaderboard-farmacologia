@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "51305985-c679-4a6f-b471-35b1c6ee7b16",
+  "id": "46dedad8-72cd-4b6f-994e-705b8f62b5fb",
   "prevId": "a51ab765-7d8e-4b8f-a947-6bd843df9c12",
   "tables": {
     "activitySubmissions": {
@@ -5472,13 +5472,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "classId": {
-          "name": "classId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "weekLabel": {
           "name": "weekLabel",
           "type": "varchar(50)",
@@ -5488,7 +5481,7 @@
         },
         "weekDate": {
           "name": "weekDate",
-          "type": "varchar(30)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -5523,14 +5516,6 @@
           "autoincrement": false,
           "default": false
         },
-        "sortOrder": {
-          "name": "sortOrder",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
         "isActive": {
           "name": "isActive",
           "type": "boolean",
@@ -5539,8 +5524,16 @@
           "autoincrement": false,
           "default": true
         },
-        "createdBy": {
-          "name": "createdBy",
+        "sortOrder": {
+          "name": "sortOrder",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "gameWeekNumber": {
+          "name": "gameWeekNumber",
           "type": "int",
           "primaryKey": false,
           "notNull": false,

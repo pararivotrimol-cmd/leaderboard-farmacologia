@@ -1,242 +1,172 @@
-/**
- * Schedule Router — Gerenciamento do Cronograma do Semestre
- * Permite que professores e admins editem o cronograma diretamente na plataforma
- * Suporta vinculação com semanas do jogo (gameWeekNumber)
- */
 import { z } from "zod";
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
-import { getDb } from "../db";
+import { router, publicProcedure } from "../_core/trpc";
+import { getDb, getTeacherAccountBySessionToken } from "../db";
 import { scheduleEntries, gameWeeklyReleases } from "../../drizzle/schema";
-import { eq, asc, and, isNull, or, inArray } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
-
-const scheduleEntryInput = z.object({
-  weekLabel: z.string().min(1).max(50),
-  weekDate: z.string().max(30).optional(),
-  title: z.string().min(1).max(300),
-  detail: z.string().optional(),
-  type: z.enum(["aula", "tbl", "caso", "jigsaw", "prova"]),
-  highlight: z.boolean().default(false),
-  sortOrder: z.number().int().default(0),
-  classId: z.number().int().optional(),
-  isActive: z.boolean().default(true),
-  gameWeekNumber: z.number().int().min(1).max(20).nullable().optional(),
-});
+import { eq, asc, desc } from "drizzle-orm";
 
 export const scheduleRouter = router({
-  /**
-   * Public: list all active schedule entries with game week release status
-   * Returns entries enriched with isGameWeekUnlocked and isCurrentGameWeek flags
-   */
-  getAll: publicProcedure
-    .input(z.object({ classId: z.number().int().optional() }).optional())
+  getAll: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const entries = await db
+      .select()
+      .from(scheduleEntries)
+      .where(eq(scheduleEntries.isActive, true))
+      .orderBy(asc(scheduleEntries.sortOrder));
+    let releasedWeeks: number[] = [];
+    let currentGameWeek: number | null = null;
+    try {
+      const releases = await db
+        .select()
+        .from(gameWeeklyReleases)
+        .where(eq(gameWeeklyReleases.isReleased, true))
+        .orderBy(desc(gameWeeklyReleases.weekNumber));
+      releasedWeeks = releases.map((r) => r.weekNumber);
+      currentGameWeek = releases.length > 0 ? releases[0].weekNumber : null;
+    } catch {}
+    return entries.map((e) => ({
+      ...e,
+      isCurrentGameWeek: e.gameWeekNumber !== null && e.gameWeekNumber === currentGameWeek,
+      isGameWeekUnlocked: e.gameWeekNumber !== null ? releasedWeeks.includes(e.gameWeekNumber) : null,
+    }));
+  }),
+
+  getAllAdmin: publicProcedure
+    .input(z.object({ teacherSessionToken: z.string() }))
     .query(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
-      // Fetch active schedule entries
-      const rows = await db
+      if (!db) throw new Error("Database unavailable");
+      const entries = await db
         .select()
         .from(scheduleEntries)
-        .where(
-          and(
-            eq(scheduleEntries.isActive, true),
-            input?.classId
-              ? or(
-                  eq(scheduleEntries.classId, input.classId),
-                  isNull(scheduleEntries.classId)
-                )
-              : isNull(scheduleEntries.classId)
-          )
-        )
-        .orderBy(asc(scheduleEntries.sortOrder), asc(scheduleEntries.id));
-
-      // Fetch all released game weeks to enrich schedule entries
-      const releasedWeeks = await db
-        .select({
-          weekNumber: gameWeeklyReleases.weekNumber,
-          isReleased: gameWeeklyReleases.isReleased,
-          releasedAt: gameWeeklyReleases.releasedAt,
-        })
-        .from(gameWeeklyReleases)
-        .where(eq(gameWeeklyReleases.isReleased, true));
-
-      // Build a set of released week numbers
-      const releasedWeekNumbers = new Set(releasedWeeks.map(w => w.weekNumber));
-
-      // Find the most recently released week (current game week)
-      const mostRecentRelease = releasedWeeks
-        .filter(w => w.releasedAt)
-        .sort((a, b) => {
-          const aTime = a.releasedAt ? new Date(a.releasedAt).getTime() : 0;
-          const bTime = b.releasedAt ? new Date(b.releasedAt).getTime() : 0;
-          return bTime - aTime;
-        })[0];
-
-      const currentGameWeekNumber = mostRecentRelease?.weekNumber ?? null;
-
-      // Enrich entries with game week status
-      return rows.map(entry => ({
-        ...entry,
-        isGameWeekUnlocked: entry.gameWeekNumber != null
-          ? releasedWeekNumbers.has(entry.gameWeekNumber)
-          : null,
-        isCurrentGameWeek: entry.gameWeekNumber != null
-          ? entry.gameWeekNumber === currentGameWeekNumber
-          : false,
-      }));
-    }),
-
-  /**
-   * Admin/Professor: list all entries including inactive ones, with game week info
-   */
-  getAllAdmin: protectedProcedure
-    .input(z.object({ classId: z.number().int().optional() }).optional())
-    .query(async ({ ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem acessar esta rota." });
-      }
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
-      const rows = await db
-        .select()
-        .from(scheduleEntries)
-        .orderBy(asc(scheduleEntries.sortOrder), asc(scheduleEntries.id));
-
-      // Also fetch all game weeks (released and unreleased) for admin view
-      const allGameWeeks = await db
-        .select({
-          weekNumber: gameWeeklyReleases.weekNumber,
-          isReleased: gameWeeklyReleases.isReleased,
-          title: gameWeeklyReleases.title,
-        })
-        .from(gameWeeklyReleases)
-        .orderBy(asc(gameWeeklyReleases.weekNumber));
-
-      const gameWeekMap = new Map(allGameWeeks.map(w => [w.weekNumber, w]));
-
-      return rows.map(entry => ({
-        ...entry,
-        gameWeekInfo: entry.gameWeekNumber != null
-          ? (gameWeekMap.get(entry.gameWeekNumber) ?? null)
+        .orderBy(asc(scheduleEntries.sortOrder));
+      let gameWeeks: { weekNumber: number; isReleased: boolean }[] = [];
+      try {
+        gameWeeks = await db
+          .select({ weekNumber: gameWeeklyReleases.weekNumber, isReleased: gameWeeklyReleases.isReleased })
+          .from(gameWeeklyReleases)
+          .orderBy(asc(gameWeeklyReleases.weekNumber));
+      } catch {}
+      return entries.map((e) => ({
+        ...e,
+        gameWeekInfo: e.gameWeekNumber !== null
+          ? gameWeeks.find((w) => w.weekNumber === e.gameWeekNumber) ?? null
           : null,
       }));
     }),
 
-  /**
-   * Public: get available game weeks for linking (for admin selector)
-   */
-  getGameWeeks: protectedProcedure
-    .query(async ({ ctx }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem acessar esta rota." });
-      }
+  getGameWeeks: publicProcedure
+    .input(z.object({ teacherSessionToken: z.string() }))
+    .query(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
-      const weeks = await db
-        .select({
-          id: gameWeeklyReleases.id,
-          weekNumber: gameWeeklyReleases.weekNumber,
-          title: gameWeeklyReleases.title,
-          isReleased: gameWeeklyReleases.isReleased,
-        })
-        .from(gameWeeklyReleases)
-        .orderBy(asc(gameWeeklyReleases.weekNumber));
-
-      return weeks;
+      if (!db) return [];
+      try {
+        return await db
+          .select({ weekNumber: gameWeeklyReleases.weekNumber, isReleased: gameWeeklyReleases.isReleased })
+          .from(gameWeeklyReleases)
+          .orderBy(asc(gameWeeklyReleases.weekNumber));
+      } catch {
+        return [];
+      }
     }),
 
-  /**
-   * Admin/Professor: create a new schedule entry
-   */
-  create: protectedProcedure
-    .input(scheduleEntryInput)
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem criar entradas no cronograma." });
-      }
+  create: publicProcedure
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      weekLabel: z.string().min(1).max(50),
+      weekDate: z.string().max(20).optional(),
+      title: z.string().min(1).max(300),
+      detail: z.string().optional(),
+      type: z.enum(["aula", "tbl", "caso", "jigsaw", "prova"]).default("aula"),
+      highlight: z.boolean().default(false),
+      isActive: z.boolean().default(true),
+      sortOrder: z.number().int().default(0),
+      gameWeekNumber: z.number().int().nullable().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      const [result] = await db.insert(scheduleEntries).values({
-        ...input,
-        classId: input.classId ?? null,
-        weekDate: input.weekDate ?? null,
-        detail: input.detail ?? null,
-        gameWeekNumber: input.gameWeekNumber ?? null,
-        createdBy: ctx.user.id,
+      if (!db) throw new Error("Database unavailable");
+      const { teacherSessionToken, ...data } = input;
+      await db.insert(scheduleEntries).values({
+        weekLabel: data.weekLabel,
+        weekDate: data.weekDate ?? null,
+        title: data.title,
+        detail: data.detail ?? null,
+        type: data.type,
+        highlight: data.highlight,
+        isActive: data.isActive,
+        sortOrder: data.sortOrder,
+        gameWeekNumber: data.gameWeekNumber ?? null,
       });
-      const id = (result as any).insertId;
-      const [row] = await db
-        .select()
-        .from(scheduleEntries)
-        .where(eq(scheduleEntries.id, id));
-      return row;
+      return { success: true };
     }),
 
-  /**
-   * Admin/Professor: update an existing schedule entry
-   */
-  update: protectedProcedure
-    .input(z.object({ id: z.number().int() }).merge(scheduleEntryInput.partial()))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem editar o cronograma." });
-      }
-      const { id, ...data } = input;
+  update: publicProcedure
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      id: z.number().int(),
+      weekLabel: z.string().min(1).max(50).optional(),
+      weekDate: z.string().max(20).nullable().optional(),
+      title: z.string().min(1).max(300).optional(),
+      detail: z.string().nullable().optional(),
+      type: z.enum(["aula", "tbl", "caso", "jigsaw", "prova"]).optional(),
+      highlight: z.boolean().optional(),
+      isActive: z.boolean().optional(),
+      sortOrder: z.number().int().optional(),
+      gameWeekNumber: z.number().int().nullable().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      await db
-        .update(scheduleEntries)
-        .set({
-          ...data,
-          ...(data.classId !== undefined ? { classId: data.classId ?? null } : {}),
-          ...(data.weekDate !== undefined ? { weekDate: data.weekDate ?? null } : {}),
-          ...(data.detail !== undefined ? { detail: data.detail ?? null } : {}),
-          ...(data.gameWeekNumber !== undefined ? { gameWeekNumber: data.gameWeekNumber ?? null } : {}),
-        })
-        .where(eq(scheduleEntries.id, id));
-      const [row] = await db
-        .select()
-        .from(scheduleEntries)
-        .where(eq(scheduleEntries.id, id));
-      if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Entrada não encontrada." });
-      return row;
+      if (!db) throw new Error("Database unavailable");
+      const { teacherSessionToken, id, ...fields } = input;
+      const updateData: Record<string, unknown> = {};
+      if (fields.weekLabel !== undefined) updateData.weekLabel = fields.weekLabel;
+      if (fields.weekDate !== undefined) updateData.weekDate = fields.weekDate;
+      if (fields.title !== undefined) updateData.title = fields.title;
+      if (fields.detail !== undefined) updateData.detail = fields.detail;
+      if (fields.type !== undefined) updateData.type = fields.type;
+      if (fields.highlight !== undefined) updateData.highlight = fields.highlight;
+      if (fields.isActive !== undefined) updateData.isActive = fields.isActive;
+      if (fields.sortOrder !== undefined) updateData.sortOrder = fields.sortOrder;
+      if (fields.gameWeekNumber !== undefined) updateData.gameWeekNumber = fields.gameWeekNumber;
+      await db.update(scheduleEntries).set(updateData).where(eq(scheduleEntries.id, id));
+      return { success: true };
     }),
 
-  /**
-   * Admin/Professor: delete a schedule entry
-   */
-  delete: protectedProcedure
-    .input(z.object({ id: z.number().int() }))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem remover entradas do cronograma." });
-      }
+  delete: publicProcedure
+    .input(z.object({ teacherSessionToken: z.string(), id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!db) throw new Error("Database unavailable");
       await db.delete(scheduleEntries).where(eq(scheduleEntries.id, input.id));
       return { success: true };
     }),
 
-  /**
-   * Admin/Professor: reorder entries by providing an ordered array of IDs
-   */
-  reorder: protectedProcedure
-    .input(z.object({ orderedIds: z.array(z.number().int()) }))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Apenas administradores podem reordenar o cronograma." });
-      }
+  reorder: publicProcedure
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      orderedIds: z.array(z.number().int()),
+    }))
+    .mutation(async ({ input }) => {
+      const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
+      if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      for (let i = 0; i < input.orderedIds.length; i++) {
-        await db
-          .update(scheduleEntries)
-          .set({ sortOrder: i + 1 })
-          .where(eq(scheduleEntries.id, input.orderedIds[i]));
-      }
+      if (!db) throw new Error("Database unavailable");
+      await Promise.all(
+        input.orderedIds.map((id, index) =>
+          db.update(scheduleEntries).set({ sortOrder: index + 1 }).where(eq(scheduleEntries.id, id))
+        )
+      );
       return { success: true };
     }),
 });
