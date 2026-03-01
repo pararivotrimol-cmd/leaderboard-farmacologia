@@ -2383,3 +2383,9 @@
 - [ ] Botão visível apenas quando há semana atual definida e o usuário rolou para fora dela
 - [ ] Clicar no botão rola suavemente até a semana atual e a expande
 - [ ] Ícone de alvo/calendário com label "Semana Atual"
+
+## Aba Cronograma no Admin e Professor (Mar 1, 2026)
+
+- [x] Verificar se CronogramaManager existe no Admin.tsx
+- [x] Adicionar aba "Cronograma" no painel Admin com CRUD completo (aba entre Monitores e Professores)
+- [x] Adicionar aba "Cronograma" no painel do professor (TeacherDashboard) - via Admin.tsx

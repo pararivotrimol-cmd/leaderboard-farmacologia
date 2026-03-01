@@ -543,6 +543,206 @@ function HighlightsManager({ password }: { password: string }) {
   );
 }
 
+// ─── Cronograma Manager ───
+function CronogramaManager({ teacherToken }: { teacherToken: string }) {
+  const [entries, setEntries] = useState<any[]>([]);
+  const [gameWeeks, setGameWeeks] = useState<{ weekNumber: number; isReleased: boolean }[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    weekLabel: "",
+    weekDate: "",
+    title: "",
+    detail: "",
+    type: "aula" as "aula" | "tbl" | "caso" | "jigsaw" | "prova",
+    highlight: false,
+    isActive: true,
+    sortOrder: 0,
+    gameWeekNumber: null as number | null,
+  });
+
+  const { data: adminEntries, refetch } = trpc.schedule.getAllAdmin.useQuery(
+    { teacherSessionToken: teacherToken },
+    { enabled: !!teacherToken }
+  );
+  const { data: gwData } = trpc.schedule.getGameWeeks.useQuery(
+    { teacherSessionToken: teacherToken },
+    { enabled: !!teacherToken }
+  );
+
+  useEffect(() => { if (adminEntries) setEntries(adminEntries as any[]); }, [adminEntries]);
+  useEffect(() => { if (gwData) setGameWeeks(gwData); }, [gwData]);
+
+  const createMut = trpc.schedule.create.useMutation({ onSuccess: () => { refetch(); setShowForm(false); resetForm(); toast.success("Semana criada!"); } });
+  const updateMut = trpc.schedule.update.useMutation({ onSuccess: () => { refetch(); setEditingId(null); resetForm(); toast.success("Semana atualizada!"); } });
+  const deleteMut = trpc.schedule.delete.useMutation({ onSuccess: () => { refetch(); toast.success("Semana removida!"); } });
+  const reorderMut = trpc.schedule.reorder.useMutation({ onSuccess: () => refetch() });
+
+  function resetForm() {
+    setFormData({ weekLabel: "", weekDate: "", title: "", detail: "", type: "aula", highlight: false, isActive: true, sortOrder: entries.length + 1, gameWeekNumber: null });
+  }
+
+  function startEdit(entry: any) {
+    setEditingId(entry.id);
+    setFormData({
+      weekLabel: entry.weekLabel,
+      weekDate: entry.weekDate ?? "",
+      title: entry.title,
+      detail: entry.detail ?? "",
+      type: entry.type,
+      highlight: entry.highlight,
+      isActive: entry.isActive,
+      sortOrder: entry.sortOrder,
+      gameWeekNumber: entry.gameWeekNumber ?? null,
+    });
+    setShowForm(true);
+  }
+
+  function handleSubmit() {
+    if (!formData.weekLabel.trim() || !formData.title.trim()) { toast.error("Rótulo e título são obrigatórios"); return; }
+    setSaving(true);
+    const payload = { teacherSessionToken: teacherToken, ...formData, weekDate: formData.weekDate || undefined, detail: formData.detail || undefined };
+    if (editingId !== null) {
+      updateMut.mutate({ ...payload, id: editingId }, { onSettled: () => setSaving(false) });
+    } else {
+      createMut.mutate({ ...payload, sortOrder: entries.length + 1 }, { onSettled: () => setSaving(false) });
+    }
+  }
+
+  function moveEntry(idx: number, dir: -1 | 1) {
+    const newList = [...entries];
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= newList.length) return;
+    [newList[idx], newList[swapIdx]] = [newList[swapIdx], newList[idx]];
+    setEntries(newList);
+    reorderMut.mutate({ teacherSessionToken: teacherToken, orderedIds: newList.map((e) => e.id) });
+  }
+
+  const typeColors: Record<string, string> = {
+    aula: "bg-blue-500/20 text-blue-300",
+    tbl: "bg-purple-500/20 text-purple-300",
+    caso: "bg-amber-500/20 text-amber-300",
+    jigsaw: "bg-emerald-500/20 text-emerald-300",
+    prova: "bg-red-500/20 text-red-300",
+  };
+  const typeLabels: Record<string, string> = { aula: "Aula", tbl: "TBL", caso: "Caso Clínico", jigsaw: "Jigsaw", prova: "Prova" };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Cronograma do Semestre</h2>
+          <p className="text-sm text-muted-foreground">{entries.length} semanas cadastradas</p>
+        </div>
+        <button
+          onClick={() => { setEditingId(null); resetForm(); setShowForm(true); }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+        >
+          <Plus size={16} /> Nova Semana
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="border border-border rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+          <h3 className="font-semibold text-foreground">{editingId ? "Editar Semana" : "Nova Semana"}</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Rótulo *</label>
+              <input value={formData.weekLabel} onChange={e => setFormData(p => ({ ...p, weekLabel: e.target.value }))} placeholder="Semana 1" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Data</label>
+              <input value={formData.weekDate} onChange={e => setFormData(p => ({ ...p, weekDate: e.target.value }))} placeholder="10/03/2026" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Título *</label>
+            <input value={formData.title} onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} placeholder="Introdução à Farmacologia" className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Detalhes</label>
+            <textarea value={formData.detail} onChange={e => setFormData(p => ({ ...p, detail: e.target.value }))} rows={3} placeholder="Descrição detalhada da aula..." className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Tipo</label>
+              <select value={formData.type} onChange={e => setFormData(p => ({ ...p, type: e.target.value as any }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+                <option value="aula">Aula</option>
+                <option value="tbl">TBL</option>
+                <option value="caso">Caso Clínico</option>
+                <option value="jigsaw">Jigsaw</option>
+                <option value="prova">Prova</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Semana do Jogo</label>
+              <select value={formData.gameWeekNumber ?? ""} onChange={e => setFormData(p => ({ ...p, gameWeekNumber: e.target.value ? Number(e.target.value) : null }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+                <option value="">— Nenhuma —</option>
+                {gameWeeks.map(gw => (
+                  <option key={gw.weekNumber} value={gw.weekNumber}>Semana {gw.weekNumber} {gw.isReleased ? "✅" : "🔒"}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <input type="checkbox" checked={formData.highlight} onChange={e => setFormData(p => ({ ...p, highlight: e.target.checked }))} />
+              Destacar
+            </label>
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <input type="checkbox" checked={formData.isActive} onChange={e => setFormData(p => ({ ...p, isActive: e.target.checked }))} />
+              Visível
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleSubmit} disabled={saving} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50">
+              <Save size={14} /> {saving ? "Salvando..." : editingId ? "Salvar" : "Criar"}
+            </button>
+            <button onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }} className="px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-secondary">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {entries.map((entry, idx) => (
+          <div key={entry.id} className={`border rounded-lg p-3 flex items-start gap-3 ${entry.highlight ? "border-primary/40" : "border-border"}`} style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+            <div className="flex flex-col gap-1 shrink-0">
+              <button onClick={() => moveEntry(idx, -1)} disabled={idx === 0} className="p-1 rounded hover:bg-secondary disabled:opacity-30"><ChevronUp size={14} /></button>
+              <button onClick={() => moveEntry(idx, 1)} disabled={idx === entries.length - 1} className="p-1 rounded hover:bg-secondary disabled:opacity-30"><ChevronDown size={14} /></button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs text-muted-foreground">{entry.weekLabel}</span>
+                {entry.weekDate && <span className="text-xs text-muted-foreground">{entry.weekDate}</span>}
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[entry.type] || "bg-secondary text-muted-foreground"}`}>{typeLabels[entry.type] || entry.type}</span>
+                {entry.gameWeekNumber && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">🎮 S{entry.gameWeekNumber} {entry.gameWeekInfo?.isReleased ? "✅" : "🔒"}</span>}
+                {entry.highlight && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">⭐ Destaque</span>}
+                {!entry.isActive && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">Oculto</span>}
+              </div>
+              <p className="text-sm font-medium text-foreground mt-1 truncate">{entry.title}</p>
+              {entry.detail && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{entry.detail}</p>}
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <button onClick={() => startEdit(entry)} className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground"><Edit2 size={14} /></button>
+              <button onClick={() => { if (confirm(`Remover "${entry.title}"?`)) deleteMut.mutate({ teacherSessionToken: teacherToken, id: entry.id }); }} className="p-1.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
+            </div>
+          </div>
+        ))}
+        {entries.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <Calendar size={40} className="mx-auto mb-3 opacity-30" />
+            <p>Nenhuma semana cadastrada</p>
+            <p className="text-xs mt-1">Clique em "Nova Semana" para começar</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Monitores Manager ───
 function MonitoresManager({ teacherToken }: { teacherToken: string | null }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -3699,7 +3899,7 @@ export default function Admin() {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
     return token ? "__loading__" : null;
   });
-  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores" | "cronograma">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication - read synchronously to prevent redirect loop
@@ -3768,6 +3968,7 @@ export default function Admin() {
     { key: "attendance" as const, label: "Frequência", icon: <MapPin size={16} /> },
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "monitores" as const, label: "Monitores", icon: <GraduationCap size={16} /> },
+    { key: "cronograma" as const, label: "Cronograma", icon: <Calendar size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
@@ -3845,6 +4046,7 @@ export default function Admin() {
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
+        {activeSection === "cronograma" && teacherToken && <CronogramaManager teacherToken={teacherToken} />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
 
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}
