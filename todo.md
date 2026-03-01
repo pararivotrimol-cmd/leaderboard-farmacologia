@@ -2418,3 +2418,11 @@
 - [x] Botão global "Executar Todas as Regras" com painel de resultado
 - [x] Editor de regra por badge com prévia dinâmica dos alunos elegíveis
 - [x] Botão individual por badge para executar apenas aquela regra (205 testes passando)
+
+## Ranking de Alunos por Conquistas (Mar 1, 2026)
+
+- [ ] Criar endpoint tRPC badges.getRanking para listar alunos ordenados por número de conquistas
+- [ ] Adicionar aba "Conquistas" no leaderboard público (Home.tsx)
+- [ ] Exibir ranking com posição, nome, equipe, número de badges e lista de badges obtidos
+- [ ] Destacar top 3 com medalhas (ouro, prata, bronze)
+- [ ] Escrever testes para o novo endpoint

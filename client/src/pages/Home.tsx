@@ -9,7 +9,7 @@ import {
   Trophy, Users, Zap, TrendingUp, ChevronDown, ChevronUp,
   Award, Target, Star, FlaskConical, Activity, Settings, Youtube, Bell,
   ArrowLeft, BookOpen, ClipboardList, LogOut, MapPin, BarChart3,
-  Calendar, QrCode, Gamepad2, Calculator
+  Calendar, QrCode, Gamepad2, Calculator, Medal
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
@@ -273,7 +273,7 @@ function GradeCalculator() {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "calculator" | "rules">("teams");
+  const [activeTab, setActiveTab] = useState<"teams" | "individual" | "activities" | "calculator" | "rules" | "conquistas">("teams");
   const [currentPage, setCurrentPage] = useState(1);
   const TEAMS_PER_PAGE = 5;
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -287,6 +287,9 @@ export default function Home() {
   const { logout, user } = useAuth();
   const { student: studentData } = useStudentAuth();
   const [, setLocation] = useLocation();
+
+  // Badge ranking query
+  const { data: badgeRanking, isLoading: badgeRankingLoading } = trpc.badges.getRanking.useQuery();
 
   // Check if there's an active QR code session for the Presença badge (with polling every 30s)
   const { data: activeSessionData } = trpc.qrcode.hasActiveSession.useQuery(undefined, {
@@ -312,8 +315,9 @@ export default function Home() {
     teams: "Ranking de Equipes",
     individual: "Top 10 Individual",
     activities: "Atividades XP",
-    calculator: "Calculadora de M\u00e9dia",
+    calculator: "Calculadora de Média",
     rules: "Regras do Jogo",
+    conquistas: "Ranking de Conquistas",
   };
 
   // Tab change with smooth scroll and toast
@@ -805,6 +809,25 @@ export default function Home() {
                 </motion.div>
               </button>
 
+              {/* Conquistas */}
+              <button onClick={() => handleTabChange("conquistas")} className="text-left">
+                <motion.div
+                  className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === "conquistas" ? ORANGE : ORANGE + "15",
+                    color: activeTab === "conquistas" ? "#fff" : ORANGE,
+                    border: `1px solid ${activeTab === "conquistas" ? ORANGE : ORANGE + "35"}`,
+                    boxShadow: activeTab === "conquistas" ? `0 4px 20px ${ORANGE}40` : "none",
+                  }}
+                  whileHover={{ scale: 1.06, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Medal className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight">Conquistas</span>
+                </motion.div>
+              </button>
+
               {/* YouTube */}
               <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer">
                 <motion.div
@@ -1006,6 +1029,89 @@ export default function Home() {
               <GradeCalculator />
             </motion.div>
           )}
+          {activeTab === "conquistas" && (
+            <motion.div key="conquistas" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              <h2 className="font-display font-bold text-lg text-white mb-6 flex items-center gap-2">
+                <Medal size={20} style={{ color: ORANGE }} />
+                Ranking de Conquistas
+              </h2>
+              {badgeRankingLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: ORANGE, borderTopColor: "transparent" }} />
+                </div>
+              ) : !badgeRanking || badgeRanking.length === 0 ? (
+                <div className="text-center py-16">
+                  <Medal size={48} className="mx-auto mb-4 opacity-20" style={{ color: ORANGE }} />
+                  <p className="text-white/40 text-sm">Nenhuma conquista registrada ainda.</p>
+                  <p className="text-white/25 text-xs mt-1">As conquistas aparecerão aqui conforme forem atribuídas.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {badgeRanking.map((entry, idx) => {
+                    const medalColors = ["#FFD700", "#C0C0C0", "#CD7F32"];
+                    const medalLabels = ["🥇", "🥈", "🥉"];
+                    const isTop3 = idx < 3;
+                    return (
+                      <motion.div
+                        key={entry.memberId}
+                        className="rounded-lg p-4 flex items-center gap-4"
+                        style={{
+                          backgroundColor: isTop3 ? CARD_BG : "rgba(255,255,255,0.02)",
+                          border: isTop3 ? `1px solid ${medalColors[idx]}40` : `1px solid rgba(255,255,255,0.06)`,
+                          boxShadow: isTop3 ? `0 2px 12px ${medalColors[idx]}20` : "none",
+                        }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: idx * 0.04 }}
+                      >
+                        {/* Rank */}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-mono font-bold text-sm"
+                          style={{
+                            backgroundColor: isTop3 ? medalColors[idx] + "22" : "rgba(255,255,255,0.05)",
+                            border: `1px solid ${isTop3 ? medalColors[idx] + "60" : "rgba(255,255,255,0.1)"}`,
+                            color: isTop3 ? medalColors[idx] : "rgba(255,255,255,0.4)",
+                          }}
+                        >
+                          {isTop3 ? medalLabels[idx] : entry.rank}
+                        </div>
+
+                        {/* Name + Team */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-white truncate">{entry.memberName}</p>
+                          <p className="text-xs truncate" style={{ color: entry.teamColor + "cc" }}>{entry.teamName}</p>
+                        </div>
+
+                        {/* Badge count */}
+                        <div className="text-right shrink-0">
+                          <div className="font-mono font-bold text-xl" style={{ color: isTop3 ? medalColors[idx] : ORANGE }}>
+                            {entry.badgeCount}
+                          </div>
+                          <div className="text-[10px] text-white/30">{entry.badgeCount === 1 ? "conquista" : "conquistas"}</div>
+                        </div>
+
+                        {/* Badge thumbnails */}
+                        {entry.badges.length > 0 && (
+                          <div className="flex gap-1 shrink-0 ml-1">
+                            {entry.badges.slice(0, 4).map((b, bi) => (
+                              b.iconUrl ? (
+                                <img key={bi} src={b.iconUrl} alt={b.name} title={b.name} className="w-7 h-7 rounded-full object-cover" style={{ border: `1px solid ${ORANGE}40` }} />
+                              ) : (
+                                <div key={bi} className="w-7 h-7 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: ORANGE + "20", border: `1px solid ${ORANGE}30` }} title={b.name}>🏅</div>
+                              )
+                            ))}
+                            {entry.badges.length > 4 && (
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono" style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>+{entry.badges.length - 4}</div>
+                            )}
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {activeTab === "rules" && (
             <motion.div key="rules" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               <h2 className="font-display font-bold text-lg text-white mb-6 flex items-center gap-2">

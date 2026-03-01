@@ -2048,6 +2048,61 @@ export const appRouter = router({
 
         return allMembers.filter(m => targetMemberIds.includes(m.id)).map(m => ({ id: m.id, name: m.name, xp: m.xp }));
       }),
+
+    // Public: get student ranking by number of badges
+    getRanking: publicProcedure
+      .query(async () => {
+        const drizzleDb = await db.getDb();
+        if (!drizzleDb) return [];
+        const { memberBadges, badges, members, teams } = await import("../drizzle/schema.js");
+        const { eq, count, sql } = await import("drizzle-orm");
+
+        // Get badge count per member with member and team info
+        const rows = await drizzleDb
+          .select({
+            memberId: members.id,
+            memberName: members.name,
+            teamId: teams.id,
+            teamName: teams.name,
+            teamColor: teams.color,
+            badgeCount: count(memberBadges.id).as("badgeCount"),
+          })
+          .from(members)
+          .leftJoin(teams, eq(members.teamId, teams.id))
+          .leftJoin(memberBadges, eq(memberBadges.memberId, members.id))
+          .groupBy(members.id, members.name, teams.id, teams.name, teams.color)
+          .orderBy(sql`badgeCount DESC`, members.name);
+
+        // Also get badge details per member
+        const earnedRows = await drizzleDb
+          .select({
+            memberId: memberBadges.memberId,
+            badgeName: badges.name,
+            badgeCategory: badges.category,
+            badgeIconUrl: badges.iconUrl,
+            earnedAt: memberBadges.earnedAt,
+          })
+          .from(memberBadges)
+          .innerJoin(badges, eq(memberBadges.badgeId, badges.id));
+
+        const badgesByMember: Record<number, { name: string; category: string; iconUrl: string | null; earnedAt: Date }[]> = {};
+        for (const row of earnedRows) {
+          if (!badgesByMember[row.memberId]) badgesByMember[row.memberId] = [];
+          badgesByMember[row.memberId].push({ name: row.badgeName, category: row.badgeCategory, iconUrl: row.badgeIconUrl, earnedAt: row.earnedAt });
+        }
+
+        return rows
+          .filter((r: { badgeCount: unknown }) => Number(r.badgeCount) > 0)
+          .map((r: { memberId: number; memberName: string; teamName: string | null; teamColor: string | null; badgeCount: unknown }, idx: number) => ({
+            rank: idx + 1,
+            memberId: r.memberId,
+            memberName: r.memberName,
+            teamName: r.teamName ?? "",
+            teamColor: r.teamColor ?? "#10b981",
+            badgeCount: Number(r.badgeCount),
+            badges: (badgesByMember[r.memberId] ?? []).sort((a: { earnedAt: Date }, b: { earnedAt: Date }) => new Date(b.earnedAt).getTime() - new Date(a.earnedAt).getTime()),
+          }));
+      }),
   }),
 
   // ─── Student Auth (email institucional @edu.unirio.br) ───
