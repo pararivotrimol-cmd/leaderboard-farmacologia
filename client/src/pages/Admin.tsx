@@ -652,10 +652,11 @@ function QRCodeAcessoManager() {
               level="H"
               includeMargin={false}
               imageSettings={{
-                src: "/logo-qr.png",
-                height: Math.round(qrSize * 0.18),
-                width: Math.round(qrSize * 0.18),
+                src: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028318382/FUZ2ecmXaKXVi9q85vHrsr/logo-qr_8a8442d8.png",
+                height: Math.round(qrSize * 0.22),
+                width: Math.round(qrSize * 0.22),
                 excavate: true,
+                crossOrigin: "anonymous",
               }}
             />
           ) : (

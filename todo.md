@@ -2399,3 +2399,10 @@
 - [x] Adicionar aba "QR Acesso" no painel Admin (entre Cronograma e Professores)
 - [x] Suportar múltiplos domínios da plataforma (3 domínios: principal, alternativo, legado)
 - [x] Seletor de tamanho do QR code (150px–500px)
+
+## Logo no Centro do QR Code (Mar 1, 2026)
+
+- [x] Localizar logotipo da disciplina no projeto (LOGO_URL em Home.tsx)
+- [x] Baixar logo e salvar como /logo-qr.png em client/public
+- [x] Fazer upload do logo para CDN (cross-origin seguro para canvas export)
+- [x] Atualizar QRCodeAcessoManager para usar o logo no centro do QR code (22% do tamanho, excavate: true)
