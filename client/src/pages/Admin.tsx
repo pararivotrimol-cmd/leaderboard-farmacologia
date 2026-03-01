@@ -543,6 +543,172 @@ function HighlightsManager({ password }: { password: string }) {
   );
 }
 
+// ─── QR Code Acesso Manager ───
+function QRCodeAcessoManager() {
+  const domains = [
+    { label: "Domínio Principal", url: "https://2026.conexaofarmacologia.com.br" },
+    { label: "Domínio Alternativo", url: "https://2026conexaofarmacologia.manus.space" },
+    { label: "Domínio Legado", url: "https://farmalead-fuz2ecmx.manus.space" },
+  ];
+  const [selectedDomain, setSelectedDomain] = useState(domains[0].url);
+  const [qrSize, setQrSize] = useState(300);
+  const [showInstructions, setShowInstructions] = useState(true);
+
+  function downloadQR(format: "png" | "svg") {
+    const canvas = document.querySelector<HTMLCanvasElement>("#qr-acesso-canvas canvas");
+    const svg = document.querySelector<SVGElement>("#qr-acesso-canvas svg");
+    if (format === "png" && canvas) {
+      const link = document.createElement("a");
+      link.download = "qr-acesso-farmacologia.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } else if (format === "svg" && svg) {
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svg);
+      const blob = new Blob([svgStr], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = "qr-acesso-farmacologia.svg";
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    } else {
+      toast.error("Não foi possível gerar o arquivo. Tente outro formato.");
+    }
+  }
+
+  function printQR() {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) { toast.error("Popup bloqueado. Permita popups para imprimir."); return; }
+    const canvas = document.querySelector<HTMLCanvasElement>("#qr-acesso-canvas canvas");
+    const imgSrc = canvas ? canvas.toDataURL("image/png") : "";
+    printWindow.document.write(`
+      <!DOCTYPE html><html><head><title>QR Code - Conexão em Farmacologia</title>
+      <style>body{font-family:sans-serif;text-align:center;padding:40px;background:#fff;color:#000}
+      h1{font-size:28px;margin-bottom:8px}p{font-size:16px;color:#555;margin:4px 0}
+      img{margin:24px auto;display:block}code{background:#f0f0f0;padding:4px 8px;border-radius:4px;font-size:14px}
+      .instructions{margin-top:20px;font-size:14px;color:#333;border:1px solid #ddd;padding:16px;border-radius:8px;max-width:400px;margin-left:auto;margin-right:auto}
+      @media print{body{padding:20px}}</style></head><body>
+      <h1>🧪 Conexão em Farmacologia I</h1>
+      <p>Acesse a plataforma pelo QR code abaixo</p>
+      ${imgSrc ? `<img src="${imgSrc}" width="280" height="280" />` : `<p>QR Code: <code>${selectedDomain}</code></p>`}
+      <p style="margin-top:16px"><code>${selectedDomain}</code></p>
+      <div class="instructions">
+        <strong>Como acessar:</strong><br/>
+        1. Abra a câmera do celular<br/>
+        2. Aponte para o QR code<br/>
+        3. Toque no link que aparecer<br/>
+        4. Faça login com seu e-mail institucional
+      </div>
+      <script>window.onload=()=>{window.print();window.close();}<\/script>
+      </body></html>
+    `);
+    printWindow.document.close();
+  }
+
+  // Dynamically import QRCodeCanvas
+  const [QRCodeCanvas, setQRCodeCanvas] = useState<any>(null);
+  useEffect(() => {
+    import("qrcode.react").then((mod) => setQRCodeCanvas(() => mod.QRCodeCanvas));
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-foreground">QR Code de Acesso</h2>
+        <p className="text-sm text-muted-foreground">Gere e baixe o QR code para os alunos acessarem a plataforma</p>
+      </div>
+
+      {/* Domain selector */}
+      <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <label className="text-sm font-medium text-foreground block mb-2">URL da plataforma</label>
+        <div className="flex flex-col gap-2">
+          {domains.map((d) => (
+            <label key={d.url} className="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="domain" value={d.url} checked={selectedDomain === d.url} onChange={() => setSelectedDomain(d.url)} className="accent-primary" />
+              <div>
+                <span className="text-sm font-medium text-foreground">{d.label}</span>
+                <span className="text-xs text-muted-foreground ml-2">{d.url}</span>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Size selector */}
+      <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <label className="text-sm font-medium text-foreground block mb-2">Tamanho: {qrSize}px</label>
+        <input type="range" min={150} max={500} step={50} value={qrSize} onChange={e => setQrSize(Number(e.target.value))} className="w-full accent-primary" />
+        <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>150px</span><span>500px</span></div>
+      </div>
+
+      {/* QR Code preview */}
+      <div className="border border-border rounded-lg p-6 flex flex-col items-center gap-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <div id="qr-acesso-canvas" className="bg-white p-4 rounded-xl shadow-lg">
+          {QRCodeCanvas ? (
+            <QRCodeCanvas
+              value={selectedDomain}
+              size={qrSize}
+              level="H"
+              includeMargin={false}
+              imageSettings={{
+                src: "/logo-qr.png",
+                height: Math.round(qrSize * 0.18),
+                width: Math.round(qrSize * 0.18),
+                excavate: true,
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center" style={{ width: qrSize, height: qrSize }}>
+              <div className="text-center text-gray-400">
+                <QrCode size={48} className="mx-auto mb-2" />
+                <p className="text-sm">Carregando...</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground text-center max-w-xs break-all">{selectedDomain}</p>
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          <button onClick={() => downloadQR("png")} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">
+            <Download size={15} /> Baixar PNG
+          </button>
+          <button onClick={() => downloadQR("svg")} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-secondary">
+            <Download size={15} /> Baixar SVG
+          </button>
+          <button onClick={printQR} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-secondary">
+            🖨️ Imprimir
+          </button>
+        </div>
+      </div>
+
+      {/* Instructions toggle */}
+      <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <button onClick={() => setShowInstructions(!showInstructions)} className="w-full flex items-center justify-between p-4 text-left">
+          <span className="text-sm font-medium text-foreground">Instruções para os alunos</span>
+          {showInstructions ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        {showInstructions && (
+          <div className="px-4 pb-4 border-t border-border/50">
+            <ol className="mt-3 space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+              <li>Abra a câmera do celular ou um leitor de QR code</li>
+              <li>Aponte para o QR code acima</li>
+              <li>Toque no link que aparecer na tela</li>
+              <li>Faça login com seu e-mail institucional</li>
+              <li>Acesse o jogo, cronograma, materiais e muito mais!</li>
+            </ol>
+            <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-xs text-primary font-medium">💡 Dica para o professor</p>
+              <p className="text-xs text-muted-foreground mt-1">Imprima o QR code e cole na sala de aula, ou projete na tela no primeiro dia de aula para facilitar o acesso de todos os alunos.</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Cronograma Manager ───
 function CronogramaManager({ teacherToken }: { teacherToken: string }) {
   const [entries, setEntries] = useState<any[]>([]);
@@ -3899,7 +4065,7 @@ export default function Admin() {
     const token = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken");
     return token ? "__loading__" : null;
   });
-  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores" | "cronograma">("turmas");
+  const [activeSection, setActiveSection] = useState<"jogo" | "turmas" | "teams" | "xp" | "activities" | "highlights" | "recursos" | "badges" | "attendance" | "professores" | "jigsaw" | "settings" | "rebalanceamento" | "qr-code" | "monitores" | "cronograma" | "qr-acesso">("turmas");
   const [, setLocation] = useState("/");
   
   // Check teacher authentication - read synchronously to prevent redirect loop
@@ -3969,6 +4135,7 @@ export default function Admin() {
     { key: "jigsaw" as const, label: "Seminários Jigsaw", icon: <Target size={16} /> },
     { key: "monitores" as const, label: "Monitores", icon: <GraduationCap size={16} /> },
     { key: "cronograma" as const, label: "Cronograma", icon: <Calendar size={16} /> },
+    { key: "qr-acesso" as const, label: "QR Acesso", icon: <QrCode size={16} /> },
     { key: "professores" as const, label: "Professores", icon: <UserCheck size={16} /> },
     { key: "rebalanceamento" as const, label: "Rebalanceamento", icon: <Shuffle size={16} /> },
     { key: "qr-code" as const, label: "QR Code Presença", icon: <QrCode size={16} /> },
@@ -4047,6 +4214,7 @@ export default function Admin() {
         {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
         {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
         {activeSection === "cronograma" && teacherToken && <CronogramaManager teacherToken={teacherToken} />}
+        {activeSection === "qr-acesso" && <QRCodeAcessoManager />}
         {activeSection === "professores" && teacherToken && <ProfessoresManager teacherToken={teacherToken} />}
 
         {activeSection === "rebalanceamento" && teacherToken && <JigsawRebalancingManager />}

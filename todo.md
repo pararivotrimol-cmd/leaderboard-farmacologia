@@ -2389,3 +2389,13 @@
 - [x] Verificar se CronogramaManager existe no Admin.tsx
 - [x] Adicionar aba "Cronograma" no painel Admin com CRUD completo (aba entre Monitores e Professores)
 - [x] Adicionar aba "Cronograma" no painel do professor (TeacherDashboard) - via Admin.tsx
+
+## QR Code de Acesso à Plataforma (Mar 1, 2026)
+
+- [x] Instalar biblioteca qrcode.react para geração de QR codes no frontend
+- [x] Criar componente QRCodeAcessoManager com QR code da URL da plataforma
+- [x] Adicionar opções de download (PNG/SVG) do QR code
+- [x] Adicionar visualização de impressão (print view) com instruções para os alunos
+- [x] Adicionar aba "QR Acesso" no painel Admin (entre Cronograma e Professores)
+- [x] Suportar múltiplos domínios da plataforma (3 domínios: principal, alternativo, legado)
+- [x] Seletor de tamanho do QR code (150px–500px)
