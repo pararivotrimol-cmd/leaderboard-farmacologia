@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BossBattle, { BOSSES } from "@/components/game/BossBattle";
+import { BossVictoryAnimation } from "@/components/game/BossVictoryAnimation";
 
 // Character images
 const CHARACTER_IMAGES: Record<string, string> = {
@@ -25,30 +26,68 @@ const CHARACTER_IMAGES: Record<string, string> = {
 
 const MAP_IMAGE = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/BxRpnDQgavBgFKVD.png";
 
-// Quest positions on map (relative %)
+// Quest positions on map (relative %) — 85 quests across 17 weeks
 const QUEST_POSITIONS: Record<number, { x: number; y: number }> = {
-  1: { x: 12, y: 82 }, 2: { x: 22, y: 70 },
-  3: { x: 15, y: 55 }, 4: { x: 28, y: 48 },
-  5: { x: 40, y: 60 }, 6: { x: 50, y: 50 },
-  7: { x: 35, y: 35 }, 8: { x: 48, y: 30 },
-  9: { x: 60, y: 40 }, 10: { x: 55, y: 22 },
-  11: { x: 70, y: 35 }, 12: { x: 65, y: 20 },
-  13: { x: 78, y: 30 }, 14: { x: 75, y: 15 },
-  15: { x: 85, y: 25 }, 16: { x: 88, y: 10 },
+  // Week 1
+  1: { x: 8, y: 88 }, 2: { x: 14, y: 82 }, 3: { x: 10, y: 76 }, 4: { x: 16, y: 70 },
+  // Week 2
+  5: { x: 24, y: 84 }, 6: { x: 28, y: 78 }, 7: { x: 22, y: 72 }, 8: { x: 30, y: 66 },
+  // Week 3
+  9: { x: 38, y: 82 }, 10: { x: 42, y: 76 }, 11: { x: 36, y: 70 }, 12: { x: 44, y: 64 },
+  // Week 4
+  13: { x: 52, y: 84 }, 14: { x: 56, y: 78 }, 15: { x: 50, y: 72 }, 16: { x: 58, y: 66 },
+  // Week 5
+  17: { x: 66, y: 82 }, 18: { x: 70, y: 76 }, 19: { x: 64, y: 70 }, 20: { x: 72, y: 64 },
+  // Week 6
+  21: { x: 8, y: 60 }, 22: { x: 14, y: 54 }, 23: { x: 10, y: 48 }, 24: { x: 16, y: 42 },
+  // Week 7
+  25: { x: 24, y: 58 }, 26: { x: 28, y: 52 }, 27: { x: 22, y: 46 }, 28: { x: 30, y: 40 },
+  // Week 8
+  29: { x: 38, y: 56 }, 30: { x: 42, y: 50 }, 31: { x: 36, y: 44 }, 32: { x: 44, y: 38 },
+  // Week 9
+  33: { x: 52, y: 58 }, 34: { x: 56, y: 52 }, 35: { x: 50, y: 46 }, 36: { x: 58, y: 40 },
+  // Week 10
+  37: { x: 66, y: 56 }, 38: { x: 70, y: 50 }, 39: { x: 64, y: 44 }, 40: { x: 72, y: 38 },
+  // Week 11
+  41: { x: 8, y: 32 }, 42: { x: 14, y: 26 }, 43: { x: 10, y: 20 }, 44: { x: 16, y: 14 },
+  // Week 12
+  45: { x: 24, y: 30 }, 46: { x: 28, y: 24 }, 47: { x: 22, y: 18 }, 48: { x: 30, y: 12 },
+  // Week 13
+  49: { x: 38, y: 28 }, 50: { x: 42, y: 22 }, 51: { x: 36, y: 16 }, 52: { x: 44, y: 10 },
+  // Week 14
+  53: { x: 52, y: 30 }, 54: { x: 56, y: 24 }, 55: { x: 50, y: 18 }, 56: { x: 58, y: 12 },
+  // Week 15
+  57: { x: 66, y: 28 }, 58: { x: 70, y: 22 }, 59: { x: 64, y: 16 }, 60: { x: 72, y: 10 },
+  // Week 16
+  61: { x: 78, y: 30 }, 62: { x: 82, y: 24 }, 63: { x: 76, y: 18 }, 64: { x: 84, y: 12 },
+  // Week 17
+  65: { x: 88, y: 28 }, 66: { x: 92, y: 22 }, 67: { x: 86, y: 16 }, 68: { x: 94, y: 10 },
+  // Extra positions for quests 69-85 (boss quests per week)
+  69: { x: 20, y: 90 }, 70: { x: 34, y: 90 }, 71: { x: 48, y: 90 }, 72: { x: 62, y: 90 }, 73: { x: 76, y: 90 },
+  74: { x: 20, y: 36 }, 75: { x: 34, y: 36 }, 76: { x: 48, y: 36 }, 77: { x: 62, y: 36 }, 78: { x: 76, y: 36 },
+  79: { x: 20, y: 8 }, 80: { x: 34, y: 8 }, 81: { x: 48, y: 8 }, 82: { x: 62, y: 8 }, 83: { x: 76, y: 8 },
+  84: { x: 88, y: 8 }, 85: { x: 94, y: 4 },
 };
 
 // Boss positions on map (between week quest clusters)
 const BOSS_POSITIONS: Record<number, { x: number; y: number }> = {
-  1: { x: 18, y: 75 },   // After week 1 quests
-  2: { x: 22, y: 50 },   // After week 2 quests
-  3: { x: 46, y: 55 },   // After week 3 quests
-  4: { x: 42, y: 32 },   // After week 4 quests
-  5: { x: 58, y: 30 },   // After week 5 quests
-  6: { x: 68, y: 27 },   // After week 6 quests
-  7: { x: 72, y: 18 },   // After week 7 quests
-  8: { x: 82, y: 28 },   // After week 8 quests
-  9: { x: 80, y: 12 },   // After week 9 quests
-  10: { x: 92, y: 5 },   // Final boss
+  1: { x: 20, y: 74 },   // After week 1 quests
+  2: { x: 32, y: 74 },   // After week 2 quests
+  3: { x: 46, y: 74 },   // After week 3 quests
+  4: { x: 60, y: 74 },   // After week 4 quests
+  5: { x: 74, y: 74 },   // After week 5 quests
+  6: { x: 20, y: 46 },   // After week 6 quests
+  7: { x: 32, y: 46 },   // After week 7 quests
+  8: { x: 46, y: 46 },   // After week 8 quests
+  9: { x: 60, y: 46 },   // After week 9 quests
+  10: { x: 74, y: 46 },  // After week 10 quests
+  11: { x: 20, y: 18 },  // After week 11 quests
+  12: { x: 32, y: 18 },  // After week 12 quests
+  13: { x: 46, y: 18 },  // After week 13 quests
+  14: { x: 60, y: 18 },  // After week 14 quests
+  15: { x: 74, y: 18 },  // After week 15 quests
+  16: { x: 84, y: 18 },  // After week 16 quests
+  17: { x: 94, y: 14 },  // Final boss week 17
 };
 
 type GameView = "map" | "quest" | "result" | "report" | "boss";
@@ -73,6 +112,8 @@ export default function GamePortal() {
   const [reportType, setReportType] = useState<"error" | "doubt" | "suggestion">("doubt");
   const [activeBossWeek, setActiveBossWeek] = useState<number | null>(null);
   const [activeQuestion, setActiveQuestion] = useState<{ description: string; alternatives: any[]; explanation: string; questionIndex: number; totalQuestions: number } | null>(null);
+  const [showBossAnimation, setShowBossAnimation] = useState(false);
+  const [bossAnimData, setBossAnimData] = useState<{ isVictory: boolean; bossEmoji: string; bossName: string; pfEarned: number; pfPenalty: number } | null>(null);
 
   // Hardcoded memberId=1 for now (will be dynamic with auth)
   const memberId = 1;
@@ -196,6 +237,19 @@ export default function GamePortal() {
       setResultData(result);
       setShowResult(true);
       refetchProgress();
+
+      // If boss question: show battle animation
+      if (result.isBossQuestion) {
+        const boss = BOSSES.find((b: any) => b.weekNumber === selectedQuest?.weekNumber);
+        setBossAnimData({
+          isVictory: result.isCorrect,
+          bossEmoji: boss?.emoji || "🐉",
+          bossName: selectedQuest?.npcName || "Chefe",
+          pfEarned: result.pfEarned,
+          pfPenalty: result.pfPenalty || 0,
+        });
+        setShowBossAnimation(true);
+      }
     } catch (error) {
       toast.error("Erro ao enviar resposta");
     }
@@ -711,6 +765,12 @@ export default function GamePortal() {
                       <p className="text-sm text-gray-300 mt-2">
                         Resposta correta: <strong className="text-emerald-400">{resultData?.correctAnswerText}</strong>
                       </p>
+                      {resultData?.isBossQuestion && resultData?.pfPenalty > 0 && (
+                        <p className="text-red-400 font-bold mt-2">-{resultData.pfPenalty} PF (penalidade do chefe)</p>
+                      )}
+                      {!resultData?.isBossQuestion && (
+                        <p className="text-amber-400 text-sm mt-2">Tente novamente para avançar!</p>
+                      )}
                     </>
                   )}
                   {resultData?.explanation && (
@@ -736,20 +796,51 @@ export default function GamePortal() {
                   </div>
                 )}
 
-                <Button
-                  onClick={() => {
-                    setView("map");
-                    setSelectedQuest(null);
-                    setShowResult(false);
-                  }}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                >
-                  <Map size={16} className="mr-2" /> Voltar ao Mapa
-                </Button>
+                {resultData?.isCorrect ? (
+                  <Button
+                    onClick={() => {
+                      setView("map");
+                      setSelectedQuest(null);
+                      setShowResult(false);
+                    }}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Map size={16} className="mr-2" /> Voltar ao Mapa
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setShowResult(false);
+                      setResultData(null);
+                      setSelectedAnswer(null);
+                      setTimeLeft(60);
+                      setTimerActive(true);
+                    }}
+                    className="w-full bg-amber-600 hover:bg-amber-700"
+                  >
+                    <RotateCcw size={16} className="mr-2" /> Tentar Novamente
+                  </Button>
+                )}
               </div>
             )}
           </div>
         </div>
+
+        {/* Boss Victory/Defeat Animation Overlay */}
+        {showBossAnimation && bossAnimData && (
+          <BossVictoryAnimation
+            isVictory={bossAnimData.isVictory}
+            characterEmoji="🧙"
+            bossEmoji={bossAnimData.bossEmoji}
+            bossName={bossAnimData.bossName}
+            pfEarned={bossAnimData.pfEarned}
+            pfPenalty={bossAnimData.pfPenalty}
+            onAnimationEnd={() => {
+              setShowBossAnimation(false);
+              setBossAnimData(null);
+            }}
+          />
+        )}
 
         {/* Report Dialog */}
         <Dialog open={showReport} onOpenChange={setShowReport}>

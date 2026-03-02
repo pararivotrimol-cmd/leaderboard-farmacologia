@@ -197,6 +197,118 @@ const BOSSES: BossData[] = [
       ]},
     ],
   },
+  {
+    id: 11, weekNumber: 11, name: "Kraken Cardiovascular", title: "Monstro dos Fármacos Cardíacos",
+    emoji: "🦑", color: "#0ea5e9", hp: 650, playerHp: 100, pfReward: 60, xpReward: 520,
+    phases: [
+      { name: "Anti-hipertensivos", questions: [
+        { question: "Qual classe de anti-hipertensivo é preferida em pacientes com insuficiência cardíaca com fração de ejeção reduzida?", alternatives: [{ id: "a", text: "Bloqueadores de canal de cálcio" }, { id: "b", text: "IECA ou BRA" }, { id: "c", text: "Diuréticos tiazídicos" }, { id: "d", text: "Alfa-bloqueadores" }], correctAnswer: "b", explanation: "IECA/BRA reduzem pós-carga e remodelamento cardíaco, sendo primeira linha na IC com FE reduzida." },
+        { question: "O mecanismo de ação dos bloqueadores de canal de cálcio di-hidropiridínicos é:", alternatives: [{ id: "a", text: "Bloqueio de canais de sódio" }, { id: "b", text: "Bloqueio de canais L de cálcio nas células musculares lisas vasculares" }, { id: "c", text: "Inibição da enzima conversora de angiotensina" }, { id: "d", text: "Bloqueio de receptores beta-adrenérgicos" }], correctAnswer: "b", explanation: "Di-hidropiridinas (ex: anlodipino) bloqueiam canais L de cálcio vasculares, causando vasodilatação." },
+      ]},
+      { name: "Antiarrítmicos", questions: [
+        { question: "A amiodarona pertence a qual classe de antiarrítmicos (Vaughan Williams)?", alternatives: [{ id: "a", text: "Classe I" }, { id: "b", text: "Classe II" }, { id: "c", text: "Classe III" }, { id: "d", text: "Classe IV" }], correctAnswer: "c", explanation: "Amiodarona é Classe III (bloqueador de canal de potássio), prolongando o potencial de ação." },
+      ]},
+      { name: "Caso Clínico Cardíaco", questions: [
+        { question: "Paciente com fibrilação atrial e insuficiência cardíaca. Qual fármaco controla a frequência cardíaca e melhora a contratilidade?", alternatives: [{ id: "a", text: "Metoprolol" }, { id: "b", text: "Digoxina" }, { id: "c", text: "Verapamil" }, { id: "d", text: "Adenosina" }], correctAnswer: "b", explanation: "Digoxina controla a FC na FA e tem efeito inotrópico positivo, útil na IC com FA." },
+      ]},
+    ],
+  },
+  {
+    id: 12, weekNumber: 12, name: "Leviatã Renal", title: "Senhor dos Diuréticos",
+    emoji: "🌊", color: "#06b6d4", hp: 650, playerHp: 100, pfReward: 60, xpReward: 520,
+    phases: [
+      { name: "Diuréticos", questions: [
+        { question: "Qual diurético é o mais potente e age na alça de Henle?", alternatives: [{ id: "a", text: "Hidroclorotiazida" }, { id: "b", text: "Furosemida" }, { id: "c", text: "Espironolactona" }, { id: "d", text: "Acetazolamida" }], correctAnswer: "b", explanation: "Furosemida é diurético de alça, inibe o cotransportador Na-K-2Cl no ramo ascendente espesso." },
+        { question: "A espironolactona é um antagonista de:", alternatives: [{ id: "a", text: "Angiotensina II" }, { id: "b", text: "Aldosterona" }, { id: "c", text: "Vasopressina" }, { id: "d", text: "Renina" }], correctAnswer: "b", explanation: "Espironolactona bloqueia receptores de aldosterona, poupando potássio e sendo útil na IC." },
+      ]},
+      { name: "Fármacos Renais", questions: [
+        { question: "Qual fármaco é usado para tratar hipercalcemia aguda por seu efeito calciúrico?", alternatives: [{ id: "a", text: "Tiazídicos" }, { id: "b", text: "Furosemida" }, { id: "c", text: "Espironolactona" }, { id: "d", text: "Amilorida" }], correctAnswer: "b", explanation: "Furosemida aumenta a excreção de cálcio, sendo usada com hidratação na hipercalcemia aguda." },
+      ]},
+      { name: "Caso Clínico Renal", questions: [
+        { question: "Paciente com edema por IC e hipocalemia. Qual combinação diurética é mais adequada?", alternatives: [{ id: "a", text: "Furosemida + hidroclorotiazida" }, { id: "b", text: "Furosemida + espironolactona" }, { id: "c", text: "Acetazolamida + tiazídico" }, { id: "d", text: "Amilorida isolada" }], correctAnswer: "b", explanation: "Furosemida (diurético de alça) + espironolactona (poupador de K+) combina eficácia e proteção contra hipocalemia." },
+      ]},
+    ],
+  },
+  {
+    id: 13, weekNumber: 13, name: "Quimera Endócrina", title: "Besta Hormonal",
+    emoji: "🧬", color: "#a855f7", hp: 680, playerHp: 100, pfReward: 65, xpReward: 550,
+    phases: [
+      { name: "Antidiabéticos", questions: [
+        { question: "Qual antidiabético oral tem como mecanismo a inibição da gliconeogênese hepática e não causa hipoglicemia isolado?", alternatives: [{ id: "a", text: "Glibenclamida" }, { id: "b", text: "Metformina" }, { id: "c", text: "Acarbose" }, { id: "d", text: "Pioglitazona" }], correctAnswer: "b", explanation: "Metformina reduz a produção hepática de glicose e não causa hipoglicemia quando usada isoladamente." },
+        { question: "As sulfonilureias atuam estimulando:", alternatives: [{ id: "a", text: "Receptores de insulina no músculo" }, { id: "b", text: "Secreção de insulina pelas células beta pancreáticas" }, { id: "c", text: "Absorção de glicose no intestino" }, { id: "d", text: "Excreção renal de glicose" }], correctAnswer: "b", explanation: "Sulfonilureias bloqueiam canais de K+ ATP-dependentes nas células beta, aumentando a secreção de insulina." },
+      ]},
+      { name: "Hormônios Tireoidianos", questions: [
+        { question: "O propiltiouracil (PTU) inibe a síntese de hormônios tireoidianos e também:", alternatives: [{ id: "a", text: "Bloqueia receptores de TSH" }, { id: "b", text: "Inibe a conversão periférica de T4 em T3" }, { id: "c", text: "Destrói células foliculares" }, { id: "d", text: "Aumenta a captação de iodo" }], correctAnswer: "b", explanation: "PTU inibe a peroxidase tireoidiana E a desiodase periférica, reduzindo a conversão de T4 em T3 ativo." },
+      ]},
+      { name: "Caso Clínico Endócrino", questions: [
+        { question: "Paciente com DM2 e doença renal crônica estágio 3. Qual antidiabético deve ser evitado?", alternatives: [{ id: "a", text: "Insulina" }, { id: "b", text: "Metformina em dose plena" }, { id: "c", text: "Sitagliptina" }, { id: "d", text: "Liraglutida" }], correctAnswer: "b", explanation: "Metformina é contraindicada em DRC avançada (TFG < 30) pelo risco de acidose lática; doses devem ser ajustadas na DRC estágio 3." },
+      ]},
+    ],
+  },
+  {
+    id: 14, weekNumber: 14, name: "Basilisco Oncológico", title: "Serpente da Quimioterapia",
+    emoji: "🐍", color: "#ec4899", hp: 700, playerHp: 100, pfReward: 65, xpReward: 550,
+    phases: [
+      { name: "Antineoplásicos I", questions: [
+        { question: "O metotrexato atua como antineoplásico por:", alternatives: [{ id: "a", text: "Alquilação do DNA" }, { id: "b", text: "Inibição da di-hidrofolato redutase" }, { id: "c", text: "Inibição da topoisomerase II" }, { id: "d", text: "Bloqueio de receptores de estrogênio" }], correctAnswer: "b", explanation: "Metotrexato inibe a DHFR, impedindo a síntese de folato ativo e, consequentemente, a síntese de purinas e timidilato." },
+        { question: "Qual antineoplásico causa cardiotoxicidade dose-dependente?", alternatives: [{ id: "a", text: "Vincristina" }, { id: "b", text: "Doxorrubicina" }, { id: "c", text: "Tamoxifeno" }, { id: "d", text: "Imatinibe" }], correctAnswer: "b", explanation: "Doxorrubicina (antraciclina) causa cardiomiopatia dose-dependente por geração de radicais livres." },
+      ]},
+      { name: "Antineoplásicos II", questions: [
+        { question: "O imatinibe é um exemplo de terapia-alvo que inibe:", alternatives: [{ id: "a", text: "Topoisomerase I" }, { id: "b", text: "BCR-ABL tirosina quinase" }, { id: "c", text: "Aromatase" }, { id: "d", text: "Receptor de androgênio" }], correctAnswer: "b", explanation: "Imatinibe inibe seletivamente a BCR-ABL, sendo revolucionário no tratamento da leucemia mieloide crônica." },
+      ]},
+      { name: "Caso Clínico Oncológico", questions: [
+        { question: "Paciente com câncer de mama HER2+ recebe trastuzumabe. Qual é o mecanismo de ação?", alternatives: [{ id: "a", text: "Inibe a síntese de DNA" }, { id: "b", text: "Anticorpo monoclonal anti-HER2 que bloqueia sinalização proliferativa" }, { id: "c", text: "Bloqueia receptores de estrogênio" }, { id: "d", text: "Inibe a angiogênese" }], correctAnswer: "b", explanation: "Trastuzumabe é um anticorpo monoclonal que se liga ao domínio extracelular do HER2, bloqueando a proliferação celular." },
+      ]},
+    ],
+  },
+  {
+    id: 15, weekNumber: 15, name: "Titã da Coagulação", title: "Guardião do Sistema Hemostático",
+    emoji: "🩸", color: "#ef4444", hp: 720, playerHp: 100, pfReward: 70, xpReward: 580,
+    phases: [
+      { name: "Anticoagulantes", questions: [
+        { question: "A heparina não fracionada exerce seu efeito anticoagulante principalmente por:", alternatives: [{ id: "a", text: "Inibição da vitamina K" }, { id: "b", text: "Potencialização da antitrombina III" }, { id: "c", text: "Inibição direta da trombina" }, { id: "d", text: "Bloqueio do receptor GPIIb/IIIa" }], correctAnswer: "b", explanation: "Heparina se liga à antitrombina III, aumentando 1000x sua capacidade de inibir trombina e fator Xa." },
+        { question: "Qual anticoagulante oral inibe diretamente o fator Xa?", alternatives: [{ id: "a", text: "Varfarina" }, { id: "b", text: "Dabigatrana" }, { id: "c", text: "Rivaroxabana" }, { id: "d", text: "Heparina de baixo peso molecular" }], correctAnswer: "c", explanation: "Rivaroxabana é inibidor direto do fator Xa, sem necessidade de cofator como a antitrombina." },
+      ]},
+      { name: "Antiagregantes", questions: [
+        { question: "O clopidogrel inibe a agregação plaquetária por:", alternatives: [{ id: "a", text: "Inibição da COX-1" }, { id: "b", text: "Bloqueio irreversível do receptor P2Y12 de ADP" }, { id: "c", text: "Inibição da fosfodiesterase" }, { id: "d", text: "Bloqueio do receptor GPIIb/IIIa" }], correctAnswer: "b", explanation: "Clopidogrel é um pró-fármaco que, após ativação hepática, bloqueia irreversivelmente o receptor P2Y12." },
+      ]},
+      { name: "Caso Clínico Hemostático", questions: [
+        { question: "Paciente em uso de varfarina com INR 8,5 e sangramento ativo. Qual é a conduta farmacológica imediata?", alternatives: [{ id: "a", text: "Suspender varfarina e aguardar" }, { id: "b", text: "Vitamina K IV + concentrado de complexo protrombínico" }, { id: "c", text: "Protamina IV" }, { id: "d", text: "Transfusão de plaquetas" }], correctAnswer: "b", explanation: "Vitamina K IV reverte o efeito da varfarina; o CCP fornece fatores imediatos para reverter o sangramento agudo." },
+      ]},
+    ],
+  },
+  {
+    id: 16, weekNumber: 16, name: "Hidra Psiquiátrica", title: "Monstro dos Psicotrópicos",
+    emoji: "🧠", color: "#7c3aed", hp: 750, playerHp: 100, pfReward: 70, xpReward: 580,
+    phases: [
+      { name: "Antidepressivos", questions: [
+        { question: "Os ISRS (inibidores seletivos de recaptação de serotonina) atuam por:", alternatives: [{ id: "a", text: "Inibição da MAO" }, { id: "b", text: "Bloqueio do transportador de serotonina (SERT)" }, { id: "c", text: "Agonismo direto de receptores 5-HT" }, { id: "d", text: "Inibição da síntese de serotonina" }], correctAnswer: "b", explanation: "ISRS bloqueiam o SERT, impedindo a recaptação de serotonina e aumentando sua concentração sináptica." },
+        { question: "Qual antidepressivo tem maior risco de síndrome serotoninérgica quando combinado com tramadol?", alternatives: [{ id: "a", text: "Bupropiona" }, { id: "b", text: "Mirtazapina" }, { id: "c", text: "ISRS (ex: fluoxetina)" }, { id: "d", text: "Trazodona" }], correctAnswer: "c", explanation: "ISRS + tramadol (que também inibe recaptação de serotonina) aumenta risco de síndrome serotoninérgica." },
+      ]},
+      { name: "Antipsicóticos", questions: [
+        { question: "Os antipsicóticos típicos (1ª geração) causam efeitos extrapiramidais principalmente por:", alternatives: [{ id: "a", text: "Bloqueio de receptores D2 no estriado" }, { id: "b", text: "Bloqueio de receptores muscarínicos" }, { id: "c", text: "Agonismo de receptores 5-HT2A" }, { id: "d", text: "Inibição da recaptação de dopamina" }], correctAnswer: "a", explanation: "Bloqueio D2 no estriado causa parkinsonismo, acatisia, distonia aguda e discinesia tardia." },
+      ]},
+      { name: "Caso Clínico Psiquiátrico", questions: [
+        { question: "Paciente com transtorno bipolar em uso de lítio apresenta tremor, poliúria e confusão. Qual é a conduta?", alternatives: [{ id: "a", text: "Aumentar a dose de lítio" }, { id: "b", text: "Suspeitar de intoxicação por lítio e dosar litemia" }, { id: "c", text: "Adicionar haloperidol" }, { id: "d", text: "Iniciar diurético tiazídico" }], correctAnswer: "b", explanation: "Sintomas de intoxicação por lítio incluem tremor, poliúria, confusão e ataxia; a litemia deve ser dosada urgentemente." },
+      ]},
+    ],
+  },
+  {
+    id: 17, weekNumber: 17, name: "Tiamat Omega — O Dragão Supremo", title: "Chefe Final de Farmacologia I",
+    emoji: "🐲", color: "#fbbf24", hp: 900, playerHp: 100, pfReward: 80, xpReward: 700,
+    phases: [
+      { name: "Revisão Integradora I", questions: [
+        { question: "Um paciente usa inibidor da MAO (IMAO) e ingere alimentos ricos em tiramina. O resultado é:", alternatives: [{ id: "a", text: "Hipotensão grave" }, { id: "b", text: "Crise hipertensiva" }, { id: "c", text: "Bradicardia" }, { id: "d", text: "Hipoglicemia" }], correctAnswer: "b", explanation: "IMAOs impedem a degradação da tiramina, que libera noradrenalina em excesso, causando crise hipertensiva (efeito queijo)." },
+        { question: "Qual é o antídoto específico para intoxicação por paracetamol (acetaminofeno)?", alternatives: [{ id: "a", text: "Flumazenil" }, { id: "b", text: "N-acetilcisteína" }, { id: "c", text: "Naloxona" }, { id: "d", text: "Atropina" }], correctAnswer: "b", explanation: "N-acetilcisteína repõe glutationa hepática, neutralizando o metabólito tóxico NAPQI do paracetamol." },
+      ]},
+      { name: "Revisão Integradora II", questions: [
+        { question: "O índice terapêutico (IT) de um fármaco é definido como:", alternatives: [{ id: "a", text: "DE50 / DL50" }, { id: "b", text: "DL50 / DE50" }, { id: "c", text: "Dose máxima / dose mínima" }, { id: "d", text: "Biodisponibilidade oral / IV" }], correctAnswer: "b", explanation: "IT = DL50/DE50. Quanto maior o IT, mais seguro o fármaco. Lítio e digoxina têm IT estreito." },
+      ]},
+      { name: "Caso Clínico Final Integrador", questions: [
+        { question: "Paciente com sepse recebe aminoglicosídeo + beta-lactâmico. Qual é a base farmacológica desta combinação?", alternatives: [{ id: "a", text: "Efeito antagônico para reduzir toxicidade" }, { id: "b", text: "Sinergismo: beta-lactâmico facilita entrada do aminoglicosídeo ao romper a parede celular" }, { id: "c", text: "Ambos inibem a síntese proteica" }, { id: "d", text: "Redução da resistência por competição" }], correctAnswer: "b", explanation: "Beta-lactâmicos rompem a parede bacteriana, facilitando a entrada dos aminoglicosídeos que inibem a síntese proteica — sinergismo bactericida." },
+      ]},
+    ],
+  },
 ];
 
 // ═══════════════════════════════════════

@@ -8,6 +8,7 @@ import {
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { QUEST_EXTRA_QUESTIONS } from "../../shared/questExtraQuestions";
+import { ALL_GAME_QUESTIONS } from "../../shared/gameQuestions";
 
 // ─── Helper: find memberId from user openId ───
 async function findMemberId(db: any, userId: number): Promise<number | null> {
@@ -21,249 +22,28 @@ async function findMemberId(db: any, userId: number): Promise<number | null> {
   return memberRows[0]?.id ?? null;
 }
 
-// ─── Built-in 16 quests data (used when no DB quests exist) ───
-const BUILTIN_QUESTS = [
-  {
-    id: 1, order: 1, level: 1, weekNumber: 1,
-    title: "O Portal da Farmacocinética",
-    description: "Para atravessar o portal, responda: Qual é a ordem correta dos processos farmacocinéticos?",
-    npcName: "Mestre dos Magos", npcType: "mage" as const,
-    questType: "puzzle" as const, difficulty: "easy" as const,
-    farmacologiaPointsReward: 50, experienceReward: 100,
-    alternatives: [
-      { id: "a", text: "Absorção → Distribuição → Metabolismo → Excreção (ADME)", isCorrect: true },
-      { id: "b", text: "Distribuição → Absorção → Excreção → Metabolismo", isCorrect: false },
-      { id: "c", text: "Metabolismo → Absorção → Distribuição → Excreção", isCorrect: false },
-      { id: "d", text: "Excreção → Metabolismo → Distribuição → Absorção", isCorrect: false },
-    ],
-    explanation: "A ordem correta é ADME: Absorção, Distribuição, Metabolismo e Excreção.",
-  },
-  {
-    id: 2, order: 2, level: 1, weekNumber: 1,
-    title: "O Escudo de Sheila e a Barreira Hematoencefálica",
-    description: "Meu escudo me protege como a barreira hematoencefálica protege o cérebro. Que característica um fármaco DEVE ter para atravessá-la?",
-    npcName: "Sheila", npcType: "warrior" as const,
-    questType: "puzzle" as const, difficulty: "easy" as const,
-    farmacologiaPointsReward: 75, experienceReward: 150,
-    alternatives: [
-      { id: "a", text: "Alta polaridade e hidrofilicidade", isCorrect: false },
-      { id: "b", text: "Lipofilicidade e baixo peso molecular", isCorrect: true },
-      { id: "c", text: "Grande tamanho molecular", isCorrect: false },
-      { id: "d", text: "Carga elétrica positiva", isCorrect: false },
-    ],
-    explanation: "Fármacos lipofílicos e de baixo peso molecular atravessam a BHE mais facilmente.",
-  },
-  {
-    id: 3, order: 3, level: 2, weekNumber: 2,
-    title: "O Cajado de Presto e os Receptores",
-    description: "Meu cajado se liga a alvos específicos, assim como fármacos se ligam a receptores. Qual tipo de ligação é MAIS FORTE?",
-    npcName: "Presto", npcType: "mage" as const,
-    questType: "combat" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 100, experienceReward: 200,
-    alternatives: [
-      { id: "a", text: "Ligação iônica", isCorrect: false },
-      { id: "b", text: "Ligação covalente", isCorrect: true },
-      { id: "c", text: "Ligação de hidrogênio", isCorrect: false },
-      { id: "d", text: "Forças de Van der Waals", isCorrect: false },
-    ],
-    explanation: "Ligações covalentes são irreversíveis e as mais fortes entre fármaco-receptor.",
-  },
-  {
-    id: 4, order: 4, level: 2, weekNumber: 2,
-    title: "O Arco de Hank e a Dose-Resposta",
-    description: "Como um arqueiro ajusta a força do arco, médicos ajustam doses. O que é DL50?",
-    npcName: "Hank", npcType: "warrior" as const,
-    questType: "combat" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 100, experienceReward: 200,
-    alternatives: [
-      { id: "a", text: "Dose letal para 50% da população", isCorrect: true },
-      { id: "b", text: "Dose que causa 50% do efeito máximo", isCorrect: false },
-      { id: "c", text: "Dose mínima eficaz", isCorrect: false },
-      { id: "d", text: "Dose de manutenção", isCorrect: false },
-    ],
-    explanation: "DL50 é a dose letal para 50% da população testada. É uma medida de toxicidade.",
-  },
-  {
-    id: 5, order: 5, level: 3, weekNumber: 3,
-    title: "O Bastão de Bobby e os Agonistas",
-    description: "Meu bastão ativa a força! Qual é a definição correta de um fármaco AGONISTA?",
-    npcName: "Bobby", npcType: "warrior" as const,
-    questType: "combat" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 125, experienceReward: 250,
-    alternatives: [
-      { id: "a", text: "Bloqueia receptores sem ativá-los", isCorrect: false },
-      { id: "b", text: "Liga-se e ativa receptores produzindo resposta", isCorrect: true },
-      { id: "c", text: "Impede ligação de outros fármacos", isCorrect: false },
-      { id: "d", text: "Não se liga a receptores", isCorrect: false },
-    ],
-    explanation: "Agonistas se ligam ao receptor e produzem uma resposta biológica.",
-  },
-  {
-    id: 6, order: 6, level: 3, weekNumber: 3,
-    title: "O Escudo de Eric e os Antagonistas",
-    description: "Às vezes precisamos BLOQUEAR ameaças. Qual antagonista é usado em overdose de opioides?",
-    npcName: "Eric", npcType: "warrior" as const,
-    questType: "combat" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 125, experienceReward: 250,
-    alternatives: [
-      { id: "a", text: "Atropina", isCorrect: false },
-      { id: "b", text: "Naloxona", isCorrect: true },
-      { id: "c", text: "Flumazenil", isCorrect: false },
-      { id: "d", text: "Propranolol", isCorrect: false },
-    ],
-    explanation: "Naloxona é antagonista competitivo de receptores opioides μ.",
-  },
-  {
-    id: 7, order: 7, level: 4, weekNumber: 4,
-    title: "Uni e o Sistema Nervoso Autônomo",
-    description: "O SNA tem duas divisões. Qual neurotransmissor é liberado pelos neurônios PARASSIMPÁTICOS pós-ganglionares?",
-    npcName: "Uni", npcType: "healer" as const,
-    questType: "puzzle" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 150, experienceReward: 300,
-    alternatives: [
-      { id: "a", text: "Noradrenalina", isCorrect: false },
-      { id: "b", text: "Dopamina", isCorrect: false },
-      { id: "c", text: "Acetilcolina", isCorrect: true },
-      { id: "d", text: "Serotonina", isCorrect: false },
-    ],
-    explanation: "Neurônios parassimpáticos pós-ganglionares liberam acetilcolina (ACh).",
-  },
-  {
-    id: 8, order: 8, level: 4, weekNumber: 4,
-    title: "A Caverna dos Receptores Colinérgicos",
-    description: "Vencer Venger requer conhecimento! Qual fármaco é um antagonista MUSCARÍNICO?",
-    npcName: "Venger", npcType: "boss" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 200, experienceReward: 400,
-    alternatives: [
-      { id: "a", text: "Neostigmina", isCorrect: false },
-      { id: "b", text: "Atropina", isCorrect: true },
-      { id: "c", text: "Succinilcolina", isCorrect: false },
-      { id: "d", text: "Pilocarpina", isCorrect: false },
-    ],
-    explanation: "Atropina é o antagonista muscarínico clássico, bloqueando receptores M1-M5.",
-  },
-  {
-    id: 9, order: 9, level: 5, weekNumber: 5,
-    title: "O Castelo dos Adrenérgicos",
-    description: "Cada cabeça de Tiamat representa um receptor adrenérgico. Qual receptor, quando ativado, causa BRONCODILATAÇÃO?",
-    npcName: "Tiamat", npcType: "boss" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 175, experienceReward: 350,
-    alternatives: [
-      { id: "a", text: "α1", isCorrect: false },
-      { id: "b", text: "α2", isCorrect: false },
-      { id: "c", text: "β1", isCorrect: false },
-      { id: "d", text: "β2", isCorrect: true },
-    ],
-    explanation: "Agonistas β2 relaxam o músculo liso brônquico, causando broncodilatação.",
-  },
-  {
-    id: 10, order: 10, level: 5, weekNumber: 5,
-    title: "A Floresta dos Anestésicos",
-    description: "Na floresta do sono profundo, qual anestésico inalatório é MAIS potente?",
-    npcName: "Mestre dos Magos", npcType: "mage" as const,
-    questType: "puzzle" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 175, experienceReward: 350,
-    alternatives: [
-      { id: "a", text: "Óxido nitroso", isCorrect: false },
-      { id: "b", text: "Halotano", isCorrect: true },
-      { id: "c", text: "Sevoflurano", isCorrect: false },
-      { id: "d", text: "Desflurano", isCorrect: false },
-    ],
-    explanation: "Halotano tem menor CAM (concentração alveolar mínima), logo é mais potente.",
-  },
-  {
-    id: 11, order: 11, level: 6, weekNumber: 6,
-    title: "O Labirinto dos Analgésicos",
-    description: "No labirinto da dor, qual analgésico NÃO é opioide?",
-    npcName: "Hank", npcType: "warrior" as const,
-    questType: "puzzle" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 200, experienceReward: 400,
-    alternatives: [
-      { id: "a", text: "Morfina", isCorrect: false },
-      { id: "b", text: "Codeína", isCorrect: false },
-      { id: "c", text: "Paracetamol", isCorrect: true },
-      { id: "d", text: "Tramadol", isCorrect: false },
-    ],
-    explanation: "Paracetamol (acetaminofeno) é analgésico não-opioide de ação central.",
-  },
-  {
-    id: 12, order: 12, level: 7, weekNumber: 7,
-    title: "A Torre dos Anti-inflamatórios",
-    description: "Na torre da inflamação, qual enzima é inibida pelos AINEs?",
-    npcName: "Presto", npcType: "mage" as const,
-    questType: "combat" as const, difficulty: "medium" as const,
-    farmacologiaPointsReward: 225, experienceReward: 450,
-    alternatives: [
-      { id: "a", text: "Lipoxigenase", isCorrect: false },
-      { id: "b", text: "Fosfolipase A2", isCorrect: false },
-      { id: "c", text: "Ciclooxigenase (COX)", isCorrect: true },
-      { id: "d", text: "Tromboxano sintase", isCorrect: false },
-    ],
-    explanation: "AINEs inibem as isoformas COX-1 e COX-2 da ciclooxigenase.",
-  },
-  {
-    id: 13, order: 13, level: 8, weekNumber: 8,
-    title: "O Pântano dos Antimicrobianos",
-    description: "No pântano das infecções, qual antibiótico inibe a síntese da PAREDE CELULAR bacteriana?",
-    npcName: "Eric", npcType: "warrior" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 250, experienceReward: 500,
-    alternatives: [
-      { id: "a", text: "Tetraciclina", isCorrect: false },
-      { id: "b", text: "Penicilina", isCorrect: true },
-      { id: "c", text: "Eritromicina", isCorrect: false },
-      { id: "d", text: "Ciprofloxacino", isCorrect: false },
-    ],
-    explanation: "β-lactâmicos como penicilina inibem a síntese de peptideoglicano da parede celular.",
-  },
-  {
-    id: 14, order: 14, level: 9, weekNumber: 9,
-    title: "A Montanha dos Cardiovasculares",
-    description: "No topo da montanha cardíaca, qual classe de fármacos inibe a ECA?",
-    npcName: "Todos os Heróis", npcType: "warrior" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 275, experienceReward: 550,
-    alternatives: [
-      { id: "a", text: "Bloqueadores de canais de cálcio", isCorrect: false },
-      { id: "b", text: "β-bloqueadores", isCorrect: false },
-      { id: "c", text: "Inibidores da ECA (IECAs)", isCorrect: true },
-      { id: "d", text: "Diuréticos tiazídicos", isCorrect: false },
-    ],
-    explanation: "IECAs (captopril, enalapril) bloqueiam a conversão de Ang I → Ang II.",
-  },
-  {
-    id: 15, order: 15, level: 9, weekNumber: 9,
-    title: "O Abismo dos Psicotrópicos",
-    description: "No abismo da mente, qual neurotransmissor é AUMENTADO pelos ISRSs?",
-    npcName: "Dungeon Master", npcType: "mage" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 300, experienceReward: 600,
-    alternatives: [
-      { id: "a", text: "Dopamina", isCorrect: false },
-      { id: "b", text: "GABA", isCorrect: false },
-      { id: "c", text: "Serotonina", isCorrect: true },
-      { id: "d", text: "Glutamato", isCorrect: false },
-    ],
-    explanation: "ISRSs bloqueiam a recaptação de serotonina (5-HT) na fenda sináptica.",
-  },
-  {
-    id: 16, order: 16, level: 10, weekNumber: 10,
-    title: "O Portal de Retorno - Boss Final",
-    description: "Para abrir o portal de retorno, responda: Qual é o principal órgão de METABOLIZAÇÃO de fármacos?",
-    npcName: "Tiamat", npcType: "boss" as const,
-    questType: "combat" as const, difficulty: "hard" as const,
-    farmacologiaPointsReward: 500, experienceReward: 1000,
-    alternatives: [
-      { id: "a", text: "Rins", isCorrect: false },
-      { id: "b", text: "Fígado", isCorrect: true },
-      { id: "c", text: "Intestino", isCorrect: false },
-      { id: "d", text: "Pulmões", isCorrect: false },
-    ],
-    explanation: "O fígado é o principal órgão de metabolização (biotransformação) de fármacos.",
-  },
-];
+// ─── Built-in 85 quests data (17 weeks × 5 questions) ───
+// Convert GameQuestion format to the legacy BUILTIN_QUESTS format for compatibility
+const BUILTIN_QUESTS = ALL_GAME_QUESTIONS.map(gq => ({
+  id: gq.id,
+  order: gq.id,
+  level: Math.ceil(gq.weekNumber / 2),
+  weekNumber: gq.weekNumber,
+  questionInWeek: gq.questionInWeek,
+  isBossQuestion: gq.isBossQuestion,
+  title: gq.title,
+  description: gq.description,
+  npcName: gq.npcName,
+  npcType: gq.npcType as "warrior" | "mage" | "healer" | "boss",
+  questType: gq.isBossQuestion ? "combat" as const : (gq.questionInWeek <= 2 ? "puzzle" as const : "combat" as const),
+  difficulty: gq.difficulty,
+  farmacologiaPointsReward: gq.pfReward,
+  pfPenalty: gq.pfPenalty,
+  experienceReward: gq.pfReward * 10,
+  alternatives: gq.alternatives,
+  explanation: gq.explanation,
+}));
+
 
 // ─── Achievement definitions ───
 const ACHIEVEMENT_DEFS = [
@@ -489,6 +269,8 @@ export const gameRouter = router({
       const isCorrect = input.answer === correctAlt?.id;
       const pfEarned = isCorrect ? quest.farmacologiaPointsReward : 0;
       const xpEarned = isCorrect ? quest.experienceReward : 0;
+      // Boss penalty: if wrong answer on boss question, deduct pfPenalty
+      const pfPenalty = (!isCorrect && quest.isBossQuestion && quest.pfPenalty) ? quest.pfPenalty : 0;
 
       // Get progress
       const progressRows = await db
@@ -517,19 +299,24 @@ export const gameRouter = router({
         updates.questsCompleted = prog.questsCompleted + 1;
         updates.combatsWon = prog.combatsWon + 1;
 
-        // Level up logic: every 2 quests = 1 level (max 10)
+        // Level up logic: every 5 quests = 1 level (max 17)
         const newQuestsCompleted = prog.questsCompleted + 1;
-        const newLevel = Math.min(Math.ceil(newQuestsCompleted / 2) + 1, 10);
+        const newLevel = Math.min(Math.ceil(newQuestsCompleted / 5) + 1, 17);
         if (newLevel > prog.level) {
           updates.level = newLevel;
         }
 
-        // Check if game complete
-        if (newQuestsCompleted >= 16) {
+        // Check if game complete (85 quests total)
+        if (newQuestsCompleted >= 85) {
           updates.isCompleted = true;
         }
       } else {
         updates.combatsLost = prog.combatsLost + 1;
+        // Apply boss penalty if wrong on boss question
+        if (pfPenalty > 0) {
+          const currentPF = prog.farmacologiaPoints || 0;
+          updates.farmacologiaPoints = Math.max(0, currentPF - pfPenalty);
+        }
       }
 
       await db
@@ -537,15 +324,18 @@ export const gameRouter = router({
         .set(updates)
         .where(eq(gameProgress.id, prog.id));
 
-      // Log transaction if PF earned
-      if (pfEarned > 0) {
+      // Log transaction if PF earned or penalized
+      if (pfEarned > 0 || pfPenalty > 0) {
+        const netPF = pfEarned - pfPenalty;
         await db.insert(gameTransactions).values({
           memberId: input.memberId,
           classId: input.classId,
-          pfAmount: pfEarned,
-          transactionType: "quest_complete",
+          pfAmount: netPF,
+          transactionType: pfEarned > 0 ? "quest_complete" : "boss_penalty",
           missionId: input.questId,
-          description: `Missão "${quest.title}": +${pfEarned} PF`,
+          description: pfEarned > 0
+            ? `Missão "${quest.title}": +${pfEarned} PF`
+            : `Chefe "${quest.npcName}" venceu: -${pfPenalty} PF`,
         });
 
         // Sync with main leaderboard
@@ -556,9 +346,11 @@ export const gameRouter = router({
           .limit(1);
 
         if (member[0]) {
+          const currentXP = parseFloat(member[0].xp) || 0;
+          const newXP = Math.max(0, currentXP + pfEarned - pfPenalty);
           await db
             .update(members)
-            .set({ xp: String(parseFloat(member[0].xp) + pfEarned) })
+            .set({ xp: String(newXP) })
             .where(eq(members.id, input.memberId));
         }
       }
@@ -606,13 +398,18 @@ export const gameRouter = router({
 
       return {
         isCorrect,
+        canAdvance: isCorrect, // Only advance to next question when correct
         correctAnswer: correctAlt?.id || "",
         correctAnswerText: correctAlt?.text || "",
         explanation: activeQuestion.explanation || quest.explanation,
         pfEarned,
+        pfPenalty,
         xpEarned,
+        isBossQuestion: quest.isBossQuestion || false,
         newAchievements: newAchievements.map(id => ACHIEVEMENT_DEFS.find(a => a.id === id)!),
-        message: isCorrect ? "Parabéns! Você venceu o combate!" : "Resposta incorreta. Tente novamente!",
+        message: isCorrect
+          ? (quest.isBossQuestion ? `Chefe derrotado! +${pfEarned} PF!` : `Correto! +${pfEarned} PF`)
+          : (quest.isBossQuestion ? `O chefe venceu! -${pfPenalty} PF` : `Resposta incorreta. Tente novamente!`),
       };
     }),
 
