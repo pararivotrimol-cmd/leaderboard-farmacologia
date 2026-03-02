@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,18 +11,25 @@ import {
   Shield, Eye, Send
 } from "lucide-react";
 
-// Week titles
+// Week titles (17 weeks)
 const WEEK_TITLES: Record<number, string> = {
   1: "Farmacocinética (ADME)",
   2: "Farmacodinâmica (Receptores e Dose-Resposta)",
   3: "Agonistas e Antagonistas",
   4: "Sistema Nervoso Autônomo e Colinérgicos",
-  5: "Adrenérgicos e Anestésicos",
-  6: "Analgésicos",
-  7: "Anti-inflamatórios",
-  8: "Antimicrobianos",
-  9: "Cardiovasculares e Psicotrópicos",
-  10: "Boss Final - Revisão Geral",
+  5: "Adrenérgicos e Anestésicos Locais",
+  6: "Analgésicos Opioides",
+  7: "Anti-inflamatórios (AINEs e Corticoides)",
+  8: "Antimicrobianos I (Beta-lactâmicos)",
+  9: "Antimicrobianos II (Outros grupos)",
+  10: "Cardiovasculares I (Anti-hipertensivos)",
+  11: "Cardiovasculares II (Antiarrítmicos)",
+  12: "Psicotrópicos I (Ansiolíticos e Hipnóticos)",
+  13: "Psicotrópicos II (Antidepressivos)",
+  14: "Psicotrópicos III (Antipsicóticos)",
+  15: "Endocrinologia (Insulina e Hipoglicemiantes)",
+  16: "Oncologia (Quimioterápicos)",
+  17: "Revisão Geral — Boss Final",
 };
 
 type Tab = "overview" | "releases" | "students" | "reports";
@@ -33,6 +40,7 @@ export default function AdminGamePanel() {
   const [expandedStudent, setExpandedStudent] = useState<number | null>(null);
   const [respondingReport, setRespondingReport] = useState<number | null>(null);
   const [responseText, setResponseText] = useState("");
+  const [scheduleDates, setScheduleDates] = useState<Record<number, string>>({});
   const classId = 1; // Default class
 
   // Queries
@@ -47,6 +55,18 @@ export default function AdminGamePanel() {
   const releaseMutation = trpc.game.releaseWeek.useMutation();
   const lockMutation = trpc.game.lockWeek.useMutation();
   const respondMutation = trpc.game.respondToReport.useMutation();
+  const scheduleMutation = trpc.game.scheduleWeekRelease.useMutation();
+  const checkScheduledMutation = trpc.game.checkScheduledReleases.useMutation();
+
+  // Auto-check scheduled releases on mount
+  useEffect(() => {
+    checkScheduledMutation.mutateAsync({ classId }).then(result => {
+      if (result.released.length > 0) {
+        toast.success(`Semanas ${result.released.join(", ")} liberadas automaticamente!`);
+        refetchReleases();
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derived data
   const releasedWeeks = useMemo(() => {
@@ -70,6 +90,18 @@ export default function AdminGamePanel() {
       refetchReleases();
     } catch {
       toast.error("Erro ao bloquear semana");
+    }
+  };
+
+  const handleScheduleWeek = async (weekNumber: number) => {
+    const dateStr = scheduleDates[weekNumber];
+    if (!dateStr) { toast.error("Selecione uma data primeiro"); return; }
+    try {
+      await scheduleMutation.mutateAsync({ classId, weekNumber, scheduledDate: new Date(dateStr).toISOString() });
+      toast.success(`Semana ${weekNumber} agendada para ${new Date(dateStr).toLocaleDateString("pt-BR")}`);
+      refetchReleases();
+    } catch {
+      toast.error("Erro ao agendar semana");
     }
   };
 
@@ -240,43 +272,72 @@ export default function AdminGamePanel() {
             </div>
 
             <div className="space-y-3">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map(weekNum => {
+              {Array.from({ length: 17 }, (_, i) => i + 1).map(weekNum => {
                 const isReleased = releasedWeeks.has(weekNum);
-                const weekQuests = (allQuests || []).filter((q: any) => q.weekNumber === weekNum);
+                const releaseEntry = (releases || []).find((r: any) => r.weekNumber === weekNum);
+                const scheduledDate = releaseEntry?.scheduledReleaseDate
+                  ? new Date(releaseEntry.scheduledReleaseDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                  : null;
+                const isBossWeek = weekNum === 17;
 
                 return (
                   <div
                     key={weekNum}
-                    className={`
-                      border rounded-xl p-4 transition-all
-                      ${isReleased
-                        ? "bg-emerald-500/5 border-emerald-500/20"
-                        : "bg-white/5 border-white/10"
-                      }
-                    `}
+                    className={`border rounded-xl p-4 transition-all ${
+                      isReleased ? "bg-emerald-500/5 border-emerald-500/20"
+                      : isBossWeek ? "bg-red-500/5 border-red-500/20"
+                      : "bg-white/5 border-white/10"
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className={`
-                          w-10 h-10 rounded-full flex items-center justify-center
-                          ${isReleased ? "bg-emerald-500/20" : "bg-gray-500/20"}
-                        `}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                          isReleased ? "bg-emerald-500/20" : isBossWeek ? "bg-red-500/20" : "bg-gray-500/20"
+                        }`}>
                           {isReleased ? (
                             <Unlock size={18} className="text-emerald-400" />
+                          ) : isBossWeek ? (
+                            <Shield size={18} className="text-red-400" />
                           ) : (
                             <Lock size={18} className="text-gray-400" />
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold">Semana {weekNum}</p>
+                          <p className="font-semibold">Semana {weekNum} {isBossWeek ? "👑" : ""}</p>
                           <p className="text-sm text-gray-400">{WEEK_TITLES[weekNum]}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {weekQuests.length} missão(ões): {weekQuests.map((q: any) => q.title).join(", ")}
-                          </p>
+                          {scheduledDate && !isReleased && (
+                            <p className="text-xs text-amber-400 mt-0.5 flex items-center gap-1">
+                              <Clock size={11} /> Agendada: {scheduledDate}
+                            </p>
+                          )}
+                          {isReleased && releaseEntry?.releasedAt && (
+                            <p className="text-xs text-emerald-400 mt-0.5">
+                              Liberada em {new Date(releaseEntry.releasedAt).toLocaleDateString("pt-BR")}
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 ml-13">
+                        {!isReleased && (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="datetime-local"
+                              value={scheduleDates[weekNum] || ""}
+                              onChange={e => setScheduleDates(prev => ({ ...prev, [weekNum]: e.target.value }))}
+                              className="text-xs bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleScheduleWeek(weekNum)}
+                              disabled={scheduleMutation.isPending || !scheduleDates[weekNum]}
+                              className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10 text-xs"
+                            >
+                              <Clock size={12} className="mr-1" /> Agendar
+                            </Button>
+                          </div>
+                        )}
                         {isReleased ? (
                           <Button
                             variant="outline"
@@ -294,7 +355,7 @@ export default function AdminGamePanel() {
                             disabled={releaseMutation.isPending}
                             className="bg-emerald-600 hover:bg-emerald-700"
                           >
-                            <Unlock size={14} className="mr-1" /> Liberar
+                            <Unlock size={14} className="mr-1" /> Liberar Agora
                           </Button>
                         )}
                       </div>

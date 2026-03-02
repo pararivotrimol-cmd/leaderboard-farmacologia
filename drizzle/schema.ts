@@ -1299,6 +1299,7 @@ export const gameWeeklyReleases = mysqlTable("gameWeeklyReleases", {
   isReleased: boolean("isReleased").notNull().default(false), // Professor must explicitly release
   releasedAt: timestamp("releasedAt"), // When it was released
   releasedBy: int("releasedBy"), // Teacher account ID who released it
+  scheduledReleaseDate: timestamp("scheduledReleaseDate"), // Auto-release on this date/time
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

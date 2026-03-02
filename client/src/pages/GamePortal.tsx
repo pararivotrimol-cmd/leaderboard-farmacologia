@@ -12,6 +12,8 @@ import {
 import { toast } from "sonner";
 import BossBattle, { BOSSES } from "@/components/game/BossBattle";
 import { BossVictoryAnimation } from "@/components/game/BossVictoryAnimation";
+import { playCorrectSound, playWrongSound, playVictorySound, playDefeatSound, playWeekCompleteSound } from "@/lib/gameSounds";
+import { WeekReview } from "@/components/game/WeekReview";
 
 // Character images
 const CHARACTER_IMAGES: Record<string, string> = {
@@ -114,6 +116,7 @@ export default function GamePortal() {
   const [activeQuestion, setActiveQuestion] = useState<{ description: string; alternatives: any[]; explanation: string; questionIndex: number; totalQuestions: number } | null>(null);
   const [showBossAnimation, setShowBossAnimation] = useState(false);
   const [bossAnimData, setBossAnimData] = useState<{ isVictory: boolean; bossEmoji: string; bossName: string; pfEarned: number; pfPenalty: number } | null>(null);
+  const [reviewWeek, setReviewWeek] = useState<{ weekNumber: number; weekTitle: string } | null>(null);
 
   // Hardcoded memberId=1 for now (will be dynamic with auth)
   const memberId = 1;
@@ -238,8 +241,14 @@ export default function GamePortal() {
       setShowResult(true);
       refetchProgress();
 
-      // If boss question: show battle animation
+      // Play sound based on result
       if (result.isBossQuestion) {
+        // Boss question: play victory or defeat fanfare
+        if (result.isCorrect) {
+          playVictorySound();
+        } else {
+          playDefeatSound();
+        }
         const boss = BOSSES.find((b: any) => b.weekNumber === selectedQuest?.weekNumber);
         setBossAnimData({
           isVictory: result.isCorrect,
@@ -249,6 +258,15 @@ export default function GamePortal() {
           pfPenalty: result.pfPenalty || 0,
         });
         setShowBossAnimation(true);
+      } else {
+        // Regular question: short chime or buzz
+        if (result.isCorrect) {
+          playCorrectSound();
+          // Play week complete sound if this was the last regular quest (question 4) and it was correct
+          if (result.canAdvance && activeQuestion && activeQuestion.questionIndex === 3) playWeekCompleteSound();
+        } else {
+          playWrongSound();
+        }
       }
     } catch (error) {
       toast.error("Erro ao enviar resposta");
@@ -553,7 +571,15 @@ export default function GamePortal() {
                     <p className="text-xs font-bold text-white truncate">{boss.name}</p>
                     <p className="text-[10px] text-gray-400">Sem. {boss.weekNumber}</p>
                     {isDefeated && (
-                      <p className="text-[10px] text-emerald-400 mt-1">Derrotado</p>
+                      <>
+                        <p className="text-[10px] text-emerald-400 mt-1">Derrotado</p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setReviewWeek({ weekNumber: boss.weekNumber, weekTitle: boss.name }); }}
+                          className="mt-1.5 text-[10px] text-blue-400 hover:text-blue-300 underline"
+                        >
+                          📖 Revisar
+                        </button>
+                      </>
                     )}
                     {isAvailable && !isDefeated && (
                       <p className="text-[10px] text-red-400 mt-1 animate-pulse">Disponível!</p>
@@ -842,6 +868,14 @@ export default function GamePortal() {
           />
         )}
 
+        {/* Week Review Modal */}
+        {reviewWeek && (
+          <WeekReview
+            weekNumber={reviewWeek.weekNumber}
+            weekTitle={reviewWeek.weekTitle}
+            onClose={() => setReviewWeek(null)}
+          />
+        )}
         {/* Report Dialog */}
         <Dialog open={showReport} onOpenChange={setShowReport}>
           <DialogContent className="bg-[#111638] border-purple-500/20 text-white max-w-md">

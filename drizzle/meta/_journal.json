@@ -120,6 +120,13 @@
       "when": 1772376692558,
       "tag": "0016_conscious_killer_shrike",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1772482830994,
+      "tag": "0017_red_thena",
+      "breakpoints": true
     }
   ]
 }

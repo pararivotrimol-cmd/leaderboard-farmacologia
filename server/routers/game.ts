@@ -138,7 +138,28 @@ export const gameRouter = router({
         explanation: selected.explanation,
       };
     }),
-
+  /**
+   * Get all questions for a week in review mode (no PF awarded)
+   */
+  getWeekReviewQuestions: publicProcedure
+    .input(z.object({ weekNumber: z.number() }))
+    .query(({ input }) => {
+      const weekQuests = BUILTIN_QUESTS.filter(q => q.weekNumber === input.weekNumber);
+      return weekQuests.map(quest => {
+        const extras = QUEST_EXTRA_QUESTIONS[quest.id] || [];
+        const pool = [
+          { description: quest.description, alternatives: quest.alternatives, explanation: quest.explanation },
+          ...extras,
+        ];
+        return {
+          questId: quest.id,
+          questTitle: quest.title,
+          isBossQuest: quest.isBossQuestion || false,
+          difficulty: quest.difficulty,
+          questions: pool,
+        };
+      });
+    }),
   /**
    * Get player's game progress (works with memberId directly)
    */
@@ -688,10 +709,74 @@ export const gameRouter = router({
             eq(gameWeeklyReleases.weekNumber, input.weekNumber)
           )
         );
-
       return { success: true };
     }),
-
+  /**
+   * Schedule a week to be auto-released on a specific date
+   */
+  scheduleWeekRelease: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      weekNumber: z.number(),
+      scheduledDate: z.string(), // ISO date string
+      teacherId: z.number().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const scheduledDate = new Date(input.scheduledDate);
+      const WEEK_TITLES_17: Record<number, string> = {
+        1: "Farmacocinética (ADME)", 2: "Farmacodinâmica (Receptores e Dose-Resposta)",
+        3: "Agonistas e Antagonistas", 4: "Sistema Nervoso Autônomo e Colinérgicos",
+        5: "Adrenérgicos e Anestésicos Locais", 6: "Analgésicos Opioides",
+        7: "Anti-inflamatórios (AINEs e Corticoides)", 8: "Antimicrobianos I (Beta-lactâmicos)",
+        9: "Antimicrobianos II (Outros grupos)", 10: "Cardiovasculares I (Anti-hipertensivos)",
+        11: "Cardiovasculares II (Antiarrítmicos)", 12: "Psicotrópicos I (Ansiolíticos e Hipnóticos)",
+        13: "Psicotrópicos II (Antidepressivos)", 14: "Psicotrópicos III (Antipsicóticos)",
+        15: "Endocrinologia (Insulina e Hipoglicemiantes)", 16: "Oncologia (Quimioterápicos)",
+        17: "Revisão Geral — Boss Final",
+      };
+      const questIds = BUILTIN_QUESTS.filter(q => q.weekNumber === input.weekNumber).map(q => q.id);
+      const existing = await db.select().from(gameWeeklyReleases)
+        .where(and(eq(gameWeeklyReleases.classId, input.classId), eq(gameWeeklyReleases.weekNumber, input.weekNumber)))
+        .limit(1);
+      if (existing.length > 0) {
+        await db.update(gameWeeklyReleases)
+          .set({ scheduledReleaseDate: scheduledDate })
+          .where(eq(gameWeeklyReleases.id, existing[0].id));
+      } else {
+        await db.insert(gameWeeklyReleases).values({
+          classId: input.classId, weekNumber: input.weekNumber,
+          questIds: JSON.stringify(questIds),
+          title: `Semana ${input.weekNumber} - ${WEEK_TITLES_17[input.weekNumber] || "Desafios"}`,
+          isReleased: false, scheduledReleaseDate: scheduledDate,
+          releasedBy: input.teacherId || null,
+        });
+      }
+      return { success: true, scheduledDate: scheduledDate.toISOString() };
+    }),
+  /**
+   * Check and auto-release scheduled weeks that are past their scheduled date
+   */
+  checkScheduledReleases: publicProcedure
+    .input(z.object({ classId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { released: [] };
+      const now = new Date();
+      const pending = await db.select().from(gameWeeklyReleases)
+        .where(eq(gameWeeklyReleases.classId, input.classId));
+      const released: number[] = [];
+      for (const entry of pending) {
+        if (!entry.isReleased && entry.scheduledReleaseDate && entry.scheduledReleaseDate <= now) {
+          await db.update(gameWeeklyReleases)
+            .set({ isReleased: true, releasedAt: now })
+            .where(eq(gameWeeklyReleases.id, entry.id));
+          released.push(entry.weekNumber);
+        }
+      }
+      return { released };
+    }),
   /**
    * Get all students' game progress for a class (teacher view)
    */

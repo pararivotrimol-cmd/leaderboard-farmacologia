@@ -1,0 +1,1 @@
+ALTER TABLE `gameWeeklyReleases` ADD `scheduledReleaseDate` timestamp;
