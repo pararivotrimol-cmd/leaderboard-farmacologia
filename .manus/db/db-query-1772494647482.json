@@ -1,0 +1,52 @@
+{
+  "query": "SELECT eg.id, eg.name, eg.classId, t.name as topicName, (SELECT COUNT(*) FROM jigsawExpertMembers WHERE expertGroupId = eg.id) as memberCount FROM jigsawExpertGroups eg LEFT JOIN jigsawTopics t ON eg.topicId = t.id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT eg.id, eg.name, eg.classId, t.name as topicName, (SELECT COUNT(*) FROM jigsawExpertMembers WHERE expertGroupId = eg.id) as memberCount FROM jigsawExpertGroups eg LEFT JOIN jigsawTopics t ON eg.topicId = t.id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Grupo Cannabis — Os Receptores",
+      "classId": "1",
+      "topicName": "Farmacologia dos Canabinoides",
+      "memberCount": "14"
+    },
+    {
+      "id": "2",
+      "name": "Grupo Anafilaxia — Os Guardiões",
+      "classId": "1",
+      "topicName": "Alergia Medicamentosa",
+      "memberCount": "14"
+    },
+    {
+      "id": "3",
+      "name": "Grupo Dopamina — Os Neurotransmissores",
+      "classId": "1",
+      "topicName": "Farmacodependência de Drogas de Abuso",
+      "memberCount": "14"
+    },
+    {
+      "id": "4",
+      "name": "Grupo Leptina — Os Metabólicos",
+      "classId": "1",
+      "topicName": "Farmacologia dos Emagrecedores",
+      "memberCount": "14"
+    },
+    {
+      "id": "5",
+      "name": "Grupo Citocromo — Os Interatores",
+      "classId": "1",
+      "topicName": "Interações Medicamentosas",
+      "memberCount": "14"
+    },
+    {
+      "id": "6",
+      "name": "Grupo Oncologia — Os Quimioterápicos",
+      "classId": "1",
+      "topicName": "Farmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal",
+      "memberCount": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tclassId\ttopicName\tmemberCount\n1\tGrupo Cannabis — Os Receptores\t1\tFarmacologia dos Canabinoides\t14\n2\tGrupo Anafilaxia — Os Guardiões\t1\tAlergia Medicamentosa\t14\n3\tGrupo Dopamina — Os Neurotransmissores\t1\tFarmacodependência de Drogas de Abuso\t14\n4\tGrupo Leptina — Os Metabólicos\t1\tFarmacologia dos Emagrecedores\t14\n5\tGrupo Citocromo — Os Interatores\t1\tInterações Medicamentosas\t14\n6\tGrupo Oncologia — Os Quimioterápicos\t1\tFarmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal\t14\n",
+  "stderr": "",
+  "execution_time_ms": 70
+}

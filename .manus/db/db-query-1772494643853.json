@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COUNT(*) as expertGroups FROM jigsawExpertGroups;\nSELECT COUNT(*) as expertMembers FROM jigsawExpertMembers;\nSELECT COUNT(*) as homeGroups FROM jigsawHomeGroups;\nSELECT COUNT(*) as homeMembers FROM jigsawHomeMembers;\nSELECT COUNT(*) as topics FROM jigsawTopics;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT COUNT(*) as expertGroups FROM jigsawExpertGroups;\nSELECT COUNT(*) as expertMembers FROM jigsawExpertMembers;\nSELECT COUNT(*) as homeGroups FROM jigsawHomeGroups;\nSELECT COUNT(*) as homeMembers FROM jigsawHomeMembers;\nSELECT COUNT(*) as topics FROM jigsawTopics;",
+  "rows": [
+    {
+      "expertGroups": "6"
+    },
+    {
+      "expertGroups": "expertMembers"
+    },
+    {
+      "expertGroups": "84"
+    },
+    {
+      "expertGroups": "homeGroups"
+    },
+    {
+      "expertGroups": "14"
+    },
+    {
+      "expertGroups": "homeMembers"
+    },
+    {
+      "expertGroups": "84"
+    },
+    {
+      "expertGroups": "topics"
+    },
+    {
+      "expertGroups": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "expertGroups\n6\nexpertMembers\n84\nhomeGroups\n14\nhomeMembers\n84\ntopics\n6\n",
+  "stderr": "",
+  "execution_time_ms": 86
+}

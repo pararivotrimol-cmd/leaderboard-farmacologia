@@ -1,0 +1,8 @@
+{
+  "query": "SELECT 'jigsaw_expert_groups' as tbl, COUNT(*) as cnt FROM jigsaw_expert_groups\nUNION ALL SELECT 'jigsaw_expert_members', COUNT(*) FROM jigsaw_expert_members\nUNION ALL SELECT 'jigsaw_home_groups', COUNT(*) FROM jigsaw_home_groups\nUNION ALL SELECT 'jigsaw_home_members', COUNT(*) FROM jigsaw_home_members\nUNION ALL SELECT 'jigsaw_topics', COUNT(*) FROM jigsaw_topics;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT 'jigsaw_expert_groups' as tbl, COUNT(*) as cnt FROM jigsaw_expert_groups\nUNION ALL SELECT 'jigsaw_expert_members', COUNT(*) FROM jigsaw_expert_members\nUNION ALL SELECT 'jigsaw_home_groups', COUNT(*) FROM jigsaw_home_groups\nUNION ALL SELECT 'jigsaw_home_members', COUNT(*) FROM jigsaw_home_members\nUNION ALL SELECT 'jigsaw_topics', COUNT(*) FROM jigsaw_topics;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'fuz2ecmxakxvi9q85vhrsr.jigsaw_expert_groups' doesn't exist"
+  ]
+}

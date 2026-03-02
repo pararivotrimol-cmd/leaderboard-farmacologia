@@ -1,0 +1,54 @@
+{
+  "query": "SELECT eg.id, eg.name, eg.classId FROM jigsawExpertGroups eg LIMIT 6;\nSELECT em.memberId, em.expertGroupId FROM jigsawExpertMembers em LIMIT 5;\nSELECT id, name FROM jigsawTopics LIMIT 6;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT eg.id, eg.name, eg.classId FROM jigsawExpertGroups eg LIMIT 6;\nSELECT em.memberId, em.expertGroupId FROM jigsawExpertMembers em LIMIT 5;\nSELECT id, name FROM jigsawTopics LIMIT 6;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Grupo Cannabis — Os Receptores",
+      "classId": "1"
+    },
+    {
+      "id": "2",
+      "name": "Grupo Anafilaxia — Os Guardiões",
+      "classId": "1"
+    },
+    {
+      "id": "3",
+      "name": "Grupo Dopamina — Os Neurotransmissores",
+      "classId": "1"
+    },
+    {
+      "id": "4",
+      "name": "Grupo Leptina — Os Metabólicos",
+      "classId": "1"
+    },
+    {
+      "id": "5",
+      "name": "Grupo Citocromo — Os Interatores",
+      "classId": "1"
+    },
+    {
+      "id": "6",
+      "name": "Grupo Oncologia — Os Quimioterápicos",
+      "classId": "1"
+    }
+  ],
+  "messages": [
+    "memberId\texpertGroupId",
+    "570075\t1",
+    "570023\t1",
+    "570024\t1",
+    "570057\t1",
+    "570087\t1",
+    "id\tname",
+    "1\tFarmacologia dos Canabinoides",
+    "2\tAlergia Medicamentosa",
+    "3\tFarmacodependência de Drogas de Abuso",
+    "4\tFarmacologia dos Emagrecedores",
+    "5\tInterações Medicamentosas",
+    "6\tFarmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal"
+  ],
+  "stdout": "id\tname\tclassId\n1\tGrupo Cannabis — Os Receptores\t1\n2\tGrupo Anafilaxia — Os Guardiões\t1\n3\tGrupo Dopamina — Os Neurotransmissores\t1\n4\tGrupo Leptina — Os Metabólicos\t1\n5\tGrupo Citocromo — Os Interatores\t1\n6\tGrupo Oncologia — Os Quimioterápicos\t1\nmemberId\texpertGroupId\n570075\t1\n570023\t1\n570024\t1\n570057\t1\n570087\t1\nid\tname\n1\tFarmacologia dos Canabinoides\n2\tAlergia Medicamentosa\n3\tFarmacodependência de Drogas de Abuso\n4\tFarmacologia dos Emagrecedores\n5\tInterações Medicamentosas\n6\tFarmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal\n",
+  "stderr": "",
+  "execution_time_ms": 79
+}

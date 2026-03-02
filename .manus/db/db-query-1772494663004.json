@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, classId FROM jigsawExpertGroups LIMIT 6;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, classId FROM jigsawExpertGroups LIMIT 6;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Grupo Cannabis — Os Receptores",
+      "classId": "1"
+    },
+    {
+      "id": "2",
+      "name": "Grupo Anafilaxia — Os Guardiões",
+      "classId": "1"
+    },
+    {
+      "id": "3",
+      "name": "Grupo Dopamina — Os Neurotransmissores",
+      "classId": "1"
+    },
+    {
+      "id": "4",
+      "name": "Grupo Leptina — Os Metabólicos",
+      "classId": "1"
+    },
+    {
+      "id": "5",
+      "name": "Grupo Citocromo — Os Interatores",
+      "classId": "1"
+    },
+    {
+      "id": "6",
+      "name": "Grupo Oncologia — Os Quimioterápicos",
+      "classId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tclassId\n1\tGrupo Cannabis — Os Receptores\t1\n2\tGrupo Anafilaxia — Os Guardiões\t1\n3\tGrupo Dopamina — Os Neurotransmissores\t1\n4\tGrupo Leptina — Os Metabólicos\t1\n5\tGrupo Citocromo — Os Interatores\t1\n6\tGrupo Oncologia — Os Quimioterápicos\t1\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

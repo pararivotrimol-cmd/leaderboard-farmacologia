@@ -8,7 +8,8 @@ import { useStudentAuth } from "@/pages/StudentLogin";
 import {
   ArrowLeft, AlertCircle, Lock, Calendar, QrCode,
   BarChart3, BookOpen, Gamepad2, Target, Users,
-  Download, Clock, CheckCircle, XCircle, FileText
+  Download, Clock, CheckCircle, XCircle, FileText,
+  Puzzle, FlaskConical, Shuffle, Star, ChevronDown, ChevronUp
 } from "lucide-react";
 
 const DARK_BG = "#0A1628";
@@ -46,6 +47,12 @@ export default function StudentArea() {
   const { data: jigsawGroups } = trpc.jigsawGroups.getByClass.useQuery(
     { classId: classId || 0 },
     { enabled: !!classId }
+  );
+
+  // Buscar grupos Jigsaw do aluno (Fase 1 + Fase 2)
+  const { data: myJigsawGroups, isLoading: loadingMyJigsaw } = trpc.jigsawComplete.getMyJigsawGroups.useQuery(
+    { memberId: memberId!, classId: classId || 1 },
+    { enabled: !!memberId }
   );
 
   // Verificar se aluno está matriculado na turma
@@ -180,6 +187,41 @@ export default function StudentArea() {
         showClassSelector={false}
         memberId={memberId}
       />
+
+      {/* Tab Bar */}
+      <div
+        className="border-b sticky top-[57px] z-30"
+        style={{ backgroundColor: CARD_BG, borderColor: "rgba(255,255,255,0.08)" }}
+      >
+        <div className="container mx-auto px-3 sm:px-4 2xl:px-8">
+          <div className="flex gap-0 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {[
+              { key: "cronograma", label: "Cronograma", icon: <Calendar size={14} /> },
+              { key: "presenca", label: "Presença", icon: <QrCode size={14} /> },
+              { key: "media", label: "Média", icon: <BarChart3 size={14} /> },
+              { key: "materiais", label: "Materiais", icon: <BookOpen size={14} /> },
+              { key: "jogo", label: "Jogo", icon: <Gamepad2 size={14} /> },
+              { key: "atividades", label: "Atividades", icon: <Target size={14} /> },
+              { key: "equipes", label: "Equipes", icon: <Users size={14} /> },
+              { key: "jigsaw", label: "Jigsaw", icon: <Puzzle size={14} /> },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex-shrink-0"
+                style={{
+                  borderBottomColor: activeTab === tab.key ? ORANGE : "transparent",
+                  color: activeTab === tab.key ? ORANGE : "rgba(255,255,255,0.5)",
+                  backgroundColor: "transparent",
+                }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="container mx-auto px-3 sm:px-4 2xl:px-8 py-4 sm:py-8 2xl:py-12">
@@ -608,6 +650,152 @@ export default function StudentArea() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ MEU GRUPO JIGSAW ═══ */}
+        {activeTab === "jigsaw" && (
+          <div>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Puzzle size={20} className="sm:hidden" style={{ color: ORANGE }} />
+              <Puzzle size={24} className="hidden sm:block" style={{ color: ORANGE }} />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Meu Grupo Jigsaw</h2>
+            </div>
+
+            {loadingMyJigsaw ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-orange-500 border-t-transparent" />
+              </div>
+            ) : !myJigsawGroups?.expertGroup && !myJigsawGroups?.homeGroup ? (
+              <div className="rounded-xl p-10 text-center" style={{ backgroundColor: CARD_BG, border: "1px solid rgba(255,255,255,0.1)" }}>
+                <Puzzle size={48} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.2)" }} />
+                <p className="text-white/60 text-sm">Você ainda não foi alocado em nenhum grupo Jigsaw.</p>
+                <p className="text-white/40 text-xs mt-2">Os grupos serão divulgados pelo professor em breve.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+
+                {/* Fase 1 — Grupo Especialista */}
+                {myJigsawGroups?.expertGroup && (
+                  <div className="rounded-xl overflow-hidden" style={{ backgroundColor: CARD_BG, border: "1px solid rgba(16,185,129,0.3)" }}>
+                    <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: "rgba(16,185,129,0.1)", borderBottom: "1px solid rgba(16,185,129,0.2)" }}>
+                      <FlaskConical size={16} style={{ color: "#10b981" }} />
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#10b981" }}>Fase 1 — Grupo Especialista</span>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: "rgba(16,185,129,0.15)" }}>
+                          🧪
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white">{myJigsawGroups.expertGroup.name}</h3>
+                          <p className="text-xs mt-0.5" style={{ color: "#10b981" }}>{myJigsawGroups.expertGroup.topicName}</p>
+                          {myJigsawGroups.expertGroup.topicDescription && (
+                            <p className="text-xs text-white/50 mt-1">{myJigsawGroups.expertGroup.topicDescription}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Notas Fase 1 */}
+                      {(Number(myJigsawGroups.expertGroup.myPresentationScore) > 0 || Number(myJigsawGroups.expertGroup.myParticipationScore) > 0) && (
+                        <div className="rounded-lg p-3 flex gap-4" style={{ backgroundColor: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)" }}>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg" style={{ color: "#10b981" }}>{Number(myJigsawGroups.expertGroup.myPresentationScore).toFixed(1)}</div>
+                            <div className="text-[10px] text-white/50">Apresentação</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg" style={{ color: "#10b981" }}>{Number(myJigsawGroups.expertGroup.myParticipationScore).toFixed(1)}</div>
+                            <div className="text-[10px] text-white/50">Participação</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg text-white">
+                              {(Number(myJigsawGroups.expertGroup.myPresentationScore) + Number(myJigsawGroups.expertGroup.myParticipationScore)).toFixed(1)}
+                            </div>
+                            <div className="text-[10px] text-white/50">Total Fase 1</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Colegas do grupo */}
+                      <div>
+                        <p className="text-xs text-white/40 mb-2 uppercase tracking-wide">Colegas do grupo ({myJigsawGroups.expertGroup.members?.length || 0} alunos)</p>
+                        <div className="space-y-1">
+                          {(myJigsawGroups.expertGroup.members || []).map((m: any, idx: number) => (
+                            <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                              <span className="text-[10px] text-white/30 font-mono w-4">{idx + 1}</span>
+                              <span className="text-sm text-white/80">{m.name?.includes('\t') ? m.name.split('\t')[1] : m.name}</span>
+                              {m.role === "leader" && <Star size={11} style={{ color: ORANGE }} />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fase 2 — Grupo Mosaico */}
+                {myJigsawGroups?.homeGroup && (
+                  <div className="rounded-xl overflow-hidden" style={{ backgroundColor: CARD_BG, border: "1px solid rgba(99,102,241,0.3)" }}>
+                    <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: "rgba(99,102,241,0.1)", borderBottom: "1px solid rgba(99,102,241,0.2)" }}>
+                      <Shuffle size={16} style={{ color: "#6366f1" }} />
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6366f1" }}>Fase 2 — Grupo Mosaico</span>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: "rgba(99,102,241,0.15)" }}>
+                          🧩
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white">{myJigsawGroups.homeGroup.name}</h3>
+                          <p className="text-xs mt-0.5" style={{ color: "#6366f1" }}>Você ensina: {myJigsawGroups.homeGroup.myTopicName}</p>
+                        </div>
+                      </div>
+
+                      {/* Notas Fase 2 */}
+                      {(Number(myJigsawGroups.homeGroup.myPresentationScore) > 0 || Number(myJigsawGroups.homeGroup.myParticipationScore) > 0 || Number(myJigsawGroups.homeGroup.myPeerRating) > 0) && (
+                        <div className="rounded-lg p-3 flex gap-3 flex-wrap" style={{ backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)" }}>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>{Number(myJigsawGroups.homeGroup.myPresentationScore).toFixed(1)}</div>
+                            <div className="text-[10px] text-white/50">Apresentação</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>{Number(myJigsawGroups.homeGroup.myParticipationScore).toFixed(1)}</div>
+                            <div className="text-[10px] text-white/50">Participação</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>{Number(myJigsawGroups.homeGroup.myPeerRating).toFixed(1)}</div>
+                            <div className="text-[10px] text-white/50">Avaliação Pares</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-mono font-bold text-lg text-white">
+                              {(Number(myJigsawGroups.homeGroup.myPresentationScore) + Number(myJigsawGroups.homeGroup.myParticipationScore) + Number(myJigsawGroups.homeGroup.myPeerRating)).toFixed(1)}
+                            </div>
+                            <div className="text-[10px] text-white/50">Total Fase 2</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Colegas do grupo mosaico */}
+                      <div>
+                        <p className="text-xs text-white/40 mb-2 uppercase tracking-wide">Especialistas no grupo ({myJigsawGroups.homeGroup.members?.length || 0} alunos)</p>
+                        <div className="space-y-1">
+                          {(myJigsawGroups.homeGroup.members || []).map((m: any, idx: number) => (
+                            <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                              <span className="text-[10px] text-white/30 font-mono w-4">{idx + 1}</span>
+                              <span className="flex-1 text-sm text-white/80">{m.name?.includes('\t') ? m.name.split('\t')[1] : m.name}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded text-white" style={{ backgroundColor: "rgba(99,102,241,0.5)" }}>
+                                {m.topicName?.split(" ").slice(0, 3).join(" ")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
           </div>

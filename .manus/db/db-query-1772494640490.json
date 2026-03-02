@@ -1,0 +1,30 @@
+{
+  "query": "SELECT 'jigsawExpertGroups' as tbl, COUNT(*) as cnt FROM jigsawExpertGroups\nUNION ALL SELECT 'jigsawExpertMembers', COUNT(*) FROM jigsawExpertMembers\nUNION ALL SELECT 'jigsawHomeGroups', COUNT(*) FROM jigsawHomeGroups\nUNION ALL SELECT 'jigsawHomeMembers', COUNT(*) FROM jigsawHomeMembers\nUNION ALL SELECT 'jigsawTopics', COUNT(*) FROM jigsawTopics;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT 'jigsawExpertGroups' as tbl, COUNT(*) as cnt FROM jigsawExpertGroups\nUNION ALL SELECT 'jigsawExpertMembers', COUNT(*) FROM jigsawExpertMembers\nUNION ALL SELECT 'jigsawHomeGroups', COUNT(*) FROM jigsawHomeGroups\nUNION ALL SELECT 'jigsawHomeMembers', COUNT(*) FROM jigsawHomeMembers\nUNION ALL SELECT 'jigsawTopics', COUNT(*) FROM jigsawTopics;",
+  "rows": [
+    {
+      "tbl": "jigsawExpertGroups",
+      "cnt": "6"
+    },
+    {
+      "tbl": "jigsawTopics",
+      "cnt": "6"
+    },
+    {
+      "tbl": "jigsawExpertMembers",
+      "cnt": "84"
+    },
+    {
+      "tbl": "jigsawHomeGroups",
+      "cnt": "14"
+    },
+    {
+      "tbl": "jigsawHomeMembers",
+      "cnt": "84"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\njigsawExpertGroups\t6\njigsawTopics\t6\njigsawExpertMembers\t84\njigsawHomeGroups\t14\njigsawHomeMembers\t84\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

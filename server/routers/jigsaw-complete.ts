@@ -3,7 +3,7 @@
  * Implements expert groups, home groups, and scoring
  */
 
-import { router, adminProcedure, protectedProcedure } from "../_core/trpc";
+import { router, adminProcedure, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
@@ -1196,6 +1196,181 @@ export const jigsawCompleteRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Erro ao deletar grupos mosaico",
+        });
+      }
+    }),
+
+  /**
+   * ========================================
+   * STUDENT: Get my Jigsaw groups (expert + home)
+   * ========================================
+   */
+  getMyJigsawGroups: publicProcedure
+    .input(z.object({ memberId: z.number(), classId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Find expert group
+        const expertMembership = await db
+          .select()
+          .from(jigsawExpertMembers)
+          .where(eq(jigsawExpertMembers.memberId, input.memberId))
+          .limit(1);
+
+        let expertGroup = null;
+        if (expertMembership.length > 0) {
+          const eg = await db
+            .select()
+            .from(jigsawExpertGroups)
+            .where(eq(jigsawExpertGroups.id, expertMembership[0].expertGroupId))
+            .limit(1);
+          if (eg.length > 0) {
+            const topic = await db
+              .select()
+              .from(jigsawTopics)
+              .where(eq(jigsawTopics.id, eg[0].topicId))
+              .limit(1);
+            const egMembers = await db
+              .select()
+              .from(jigsawExpertMembers)
+              .where(eq(jigsawExpertMembers.expertGroupId, eg[0].id));
+            const memberNames = await Promise.all(
+              egMembers.map(async (m) => {
+                const md = await db.select().from(members).where(eq(members.id, m.memberId)).limit(1);
+                return md[0] ? { id: md[0].id, name: md[0].name, role: m.role } : null;
+              })
+            );
+            expertGroup = {
+              ...eg[0],
+              topicName: topic[0]?.name || "Tópico",
+              topicDescription: topic[0]?.description || "",
+              members: memberNames.filter(Boolean),
+              myRole: expertMembership[0].role,
+              myPresentationScore: expertMembership[0].presentationScore,
+              myParticipationScore: expertMembership[0].participationScore,
+            };
+          }
+        }
+
+        // Find home group (mosaico)
+        const homeMembership = await db
+          .select()
+          .from(jigsawHomeMembers)
+          .where(eq(jigsawHomeMembers.memberId, input.memberId))
+          .limit(1);
+
+        let homeGroup = null;
+        if (homeMembership.length > 0) {
+          const hg = await db
+            .select()
+            .from(jigsawHomeGroups)
+            .where(eq(jigsawHomeGroups.id, homeMembership[0].homeGroupId))
+            .limit(1);
+          if (hg.length > 0) {
+            const hgMembers = await db
+              .select()
+              .from(jigsawHomeMembers)
+              .where(eq(jigsawHomeMembers.homeGroupId, hg[0].id));
+            const memberDetails = await Promise.all(
+              hgMembers.map(async (m) => {
+                const md = await db.select().from(members).where(eq(members.id, m.memberId)).limit(1);
+                const topicData = await db.select().from(jigsawTopics).where(eq(jigsawTopics.id, m.topicId)).limit(1);
+                return md[0] ? {
+                  id: md[0].id,
+                  name: md[0].name,
+                  topicName: topicData[0]?.name || "Tópico",
+                  presentationScore: m.presentationScore,
+                  participationScore: m.participationScore,
+                  peerRating: m.peerRating,
+                } : null;
+              })
+            );
+            homeGroup = {
+              ...hg[0],
+              members: memberDetails.filter(Boolean),
+              myTopicName: (await db.select().from(jigsawTopics).where(eq(jigsawTopics.id, homeMembership[0].topicId)).limit(1))[0]?.name || "Tópico",
+              myPresentationScore: homeMembership[0].presentationScore,
+              myParticipationScore: homeMembership[0].participationScore,
+              myPeerRating: homeMembership[0].peerRating,
+            };
+          }
+        }
+
+        return { expertGroup, homeGroup };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao buscar grupos Jigsaw do aluno",
+        });
+      }
+    }),
+
+  /**
+   * ========================================
+   * ADMIN: Calculate total PF for all members in a class
+   * ========================================
+   */
+  calculateAllTotals: adminProcedure
+    .input(z.object({ classId: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const allMembers = await db
+          .select({ id: members.id })
+          .from(jigsawExpertMembers)
+          .innerJoin(jigsawExpertGroups, eq(jigsawExpertMembers.expertGroupId, jigsawExpertGroups.id))
+          .where(eq(jigsawExpertGroups.classId, input.classId));
+
+        let updated = 0;
+        for (const m of allMembers) {
+          const expertScores = await db
+            .select()
+            .from(jigsawExpertMembers)
+            .where(eq(jigsawExpertMembers.memberId, m.id));
+          const homeScores = await db
+            .select()
+            .from(jigsawHomeMembers)
+            .where(eq(jigsawHomeMembers.memberId, m.id));
+
+          const totalPresentation =
+            expertScores.reduce((s: number, x: any) => s + (Number(x.presentationScore) || 0), 0) +
+            homeScores.reduce((s: number, x: any) => s + (Number(x.presentationScore) || 0), 0);
+          const totalParticipation =
+            expertScores.reduce((s: number, x: any) => s + (Number(x.participationScore) || 0), 0) +
+            homeScores.reduce((s: number, x: any) => s + (Number(x.participationScore) || 0), 0);
+          const totalPeerRating = homeScores.reduce((s: number, x: any) => s + (Number(x.peerRating) || 0), 0);
+          const totalJigsawPF = totalPresentation + totalParticipation + totalPeerRating;
+
+          const existing = await db.select().from(jigsawScores).where(eq(jigsawScores.memberId, m.id)).limit(1);
+          if (existing.length > 0) {
+            await db.update(jigsawScores).set({
+              totalPresentationScore: String(totalPresentation),
+              totalParticipationScore: String(totalParticipation),
+              totalPeerRating: String(totalPeerRating),
+              totalJigsawPF: String(totalJigsawPF),
+            }).where(eq(jigsawScores.memberId, m.id));
+          } else {
+            await db.insert(jigsawScores).values({
+              classId: input.classId,
+              memberId: m.id,
+              totalPresentationScore: String(totalPresentation),
+              totalParticipationScore: String(totalParticipation),
+              totalPeerRating: String(totalPeerRating),
+              totalJigsawPF: String(totalJigsawPF),
+            });
+          }
+          updated++;
+        }
+
+        return { success: true, updated };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao calcular totais",
         });
       }
     }),
