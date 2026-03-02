@@ -201,10 +201,13 @@ export default function AdminDashboard() {
 
 // ─── Overview Tab ───
 function OverviewTab({ sessionToken }: { sessionToken: string }) {
-  const statsQuery = trpc.superAdmin.getStats.useQuery({ sessionToken }, {
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
+  const [selectedClassId, setSelectedClassId] = useState<number | undefined>(undefined);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  const statsQuery = trpc.superAdmin.getStats.useQuery(
+    { sessionToken, classId: selectedClassId },
+    { retry: 1, refetchOnWindowFocus: false }
+  );
 
   if (statsQuery.isLoading) {
     return <LoadingState text="Carregando estatísticas..." />;
@@ -216,6 +219,91 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
 
   const stats = statsQuery.data;
   if (!stats) return null;
+
+  const scopeLabel = stats.system.selectedClassName
+    ? `Turma: ${stats.system.selectedClassName}`
+    : "Todas as Turmas";
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("pt-BR");
+      const timeStr = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Relatório Farmacologia — ${dateStr}</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #1a1a2e; margin: 0; padding: 32px; }
+            h1 { color: #F7941D; font-size: 24px; margin-bottom: 4px; }
+            .subtitle { color: #666; font-size: 13px; margin-bottom: 24px; }
+            .section { margin-bottom: 28px; }
+            .section h2 { font-size: 16px; color: #F7941D; border-bottom: 2px solid #F7941D; padding-bottom: 6px; margin-bottom: 14px; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px; text-align: center; }
+            .card .value { font-size: 28px; font-weight: bold; color: #F7941D; }
+            .card .label { font-size: 11px; color: #666; margin-top: 4px; }
+            .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>Relatório — Conexão em Farmacologia</h1>
+          <p class="subtitle">Gerado em ${dateStr} às ${timeStr} — Escopo: ${scopeLabel}</p>
+
+          <div class="section">
+            <h2>Resumo Geral</h2>
+            <div class="grid">
+              <div class="card"><div class="value">${stats.system.totalMembers}</div><div class="label">Total de Alunos</div></div>
+              <div class="card"><div class="value">${stats.system.totalTeams}</div><div class="label">Equipes Ativas</div></div>
+              <div class="card"><div class="value">${stats.system.totalClasses}</div><div class="label">Turmas</div></div>
+              <div class="card"><div class="value">${stats.system.totalXP}</div><div class="label">PF Total</div></div>
+              <div class="card"><div class="value">${stats.system.avgXPPerMember}</div><div class="label">Média PF/Aluno</div></div>
+              <div class="card"><div class="value">${stats.students.totalAccounts}</div><div class="label">Contas de Alunos</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Professores</h2>
+            <div class="grid">
+              <div class="card"><div class="value">${stats.teachers.total}</div><div class="label">Total</div></div>
+              <div class="card"><div class="value">${stats.teachers.active}</div><div class="label">Ativos</div></div>
+              <div class="card"><div class="value">${stats.teachers.coordenadores}</div><div class="label">Coordenadores</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Alunos</h2>
+            <div class="grid">
+              <div class="card"><div class="value">${stats.students.totalMembers}</div><div class="label">Membros (equipes)</div></div>
+              <div class="card"><div class="value">${stats.students.activeAccounts}</div><div class="label">Contas ativas</div></div>
+              <div class="card"><div class="value">${stats.students.withoutAccount}</div><div class="label">Sem conta</div></div>
+            </div>
+          </div>
+
+          <div class="footer">Conexão em Farmacologia — UNIRIO 2026.1 — Relatório gerado automaticamente</div>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) {
+        win.onload = () => {
+          win.print();
+          URL.revokeObjectURL(url);
+        };
+      }
+    } catch (err) {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const statCards = [
     { label: "Total de Alunos (Membros)", value: stats.system.totalMembers.toString(), icon: <GraduationCap size={24} />, color: ORANGE },
@@ -229,7 +317,36 @@ function OverviewTab({ sessionToken }: { sessionToken: string }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Visão Geral da Plataforma</h2>
+      {/* Header row with title, class filter and PDF export */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Visão Geral da Plataforma</h2>
+          <p className="text-sm text-gray-400 mt-0.5">{scopeLabel}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Class filter */}
+          <select
+            value={selectedClassId ?? ""}
+            onChange={e => setSelectedClassId(e.target.value ? Number(e.target.value) : undefined)}
+            className="px-3 py-2 rounded-lg text-sm border border-gray-600 bg-gray-800 text-white focus:outline-none focus:border-orange-400"
+          >
+            <option value="">Todas as Turmas</option>
+            {stats.classes?.map(c => (
+              <option key={c.id} value={c.id}>{c.name}{c.course ? ` — ${c.course}` : ""}</option>
+            ))}
+          </select>
+          {/* PDF export button */}
+          <button
+            onClick={handleExportPdf}
+            disabled={exportingPdf}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 disabled:opacity-50"
+            style={{ backgroundColor: `${ORANGE}25`, color: ORANGE, border: `1px solid ${ORANGE}50` }}
+          >
+            <FileText size={16} />
+            {exportingPdf ? "Gerando..." : "Exportar PDF"}
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((stat, i) => (

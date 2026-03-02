@@ -2426,3 +2426,8 @@
 - [ ] Exibir ranking com posição, nome, equipe, número de badges e lista de badges obtidos
 - [ ] Destacar top 3 com medalhas (ouro, prata, bronze)
 - [ ] Escrever testes para o novo endpoint
+
+## Melhorias Admin (Mar 02, 2026)
+- [x] Promover Prof. Pedro a coordenador no banco de dados
+- [x] Adicionar filtro por turma nas estatísticas do admin (endpoint + UI)
+- [x] Botão exportar PDF na aba Visão Geral do admin

@@ -643,7 +643,7 @@ export const appRouter = router({
   superAdmin: router({
     // Get system statistics (super admin only)
     getStats: publicProcedure
-      .input(z.object({ sessionToken: z.string() }))
+      .input(z.object({ sessionToken: z.string(), classId: z.number().optional() }))
       .query(async ({ input }) => {
         // Verify super admin or coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
@@ -651,25 +651,41 @@ export const appRouter = router({
           throw new Error("Acesso negado: apenas super admin ou coordenador pode acessar estatísticas");
         }
 
-        // Get all data
-        const allTeams = await db.getAllTeams();
-        const allMembers = await db.getAllMembers();
+        // Get all data (optionally filtered by class)
+        const allClasses = await db.getAllClasses();
         const allTeachers = await db.getAllTeacherAccounts();
         const allStudents = await db.getAllStudentAccounts();
-        const allClasses = await db.getAllClasses();
+
+        let scopeTeams, scopeMembers;
+        if (input.classId) {
+          scopeTeams = await db.getTeamsByClass(input.classId);
+          scopeMembers = await db.getMembersByClass(input.classId);
+        } else {
+          scopeTeams = await db.getAllTeams();
+          scopeMembers = await db.getAllMembers();
+        }
         
         // Calculate stats
-        const totalTeams = allTeams.length;
-        const totalMembers = allMembers.length;
+        const totalTeams = scopeTeams.length;
+        const totalMembers = scopeMembers.length;
         const totalTeachers = allTeachers.length;
         const activeTeachers = allTeachers.filter(t => t.isActive === 1).length;
         const coordenadores = allTeachers.filter(t => t.role === "coordenador").length;
-        const totalStudentAccounts = allStudents.length;
-        const activeStudentAccounts = allStudents.filter(s => s.isActive === 1).length;
+
+        // For student accounts, filter by class if needed
+        const memberIds = new Set(scopeMembers.map((m: any) => m.studentAccountId).filter(Boolean));
+        const scopeStudents = input.classId
+          ? allStudents.filter(s => memberIds.has(s.id))
+          : allStudents;
+        const totalStudentAccounts = scopeStudents.length;
+        const activeStudentAccounts = scopeStudents.filter(s => s.isActive === 1).length;
         
-        // Calculate total XP
-        const totalXP = allMembers.reduce((sum: number, m: any) => sum + parseFloat(m.xp.toString()), 0);
+        // Calculate total PF
+        const totalXP = scopeMembers.reduce((sum: number, m: any) => sum + parseFloat(m.xp.toString()), 0);
         const avgXPPerMember = totalMembers > 0 ? totalXP / totalMembers : 0;
+
+        // Selected class info
+        const selectedClass = input.classId ? allClasses.find(c => c.id === input.classId) : null;
 
         return {
           system: {
@@ -678,6 +694,7 @@ export const appRouter = router({
             totalClasses: allClasses.length,
             totalXP: totalXP.toFixed(1),
             avgXPPerMember: avgXPPerMember.toFixed(1),
+            selectedClassName: selectedClass?.name || null,
           },
           teachers: {
             total: totalTeachers,
@@ -692,6 +709,7 @@ export const appRouter = router({
             activeAccounts: activeStudentAccounts,
             withoutAccount: totalMembers - totalStudentAccounts,
           },
+          classes: allClasses.map(c => ({ id: c.id, name: c.name, course: c.course })),
         };
       }),
 
