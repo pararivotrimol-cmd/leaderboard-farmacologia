@@ -999,4 +999,204 @@ export const jigsawCompleteRouter = router({
         }
       }),
   },
+
+  /**
+   * ========================================
+   * NOTIFICATIONS - Notify all students about their Jigsaw groups
+   * ========================================
+   */
+  notifyAllGroups: adminProcedure
+    .input(z.object({ classId: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const groups = await db
+          .select()
+          .from(jigsawExpertGroups)
+          .where(eq(jigsawExpertGroups.classId, input.classId));
+
+        let totalNotified = 0;
+
+        for (const group of groups) {
+          const topicData = await db
+            .select()
+            .from(jigsawTopics)
+            .where(eq(jigsawTopics.id, group.topicId))
+            .limit(1);
+          const topicName = topicData[0]?.name || "Tópico";
+
+          const groupMembers = await db
+            .select()
+            .from(jigsawExpertMembers)
+            .where(eq(jigsawExpertMembers.expertGroupId, group.id));
+
+          for (const gm of groupMembers) {
+            try {
+              await createStudentNotification({
+                memberId: gm.memberId,
+                classId: input.classId,
+                title: `🧩 Grupo Jigsaw: ${group.name}`,
+                message: `Você foi alocado(a) no grupo "${group.name}" para o Seminário Jigsaw Fase 1. Seu tema de estudo é: ${topicName}. Prepare-se para se tornar especialista neste tema e ensinar seus colegas!`,
+                type: "team_allocation",
+                priority: "high",
+                relatedEntityType: "jigsaw_group",
+                relatedEntityId: group.id,
+              });
+              totalNotified++;
+            } catch (notifErr) {
+              console.warn("[JigsawNotif] Failed for member", gm.memberId, notifErr);
+            }
+          }
+        }
+
+        return { success: true, totalNotified };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao enviar notificações",
+        });
+      }
+    }),
+
+  /**
+   * ========================================
+   * GENERATE HOME GROUPS (FASE 2 - MOSAICO)
+   * ========================================
+   */
+  generateHomeGroups: adminProcedure
+    .input(z.object({ classId: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const existingHomeGroups = await db
+          .select()
+          .from(jigsawHomeGroups)
+          .where(eq(jigsawHomeGroups.classId, input.classId));
+
+        if (existingHomeGroups.length > 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Grupos mosaico já existem (${existingHomeGroups.length} grupos). Delete-os antes de gerar novamente.`,
+          });
+        }
+
+        const expertGroups = await db
+          .select()
+          .from(jigsawExpertGroups)
+          .where(eq(jigsawExpertGroups.classId, input.classId));
+
+        if (expertGroups.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Nenhum grupo especialista encontrado.",
+          });
+        }
+
+        const expertGroupsWithMembers = await Promise.all(
+          expertGroups.map(async (eg) => {
+            const egMembers = await db
+              .select()
+              .from(jigsawExpertMembers)
+              .where(eq(jigsawExpertMembers.expertGroupId, eg.id));
+            const topicData = await db
+              .select()
+              .from(jigsawTopics)
+              .where(eq(jigsawTopics.id, eg.topicId))
+              .limit(1);
+            return {
+              ...eg,
+              topicName: topicData[0]?.name || "Tópico",
+              memberIds: egMembers.map((m) => m.memberId),
+            };
+          })
+        );
+
+        const maxGroupSize = Math.max(...expertGroupsWithMembers.map((g) => g.memberIds.length));
+
+        // Shuffle each expert group's members independently
+        const shuffledGroups = expertGroupsWithMembers.map((eg) => ({
+          ...eg,
+          shuffledMembers: [...eg.memberIds].sort(() => Math.random() - 0.5),
+        }));
+
+        const createdGroups: { id: number; name: string; memberCount: number }[] = [];
+
+        for (let i = 0; i < maxGroupSize; i++) {
+          const homeGroupName = `Grupo Mosaico ${i + 1}`;
+          const result = await db.insert(jigsawHomeGroups).values({
+            classId: input.classId,
+            name: homeGroupName,
+            description: `Grupo Mosaico ${i + 1} — Fase 2 Jigsaw (1 especialista de cada tema)`,
+            meetingNumber: 1,
+            status: "forming",
+          });
+          const homeGroupId = (result as any).insertId;
+
+          let memberCount = 0;
+          for (const eg of shuffledGroups) {
+            const memberId = eg.shuffledMembers[i];
+            if (memberId) {
+              await db.insert(jigsawHomeMembers).values({
+                homeGroupId,
+                memberId,
+                topicId: eg.topicId,
+              });
+              memberCount++;
+            }
+          }
+
+          createdGroups.push({ id: homeGroupId, name: homeGroupName, memberCount });
+        }
+
+        return {
+          success: true,
+          totalHomeGroups: createdGroups.length,
+          groups: createdGroups,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao gerar grupos mosaico",
+        });
+      }
+    }),
+
+  /**
+   * Delete all home groups for a class
+   */
+  deleteHomeGroups: adminProcedure
+    .input(z.object({ classId: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const homeGroups = await db
+          .select()
+          .from(jigsawHomeGroups)
+          .where(eq(jigsawHomeGroups.classId, input.classId));
+
+        for (const hg of homeGroups) {
+          await db
+            .delete(jigsawHomeMembers)
+            .where(eq(jigsawHomeMembers.homeGroupId, hg.id));
+        }
+
+        await db
+          .delete(jigsawHomeGroups)
+          .where(eq(jigsawHomeGroups.classId, input.classId));
+
+        return { success: true, deleted: homeGroups.length };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao deletar grupos mosaico",
+        });
+      }
+    }),
 });

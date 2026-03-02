@@ -14,6 +14,7 @@ import { FileDropZone } from "@/components/FileDropZone";
 import { PDFPreview, usePDFPreview } from "@/components/PDFPreview";
 import { TagInput, TagDisplay, type Tag } from "@/components/TagInput";
 import JigsawRebalancingManager from "./AdminJigsawRebalancing";
+import AdminJigsawPanel from "./AdminJigsawPanel";
 import AttendanceQRCodeManager from "./AdminAttendanceQRCode";
 import {
   Lock, LogOut, Users, UserPlus, Trash2, Edit2, Save, X,
@@ -4400,7 +4401,7 @@ export default function Admin() {
         )}
         {activeSection === "badges" && password && <BadgesManager password={password} />}
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
-        {activeSection === "jigsaw" && teacherToken && <JigsawSeminarsManager teacherToken={teacherToken} />}
+        {activeSection === "jigsaw" && <AdminJigsawPanel />}
         {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
         {activeSection === "cronograma" && teacherToken && <CronogramaManager teacherToken={teacherToken} />}
         {activeSection === "qr-acesso" && <QRCodeAcessoManager />}
