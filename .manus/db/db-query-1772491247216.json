@@ -1,0 +1,40 @@
+{
+  "query": "SELECT eg.id, eg.name as grupo, COUNT(em.id) as total_membros FROM jigsawExpertGroups eg LEFT JOIN jigsawExpertMembers em ON em.expertGroupId = eg.id GROUP BY eg.id, eg.name ORDER BY eg.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT eg.id, eg.name as grupo, COUNT(em.id) as total_membros FROM jigsawExpertGroups eg LEFT JOIN jigsawExpertMembers em ON em.expertGroupId = eg.id GROUP BY eg.id, eg.name ORDER BY eg.id;",
+  "rows": [
+    {
+      "id": "1",
+      "grupo": "Grupo Cannabis — Os Receptores",
+      "total_membros": "14"
+    },
+    {
+      "id": "2",
+      "grupo": "Grupo Anafilaxia — Os Guardiões",
+      "total_membros": "14"
+    },
+    {
+      "id": "3",
+      "grupo": "Grupo Dopamina — Os Neurotransmissores",
+      "total_membros": "14"
+    },
+    {
+      "id": "4",
+      "grupo": "Grupo Leptina — Os Metabólicos",
+      "total_membros": "14"
+    },
+    {
+      "id": "5",
+      "grupo": "Grupo Citocromo — Os Interatores",
+      "total_membros": "14"
+    },
+    {
+      "id": "6",
+      "grupo": "Grupo Oncologia — Os Quimioterápicos",
+      "total_membros": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tgrupo\ttotal_membros\n1\tGrupo Cannabis — Os Receptores\t14\n2\tGrupo Anafilaxia — Os Guardiões\t14\n3\tGrupo Dopamina — Os Neurotransmissores\t14\n4\tGrupo Leptina — Os Metabólicos\t14\n5\tGrupo Citocromo — Os Interatores\t14\n6\tGrupo Oncologia — Os Quimioterápicos\t14\n",
+  "stderr": "",
+  "execution_time_ms": 74
+}

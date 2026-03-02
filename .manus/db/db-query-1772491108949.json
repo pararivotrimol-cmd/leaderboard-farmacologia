@@ -1,0 +1,64 @@
+{
+  "query": "SELECT id, name, course, discipline, semester FROM classes; SELECT COUNT(*) as total_members FROM members; SELECT COUNT(*) as total_teams FROM teams;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, course, discipline, semester FROM classes; SELECT COUNT(*) as total_members FROM members; SELECT COUNT(*) as total_teams FROM teams;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Farmacologia 1 - Medicina",
+      "course": "Medicina",
+      "discipline": "Farmacologia 1",
+      "semester": "2026.1"
+    },
+    {
+      "id": "2",
+      "name": "Farmacologia - Nutrição Integral",
+      "course": "Nutrição (Integral)",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    },
+    {
+      "id": "3",
+      "name": "Farmacologia 2 - Biomedicina",
+      "course": "Biomedicina",
+      "discipline": "Farmacologia 2",
+      "semester": "2026.1"
+    },
+    {
+      "id": "4",
+      "name": "Farmacologia 1 - Biomedicina",
+      "course": "Biomedicina",
+      "discipline": "Farmacologia 1",
+      "semester": "2026.1"
+    },
+    {
+      "id": "5",
+      "name": "Farmacologia - Enfermagem",
+      "course": "Enfermagem",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    },
+    {
+      "id": "6",
+      "name": "Farmacologia 2 - Medicina",
+      "course": "Medicina",
+      "discipline": "Farmacologia 2",
+      "semester": "2026.1"
+    },
+    {
+      "id": "7",
+      "name": "Farmacologia - Nutrição Noturno",
+      "course": "Nutrição (Noturno)",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    }
+  ],
+  "messages": [
+    "total_members",
+    "86",
+    "total_teams",
+    "0"
+  ],
+  "stdout": "id\tname\tcourse\tdiscipline\tsemester\n1\tFarmacologia 1 - Medicina\tMedicina\tFarmacologia 1\t2026.1\n2\tFarmacologia - Nutrição Integral\tNutrição (Integral)\tFarmacologia\t2026.1\n3\tFarmacologia 2 - Biomedicina\tBiomedicina\tFarmacologia 2\t2026.1\n4\tFarmacologia 1 - Biomedicina\tBiomedicina\tFarmacologia 1\t2026.1\n5\tFarmacologia - Enfermagem\tEnfermagem\tFarmacologia\t2026.1\n6\tFarmacologia 2 - Medicina\tMedicina\tFarmacologia 2\t2026.1\n7\tFarmacologia - Nutrição Noturno\tNutrição (Noturno)\tFarmacologia\t2026.1\ntotal_members\n86\ntotal_teams\n0\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

@@ -1,0 +1,71 @@
+{
+  "query": "SELECT id, name, course, discipline, semester FROM classes ORDER BY id; SELECT id, name, classId, teamId FROM members LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, course, discipline, semester FROM classes ORDER BY id; SELECT id, name, classId, teamId FROM members LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Farmacologia 1 - Medicina",
+      "course": "Medicina",
+      "discipline": "Farmacologia 1",
+      "semester": "2026.1"
+    },
+    {
+      "id": "2",
+      "name": "Farmacologia - Nutrição Integral",
+      "course": "Nutrição (Integral)",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    },
+    {
+      "id": "3",
+      "name": "Farmacologia 2 - Biomedicina",
+      "course": "Biomedicina",
+      "discipline": "Farmacologia 2",
+      "semester": "2026.1"
+    },
+    {
+      "id": "4",
+      "name": "Farmacologia 1 - Biomedicina",
+      "course": "Biomedicina",
+      "discipline": "Farmacologia 1",
+      "semester": "2026.1"
+    },
+    {
+      "id": "5",
+      "name": "Farmacologia - Enfermagem",
+      "course": "Enfermagem",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    },
+    {
+      "id": "6",
+      "name": "Farmacologia 2 - Medicina",
+      "course": "Medicina",
+      "discipline": "Farmacologia 2",
+      "semester": "2026.1"
+    },
+    {
+      "id": "7",
+      "name": "Farmacologia - Nutrição Noturno",
+      "course": "Nutrição (Noturno)",
+      "discipline": "Farmacologia",
+      "semester": "2026.1"
+    }
+  ],
+  "messages": [
+    "id\tname\tclassId\tteamId",
+    "570003\tMatrícula\tNome\tEmail\t1\t0",
+    "570004\t20241130901\tALEXIA ALDERETE VALDEZ\talexia.aldereteV@edu.unirio.br\t1\t0",
+    "570005\t20242130028\tALICE DIAS FIGUEIREDO\talicefigueiredo@edu.unirio.br\t1\t0",
+    "570006\t20242130029\tALINE DE MELLO FREIRE\talinemfreire@edu.unirio.br\t1\t0",
+    "570007\t20241130073\tANA BEATRIZ SOUZA BARROS\tana.barros@edu.unirio.br\t1\t0",
+    "570008\t20241130074\tANA CAROLINA ALMEIDA DOS SANTOS\tcarolinalmeidas@edu.unirio.br\t1\t0",
+    "570009\t20242130045\tANA JULIA GONCALVES DE LIMA\tanajulia.lima@edu.unirio.br\t1\t0",
+    "570010\t20242130048\tANNE CAROLYNE AVELINO LOPES DOMINGOS\tanneavelino@edu.unirio.br\t1\t0",
+    "570011\t20242130021\tANTONIO CARLOS VIANA MELO\tantonio.melo@edu.unirio.br\t1\t0",
+    "570012\t20242130030\tARTHUR CAMPOS NOGUEIRA\tarthurnogueira@edu.unirio.br\t1\t0"
+  ],
+  "stdout": "id\tname\tcourse\tdiscipline\tsemester\n1\tFarmacologia 1 - Medicina\tMedicina\tFarmacologia 1\t2026.1\n2\tFarmacologia - Nutrição Integral\tNutrição (Integral)\tFarmacologia\t2026.1\n3\tFarmacologia 2 - Biomedicina\tBiomedicina\tFarmacologia 2\t2026.1\n4\tFarmacologia 1 - Biomedicina\tBiomedicina\tFarmacologia 1\t2026.1\n5\tFarmacologia - Enfermagem\tEnfermagem\tFarmacologia\t2026.1\n6\tFarmacologia 2 - Medicina\tMedicina\tFarmacologia 2\t2026.1\n7\tFarmacologia - Nutrição Noturno\tNutrição (Noturno)\tFarmacologia\t2026.1\nid\tname\tclassId\tteamId\n570003\tMatrícula\tNome\tEmail\t1\t0\n570004\t20241130901\tALEXIA ALDERETE VALDEZ\talexia.aldereteV@edu.unirio.br\t1\t0\n570005\t20242130028\tALICE DIAS FIGUEIREDO\talicefigueiredo@edu.unirio.br\t1\t0\n570006\t20242130029\tALINE DE MELLO FREIRE\talinemfreire@edu.unirio.br\t1\t0\n570007\t20241130073\tANA BEATRIZ SOUZA BARROS\tana.barros@edu.unirio.br\t1\t0\n570008\t20241130074\tANA CAROLINA ALMEIDA DOS SANTOS\tcarolinalmeidas@edu.unirio.br\t1\t0\n570009\t20242130045\tANA JULIA GONCALVES DE LIMA\tanajulia.lima@edu.unirio.br\t1\t0\n570010\t20242130048\tANNE CAROLYNE AVELINO LOPES DOMINGOS\tanneavelino@edu.unirio.br\t1\t0\n570011\t20242130021\tANTONIO CARLOS VIANA MELO\tantonio.melo@edu.unirio.br\t1\t0\n570012\t20242130030\tARTHUR CAMPOS NOGUEIRA\tarthurnogueira@edu.unirio.br\t1\t0\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

@@ -1,0 +1,205 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "activityTemplates"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentAnswers"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentIPBlocks"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentLogs"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentQuestionLinks"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentQuestions"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessmentSubmissions"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "assessments"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "attendance"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "attendanceRecords"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "attendanceSummary"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "auditLog"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "backupRecords"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "badges"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "bossBattles"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "classes"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "courseSettings"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "emailLog"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameAchievements"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameCombats"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameErrorReports"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameMissions"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameProgress"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameQuests"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameTransactions"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "gameWeeklyReleases"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "importHistory"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "inviteCodes"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawExpertGroups"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawExpertMembers"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawGroups"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawHomeGroups"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawHomeMembers"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawMembers"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawScores"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "jigsawTopics"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "materials"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "memberBadges"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "members"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "monitorActivityLogs"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "notifications"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "onlineMeetings"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "passwordResetTokens"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "playerAvatars"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "qrCodeSessions"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "questionBank"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "questionPerformance"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "restoreHistory"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "scheduleEntries"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "seminarArticles"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "seminarParticipants"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "seminarRoles"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "seminars"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "studentAccounts"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "studentNotifications"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "systemSettings"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "teacherAccounts"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "teacherTeams"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "teams"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "users"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "weeklyHighlights"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "xpActivities"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "xpHistory"
+    },
+    {
+      "Tables_in_FUZ2ecmXaKXVi9q85vHrsr": "youtubePlaylistsTable"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_FUZ2ecmXaKXVi9q85vHrsr\n__drizzle_migrations\nactivityTemplates\nassessmentAnswers\nassessmentIPBlocks\nassessmentLogs\nassessmentQuestionLinks\nassessmentQuestions\nassessmentSubmissions\nassessments\nattendance\nattendanceRecords\nattendanceSummary\nauditLog\nbackupRecords\nbadges\nbossBattles\nclasses\ncourseSettings\nemailLog\ngameAchievements\ngameCombats\ngameErrorReports\ngameMissions\ngameProgress\ngameQuests\ngameTransactions\ngameWeeklyReleases\nimportHistory\ninviteCodes\njigsawExpertGroups\njigsawExpertMembers\njigsawGroups\njigsawHomeGroups\njigsawHomeMembers\njigsawMembers\njigsawScores\njigsawTopics\nmaterials\nmemberBadges\nmembers\nmonitorActivityLogs\nnotifications\nonlineMeetings\npasswordResetTokens\nplayerAvatars\nqrCodeSessions\nquestionBank\nquestionPerformance\nrestoreHistory\nscheduleEntries\nseminarArticles\nseminarParticipants\nseminarRoles\nseminars\nstudentAccounts\nstudentNotifications\nsystemSettings\nteacherAccounts\nteacherTeams\nteams\nusers\nweeklyHighlights\nxpActivities\nxpHistory\nyoutubePlaylistsTable\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

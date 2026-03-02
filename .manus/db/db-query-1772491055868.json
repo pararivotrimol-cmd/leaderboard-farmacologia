@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, name, emoji, color, classId FROM teams ORDER BY id; SELECT id, name FROM classes ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, emoji, color, classId FROM teams ORDER BY id; SELECT id, name FROM classes ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Farmacologia 1 - Medicina"
+    },
+    {
+      "id": "2",
+      "name": "Farmacologia - Nutrição Integral"
+    },
+    {
+      "id": "3",
+      "name": "Farmacologia 2 - Biomedicina"
+    },
+    {
+      "id": "4",
+      "name": "Farmacologia 1 - Biomedicina"
+    },
+    {
+      "id": "5",
+      "name": "Farmacologia - Enfermagem"
+    },
+    {
+      "id": "6",
+      "name": "Farmacologia 2 - Medicina"
+    },
+    {
+      "id": "7",
+      "name": "Farmacologia - Nutrição Noturno"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tFarmacologia 1 - Medicina\n2\tFarmacologia - Nutrição Integral\n3\tFarmacologia 2 - Biomedicina\n4\tFarmacologia 1 - Biomedicina\n5\tFarmacologia - Enfermagem\n6\tFarmacologia 2 - Medicina\n7\tFarmacologia - Nutrição Noturno\n",
+  "stderr": "",
+  "execution_time_ms": 784
+}

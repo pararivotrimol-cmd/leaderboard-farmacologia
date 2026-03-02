@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  eg.id,\n  eg.name as grupo,\n  jt.name as tema,\n  COUNT(em.id) as total_membros\nFROM jigsawExpertGroups eg\nJOIN jigsawTopics jt ON jt.id = eg.topicId\nLEFT JOIN jigsawExpertMembers em ON em.expertGroupId = eg.id\nGROUP BY eg.id\nORDER BY eg.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute \nSELECT \n  eg.id,\n  eg.name as grupo,\n  jt.name as tema,\n  COUNT(em.id) as total_membros\nFROM jigsawExpertGroups eg\nJOIN jigsawTopics jt ON jt.id = eg.topicId\nLEFT JOIN jigsawExpertMembers em ON em.expertGroupId = eg.id\nGROUP BY eg.id\nORDER BY eg.id;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1055 (42000) at line 2: Expression #3 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'FUZ2ecmXaKXVi9q85vHrsr.jt.name' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by"
+  ]
+}

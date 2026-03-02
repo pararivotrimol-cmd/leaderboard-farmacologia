@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, name FROM jigsawTopics ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name FROM jigsawTopics ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Farmacologia dos Canabinoides"
+    },
+    {
+      "id": "2",
+      "name": "Alergia Medicamentosa"
+    },
+    {
+      "id": "3",
+      "name": "Farmacodependência de Drogas de Abuso"
+    },
+    {
+      "id": "4",
+      "name": "Farmacologia dos Emagrecedores"
+    },
+    {
+      "id": "5",
+      "name": "Interações Medicamentosas"
+    },
+    {
+      "id": "6",
+      "name": "Farmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tFarmacologia dos Canabinoides\n2\tAlergia Medicamentosa\n3\tFarmacodependência de Drogas de Abuso\n4\tFarmacologia dos Emagrecedores\n5\tInterações Medicamentosas\n6\tFarmacologia dos Quimioterápicos contra Tumor de Pulmão e Colorretal\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

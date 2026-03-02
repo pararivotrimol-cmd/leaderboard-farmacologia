@@ -1,0 +1,14 @@
+{
+  "query": "SELECT * FROM classes LIMIT 5; SELECT id, name, classId, teamId, pf FROM gameClassMembers LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT * FROM classes LIMIT 5; SELECT id, name, classId, teamId, pf FROM gameClassMembers LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "id\tname\tcourse\tdiscipline\tsemester\tteacherAccountId\tteacherName\tcolor\tisActive\tcreatedAt\tupdatedAt",
+    "1\tFarmacologia 1 - Medicina\tMedicina\tFarmacologia 1\t2026.1\t120005\tProf. Pedro Alexandre\t#E74C3C\t1\t2026-02-19 16:01:11\t2026-02-19 16:01:11",
+    "2\tFarmacologia - Nutrição Integral\tNutrição (Integral)\tFarmacologia\t2026.1\t210001\tGuilherme Rapozeiro França \t#2ECC71\t1\t2026-02-19 16:01:11\t2026-02-19 16:01:11",
+    "3\tFarmacologia 2 - Biomedicina\tBiomedicina\tFarmacologia 2\t2026.1\t210001\tGuilherme Rapozeiro França \t#3498DB\t1\t2026-02-19 16:01:11\t2026-02-19 16:01:11",
+    "4\tFarmacologia 1 - Biomedicina\tBiomedicina\tFarmacologia 1\t2026.1\t30001\tTHAIANA DA CUNHA FERREIRA MENDES\t#9B59B6\t1\t2026-02-19 16:01:11\t2026-02-19 16:01:11",
+    "5\tFarmacologia - Enfermagem\tEnfermagem\tFarmacologia\t2026.1\t30001\tTHAIANA DA CUNHA FERREIRA MENDES\t#F39C12\t1\t2026-02-19 16:01:11\t2026-02-19 16:01:11",
+    "ERROR 1146 (42S02) at line 1: Table 'fuz2ecmxakxvi9q85vhrsr.gameClassMembers' doesn't exist"
+  ]
+}
