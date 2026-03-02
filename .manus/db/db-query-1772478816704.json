@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, name, email, role, LEFT(sessionToken, 20) as tokenPreview FROM teacherAccounts ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, email, role, LEFT(sessionToken, 20) as tokenPreview FROM teacherAccounts ORDER BY id;",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "THAIANA DA CUNHA FERREIRA MENDES",
+      "email": "thaiana.mendes@unirio.br",
+      "role": "coordenador",
+      "tokenPreview": "0b5b75119c4472815470"
+    },
+    {
+      "id": "120005",
+      "name": "Prof. Pedro Alexandre",
+      "email": "pedro.alexandre@unirio.br",
+      "role": "super_admin",
+      "tokenPreview": "bac489d3c1e4de2c27e0"
+    },
+    {
+      "id": "210001",
+      "name": "Guilherme Rapozeiro França ",
+      "email": "guilherme.franca@unirio.br",
+      "role": "coordenador",
+      "tokenPreview": "786770f5d853475ff48c"
+    },
+    {
+      "id": "540001",
+      "name": "Monique Moss",
+      "email": "monique.moss@unirio.br",
+      "role": "coordenador",
+      "tokenPreview": "f0eabe123311f5caa98a"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\ttokenPreview\n30001\tTHAIANA DA CUNHA FERREIRA MENDES\tthaiana.mendes@unirio.br\tcoordenador\t0b5b75119c4472815470\n120005\tProf. Pedro Alexandre\tpedro.alexandre@unirio.br\tsuper_admin\tbac489d3c1e4de2c27e0\n210001\tGuilherme Rapozeiro França \tguilherme.franca@unirio.br\tcoordenador\t786770f5d853475ff48c\n540001\tMonique Moss\tmonique.moss@unirio.br\tcoordenador\tf0eabe123311f5caa98a\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

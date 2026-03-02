@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, name, email, role FROM teacherAccounts LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, email, role FROM teacherAccounts LIMIT 20;",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "THAIANA DA CUNHA FERREIRA MENDES",
+      "email": "thaiana.mendes@unirio.br",
+      "role": "coordenador"
+    },
+    {
+      "id": "120005",
+      "name": "Prof. Pedro Alexandre",
+      "email": "pedro.alexandre@unirio.br",
+      "role": "super_admin"
+    },
+    {
+      "id": "210001",
+      "name": "Guilherme Rapozeiro França ",
+      "email": "guilherme.franca@unirio.br",
+      "role": "coordenador"
+    },
+    {
+      "id": "540001",
+      "name": "Monique Moss",
+      "email": "monique.moss@unirio.br",
+      "role": "coordenador"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n30001\tTHAIANA DA CUNHA FERREIRA MENDES\tthaiana.mendes@unirio.br\tcoordenador\n120005\tProf. Pedro Alexandre\tpedro.alexandre@unirio.br\tsuper_admin\n210001\tGuilherme Rapozeiro França \tguilherme.franca@unirio.br\tcoordenador\n540001\tMonique Moss\tmonique.moss@unirio.br\tcoordenador\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

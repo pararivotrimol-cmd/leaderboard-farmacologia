@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [teacherRole, setTeacherRole] = useState<string | null>(null);
 
   useEffect(() => {
     const adminRole = localStorage.getItem("adminRole");
@@ -55,6 +56,7 @@ export default function AdminDashboard() {
 
     if (adminRole === "super_admin" && adminToken) {
       setSessionToken(adminToken);
+      setTeacherRole("super_admin");
     } else if (teacherToken) {
       setSessionToken(teacherToken);
     } else {
@@ -62,6 +64,23 @@ export default function AdminDashboard() {
       return;
     }
   }, [navigate]);
+
+  // Fetch teacher role from server when using teacherSessionToken
+  const teacherMeQuery = trpc.teacherAuth.me.useQuery(
+    { sessionToken: sessionToken || "" },
+    { enabled: !!sessionToken && teacherRole === null }
+  );
+
+  useEffect(() => {
+    if (teacherMeQuery.data) {
+      const role = teacherMeQuery.data.role;
+      setTeacherRole(role);
+      // Regular professors should use /admin/professor instead
+      if (role === "professor") {
+        navigate("/admin/professor");
+      }
+    }
+  }, [teacherMeQuery.data, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("teacherSessionToken");
@@ -76,6 +95,18 @@ export default function AdminDashboard() {
   };
 
   if (!sessionToken) return null;
+
+  // Show loading while fetching teacher role
+  if (teacherRole === null && teacherMeQuery.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: DARK_BG }}>

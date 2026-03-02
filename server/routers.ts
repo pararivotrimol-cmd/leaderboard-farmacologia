@@ -645,10 +645,10 @@ export const appRouter = router({
     getStats: publicProcedure
       .input(z.object({ sessionToken: z.string() }))
       .query(async ({ input }) => {
-        // Verify super admin
+        // Verify super admin or coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "super_admin") {
-          throw new Error("Acesso negado: apenas super admin pode acessar estatísticas");
+        if (!teacher || (teacher.role !== "super_admin" && teacher.role !== "coordenador")) {
+          throw new Error("Acesso negado: apenas super admin ou coordenador pode acessar estatísticas");
         }
 
         // Get all data
@@ -699,10 +699,10 @@ export const appRouter = router({
     getRecentActivities: publicProcedure
       .input(z.object({ sessionToken: z.string(), limit: z.number().optional() }))
       .query(async ({ input }) => {
-        // Verify super admin
+        // Verify super admin or coordenador
         const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
-        if (!teacher || teacher.role !== "super_admin") {
-          throw new Error("Acesso negado: apenas super admin pode acessar atividades");
+        if (!teacher || (teacher.role !== "super_admin" && teacher.role !== "coordenador")) {
+          throw new Error("Acesso negado: apenas super admin ou coordenador pode acessar atividades");
         }
 
         // Get recent audit logs for this super admin

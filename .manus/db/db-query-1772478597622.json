@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, email, role, sessionToken FROM teacherAccounts WHERE email = 'pedro.alexandre@unirio.br';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, name, email, role, sessionToken FROM teacherAccounts WHERE email = 'pedro.alexandre@unirio.br';",
+  "rows": [
+    {
+      "id": "120005",
+      "name": "Prof. Pedro Alexandre",
+      "email": "pedro.alexandre@unirio.br",
+      "role": "super_admin",
+      "sessionToken": "bac489d3c1e4de2c27e0cd3ff2ba19815490ac99cb07dded8231b87add902754"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tsessionToken\n120005\tProf. Pedro Alexandre\tpedro.alexandre@unirio.br\tsuper_admin\tbac489d3c1e4de2c27e0cd3ff2ba19815490ac99cb07dded8231b87add902754\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}
