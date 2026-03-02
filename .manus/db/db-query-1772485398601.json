@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM gameWeeklyReleases ORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT * FROM gameWeeklyReleases ORDER BY weekNumber;",
+  "rows": [
+    {
+      "id": "1",
+      "classId": "1",
+      "weekNumber": "1",
+      "questIds": "[1,2]",
+      "title": "Semana 1 - Farmacocinética (ADME)",
+      "description": "NULL",
+      "isReleased": "0",
+      "releasedAt": "2026-02-24 17:59:38",
+      "releasedBy": "NULL",
+      "createdAt": "2026-02-24 17:59:37",
+      "updatedAt": "2026-02-24 17:59:43",
+      "scheduledReleaseDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tclassId\tweekNumber\tquestIds\ttitle\tdescription\tisReleased\treleasedAt\treleasedBy\tcreatedAt\tupdatedAt\tscheduledReleaseDate\n1\t1\t1\t[1,2]\tSemana 1 - Farmacocinética (ADME)\tNULL\t0\t2026-02-24 17:59:38\tNULL\t2026-02-24 17:59:37\t2026-02-24 17:59:43\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

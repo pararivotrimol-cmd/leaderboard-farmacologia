@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb } from "../db";
+import { getDb, getMembersByClass, createStudentNotification } from "../db";
 import {
   gameProgress, gameQuests, gameCombats, gameAchievements,
   members, gameTransactions, gameWeeklyReleases, playerAvatars,
@@ -773,6 +773,23 @@ export const gameRouter = router({
             .set({ isReleased: true, releasedAt: now })
             .where(eq(gameWeeklyReleases.id, entry.id));
           released.push(entry.weekNumber);
+          // Send push notification to all students in the class
+          try {
+            const classMembers = await getMembersByClass(input.classId);
+            const weekTitle = entry.title || `Semana ${entry.weekNumber}`;
+            await Promise.all(classMembers.map(member =>
+              createStudentNotification({
+                memberId: member.id,
+                classId: input.classId,
+                title: `\uD83C\uDFAE Nova semana liberada: ${weekTitle}`,
+                message: `A ${weekTitle} do jogo Conex\u00e3o em Farmacologia est\u00e1 dispon\u00edvel! Acesse agora para ganhar PF e subir no ranking.`,
+                type: "announcement",
+                priority: "high",
+              })
+            ));
+          } catch (e) {
+            console.warn('[checkScheduledReleases] Failed to send notifications:', e);
+          }
         }
       }
       return { released };

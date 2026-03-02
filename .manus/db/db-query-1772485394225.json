@@ -1,0 +1,15 @@
+{
+  "query": "SELECT weekNumber, isReleased, scheduledReleaseDate FROM gameWeeklyReleases ORDER BY weekNumber LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT weekNumber, isReleased, scheduledReleaseDate FROM gameWeeklyReleases ORDER BY weekNumber LIMIT 20;",
+  "rows": [
+    {
+      "weekNumber": "1",
+      "isReleased": "0",
+      "scheduledReleaseDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tisReleased\tscheduledReleaseDate\n1\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 128
+}

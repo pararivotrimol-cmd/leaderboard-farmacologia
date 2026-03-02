@@ -195,7 +195,10 @@ export default function GamePortal() {
 
   const handleQuestClick = async (quest: any) => {
     if (completedQuestIds?.includes(quest.id)) {
-      toast.info("Missão já completada! ✅");
+      // Open review mode for the week this quest belongs to
+      const weekNumber = quest.weekNumber || Math.ceil(quest.id / 5);
+      const boss = BOSSES.find(b => b.weekNumber === weekNumber);
+      setReviewWeek({ weekNumber, weekTitle: boss?.name || `Semana ${weekNumber}` });
       return;
     }
     setSelectedQuest(quest);
@@ -473,6 +476,9 @@ export default function GamePortal() {
                     <div className="bg-black/90 rounded-lg px-3 py-2 whitespace-nowrap text-center">
                       <p className="text-xs font-bold text-white">{quest.title}</p>
                       <p className="text-[10px] text-gray-400">{quest.npcName} • +{quest.farmacologiaPointsReward} PF</p>
+                      {isCompleted && (
+                        <p className="text-[10px] text-blue-400 mt-0.5">📖 Clique para revisar</p>
+                      )}
                     </div>
                   </div>
                 </button>

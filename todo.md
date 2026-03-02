@@ -2431,3 +2431,6 @@
 - [x] Promover Prof. Pedro a coordenador no banco de dados
 - [x] Adicionar filtro por turma nas estatísticas do admin (endpoint + UI)
 - [x] Botão exportar PDF na aba Visão Geral do admin
+- [ ] Agendar datas das 17 semanas conforme calendário UNIRIO 2026.1
+- [ ] Adicionar botão Revisar no mapa do jogo (sobre missões concluídas)
+- [ ] Notificação push automática quando nova semana é liberada
