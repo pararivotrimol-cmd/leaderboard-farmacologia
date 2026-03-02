@@ -111,14 +111,14 @@ export default function StudentStats() {
           initial="hidden"
           animate="visible"
         >
-          {/* Total XP */}
+          {/* Total PF */}
           <motion.div
             className="rounded-lg p-4 sm:p-5"
             style={{ backgroundColor: CARD_BG, border: `1px solid ${ORANGE}30` }}
             variants={itemVariants}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-white/60 uppercase tracking-wide">Total XP</span>
+              <span className="text-xs font-medium text-white/60 uppercase tracking-wide">Total PF</span>
               <Zap size={18} style={{ color: ORANGE }} />
             </div>
             <div className="font-mono font-bold text-2xl text-white">{statsData.totalXP}</div>
@@ -206,7 +206,7 @@ export default function StudentStats() {
                   opacity: 0.8,
                 }}
                 whileHover={{ opacity: 1, scale: 1.05 }}
-                title={`Semana ${idx + 1}: ${xp} XP`}
+                title={`Semana ${idx + 1}: ${xp} PF`}
               >
                 <div className="text-xs text-white text-center pt-2 font-mono">{xp}</div>
               </motion.div>
@@ -266,7 +266,7 @@ export default function StudentStats() {
                     <div className="text-sm text-white">{member.name}</div>
                   </div>
                   <div className="font-mono font-bold text-sm" style={{ color: ORANGE }}>
-                    {member.xp} XP
+                    {member.xp} PF
                   </div>
                 </div>
               ))}

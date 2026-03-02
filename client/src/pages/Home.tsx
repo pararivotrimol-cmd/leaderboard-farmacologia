@@ -314,7 +314,7 @@ export default function Home() {
   const tabLabels: Record<string, string> = {
     teams: "Ranking de Equipes",
     individual: "Top 10 Individual",
-    activities: "Atividades XP",
+    activities: "Atividades PF",
     calculator: "Calculadora de Média",
     rules: "Regras do Jogo",
     conquistas: "Ranking de Conquistas",
@@ -924,7 +924,7 @@ export default function Home() {
                   className="px-4 py-2 rounded-lg text-sm text-white"
                   style={{ backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}33` }}
                 >
-                  <option value="xp">Ordenar por XP</option>
+                  <option value="xp">Ordenar por PF</option>
                   <option value="name">Ordenar por Nome</option>
                 </select>
               </div>

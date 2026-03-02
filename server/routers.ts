@@ -1989,7 +1989,7 @@ export const appRouter = router({
           const toRevoke = currentEarnerIds.filter(id => !targetMemberIds.includes(id));
 
           for (const memberId of toAward) {
-            await db.awardBadge({ badgeId: badge.id, memberId, note: "Auto-atribu\u00eddo por regra de XP" });
+            await db.awardBadge({ badgeId: badge.id, memberId, note: "Auto-atribu\u00eddo por regra de PF" });
           }
           for (const memberId of toRevoke) {
             await db.revokeBadge(memberId, badge.id);
@@ -2012,7 +2012,7 @@ export const appRouter = router({
                 `${toAward.length} aluno(s) conquistaram "${badge.name}" automaticamente!`,
                 "important"
               );
-              sendNotificationAsync("\uD83C\uDFC5 Auto-Conquista", `${toAward.length} aluno(s) receberam "${badge.name}" por regra de XP`);
+              sendNotificationAsync("\uD83C\uDFC5 Auto-Conquista", `${toAward.length} aluno(s) receberam "${badge.name}" por regra de PF`);
             } catch {}
           }
         }

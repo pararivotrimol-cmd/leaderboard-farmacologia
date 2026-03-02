@@ -335,7 +335,7 @@ export const courseInfo = {
   professor: "Prof. Dr.",
   university: "UNIRIO",
   semester: "2026.1",
-  totalStudents: 84,
+  totalStudents: 85,
   totalTeams: 16,
 };
 

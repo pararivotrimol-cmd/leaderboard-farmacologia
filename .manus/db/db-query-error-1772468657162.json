@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE courseSettings SET totalStudents = 85 WHERE id = (SELECT id FROM courseSettings LIMIT 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute UPDATE courseSettings SET totalStudents = 85 WHERE id = (SELECT id FROM courseSettings LIMIT 1);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'totalStudents' in 'field list'"
+  ]
+}

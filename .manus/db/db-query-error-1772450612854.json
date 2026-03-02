@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, week_number, title, date_range, type, description, is_highlighted, game_week_number FROM scheduleEntries ORDER BY week_number ASC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, week_number, title, date_range, type, description, is_highlighted, game_week_number FROM scheduleEntries ORDER BY week_number ASC LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'week_number' in 'field list'"
+  ]
+}

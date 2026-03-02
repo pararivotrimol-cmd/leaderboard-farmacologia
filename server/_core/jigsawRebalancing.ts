@@ -261,7 +261,7 @@ export function rebalanceByPerformance(
           groups.find(g => g.id === member.currentGroupId)?.name || "Unknown",
         toGroupId: targetGroup.id,
         toGroupName: targetGroup.name,
-        reason: `Balanceamento de desempenho (XP: ${member.xp || 0})`,
+        reason: `Balanceamento de desempenho (PF: ${member.xp || 0})`,
       });
     }
   });

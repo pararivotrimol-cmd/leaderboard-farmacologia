@@ -1,0 +1,40 @@
+{
+  "query": "SELECT * FROM courseSettings LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT * FROM courseSettings LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "settingKey": "currentWeek",
+      "settingValue": "1",
+      "updatedAt": "2026-02-17 15:10:02"
+    },
+    {
+      "id": "2",
+      "settingKey": "maxXPSemester",
+      "settingValue": "45",
+      "updatedAt": "2026-02-17 12:13:33"
+    },
+    {
+      "id": "3",
+      "settingKey": "universityName",
+      "settingValue": "UNIRIO",
+      "updatedAt": "2026-02-17 12:13:33"
+    },
+    {
+      "id": "4",
+      "settingKey": "courseName",
+      "settingValue": "Farmacologia I",
+      "updatedAt": "2026-02-17 12:13:33"
+    },
+    {
+      "id": "5",
+      "settingKey": "courseCode",
+      "settingValue": "MED-2026.1",
+      "updatedAt": "2026-02-17 12:13:33"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsettingKey\tsettingValue\tupdatedAt\n1\tcurrentWeek\t1\t2026-02-17 15:10:02\n2\tmaxXPSemester\t45\t2026-02-17 12:13:33\n3\tuniversityName\tUNIRIO\t2026-02-17 12:13:33\n4\tcourseName\tFarmacologia I\t2026-02-17 12:13:33\n5\tcourseCode\tMED-2026.1\t2026-02-17 12:13:33\n",
+  "stderr": "",
+  "execution_time_ms": 136
+}

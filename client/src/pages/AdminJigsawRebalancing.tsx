@@ -132,7 +132,7 @@ export default function JigsawRebalancingManager() {
           fromGroupName: "Grupo Jigsaw C",
           toGroupId: 1,
           toGroupName: "Grupo Jigsaw A",
-          reason: "Balanceamento de desempenho (XP: 510)",
+          reason: "Balanceamento de desempenho (PF: 510)",
         },
         {
           memberId: 1,
@@ -141,7 +141,7 @@ export default function JigsawRebalancingManager() {
           fromGroupName: "Grupo Jigsaw A",
           toGroupId: 3,
           toGroupName: "Grupo Jigsaw C",
-          reason: "Balanceamento de desempenho (XP: 450)",
+          reason: "Balanceamento de desempenho (PF: 450)",
         },
       ];
     }
@@ -190,7 +190,7 @@ export default function JigsawRebalancingManager() {
   const strategyDescriptions = {
     size: "Distribui alunos igualmente entre grupos para balancear tamanho",
     specialties: "Garante que cada grupo tenha alunos de diferentes especialidades",
-    performance: "Distribui alunos para balancear XP total dos grupos",
+    performance: "Distribui alunos para balancear PF total dos grupos",
   };
 
   return (
@@ -249,7 +249,7 @@ export default function JigsawRebalancingManager() {
                   {strategyDescriptions.performance}
                 </p>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-900">
-                  <strong>Como funciona:</strong> Ordena alunos por XP e distribui em round-robin para balancear desempenho.
+                  <strong>Como funciona:</strong> Ordena alunos por PF e distribui em round-robin para balancear desempenho.
                 </div>
               </div>
             </TabsContent>

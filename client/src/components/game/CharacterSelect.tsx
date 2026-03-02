@@ -52,7 +52,7 @@ const CHARACTERS: Character[] = [
     description: "Jovem mago com chapéu vermelho. Gênio em receptores e mecanismos moleculares.",
     imagePath: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663028318382/CWntVFVrUoDFWKLk.png",
     stats: { intelligence: 100, agility: 50, strength: 40, magic: 95 },
-    specialAbility: "Sabedoria Arcana: +25% XP em todas as missões",
+    specialAbility: "Sabedoria Arcana: +25% PF em todas as missões",
   },
   {
     id: "sheila",

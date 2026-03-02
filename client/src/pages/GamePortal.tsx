@@ -702,7 +702,7 @@ export default function GamePortal() {
                     <>
                       <CheckCircle2 size={48} className="text-emerald-400 mx-auto mb-3" />
                       <h3 className="text-xl font-bold text-emerald-400">Correto! 🎉</h3>
-                      <p className="text-sm text-gray-300 mt-2">+{resultData.pfEarned} PF • +{resultData.xpEarned} XP</p>
+                      <p className="text-sm text-gray-300 mt-2">+{resultData.pfEarned} PF • +{resultData.xpEarned} PF</p>
                     </>
                   ) : (
                     <>

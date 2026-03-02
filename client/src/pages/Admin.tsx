@@ -458,7 +458,7 @@ function ActivitiesManager({ password }: { password: string }) {
         <div className="flex gap-2 flex-wrap">
           <input value={newIcon} onChange={e => setNewIcon(e.target.value)} className="w-12 px-2 py-2 rounded-md bg-secondary border border-border text-foreground text-center text-sm" />
           <input value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 min-w-[150px] px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Nome da atividade..." />
-          <input value={newMaxXP} onChange={e => setNewMaxXP(e.target.value)} type="number" step="0.5" className="w-20 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm text-right font-mono" placeholder="XP" />
+          <input value={newMaxXP} onChange={e => setNewMaxXP(e.target.value)} type="number" step="0.5" className="w-20 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm text-right font-mono" placeholder="PF" />
           <button onClick={() => createActivity.mutate({ password, name: newName, icon: newIcon, maxXP: newMaxXP })} disabled={!newName || createActivity.isPending} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50">{createActivity.isPending ? "Criando..." : "Criar"}</button>
         </div>
       </div>
@@ -2370,7 +2370,7 @@ function BadgesManager({ password }: { password: string }) {
       <div className="border border-primary/30 rounded-lg p-4 space-y-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Zap size={14} className="text-primary" /> Atribuição Automática por XP
+            <Zap size={14} className="text-primary" /> Atribuição Automática por PF
           </h3>
           <button
             onClick={() => autoAssignMutation.mutate({ password })}
@@ -2381,7 +2381,7 @@ function BadgesManager({ password }: { password: string }) {
             {autoAssignMutation.isPending ? "Processando..." : "Executar Todas as Regras"}
           </button>
         </div>
-        <p className="text-xs text-muted-foreground">Configure regras de auto-atribuição em cada badge abaixo. Ao executar, o sistema avalia todos os badges com regra ativa e atribui/revoga automaticamente com base no ranking de XP.</p>
+        <p className="text-xs text-muted-foreground">Configure regras de auto-atribuição em cada badge abaixo. Ao executar, o sistema avalia todos os badges com regra ativa e atribui/revoga automaticamente com base no ranking de PF.</p>
         {autoAssignResult && (
           <div className="rounded-md p-3 space-y-2" style={{ backgroundColor: "oklch(0.15 0.02 264.052)" }}>
             <div className="flex items-center gap-4 text-xs">
@@ -2457,7 +2457,7 @@ function BadgesManager({ password }: { password: string }) {
                   {hasAutoRule && ruleObj && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
                       <Zap size={9} />
-                      {ruleObj.type === "top_individual" ? `Top ${ruleObj.n} individual` : ruleObj.type === "top_team" ? `Top ${ruleObj.n} equipe(s)` : `XP ≥ ${ruleObj.xp}`}
+                      {ruleObj.type === "top_individual" ? `Top ${ruleObj.n} individual` : ruleObj.type === "top_team" ? `Top ${ruleObj.n} equipe(s)` : `PF ≥ ${ruleObj.xp}`}
                     </span>
                   )}
                 </div>
@@ -2515,9 +2515,9 @@ function BadgesManager({ password }: { password: string }) {
                           }}
                           className="px-2 py-1.5 rounded bg-background border border-border text-xs text-foreground"
                         >
-                          <option value="top_individual">Top N individual (por XP)</option>
-                          <option value="top_team">Top N equipe(s) (por XP total)</option>
-                          <option value="min_xp">XP mínimo</option>
+                          <option value="top_individual">Top N individual (por PF)</option>
+                          <option value="top_team">Top N equipe(s) (por PF total)</option>
+                          <option value="min_xp">PF mínimo</option>
                         </select>
                         {editRuleType !== "min_xp" ? (
                           <input
@@ -2540,7 +2540,7 @@ function BadgesManager({ password }: { password: string }) {
                               setEditRuleXP(xp);
                               setPreviewRule(JSON.stringify({ type: editRuleType, xp }));
                             }}
-                            placeholder="XP mínimo"
+                            placeholder="PF mínimo"
                             className="px-2 py-1.5 rounded bg-background border border-border text-xs text-foreground"
                           />
                         )}
@@ -2571,7 +2571,7 @@ function BadgesManager({ password }: { password: string }) {
                           <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Prévia — alunos que receberiam este badge:</span>
                           <div className="flex flex-wrap gap-1.5">
                             {previewMembers.map((m: any) => (
-                              <span key={m.id} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{m.name} ({m.xp} XP)</span>
+                              <span key={m.id} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{m.name} ({m.xp} PF)</span>
                             ))}
                           </div>
                         </div>

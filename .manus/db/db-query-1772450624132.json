@@ -1,0 +1,197 @@
+{
+  "query": "SELECT id, weekLabel, weekDate, title, detail, type, highlight, sortOrder, gameWeekNumber FROM scheduleEntries WHERE isActive = 1 ORDER BY sortOrder ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute SELECT id, weekLabel, weekDate, title, detail, type, highlight, sortOrder, gameWeekNumber FROM scheduleEntries WHERE isActive = 1 ORDER BY sortOrder ASC;",
+  "rows": [
+    {
+      "id": "30001",
+      "weekLabel": "Semana 1",
+      "weekDate": "03/03/2026",
+      "title": "Introdução à Farmacologia & Farmacocinética 1",
+      "detail": "Apresentação da disciplina, regras de gamificação, formação das equipes. Absorção e vias de administração, biodisponibilidade. ",
+      "type": "aula",
+      "highlight": "0",
+      "sortOrder": "1",
+      "gameWeekNumber": "1"
+    },
+    {
+      "id": "30002",
+      "weekLabel": "Semana 2",
+      "weekDate": "10/03/2026",
+      "title": "Farmacocinética 2 — Distribuição, Metabolismo e Excreção",
+      "detail": "Biotransformação hepática, citocromo P450, depuração renal. Jigsaw (Fase 1)",
+      "type": "jigsaw",
+      "highlight": "0",
+      "sortOrder": "2",
+      "gameWeekNumber": "2"
+    },
+    {
+      "id": "30003",
+      "weekLabel": "Semana 3",
+      "weekDate": "17/03/2026",
+      "title": "Farmacodinâmica — Receptores e Mecanismos",
+      "detail": "Agonistas, antagonistas, dose-resposta, potência e eficácia. Kahoot 1",
+      "type": "jigsaw",
+      "highlight": "0",
+      "sortOrder": "3",
+      "gameWeekNumber": "3"
+    },
+    {
+      "id": "30004",
+      "weekLabel": "Semana 4",
+      "weekDate": "24/03/2026",
+      "title": "Boas Práticas de Prescrição",
+      "detail": "Prescrição racional, farmacovigilância, interações medicamentosas. Caso Clínico 1. ",
+      "type": "caso",
+      "highlight": "0",
+      "sortOrder": "4",
+      "gameWeekNumber": "4"
+    },
+    {
+      "id": "30005",
+      "weekLabel": "Semana 5",
+      "weekDate": "31/03/2026",
+      "title": "SNA — Transmissão Colinérgica",
+      "detail": "Antagonistas muscarínicos. Bloqueadores Neuromusculares. Kahoot 2",
+      "type": "tbl",
+      "highlight": "0",
+      "sortOrder": "5",
+      "gameWeekNumber": "5"
+    },
+    {
+      "id": "30006",
+      "weekLabel": "Semana 6",
+      "weekDate": "07/04/2026",
+      "title": "Bloqueadores Colinérgicos e Neuromusculares",
+      "detail": "Despolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.",
+      "type": "jigsaw",
+      "highlight": "0",
+      "sortOrder": "6",
+      "gameWeekNumber": "6"
+    },
+    {
+      "id": "30007",
+      "weekLabel": "Semana 7",
+      "weekDate": "14/04/2026",
+      "title": "Fase 2 - Grupos Jigsaw",
+      "detail": "Divisão nos 14 grupos de 6 integrantes. Usar os resumos e infográficos para explicar aos colegas. Avaliação pelos pares.",
+      "type": "jigsaw",
+      "highlight": "0",
+      "sortOrder": "7",
+      "gameWeekNumber": "7"
+    },
+    {
+      "id": "8",
+      "weekLabel": "Semana 8",
+      "weekDate": "28/04/2026",
+      "title": "Prova P1 + Escape Room Farmacológico",
+      "detail": "Avaliação individual (P1): conteúdo até colinérgicos/BNM e os temas Jigsaw. ",
+      "type": "prova",
+      "highlight": "1",
+      "sortOrder": "8",
+      "gameWeekNumber": "NULL"
+    },
+    {
+      "id": "30009",
+      "weekLabel": "Semana 9",
+      "weekDate": "05/05/2026",
+      "title": "SNA — Transmissão Adrenérgica",
+      "detail": "Agonistas alfa e beta-adrenérgicos, catecolaminas. ",
+      "type": "aula",
+      "highlight": "0",
+      "sortOrder": "9",
+      "gameWeekNumber": "9"
+    },
+    {
+      "id": "30010",
+      "weekLabel": "Semana 10",
+      "weekDate": "12/05/2026",
+      "title": "SNA — Anti-adrenérgicos",
+      "detail": "Bloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 2.",
+      "type": "caso",
+      "highlight": "0",
+      "sortOrder": "10",
+      "gameWeekNumber": "10"
+    },
+    {
+      "id": "30011",
+      "weekLabel": "Semana 11",
+      "weekDate": "19/05/2026",
+      "title": "AINEs e Corticoides",
+      "detail": "Anti-inflamatórios Não Esteroidais (inibidores de COX), corticosteroides, mecanismo anti-inflamatório, efeitos adversos. Kahoot 3.",
+      "type": "tbl",
+      "highlight": "0",
+      "sortOrder": "11",
+      "gameWeekNumber": "11"
+    },
+    {
+      "id": "30012",
+      "weekLabel": "Semana 12",
+      "weekDate": "26/05/2026",
+      "title": "Anestésicos Locais",
+      "detail": "Mecanismo de ação, classificação, uso clínico. Bloqueio nervoso, aplicações em odontologia e cirurgia. Caso Clínico 3.",
+      "type": "caso",
+      "highlight": "0",
+      "sortOrder": "12",
+      "gameWeekNumber": "12"
+    },
+    {
+      "id": "30013",
+      "weekLabel": "Semana 13",
+      "weekDate": "02/06/2026",
+      "title": "Anti-histamínicos",
+      "detail": "Receptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias e gastrite. Caso Clínico 4 e Kahoot 4",
+      "type": "caso",
+      "highlight": "0",
+      "sortOrder": "13",
+      "gameWeekNumber": "13"
+    },
+    {
+      "id": "30014",
+      "weekLabel": "Semana 14",
+      "weekDate": "09/06/2026",
+      "title": "Fase 3 - Jigsaw",
+      "detail": "Estações Clínicas e vídeo ",
+      "type": "jigsaw",
+      "highlight": "0",
+      "sortOrder": "14",
+      "gameWeekNumber": "14"
+    },
+    {
+      "id": "30015",
+      "weekLabel": "Semana 15",
+      "weekDate": "16/06/2026",
+      "title": "P2 — Prova Individual",
+      "detail": "Avaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Avaliação de aprendizado.",
+      "type": "prova",
+      "highlight": "1",
+      "sortOrder": "15",
+      "gameWeekNumber": "15"
+    },
+    {
+      "id": "30016",
+      "weekLabel": "Semana 16",
+      "weekDate": "23/06/2026",
+      "title": "Segunda Chamada",
+      "detail": "Oportunidade para alunos que faltaram na P1 ou P2 realizarem a avaliação. Revisão de conteúdo.",
+      "type": "aula",
+      "highlight": "0",
+      "sortOrder": "16",
+      "gameWeekNumber": "16"
+    },
+    {
+      "id": "30017",
+      "weekLabel": "Semana 17",
+      "weekDate": "30/06/2026",
+      "title": "Prova Final + Premiação",
+      "detail": "Prova final integrativa (PF): conteúdo completo do semestre. ",
+      "type": "prova",
+      "highlight": "1",
+      "sortOrder": "17",
+      "gameWeekNumber": "17"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tweekLabel\tweekDate\ttitle\tdetail\ttype\thighlight\tsortOrder\tgameWeekNumber\n30001\tSemana 1\t03/03/2026\tIntrodução à Farmacologia & Farmacocinética 1\tApresentação da disciplina, regras de gamificação, formação das equipes. Absorção e vias de administração, biodisponibilidade. \taula\t0\t1\t1\n30002\tSemana 2\t10/03/2026\tFarmacocinética 2 — Distribuição, Metabolismo e Excreção\tBiotransformação hepática, citocromo P450, depuração renal. Jigsaw (Fase 1)\tjigsaw\t0\t2\t2\n30003\tSemana 3\t17/03/2026\tFarmacodinâmica — Receptores e Mecanismos\tAgonistas, antagonistas, dose-resposta, potência e eficácia. Kahoot 1\tjigsaw\t0\t3\t3\n30004\tSemana 4\t24/03/2026\tBoas Práticas de Prescrição\tPrescrição racional, farmacovigilância, interações medicamentosas. Caso Clínico 1. \tcaso\t0\t4\t4\n30005\tSemana 5\t31/03/2026\tSNA — Transmissão Colinérgica\tAntagonistas muscarínicos. Bloqueadores Neuromusculares. Kahoot 2\ttbl\t0\t5\t5\n30006\tSemana 6\t07/04/2026\tBloqueadores Colinérgicos e Neuromusculares\tDespolarizantes e não-despolarizantes, uso clínico em anestesia. Seminário Jigsaw 1.\tjigsaw\t0\t6\t6\n30007\tSemana 7\t14/04/2026\tFase 2 - Grupos Jigsaw\tDivisão nos 14 grupos de 6 integrantes. Usar os resumos e infográficos para explicar aos colegas. Avaliação pelos pares.\tjigsaw\t0\t7\t7\n8\tSemana 8\t28/04/2026\tProva P1 + Escape Room Farmacológico\tAvaliação individual (P1): conteúdo até colinérgicos/BNM e os temas Jigsaw. \tprova\t1\t8\tNULL\n30009\tSemana 9\t05/05/2026\tSNA — Transmissão Adrenérgica\tAgonistas alfa e beta-adrenérgicos, catecolaminas. \taula\t0\t9\t9\n30010\tSemana 10\t12/05/2026\tSNA — Anti-adrenérgicos\tBloqueadores alfa e beta, uso clínico em hipertensão e ICC. Caso Clínico 2.\tcaso\t0\t10\t10\n30011\tSemana 11\t19/05/2026\tAINEs e Corticoides\tAnti-inflamatórios Não Esteroidais (inibidores de COX), corticosteroides, mecanismo anti-inflamatório, efeitos adversos. Kahoot 3.\ttbl\t0\t11\t11\n30012\tSemana 12\t26/05/2026\tAnestésicos Locais\tMecanismo de ação, classificação, uso clínico. Bloqueio nervoso, aplicações em odontologia e cirurgia. Caso Clínico 3.\tcaso\t0\t12\t12\n30013\tSemana 13\t02/06/2026\tAnti-histamínicos\tReceptores H1 e H2, anti-histamínicos de 1ª e 2ª geração, uso clínico em alergias e gastrite. Caso Clínico 4 e Kahoot 4\tcaso\t0\t13\t13\n30014\tSemana 14\t09/06/2026\tFase 3 - Jigsaw\tEstações Clínicas e vídeo \tjigsaw\t0\t14\t14\n30015\tSemana 15\t16/06/2026\tP2 — Prova Individual\tAvaliação individual (P2): conteúdo de adrenérgicos até anti-histamínicos. Avaliação de aprendizado.\tprova\t1\t15\t15\n30016\tSemana 16\t23/06/2026\tSegunda Chamada\tOportunidade para alunos que faltaram na P1 ou P2 realizarem a avaliação. Revisão de conteúdo.\taula\t0\t16\t16\n30017\tSemana 17\t30/06/2026\tProva Final + Premiação\tProva final integrativa (PF): conteúdo completo do semestre. \tprova\t1\t17\t17\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

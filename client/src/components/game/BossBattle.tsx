@@ -404,7 +404,7 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               <div className="text-center">
                 <Star size={24} className="text-purple-400 mx-auto mb-1" />
                 <p className="text-2xl font-mono font-bold text-purple-400">+{boss.xpReward}</p>
-                <p className="text-xs text-gray-400">XP Ganhos</p>
+                <p className="text-xs text-gray-400">PF Ganhos</p>
               </div>
               <div className="text-center">
                 <Flame size={24} className="text-orange-400 mx-auto mb-1" />
