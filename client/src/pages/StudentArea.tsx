@@ -55,6 +55,12 @@ export default function StudentArea() {
     { enabled: !!memberId }
   );
 
+  // Buscar notas Jigsaw do aluno
+  const { data: jigsawScoreData } = trpc.jigsawComplete.scores.getByMember.useQuery(
+    { memberId: memberId! },
+    { enabled: !!memberId }
+  );
+
   // Verificar se aluno está matriculado na turma
   const isEnrolled = user && classData && classData.members?.some((m: any) => m.id === user.id);
 
@@ -418,6 +424,56 @@ export default function StudentArea() {
                 </div>
               )}
             </div>
+
+            {/* Nota Jigsaw */}
+            {memberId && (
+              <div
+                className="rounded-lg p-4 sm:p-5 max-w-lg mt-4"
+                style={{ backgroundColor: CARD_BG, border: "1px solid rgba(99,102,241,0.3)" }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Puzzle size={18} style={{ color: "#6366f1" }} />
+                  <h3 className="font-bold text-white text-sm">Seminário Jigsaw — Nota Final</h3>
+                </div>
+                {jigsawScoreData && Number(jigsawScoreData.totalJigsawPF) > 0 ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
+                        <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>
+                          {Number(jigsawScoreData.totalPresentationScore).toFixed(1)}
+                        </div>
+                        <div className="text-[10px] text-white/50 mt-0.5">Apresentação</div>
+                      </div>
+                      <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
+                        <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>
+                          {Number(jigsawScoreData.totalParticipationScore).toFixed(1)}
+                        </div>
+                        <div className="text-[10px] text-white/50 mt-0.5">Participação</div>
+                      </div>
+                      <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
+                        <div className="font-mono font-bold text-lg" style={{ color: "#6366f1" }}>
+                          {Number(jigsawScoreData.totalPeerRating).toFixed(1)}
+                        </div>
+                        <div className="text-[10px] text-white/50 mt-0.5">Pares</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+                      <span className="text-sm text-white/70">PF Jigsaw Total</span>
+                      <span className="font-mono font-bold text-xl" style={{ color: "#6366f1" }}>
+                        {Number(jigsawScoreData.totalJigsawPF).toFixed(1)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/40">Apresentação + Participação + Avaliação por Pares (máx. 12 pontos)</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Puzzle size={28} className="mx-auto mb-2 opacity-30" style={{ color: "#6366f1" }} />
+                    <p className="text-sm text-white/50">Notas do Seminário Jigsaw ainda não lançadas</p>
+                    <p className="text-[11px] text-white/30 mt-1">As notas serão exibidas após o professor lançá-las no sistema</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

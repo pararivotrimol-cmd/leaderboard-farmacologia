@@ -21,6 +21,16 @@ import { sendJigsawNotification } from "../_core/jigsawNotifications";
 import { createStudentNotification } from "../db";
 
 /**
+ * Utility: extract clean name from "matricula\tNome\temail" format
+ */
+function cleanName(raw: string | null | undefined): string {
+  if (!raw) return "Desconhecido";
+  const parts = raw.split("\t");
+  if (parts.length >= 2) return parts[1].trim();
+  return raw.trim();
+}
+
+/**
  * Input validation schemas
  */
 const createTopicInput = z.object({
@@ -266,7 +276,7 @@ export const jigsawCompleteRouter = router({
                     .from(members)
                     .where(eq(members.id, gm.memberId))
                     .limit(1);
-                  return memberData[0] ? { ...memberData[0], role: gm.role } : null;
+                  return memberData[0] ? { ...memberData[0], name: cleanName(memberData[0].name), role: gm.role } : null;
                 })
               );
               
@@ -589,6 +599,7 @@ export const jigsawCompleteRouter = router({
                   
                   return memberData[0] ? {
                     ...memberData[0],
+                    name: cleanName(memberData[0].name),
                     topicId: gm.topicId,
                     topicName: topicData[0]?.name || "Tópico desconhecido",
                   } : null;
@@ -829,7 +840,7 @@ export const jigsawCompleteRouter = router({
     /**
      * Get Jigsaw scores for a member
      */
-    getByMember: protectedProcedure
+    getByMember: publicProcedure
       .input(z.object({ memberId: z.number() }))
       .query(async ({ input }) => {
         try {
@@ -1239,7 +1250,7 @@ export const jigsawCompleteRouter = router({
             const memberNames = await Promise.all(
               egMembers.map(async (m) => {
                 const md = await db.select().from(members).where(eq(members.id, m.memberId)).limit(1);
-                return md[0] ? { id: md[0].id, name: md[0].name, role: m.role } : null;
+                return md[0] ? { id: md[0].id, name: cleanName(md[0].name), role: m.role } : null;
               })
             );
             expertGroup = {
@@ -1279,7 +1290,7 @@ export const jigsawCompleteRouter = router({
                 const topicData = await db.select().from(jigsawTopics).where(eq(jigsawTopics.id, m.topicId)).limit(1);
                 return md[0] ? {
                   id: md[0].id,
-                  name: md[0].name,
+                  name: cleanName(md[0].name),
                   topicName: topicData[0]?.name || "Tópico",
                   presentationScore: m.presentationScore,
                   participationScore: m.participationScore,
