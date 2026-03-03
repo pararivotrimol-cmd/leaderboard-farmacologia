@@ -77,7 +77,13 @@ export default function StudentLogin() {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      setLocation("/leaderboard");
+      const returnUrl = localStorage.getItem("attendance_return_url");
+      if (returnUrl) {
+        localStorage.removeItem("attendance_return_url");
+        setLocation(returnUrl);
+      } else {
+        setLocation("/leaderboard");
+      }
     }
   }, [isAuthenticated, isLoading, setLocation]);
 
@@ -111,7 +117,13 @@ export default function StudentLogin() {
       if (result.success && "sessionToken" in result) {
         setStudentSession(result.sessionToken);
         setSuccess("Login realizado com sucesso!");
-        setTimeout(() => setLocation("/leaderboard"), 500);
+        const returnUrl = localStorage.getItem("attendance_return_url");
+        if (returnUrl) {
+          localStorage.removeItem("attendance_return_url");
+          setTimeout(() => setLocation(returnUrl), 500);
+        } else {
+          setTimeout(() => setLocation("/leaderboard"), 500);
+        }
       } else {
         setError(result.message);
       }
@@ -174,7 +186,13 @@ export default function StudentLogin() {
       if (result.success && "sessionToken" in result) {
         setStudentSession(result.sessionToken);
         setSuccess("Conta criada com sucesso! Redirecionando...");
-        setTimeout(() => setLocation("/leaderboard"), 1000);
+        const returnUrl = localStorage.getItem("attendance_return_url");
+        if (returnUrl) {
+          localStorage.removeItem("attendance_return_url");
+          setTimeout(() => setLocation(returnUrl), 1000);
+        } else {
+          setTimeout(() => setLocation("/leaderboard"), 1000);
+        }
       } else {
         setError(result.message);
       }

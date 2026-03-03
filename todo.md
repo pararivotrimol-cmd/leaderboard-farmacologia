@@ -2434,3 +2434,4 @@
 - [ ] Agendar datas das 17 semanas conforme calendário UNIRIO 2026.1
 - [ ] Adicionar botão Revisar no mapa do jogo (sobre missões concluídas)
 - [ ] Notificação push automática quando nova semana é liberada
+- [x] Bug: QR Code de presença não encontra documento correspondente ao ser lido (corrigido: redirect após login preserva URL de retorno)
