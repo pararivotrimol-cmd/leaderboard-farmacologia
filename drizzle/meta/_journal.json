@@ -127,6 +127,13 @@
       "when": 1772482830994,
       "tag": "0017_red_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1772495563403,
+      "tag": "0018_slimy_lockjaw",
+      "breakpoints": true
     }
   ]
 }

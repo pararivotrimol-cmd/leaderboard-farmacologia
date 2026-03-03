@@ -1548,3 +1548,20 @@ export const scheduleEntries = mysqlTable("scheduleEntries", {
 });
 export type ScheduleEntry = typeof scheduleEntries.$inferSelect;
 export type InsertScheduleEntry = typeof scheduleEntries.$inferInsert;
+
+/**
+ * Jigsaw Peer Evaluations - Avaliações entre alunos do grupo mosaico
+ * Cada aluno avalia os colegas do seu grupo mosaico (0-5)
+ */
+export const jigsawPeerEvaluations = mysqlTable("jigsawPeerEvaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  homeGroupId: int("homeGroupId").notNull(), // Grupo mosaico
+  evaluatorMemberId: int("evaluatorMemberId").notNull(), // Aluno que está avaliando
+  evaluatedMemberId: int("evaluatedMemberId").notNull(), // Aluno sendo avaliado
+  rating: decimal("rating", { precision: 2, scale: 1 }).notNull(), // 0-5
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JigsawPeerEvaluation = typeof jigsawPeerEvaluations.$inferSelect;
+export type InsertJigsawPeerEvaluation = typeof jigsawPeerEvaluations.$inferInsert;

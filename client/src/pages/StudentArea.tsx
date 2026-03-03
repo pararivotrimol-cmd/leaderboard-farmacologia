@@ -833,6 +833,39 @@ export default function StudentArea() {
                         </div>
                       )}
 
+                      {/* Seção de Avaliação por Pares */}
+                      <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                        <p className="text-xs text-white/60 mb-3 uppercase tracking-wide flex items-center gap-2">
+                          <span style={{ color: "#a855f7" }}>⭐</span> Avalie seus colegas (0-5)
+                        </p>
+                        <div className="space-y-2">
+                          {(myJigsawGroups.homeGroup.members || []).filter((m: any) => m.id !== studentData?.memberId).map((m: any) => (
+                            <div key={m.id} className="flex items-center gap-2 px-2 py-2 rounded" style={{ backgroundColor: "rgba(255,255,255,0.02)" }}>
+                              <span className="flex-1 text-sm text-white/80">{m.name?.includes('\t') ? m.name.split('\t')[1] : m.name}</span>
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((rating) => (
+                                  <button
+                                    key={rating}
+                                    onClick={() => {
+                                      trpc.jigsawComplete.peerEvaluations.save.useMutation().mutate({
+                                        homeGroupId: myJigsawGroups.homeGroup.id,
+                                        evaluatorMemberId: studentData?.memberId,
+                                        evaluatedMemberId: m.id,
+                                        rating,
+                                      });
+                                    }}
+                                    className="w-6 h-6 rounded text-xs font-bold transition-all hover:scale-110"
+                                    style={{ backgroundColor: "rgba(168,85,247,0.3)", color: "#a855f7" }}
+                                  >
+                                    {rating}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Colegas do grupo mosaico */}
                       <div>
                         <p className="text-xs text-white/40 mb-2 uppercase tracking-wide">Especialistas no grupo ({myJigsawGroups.homeGroup.members?.length || 0} alunos)</p>
