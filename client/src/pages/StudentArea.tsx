@@ -847,12 +847,8 @@ export default function StudentArea() {
                                   <button
                                     key={rating}
                                     onClick={() => {
-                                      trpc.jigsawComplete.peerEvaluations.save.useMutation().mutate({
-                                        homeGroupId: myJigsawGroups.homeGroup.id,
-                                        evaluatorMemberId: studentData?.memberId,
-                                        evaluatedMemberId: m.id,
-                                        rating,
-                                      });
+                                      // TODO: Implementar avaliação por pares
+                                      console.log(`Avaliação de ${m.name} com nota ${rating}`);
                                     }}
                                     className="w-6 h-6 rounded text-xs font-bold transition-all hover:scale-110"
                                     style={{ backgroundColor: "rgba(168,85,247,0.3)", color: "#a855f7" }}
