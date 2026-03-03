@@ -2206,7 +2206,7 @@ export const appRouter = router({
           memberId: account.memberId,
           email: account.email,
           matricula: account.matricula,
-          memberName: member?.name || "Desconhecido",
+          memberName: (() => { const n = member?.name; if (!n) return "Desconhecido"; const p = n.split("\t"); return p.length >= 2 ? p[1].trim() : n.trim(); })(),
           teamId: team?.id,
           teamName: team?.name,
           teamEmoji: team?.emoji,
@@ -2232,11 +2232,17 @@ export const appRouter = router({
         db.getAllTeams(),
       ]);
       const registeredMemberIds = new Set(allAccounts.map(a => a.memberId));
+      const cleanName = (raw: string | null | undefined): string => {
+        if (!raw) return "Desconhecido";
+        const parts = raw.split("\t");
+        if (parts.length >= 2) return parts[1].trim();
+        return raw.trim();
+      };
       return allMembers
         .filter(m => !registeredMemberIds.has(m.id))
         .map(m => {
           const team = allTeams.find(t => t.id === m.teamId);
-          return { id: m.id, name: m.name, teamName: team?.name || "Sem equipe", teamEmoji: team?.emoji || "🧪" };
+          return { id: m.id, name: cleanName(m.name), teamName: team?.name || "Sem equipe", teamEmoji: team?.emoji || "🧪" };
         });
     }),
 
@@ -2462,7 +2468,7 @@ export const appRouter = router({
           const account = allAccounts.find(a => a.id === r.studentAccountId);
           return {
             ...r,
-            memberName: member?.name || "Desconhecido",
+            memberName: (() => { const n = member?.name; if (!n) return "Desconhecido"; const p = n.split("\t"); return p.length >= 2 ? p[1].trim() : n.trim(); })(),
             teamName: team?.name || "Sem equipe",
             teamEmoji: team?.emoji || "🧪",
             email: account?.email,
@@ -2558,7 +2564,7 @@ export const appRouter = router({
             ...a,
             passwordHash: undefined, // Don't expose
             sessionToken: undefined, // Don't expose
-            memberName: member?.name || "Desconhecido",
+            memberName: (() => { const n = member?.name; if (!n) return "Desconhecido"; const p = n.split("\t"); return p.length >= 2 ? p[1].trim() : n.trim(); })(),
             teamName: team?.name || "Sem equipe",
             teamEmoji: team?.emoji || "🧪",
           };

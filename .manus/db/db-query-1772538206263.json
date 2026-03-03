@@ -1,0 +1,16 @@
+{
+  "query": "\nSELECT \n  (SELECT COUNT(*) FROM studentAccounts WHERE isActive = 1) as total_cadastrados,\n  (SELECT COUNT(*) FROM members) as total_membros_banco,\n  (SELECT COUNT(*) FROM studentAccounts WHERE memberId IS NOT NULL) as vinculados_a_membro,\n  (SELECT COUNT(*) FROM studentAccounts WHERE memberId IS NULL) as sem_vinculo_membro;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3C9YCXxCojabUDk.eefe8f8e8b67 --database FUZ2ecmXaKXVi9q85vHrsr --execute \nSELECT \n  (SELECT COUNT(*) FROM studentAccounts WHERE isActive = 1) as total_cadastrados,\n  (SELECT COUNT(*) FROM members) as total_membros_banco,\n  (SELECT COUNT(*) FROM studentAccounts WHERE memberId IS NOT NULL) as vinculados_a_membro,\n  (SELECT COUNT(*) FROM studentAccounts WHERE memberId IS NULL) as sem_vinculo_membro;\n",
+  "rows": [
+    {
+      "total_cadastrados": "5",
+      "total_membros_banco": "86",
+      "vinculados_a_membro": "0",
+      "sem_vinculo_membro": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_cadastrados\ttotal_membros_banco\tvinculados_a_membro\tsem_vinculo_membro\n5\t86\t0\t5\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}
