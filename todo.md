@@ -2435,3 +2435,9 @@
 - [ ] Adicionar botão Revisar no mapa do jogo (sobre missões concluídas)
 - [ ] Notificação push automática quando nova semana é liberada
 - [x] Bug: QR Code de presença não encontra documento correspondente ao ser lido (corrigido: redirect após login preserva URL de retorno)
+- [ ] Tolerância de 30s no token QR Code para evitar falhas no limite do tempo
+- [ ] Feedback visual/sonoro no QR Code Projector quando aluno faz check-in
+- [ ] Avaliação por pares: tabela jigsawPeerEvaluations no banco
+- [ ] Avaliação por pares: endpoints tRPC (salvar, listar, média)
+- [ ] Avaliação por pares: interface no portal do aluno (aba Jigsaw)
+- [ ] Avaliação por pares: médias exibidas no AdminJigsawPanel

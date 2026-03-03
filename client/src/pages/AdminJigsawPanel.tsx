@@ -357,6 +357,121 @@ function exportGroupsPDF(expertGroups: any[], homeGroups: any[]) {
   }
 }
 
+// ─── Export CSV function ───
+function exportGradesCSV(expertGroups: any[], homeGroups: any[]) {
+  // Build a map of memberId -> all scores
+  const memberMap: Record<number, {
+    name: string;
+    expertGroup: string;
+    expertTopic: string;
+    expertPresentation: number;
+    expertParticipation: number;
+    homeGroup: string;
+    homeTopic: string;
+    homePresentation: number;
+    homeParticipation: number;
+    homePeerRating: number;
+    totalPF: number;
+  }> = {};
+
+  expertGroups.forEach((g: any) => {
+    (g.members || []).forEach((m: any) => {
+      if (!memberMap[m.id]) {
+        memberMap[m.id] = {
+          name: m.name,
+          expertGroup: g.name,
+          expertTopic: g.topicTitle || "",
+          expertPresentation: Number(m.presentationScore) || 0,
+          expertParticipation: Number(m.participationScore) || 0,
+          homeGroup: "",
+          homeTopic: "",
+          homePresentation: 0,
+          homeParticipation: 0,
+          homePeerRating: 0,
+          totalPF: 0,
+        };
+      } else {
+        memberMap[m.id].expertGroup = g.name;
+        memberMap[m.id].expertTopic = g.topicTitle || "";
+        memberMap[m.id].expertPresentation = Number(m.presentationScore) || 0;
+        memberMap[m.id].expertParticipation = Number(m.participationScore) || 0;
+      }
+    });
+  });
+
+  homeGroups.forEach((g: any) => {
+    (g.members || []).forEach((m: any) => {
+      if (!memberMap[m.id]) {
+        memberMap[m.id] = {
+          name: m.name,
+          expertGroup: "",
+          expertTopic: "",
+          expertPresentation: 0,
+          expertParticipation: 0,
+          homeGroup: g.name,
+          homeTopic: m.topicName || "",
+          homePresentation: Number(m.presentationScore) || 0,
+          homeParticipation: Number(m.participationScore) || 0,
+          homePeerRating: Number(m.peerRating) || 0,
+          totalPF: 0,
+        };
+      } else {
+        memberMap[m.id].homeGroup = g.name;
+        memberMap[m.id].homeTopic = m.topicName || "";
+        memberMap[m.id].homePresentation = Number(m.presentationScore) || 0;
+        memberMap[m.id].homeParticipation = Number(m.participationScore) || 0;
+        memberMap[m.id].homePeerRating = Number(m.peerRating) || 0;
+      }
+    });
+  });
+
+  // Calculate total PF for each member
+  Object.values(memberMap).forEach((m) => {
+    m.totalPF = m.expertPresentation + m.expertParticipation + m.homePresentation + m.homeParticipation + m.homePeerRating;
+  });
+
+  const header = [
+    "Nome",
+    "Grupo Especialista",
+    "Tema Especialista",
+    "Apres. Fase 1 (0-5)",
+    "Part. Fase 1 (0-2)",
+    "Grupo Mosaico",
+    "Tema Ensinado",
+    "Apres. Fase 2 (0-5)",
+    "Part. Fase 2 (0-2)",
+    "Aval. Pares (0-5)",
+    "PF Jigsaw Total",
+  ].join(",");
+
+  const rows = Object.values(memberMap)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((m) =>
+      [
+        `"${m.name}"`,
+        `"${m.expertGroup}"`,
+        `"${m.expertTopic}"`,
+        m.expertPresentation.toFixed(1),
+        m.expertParticipation.toFixed(1),
+        `"${m.homeGroup}"`,
+        `"${m.homeTopic}"`,
+        m.homePresentation.toFixed(1),
+        m.homeParticipation.toFixed(1),
+        m.homePeerRating.toFixed(1),
+        m.totalPF.toFixed(1),
+      ].join(",")
+    );
+
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `jigsaw_notas_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── Main Component ───
 export default function AdminJigsawPanel() {
   const [activePhase, setActivePhase] = useState<"fase1" | "fase2">("fase1");
@@ -414,6 +529,12 @@ export default function AdminJigsawPanel() {
             onClick={() => exportGroupsPDF(expertGroups, homeGroups)}
             disabled={expertGroups.length === 0}>
             <FileDown size={14} /> Exportar PDF
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportGradesCSV(expertGroups, homeGroups)}
+            disabled={expertGroups.length === 0}
+            title="Exportar notas de todos os alunos em CSV">
+            <FileDown size={14} /> Exportar CSV
           </Button>
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => calcTotalsMutation.mutate({ classId })}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRoute, useLocation, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -60,6 +60,57 @@ export default function StudentArea() {
     { memberId: memberId! },
     { enabled: !!memberId }
   );
+
+  // Peer evaluation state
+  const [peerRatings, setPeerRatings] = useState<Record<number, number>>({});
+  const [peerSaving, setPeerSaving] = useState<Record<number, boolean>>({});
+  const [peerSaved, setPeerSaved] = useState<Record<number, boolean>>({});
+  const { sessionToken: studentToken } = useStudentAuth();
+
+  // Buscar avaliações já feitas pelo aluno
+  const homeGroupId = myJigsawGroups?.homeGroup?.id;
+  const { data: myPeerEvals, refetch: refetchPeerEvals } = trpc.jigsawComplete.getMyPeerEvaluations.useQuery(
+    { evaluatorToken: studentToken || "", homeGroupId: homeGroupId || 0 },
+    { enabled: !!studentToken && !!homeGroupId }
+  );
+
+  // Preencher ratings com avaliações já feitas
+  useEffect(() => {
+    if (myPeerEvals?.evaluations) {
+      const existing: Record<number, number> = {};
+      const savedMap: Record<number, boolean> = {};
+      myPeerEvals.evaluations.forEach((e: { evaluatedMemberId: number; rating: number }) => {
+        existing[e.evaluatedMemberId] = e.rating;
+        savedMap[e.evaluatedMemberId] = true;
+      });
+      setPeerRatings(existing);
+      setPeerSaved(savedMap);
+    }
+  }, [myPeerEvals]);
+
+  const submitPeerEvalMutation = trpc.jigsawComplete.submitPeerEvaluation.useMutation({
+    onSuccess: (_, vars) => {
+      setPeerSaving(prev => ({ ...prev, [vars.evaluatedMemberId]: false }));
+      setPeerSaved(prev => ({ ...prev, [vars.evaluatedMemberId]: true }));
+      refetchPeerEvals();
+    },
+    onError: (_, vars) => {
+      setPeerSaving(prev => ({ ...prev, [vars.evaluatedMemberId]: false }));
+    },
+  });
+
+  const handlePeerRate = (evaluatedMemberId: number, rating: number) => {
+    if (!studentToken || !homeGroupId) return;
+    setPeerRatings(prev => ({ ...prev, [evaluatedMemberId]: rating }));
+    setPeerSaving(prev => ({ ...prev, [evaluatedMemberId]: true }));
+    setPeerSaved(prev => ({ ...prev, [evaluatedMemberId]: false }));
+    submitPeerEvalMutation.mutate({
+      evaluatorToken: studentToken,
+      evaluatedMemberId,
+      homeGroupId,
+      rating,
+    });
+  };
 
   // Verificar se aluno está matriculado na turma
   const isEnrolled = user && classData && classData.members?.some((m: any) => m.id === user.id);
@@ -836,30 +887,48 @@ export default function StudentArea() {
                       {/* Seção de Avaliação por Pares */}
                       <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)" }}>
                         <p className="text-xs text-white/60 mb-3 uppercase tracking-wide flex items-center gap-2">
-                          <span style={{ color: "#a855f7" }}>⭐</span> Avalie seus colegas (0-5)
+                          <Star size={12} style={{ color: "#a855f7" }} /> Avalie seus colegas do grupo mosaico (0-5)
                         </p>
                         <div className="space-y-2">
-                          {(myJigsawGroups.homeGroup.members || []).filter((m: any) => m.id !== studentData?.memberId).map((m: any) => (
+                          {(myJigsawGroups.homeGroup.members || []).filter((m: any) => m.id !== memberId).map((m: any) => (
                             <div key={m.id} className="flex items-center gap-2 px-2 py-2 rounded" style={{ backgroundColor: "rgba(255,255,255,0.02)" }}>
-                              <span className="flex-1 text-sm text-white/80">{m.name?.includes('\t') ? m.name.split('\t')[1] : m.name}</span>
-                              <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5].map((rating) => (
-                                  <button
-                                    key={rating}
-                                    onClick={() => {
-                                      // TODO: Implementar avaliação por pares
-                                      console.log(`Avaliação de ${m.name} com nota ${rating}`);
-                                    }}
-                                    className="w-6 h-6 rounded text-xs font-bold transition-all hover:scale-110"
-                                    style={{ backgroundColor: "rgba(168,85,247,0.3)", color: "#a855f7" }}
-                                  >
-                                    {rating}
-                                  </button>
-                                ))}
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm text-white/80 truncate block">{m.name}</span>
+                                <span className="text-[10px] text-white/40">{m.topicName?.split(" ").slice(0,3).join(" ")}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((rating) => {
+                                  const isSelected = (peerRatings[m.id] || 0) >= rating;
+                                  const isSaved = peerSaved[m.id];
+                                  const isSaving = peerSaving[m.id];
+                                  return (
+                                    <button
+                                      key={rating}
+                                      onClick={() => handlePeerRate(m.id, rating)}
+                                      disabled={isSaving}
+                                      className="w-7 h-7 rounded transition-all hover:scale-110 disabled:opacity-50 flex items-center justify-center"
+                                      style={{
+                                        backgroundColor: isSelected ? (isSaved ? "rgba(168,85,247,0.7)" : "rgba(168,85,247,0.5)") : "rgba(255,255,255,0.05)",
+                                        color: isSelected ? "#fff" : "rgba(255,255,255,0.3)",
+                                        border: isSelected ? "1px solid #a855f7" : "1px solid rgba(255,255,255,0.1)",
+                                      }}
+                                      title={`Dar nota ${rating}`}
+                                    >
+                                      <Star size={12} fill={isSelected ? "currentColor" : "none"} />
+                                    </button>
+                                  );
+                                })}
+                                {peerSaved[m.id] && (
+                                  <CheckCircle size={14} style={{ color: "#a855f7" }} className="ml-1" />
+                                )}
+                                {peerSaving[m.id] && (
+                                  <span className="text-[10px] text-white/40 ml-1">...</span>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
+                        <p className="text-[10px] text-white/30 mt-2">Sua avaliação é anônima e contribui para a nota final do colega.</p>
                       </div>
 
                       {/* Colegas do grupo mosaico */}

@@ -48,6 +48,10 @@ export default function QRCodeProjector() {
   const [isRotating, setIsRotating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Feedback visual: aluno recém chegado
+  const [newCheckInAlert, setNewCheckInAlert] = useState<{ name: string; id: number } | null>(null);
+  const prevCheckInCountRef = useRef<number>(0);
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check teacher auth
   const teacherToken = localStorage.getItem("teacherSessionToken");
@@ -66,6 +70,49 @@ export default function QRCodeProjector() {
       refetchInterval: 5000, // Poll every 5 seconds
     }
   );
+
+  // Get recent check-ins for visual feedback
+  const { data: recentCheckInsData } = trpc.qrcode.getRecentCheckIns.useQuery(
+    { sessionId: activeSessionDbId || 0, limit: 5 },
+    {
+      enabled: !!activeSessionDbId,
+      refetchInterval: 3000, // Poll every 3 seconds for faster feedback
+    }
+  );
+
+  // Detect new check-in and show alert
+  useEffect(() => {
+    const currentCount = recentCheckInsData?.count || 0;
+    if (currentCount > prevCheckInCountRef.current && recentCheckInsData?.recent?.length) {
+      const newest = recentCheckInsData.recent[0];
+      setNewCheckInAlert({ name: newest.name, id: newest.id });
+      // Play a subtle beep sound
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+      } catch (_) {}
+      // Clear alert after 3 seconds
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+      alertTimerRef.current = setTimeout(() => setNewCheckInAlert(null), 3000);
+    }
+    prevCheckInCountRef.current = currentCount;
+  }, [recentCheckInsData]);
+
+  // Cleanup alert timer
+  useEffect(() => {
+    return () => {
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+    };
+  }, []);
 
   // Create session mutation
   const createSessionMutation = trpc.qrcode.createSession.useMutation({
@@ -577,6 +624,51 @@ export default function QRCodeProjector() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Check-in alert popup */}
+      <AnimatePresence>
+        {newCheckInAlert && (
+          <motion.div
+            key={newCheckInAlert.id}
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl"
+            style={{ backgroundColor: "rgba(16,185,129,0.95)", border: "2px solid #10B981" }}
+          >
+            <CheckCircle size={22} className="text-white shrink-0" />
+            <div>
+              <p className="text-white font-bold text-sm 2xl:text-base leading-tight">Presença registrada!</p>
+              <p className="text-green-100 text-xs 2xl:text-sm truncate max-w-xs">{newCheckInAlert.name}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Recent check-ins list (shown during active session) */}
+      {!showSetup && recentCheckInsData?.recent && recentCheckInsData.recent.length > 0 && (
+        <div
+          className="px-4 pb-2 2xl:px-8"
+          style={{ backgroundColor: CARD_BG }}
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            <CheckCircle size={13} style={{ color: EMERALD }} />
+            <span className="text-xs 2xl:text-sm font-medium" style={{ color: EMERALD }}>Últimas presenças</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recentCheckInsData.recent.map((ci: { id: number; name: string }) => (
+              <span
+                key={ci.id}
+                className="px-2 py-0.5 rounded-full text-xs 2xl:text-sm"
+                style={{ backgroundColor: "rgba(16,185,129,0.12)", color: EMERALD, border: "1px solid rgba(16,185,129,0.3)" }}
+              >
+                {ci.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bottom bar - branding */}
       <div

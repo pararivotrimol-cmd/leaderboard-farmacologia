@@ -46,7 +46,11 @@ function isTokenValid(
 ): boolean {
   if (!sessionToken || !tokenExpiresAt) return false;
   if (sessionToken !== providedToken) return false;
-  if (new Date() > tokenExpiresAt) return false;
+  // Tolerância de 30 segundos após expiração para evitar falhas no limite do tempo
+  const GRACE_PERIOD_MS = 30_000;
+  const now = new Date();
+  const expiresWithGrace = new Date(tokenExpiresAt.getTime() + GRACE_PERIOD_MS);
+  if (now > expiresWithGrace) return false;
   return true;
 }
 
@@ -709,6 +713,55 @@ export const qrcodeRouter = router({
       }
 
       return { success: true };
+    }),
+
+  /**
+   * Obter check-ins recentes com nome do aluno para feedback visual no projetor
+   */
+  getRecentCheckIns: publicProcedure
+    .input(z.object({
+      sessionId: z.number(),
+      limit: z.number().min(1).max(20).default(5),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get total count for change detection
+      const allRecords = await db
+        .select({ id: attendanceRecords.id })
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.qrCodeSessionId, input.sessionId));
+
+      const records = await db
+        .select({
+          id: attendanceRecords.id,
+          memberId: attendanceRecords.memberId,
+          checkedInAt: attendanceRecords.checkedInAt,
+          memberName: members.name,
+        })
+        .from(attendanceRecords)
+        .leftJoin(members, eq(attendanceRecords.memberId, members.id))
+        .where(eq(attendanceRecords.qrCodeSessionId, input.sessionId))
+        .orderBy(desc(attendanceRecords.checkedInAt))
+        .limit(input.limit);
+
+      const cleanName = (raw: string | null) => {
+        if (!raw) return "Aluno";
+        const parts = raw.split("\t");
+        if (parts.length >= 2) return parts[1].trim();
+        return raw.trim();
+      };
+
+      return {
+        count: allRecords.length, // total count for change detection
+        recent: records.map((r) => ({
+          id: r.id,
+          memberId: r.memberId,
+          name: cleanName(r.memberName),
+          checkedInAt: r.checkedInAt,
+        })),
+      };
     }),
 });
 

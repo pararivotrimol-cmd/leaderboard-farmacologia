@@ -15,6 +15,8 @@ import {
   jigsawHomeGroups,
   jigsawHomeMembers,
   jigsawScores,
+  jigsawPeerEvaluations,
+  studentAccounts,
   members,
 } from "../../drizzle/schema";
 import { sendJigsawNotification } from "../_core/jigsawNotifications";
@@ -1382,6 +1384,228 @@ export const jigsawCompleteRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Erro ao calcular totais",
+        });
+      }
+    }),
+
+  /**
+   * ========================================
+   * PEER EVALUATION: Student submits rating for mosaic group colleague
+   * ========================================
+   */
+  submitPeerEvaluation: publicProcedure
+    .input(z.object({
+      evaluatorToken: z.string(),
+      evaluatedMemberId: z.number(),
+      homeGroupId: z.number(),
+      rating: z.number().min(0).max(5),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Validate evaluator token via studentAccounts
+        const accountRows = await db
+          .select()
+          .from(studentAccounts)
+          .where(and(eq(studentAccounts.sessionToken, input.evaluatorToken), eq(studentAccounts.isActive, 1)))
+          .limit(1);
+
+        if (!accountRows.length || !accountRows[0].memberId) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Token inválido ou conta sem membro vinculado" });
+        }
+        const evaluatorMemberId = accountRows[0].memberId!;
+
+        // Check evaluator is in the home group
+        const evaluatorMembership = await db
+          .select()
+          .from(jigsawHomeMembers)
+          .where(and(
+            eq(jigsawHomeMembers.homeGroupId, input.homeGroupId),
+            eq(jigsawHomeMembers.memberId, evaluatorMemberId)
+          ))
+          .limit(1);
+
+        if (!evaluatorMembership.length) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Você não pertence a este grupo mosaico" });
+        }
+
+        // Cannot evaluate yourself
+        if (evaluatorMemberId === input.evaluatedMemberId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode se autoavaliar" });
+        }
+
+        // Check evaluated member is in the same home group
+        const evaluatedMembership = await db
+          .select()
+          .from(jigsawHomeMembers)
+          .where(and(
+            eq(jigsawHomeMembers.homeGroupId, input.homeGroupId),
+            eq(jigsawHomeMembers.memberId, input.evaluatedMemberId)
+          ))
+          .limit(1);
+
+        if (!evaluatedMembership.length) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Aluno avaliado não pertence ao mesmo grupo mosaico" });
+        }
+
+        // Upsert peer evaluation
+        const existing = await db
+          .select()
+          .from(jigsawPeerEvaluations)
+          .where(and(
+            eq(jigsawPeerEvaluations.homeGroupId, input.homeGroupId),
+            eq(jigsawPeerEvaluations.evaluatorMemberId, evaluator.id),
+            eq(jigsawPeerEvaluations.evaluatedMemberId, input.evaluatedMemberId)
+          ))
+          .limit(1);
+
+        if (existing.length > 0) {
+          await db
+            .update(jigsawPeerEvaluations)
+            .set({ rating: String(input.rating) })
+            .where(eq(jigsawPeerEvaluations.id, existing[0].id));
+        } else {
+          await db.insert(jigsawPeerEvaluations).values({
+            homeGroupId: input.homeGroupId,
+            evaluatorMemberId: evaluator.id,
+            evaluatedMemberId: input.evaluatedMemberId,
+            rating: String(input.rating),
+          });
+        }
+
+        // Recalculate average peer rating for the evaluated member in this home group
+        const allRatings = await db
+          .select()
+          .from(jigsawPeerEvaluations)
+          .where(and(
+            eq(jigsawPeerEvaluations.homeGroupId, input.homeGroupId),
+            eq(jigsawPeerEvaluations.evaluatedMemberId, input.evaluatedMemberId)
+          ));
+
+        const avgRating = allRatings.length > 0
+          ? allRatings.reduce((s, r) => s + Number(r.rating), 0) / allRatings.length
+          : 0;
+
+        // Update peerRating in jigsawHomeMembers
+        await db
+          .update(jigsawHomeMembers)
+          .set({ peerRating: String(avgRating.toFixed(1)) })
+          .where(and(
+            eq(jigsawHomeMembers.homeGroupId, input.homeGroupId),
+            eq(jigsawHomeMembers.memberId, input.evaluatedMemberId)
+          ));
+
+        return { success: true, newAvgRating: avgRating };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[PeerEval] Error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Erro ao salvar avaliação por pares: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    }),
+
+  /**
+   * Get peer evaluations submitted by a student (to show what they already rated)
+   */
+  getMyPeerEvaluations: publicProcedure
+    .input(z.object({
+      evaluatorToken: z.string(),
+      homeGroupId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const accountRows = await db
+          .select()
+          .from(studentAccounts)
+          .where(and(eq(studentAccounts.sessionToken, input.evaluatorToken), eq(studentAccounts.isActive, 1)))
+          .limit(1);
+
+        if (!accountRows.length || !accountRows[0].memberId) return { evaluations: [] };
+        const evaluatorMemberId = accountRows[0].memberId!;
+
+        const evals = await db
+          .select()
+          .from(jigsawPeerEvaluations)
+          .where(and(
+            eq(jigsawPeerEvaluations.homeGroupId, input.homeGroupId),
+            eq(jigsawPeerEvaluations.evaluatorMemberId, evaluatorMemberId)
+          ));
+
+        return {
+          evaluations: evals.map(e => ({
+            evaluatedMemberId: e.evaluatedMemberId,
+            rating: Number(e.rating),
+          }))
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao buscar avaliações",
+        });
+      }
+    }),
+
+  /**
+   * ADMIN: Get all peer evaluations for a class (for overview)
+   */
+  getAdminPeerEvaluations: adminProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Get all home groups for this class
+        const homeGroups = await db
+          .select()
+          .from(jigsawHomeGroups)
+          .where(eq(jigsawHomeGroups.classId, input.classId));
+
+        const result = [];
+        for (const hg of homeGroups) {
+          const homeMembers = await db
+            .select()
+            .from(jigsawHomeMembers)
+            .where(eq(jigsawHomeMembers.homeGroupId, hg.id));
+
+          const memberDetails = await Promise.all(
+            homeMembers.map(async (m) => {
+              const md = await db.select().from(members).where(eq(members.id, m.memberId)).limit(1);
+              const evals = await db
+                .select()
+                .from(jigsawPeerEvaluations)
+                .where(and(
+                  eq(jigsawPeerEvaluations.homeGroupId, hg.id),
+                  eq(jigsawPeerEvaluations.evaluatedMemberId, m.memberId)
+                ));
+              return {
+                memberId: m.memberId,
+                name: md[0] ? cleanName(md[0].name) : "Desconhecido",
+                avgPeerRating: Number(m.peerRating) || 0,
+                evalCount: evals.length,
+              };
+            })
+          );
+
+          result.push({
+            homeGroupId: hg.id,
+            homeGroupName: hg.name,
+            members: memberDetails,
+          });
+        }
+
+        return result;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao buscar avaliações por pares",
         });
       }
     }),
