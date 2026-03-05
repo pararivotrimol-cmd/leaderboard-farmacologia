@@ -3800,6 +3800,10 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
   const [newTeamColor, setNewTeamColor] = useState("#10b981");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [editingClass, setEditingClass] = useState<number | null>(null);
+  const [editClassName, setEditClassName] = useState("");
+  const [editClassCourse, setEditClassCourse] = useState("");
+  const [editClassDiscipline, setEditClassDiscipline] = useState("");
 
   const utils = trpc.useUtils();
 
@@ -3830,6 +3834,16 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
       setSelectedClass(null);
     },
     onError: () => toast.error("Erro ao remover turma"),
+  });
+
+  const updateClass = trpc.classes.update.useMutation({
+    onSuccess: () => {
+      utils.classes.list.invalidate();
+      utils.classes.getById.invalidate();
+      toast.success("Turma atualizada!");
+      setEditingClass(null);
+    },
+    onError: () => toast.error("Erro ao atualizar turma"),
   });
 
   const assignTeam = trpc.classes.assignTeam.useMutation({
@@ -3900,13 +3914,82 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1">
-            <h2 className="font-display font-bold text-xl text-foreground">{classDetail.name}</h2>
-            <p className="text-sm text-muted-foreground">
-              {classDetail.discipline} — {classDetail.course} — {classDetail.semester}
-              {classDetail.teacherName && <span> — Prof. {classDetail.teacherName}</span>}
-            </p>
+            {editingClass === classDetail.id ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={editClassName}
+                  onChange={e => setEditClassName(e.target.value)}
+                  placeholder="Nome da turma"
+                  className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={editClassCourse}
+                    onChange={e => setEditClassCourse(e.target.value)}
+                    placeholder="Curso"
+                    className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={editClassDiscipline}
+                    onChange={e => setEditClassDiscipline(e.target.value)}
+                    placeholder="Disciplina"
+                    className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      updateClass.mutate({
+                        sessionToken: teacherToken || "",
+                        id: classDetail.id,
+                        name: editClassName,
+                        course: editClassCourse,
+                        discipline: editClassDiscipline,
+                      });
+                    }}
+                    disabled={updateClass.isPending}
+                    className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <Save size={12} /> Salvar
+                  </button>
+                  <button
+                    onClick={() => setEditingClass(null)}
+                    className="px-3 py-1.5 rounded-md bg-secondary text-foreground text-xs font-medium flex items-center gap-1"
+                  >
+                    <X size={12} /> Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-display font-bold text-xl text-foreground">{classDetail.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {classDetail.discipline} — {classDetail.course} — {classDetail.semester}
+                  {classDetail.teacherName && <span> — Prof. {classDetail.teacherName}</span>}
+                </p>
+              </>
+            )}
           </div>
-          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: classDetail.color }} />
+          <div className="flex items-center gap-2">
+            {editingClass !== classDetail.id && (
+              <button
+                onClick={() => {
+                  setEditingClass(classDetail.id);
+                  setEditClassName(classDetail.name);
+                  setEditClassCourse(classDetail.course);
+                  setEditClassDiscipline(classDetail.discipline);
+                }}
+                className="p-2 rounded-md hover:bg-secondary text-primary"
+                title="Editar nome da turma"
+              >
+                <Edit2 size={18} />
+              </button>
+            )}
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: classDetail.color }} />
+          </div>
         </div>
 
         {/* Stats */}
