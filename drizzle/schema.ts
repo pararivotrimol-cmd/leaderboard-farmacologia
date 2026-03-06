@@ -1543,6 +1543,7 @@ export const scheduleEntries = mysqlTable("scheduleEntries", {
   isActive: boolean("isActive").notNull().default(true),
   sortOrder: int("sortOrder").notNull().default(0),
   gameWeekNumber: int("gameWeekNumber"),                       // nullable link to gameWeeklyReleases.weekNumber
+  classId: int("classId"),                                     // nullable link to classes.id (null = global)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
