@@ -473,16 +473,28 @@ function exportGradesCSV(expertGroups: any[], homeGroups: any[]) {
 }
 
 // ─── Main Component ───
-export default function AdminJigsawPanel() {
+export default function AdminJigsawPanel({ teacherToken }: { teacherToken?: string }) {
   const [activePhase, setActivePhase] = useState<"fase1" | "fase2">("fase1");
-  const [classId] = useState(1);
+  const [classId, setClassId] = useState<number | null>(null);
+
+  // Buscar lista de turmas para seleção
+  const { data: classesList = [], error: classesError } = trpc.classes.list.useQuery(
+    { sessionToken: teacherToken || "" },
+    { enabled: !!teacherToken && teacherToken.length > 10, retry: false }
+  );
   const utils = trpc.useUtils();
 
   const { data: expertGroups = [], isLoading: loadingExpert, refetch: refetchExpert } =
-    trpc.jigsawComplete.expertGroups.getByClass.useQuery({ classId });
+    trpc.jigsawComplete.expertGroups.getByClass.useQuery(
+      { classId: classId! },
+      { enabled: classId !== null }
+    );
 
   const { data: homeGroups = [], isLoading: loadingHome, refetch: refetchHome } =
-    trpc.jigsawComplete.homeGroups.getByClass.useQuery({ classId });
+    trpc.jigsawComplete.homeGroups.getByClass.useQuery(
+      { classId: classId! },
+      { enabled: classId !== null }
+    );
 
   const notifyMutation = trpc.jigsawComplete.notifyAllGroups.useMutation({
     onSuccess: (data) => toast.success(`✅ ${data.totalNotified} alunos notificados!`),
@@ -511,14 +523,71 @@ export default function AdminJigsawPanel() {
   const completedHome = homeGroups.filter((g: any) => g.status === "completed").length;
   const totalMembers = expertGroups.reduce((sum: number, g: any) => sum + (g.members?.length || 0), 0);
 
+  // Seletor de turma: se nenhuma turma selecionada, mostrar grade de turmas
+  if (classId === null) {
+    if (classesError) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Puzzle size={20} className="text-primary" />
+            <h2 className="font-display font-bold text-xl text-foreground">Seminário Jigsaw</h2>
+          </div>
+          <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/10 text-sm text-destructive">
+            Erro ao carregar turmas. Verifique se você está autenticado como professor.
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Puzzle size={20} className="text-primary" />
+            <h2 className="font-display font-bold text-xl text-foreground">Seminário Jigsaw</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">Selecione uma turma para gerenciar os grupos Jigsaw</p>
+        </div>
+        {(classesList as any[]).length === 0 && (
+          <div className="p-4 rounded-lg border border-border text-sm text-muted-foreground">
+            Carregando turmas...
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          {(classesList as any[]).map((cls: any) => (
+            <button
+              key={cls.id}
+              onClick={() => setClassId(cls.id)}
+              className="border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-colors"
+              style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cls.color }} />
+                <span className="font-semibold text-sm text-foreground">{cls.name}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <p>{cls.discipline} — {cls.course}</p>
+                {cls.teacherName && <p className="mt-1">Prof. {cls.teacherName}</p>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const selectedClassData = (classesList as any[]).find((c: any) => c.id === classId);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
+          <button onClick={() => setClassId(null)} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-1">
+            ← Voltar às turmas
+          </button>
           <div className="flex items-center gap-2 mb-1">
             <Puzzle size={20} className="text-primary" />
-            <h2 className="font-display font-bold text-xl text-foreground">Seminário Jigsaw</h2>
+            <h2 className="font-display font-bold text-xl text-foreground">Seminário Jigsaw — {selectedClassData?.name || "Turma"}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             Grupos especialistas (Fase 1), grupos mosaico (Fase 2), notas e notificações.

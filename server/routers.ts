@@ -755,6 +755,17 @@ export const appRouter = router({
           ],
         };
       }),
+    // Run a database migration (super admin only)
+    runMigration: publicProcedure
+      .input(z.object({ sessionToken: z.string(), sql: z.string() }))
+      .mutation(async ({ input }) => {
+        const teacher = await db.getTeacherAccountBySessionToken(input.sessionToken);
+        if (!teacher || teacher.role !== "super_admin") throw new Error("Acesso negado");
+        const rawDb = await db.getRawDb();
+        if (!rawDb) throw new Error("Database unavailable");
+        const [rows] = await rawDb.execute(input.sql);
+        return { success: true, rows };
+      }),
   }),
 
   // ─── Teacher Management (Coordenador only) ───
@@ -1011,12 +1022,13 @@ export const appRouter = router({
   // ─── Public Leaderboard Data ───
   leaderboard: router({
     getData: publicProcedure.query(async () => {
-      const [teamsData, membersData, activitiesData, highlightsData, settings] = await Promise.all([
+      const [teamsData, membersData, activitiesData, highlightsData, settings, classesData] = await Promise.all([
         db.getAllTeams(),
         db.getAllMembers(),
         db.getAllXpActivities(),
         db.getAllHighlights(),
         db.getAllSettings(),
+        db.getAllClasses(),
       ]);
 
       const settingsMap: Record<string, string> = {};
@@ -1026,14 +1038,46 @@ export const appRouter = router({
         }
       }
 
+      // Build teams from real teams
+      let teamsResult: any[] = teamsData.map(t => ({
+        ...t,
+        members: membersData
+          .filter(m => m.teamId === t.id)
+          .map(m => ({ ...m, xp: parseFloat(m.xp) }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+
+      // If no teams, create virtual teams per class
+      if (teamsResult.length === 0 && membersData.length > 0) {
+        const classColors = ["#F7941D", "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#00BCD4", "#E91E63"];
+        const classMap = new Map(classesData.map(c => [c.id, c]));
+        const membersByClass = new Map<number | null, typeof membersData>();
+        for (const m of membersData) {
+          const key = m.classId ?? null;
+          if (!membersByClass.has(key)) membersByClass.set(key, []);
+          membersByClass.get(key)!.push(m);
+        }
+        let colorIdx = 0;
+        for (const [classId, classMembers] of membersByClass.entries()) {
+          if (!classId) continue; // Skip unassigned
+          const cls = classMap.get(classId);
+          teamsResult.push({
+            id: -classId,
+            name: cls?.name || `Turma ${classId}`,
+            emoji: "\uD83C\uDF93",
+            color: classColors[colorIdx++ % classColors.length],
+            classId,
+            createdAt: new Date(),
+            members: classMembers
+              .map(m => ({ ...m, xp: parseFloat(m.xp) }))
+              .sort((a, b) => parseFloat(b.xp as any) - parseFloat(a.xp as any)),
+          });
+        }
+      }
+
       return {
-        teams: teamsData.map(t => ({
-          ...t,
-          members: membersData
-            .filter(m => m.teamId === t.id)
-            .map(m => ({ ...m, xp: parseFloat(m.xp) }))
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        })),
+        teams: teamsResult,
+        members: membersData.map(m => ({ ...m, xp: parseFloat(m.xp) })).sort((a, b) => parseFloat(b.xp as any) - parseFloat(a.xp as any)),
         activities: activitiesData.map(a => ({ ...a, maxXP: parseFloat(a.maxXP) })).sort((a, b) => a.name.localeCompare(b.name)),
         highlights: highlightsData.sort((a, b) => b.week - a.week),
         settings: settingsMap,
@@ -1056,14 +1100,31 @@ export const appRouter = router({
           }
         }
 
-        return {
-          teams: classTeams.map(t => ({
-            ...t,
+        // Build teams list: real teams + virtual team for unassigned members
+        let teamsResult: any[] = classTeams.map(t => ({
+          ...t,
+          members: classMembers
+            .filter(m => m.teamId === t.id)
+            .map(m => ({ ...m, xp: parseFloat(m.xp) }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        }));
+        // If no teams exist, create a virtual team with all class members for ranking display
+        if (teamsResult.length === 0 && classMembers.length > 0) {
+          teamsResult = [{
+            id: -input.classId,
+            name: "Alunos da Turma",
+            emoji: "\uD83C\uDF93",
+            color: "#F7941D",
+            classId: input.classId,
+            createdAt: new Date(),
             members: classMembers
-              .filter(m => m.teamId === t.id)
               .map(m => ({ ...m, xp: parseFloat(m.xp) }))
-              .sort((a, b) => a.name.localeCompare(b.name)),
-          })),
+              .sort((a, b) => parseFloat(b.xp as any) - parseFloat(a.xp as any)),
+          }];
+        }
+        return {
+          teams: teamsResult,
+          members: classMembers.map(m => ({ ...m, xp: parseFloat(m.xp) })).sort((a, b) => parseFloat(b.xp as any) - parseFloat(a.xp as any)),
           activities: activitiesData.map(a => ({ ...a, maxXP: parseFloat(a.maxXP) })).sort((a, b) => a.name.localeCompare(b.name)),
           highlights: highlightsData.sort((a, b) => b.week - a.week),
           settings: settingsMap,
@@ -2210,6 +2271,7 @@ export const appRouter = router({
           teamId: team?.id,
           teamName: team?.name,
           teamEmoji: team?.emoji,
+          classId: member?.classId || null,
         };
       }),
 

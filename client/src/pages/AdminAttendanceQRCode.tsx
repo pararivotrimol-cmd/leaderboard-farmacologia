@@ -3,12 +3,23 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, QrCode, Copy, Download, RefreshCw } from "lucide-react";
+import { QrCode, Copy, Download, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
+
+// Turmas do semestre 2026.1
+const TURMAS = [
+  { id: 26, name: "Medicina I (SCF0051)" },
+  { id: 27, name: "Medicina II (SCF0051)" },
+  { id: 28, name: "Biomedicina (CFF0026)" },
+  { id: 29, name: "Biomedicina II (SCF0063)" },
+  { id: 30, name: "Enfermagem (SCF0057)" },
+  { id: 31, name: "Nutrição Integral (SCF0062)" },
+  { id: 32, name: "Nutrição Noturno (SCF0019)" },
+];
 
 export default function AttendanceQRCodeManager() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [classId] = useState(1); // Farmacologia 1
+  const [selectedClassId, setSelectedClassId] = useState<number>(26);
   const [qrCode, setQrCode] = useState<{
     token: string;
     qrImageUrl: string;
@@ -17,14 +28,18 @@ export default function AttendanceQRCodeManager() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Pegar sessionToken do localStorage
+  const sessionToken = localStorage.getItem("teacherSessionToken") || localStorage.getItem("sessionToken") || "";
+
   const generateQRMutation = trpc.attendance.generateQRCode.useMutation();
 
   const handleGenerateQRCode = async () => {
     setIsGenerating(true);
     try {
       const result = await generateQRMutation.mutateAsync({
-        classId,
+        classId: selectedClassId,
         classDate: selectedDate,
+        sessionToken,
       });
 
       setQrCode({
@@ -32,8 +47,9 @@ export default function AttendanceQRCodeManager() {
         qrImageUrl: result.qrImageUrl,
         expiresAt: result.expiresAt,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao gerar QR code:", error);
+      alert("❌ Erro ao gerar QR code: " + (error?.message || "Erro desconhecido"));
     } finally {
       setIsGenerating(false);
     }
@@ -51,13 +67,13 @@ export default function AttendanceQRCodeManager() {
     if (qrCode) {
       const link = document.createElement("a");
       link.href = qrCode.qrImageUrl;
-      link.download = `presenca-${selectedDate}.png`;
+      link.download = `presenca-turma${selectedClassId}-${selectedDate}.png`;
       link.click();
     }
   };
 
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
-  const isTuesday = new Date(selectedDate).getDay() === 2;
+  const turmaSelecionada = TURMAS.find(t => t.id === selectedClassId);
 
   return (
     <div className="space-y-6">
@@ -68,7 +84,7 @@ export default function AttendanceQRCodeManager() {
         </p>
       </div>
 
-      {/* Seletor de Data */}
+      {/* Seletor de Turma e Data */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -76,17 +92,35 @@ export default function AttendanceQRCodeManager() {
             Configurar QR Code
           </CardTitle>
           <CardDescription>
-            Selecione qualquer data para gerar um QR code de presença
+            Selecione a turma e a data para gerar um QR code de presença
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Seletor de Turma */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Turma</label>
+            <select
+              value={selectedClassId}
+              onChange={(e) => {
+                setSelectedClassId(Number(e.target.value));
+                setQrCode(null);
+              }}
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+            >
+              {TURMAS.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Seletor de Data */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Data da Aula</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
             />
             <div className="text-xs text-muted-foreground">
               {isToday && (
@@ -111,7 +145,7 @@ export default function AttendanceQRCodeManager() {
             ) : (
               <>
                 <QrCode size={16} className="mr-2" />
-                Gerar QR Code
+                Gerar QR Code para {turmaSelecionada?.name}
               </>
             )}
           </Button>
@@ -131,7 +165,7 @@ export default function AttendanceQRCodeManager() {
                 ✅ QR Code Gerado com Sucesso
               </CardTitle>
               <CardDescription>
-                Expira em: {new Date(qrCode.expiresAt).toLocaleTimeString("pt-BR")}
+                Turma: {turmaSelecionada?.name} | Data: {selectedDate} | Expira em: {new Date(qrCode.expiresAt).toLocaleTimeString("pt-BR")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -191,7 +225,7 @@ export default function AttendanceQRCodeManager() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
                 <strong>Como usar:</strong>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Exiba este QR code na sala de aula</li>
+                  <li>Exiba este QR code na sala de aula (projetor ou celular)</li>
                   <li>Os alunos escaneiam com seus celulares</li>
                   <li>A presença é registrada automaticamente</li>
                   <li>O QR code expira em 4 horas</li>
@@ -208,7 +242,7 @@ export default function AttendanceQRCodeManager() {
           <CardContent className="pt-8 text-center">
             <QrCode size={32} className="mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">
-              Clique em "Gerar QR Code" para criar um novo código para a aula de hoje
+              Selecione a turma e clique em "Gerar QR Code" para criar um novo código para a aula
             </p>
           </CardContent>
         </Card>

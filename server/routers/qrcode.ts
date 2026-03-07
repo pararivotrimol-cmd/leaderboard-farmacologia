@@ -59,17 +59,18 @@ export const qrcodeRouter = router({
    * Criar nova sessão de QR Code com token rotativo
    * Professor define dia da semana e horário
    */
-  createSession: protectedProcedure
+  createSession: publicProcedure
     .input(
       z.object({
         classId: z.number(),
         dayOfWeek: z.number().min(0).max(6),
         startTime: z.string().regex(/^\d{2}:\d{2}$/),
         endTime: z.string().regex(/^\d{2}:\d{2}$/),
+        sessionToken: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const teacherId = ctx.user?.id || 0;
+    .mutation(async ({ input }) => {
+      const teacherId = 0;
 
       // Generate initial rotating token
       const { token, expiresAt } = generateRotatingToken(0, 0);
@@ -121,8 +122,8 @@ export const qrcodeRouter = router({
    * Gerar novo token rotativo para uma sessão ativa
    * Chamado automaticamente a cada 10 minutos pelo frontend
    */
-  rotateToken: protectedProcedure
-    .input(z.object({ sessionId: z.number() }))
+  rotateToken: publicProcedure
+    .input(z.object({ sessionId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -168,8 +169,8 @@ export const qrcodeRouter = router({
   /**
    * Obter token atual e tempo restante de uma sessão
    */
-  getCurrentToken: protectedProcedure
-    .input(z.object({ sessionId: z.number() }))
+  getCurrentToken: publicProcedure
+    .input(z.object({ sessionId: z.number(), sessionToken: z.string().optional() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -203,8 +204,8 @@ export const qrcodeRouter = router({
   /**
    * Listar sessões de QR Code de uma turma
    */
-  getSessionsByClass: protectedProcedure
-    .input(z.object({ classId: z.number() }))
+  getSessionsByClass: publicProcedure
+    .input(z.object({ classId: z.number(), sessionToken: z.string().optional() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -224,11 +225,12 @@ export const qrcodeRouter = router({
   /**
    * Ativar/desativar sessão de QR Code
    */
-  toggleSession: protectedProcedure
+  toggleSession: publicProcedure
     .input(
       z.object({
         sessionId: z.number(),
         isActive: z.boolean(),
+        sessionToken: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -245,8 +247,8 @@ export const qrcodeRouter = router({
   /**
    * Deletar sessão de QR Code
    */
-  deleteSession: protectedProcedure
-    .input(z.object({ sessionId: z.number() }))
+  deleteSession: publicProcedure
+    .input(z.object({ sessionId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");

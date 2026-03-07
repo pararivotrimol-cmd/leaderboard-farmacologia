@@ -115,25 +115,27 @@ export default function StudentArea() {
   // Verificar se aluno está matriculado na turma
   const isEnrolled = user && classData && classData.members?.some((m: any) => m.id === user.id);
 
-  // Cronograma das semanas (dados estáticos baseados no plano de ensino)
-  const cronograma = useMemo(() => [
-    { semana: 1, data: "10/03", tema: "Apresentação da disciplina e Introdução à Farmacologia", tipo: "Aula Teórica" },
-    { semana: 2, data: "17/03", tema: "Farmacocinética I - Absorção e Distribuição", tipo: "Aula Teórica" },
-    { semana: 3, data: "24/03", tema: "Farmacocinética II - Metabolismo e Excreção", tipo: "Aula Teórica" },
-    { semana: 4, data: "31/03", tema: "Farmacodinâmica I - Receptores e Mecanismos", tipo: "Aula Teórica" },
-    { semana: 5, data: "07/04", tema: "Farmacodinâmica II - Relação Dose-Resposta", tipo: "Aula Teórica" },
-    { semana: 6, data: "14/04", tema: "Sistema Nervoso Autônomo - Simpático", tipo: "Aula Teórica" },
-    { semana: 7, data: "28/04", tema: "Sistema Nervoso Autônomo - Parassimpático", tipo: "Aula Teórica" },
-    { semana: 8, data: "05/05", tema: "Avaliação 1 (AV1)", tipo: "Avaliação" },
-    { semana: 9, data: "12/05", tema: "Seminário Jigsaw - Grupo 1 e 2", tipo: "Seminário" },
-    { semana: 10, data: "19/05", tema: "Seminário Jigsaw - Grupo 3 e 4", tipo: "Seminário" },
-    { semana: 11, data: "26/05", tema: "Seminário Jigsaw - Grupo 5 e 6", tipo: "Seminário" },
-    { semana: 12, data: "02/06", tema: "Farmacologia do Trato Gastrointestinal", tipo: "Aula Teórica" },
-    { semana: 13, data: "09/06", tema: "Anti-inflamatórios e Analgésicos", tipo: "Aula Teórica" },
-    { semana: 14, data: "16/06", tema: "Antibióticos e Antimicrobianos", tipo: "Aula Teórica" },
-    { semana: 15, data: "23/06", tema: "Avaliação 2 (AV2)", tipo: "Avaliação" },
-    { semana: 16, data: "30/06", tema: "Avaliação Final (AV3) / Recuperação", tipo: "Avaliação" },
-  ], []);
+  // Buscar cronograma do banco de dados filtrado pela turma
+  const { data: scheduleData } = trpc.schedule.getAll.useQuery(
+    { classId: classId || undefined },
+    { enabled: !!classId, staleTime: 60_000 }
+  );
+
+  // Mapear dados do banco para o formato do cronograma
+  const cronograma = useMemo(() => {
+    if (scheduleData && scheduleData.length > 0) {
+      return scheduleData.map((e: any, idx: number) => ({
+        semana: idx + 1,
+        data: e.weekDate ? e.weekDate.replace(/\/\d{4}$/, "") : "",
+        tema: e.title,
+        tipo: e.type === "prova" ? "Avaliação" : e.type === "jigsaw" ? "Seminário" : e.type === "tbl" ? "TBL" : e.type === "caso" ? "Caso Clínico" : "Aula Teórica",
+        highlight: e.highlight,
+        detail: e.detail,
+        weekLabel: e.weekLabel,
+      }));
+    }
+    return [];
+  }, [scheduleData]);
 
   // Cálculo de média
   const [av1, setAv1] = useState("");
@@ -732,27 +734,26 @@ export default function StudentArea() {
               </div>
             )}
 
-            {/* Ranking das equipes do leaderboard */}
-            {leaderboardData && leaderboardData.teams && leaderboardData.teams.length > 0 && (
+            {/* Ranking dos alunos da turma */}
+            {leaderboardData && (leaderboardData as any).members && (leaderboardData as any).members.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-white mb-4">Ranking das Equipes (PF)</h3>
+                <h3 className="text-lg font-bold text-white mb-4">Ranking da Turma (PF)</h3>
                 <div className="space-y-2">
-                  {leaderboardData.teams.map((team: any, idx: number) => (
+                  {(leaderboardData as any).members.slice(0, 20).map((member: any, idx: number) => (
                     <div
-                      key={team.id}
-                      className="rounded-lg p-4 flex items-center gap-4"
+                      key={member.id}
+                      className="rounded-lg p-3 flex items-center gap-3"
                       style={{
-                        backgroundColor: CARD_BG,
-                        border: "1px solid rgba(255,255,255,0.1)",
+                        backgroundColor: member.id === memberId ? 'rgba(247,148,29,0.15)' : CARD_BG,
+                        border: member.id === memberId ? '1px solid rgba(247,148,29,0.5)' : '1px solid rgba(255,255,255,0.1)',
                       }}
                     >
-                      <span className="text-lg font-bold w-8 text-center" style={{ color: ORANGE }}>#{idx + 1}</span>
+                      <span className="text-base font-bold w-8 text-center" style={{ color: ORANGE }}>#{idx + 1}</span>
                       <div className="flex-1">
-                        <h4 className="font-medium text-white">{team.name}</h4>
-                        <p className="text-xs text-white/40">{team.members.length} membros</p>
+                        <h4 className="font-medium text-white text-sm">{member.name}</h4>
                       </div>
-                      <span className="font-bold text-white">
-                        {team.members.reduce((sum: number, m: any) => sum + parseFloat(m.xp || 0), 0).toFixed(1)} PF
+                      <span className="font-bold text-white text-sm">
+                        {parseFloat(member.xp || 0).toFixed(1)} PF
                       </span>
                     </div>
                   ))}

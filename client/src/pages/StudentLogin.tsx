@@ -71,9 +71,10 @@ export default function StudentLogin() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
 
   // Check if already logged in
-  const { isAuthenticated, isLoading } = useStudentAuth();
+  const { isAuthenticated, isLoading, student } = useStudentAuth();
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -81,11 +82,25 @@ export default function StudentLogin() {
       if (returnUrl) {
         localStorage.removeItem("attendance_return_url");
         setLocation(returnUrl);
+      } else if (student?.classId) {
+        setLocation(`/aluno/${student.classId}`);
       } else {
         setLocation("/leaderboard");
       }
     }
-  }, [isAuthenticated, isLoading, setLocation]);
+  }, [isAuthenticated, isLoading, student, setLocation]);
+
+  // Redirecionar após login quando dados do aluno carregarem
+  useEffect(() => {
+    if (redirectAfterLogin && isAuthenticated && student) {
+      setRedirectAfterLogin(false);
+      if (student.classId) {
+        setLocation(`/aluno/${student.classId}`);
+      } else {
+        setLocation("/leaderboard");
+      }
+    }
+  }, [redirectAfterLogin, isAuthenticated, student, setLocation]);
 
   // Get available members for registration
   const { data: availableMembers } = trpc.studentAuth.getAvailableMembers.useQuery(
@@ -122,7 +137,8 @@ export default function StudentLogin() {
           localStorage.removeItem("attendance_return_url");
           setTimeout(() => setLocation(returnUrl), 500);
         } else {
-          setTimeout(() => setLocation("/leaderboard"), 500);
+          // Redirecionar para o portal da turma após carregar os dados do aluno
+          setRedirectAfterLogin(true);
         }
       } else {
         setError(result.message);

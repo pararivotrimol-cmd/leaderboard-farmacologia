@@ -56,6 +56,20 @@ export async function getDb() {
   return _db;
 }
 
+import mysql from "mysql2/promise";
+let _rawConn: mysql.Connection | null = null;
+export async function getRawDb() {
+  if (!_rawConn && process.env.DATABASE_URL) {
+    try {
+      _rawConn = await mysql.createConnection(process.env.DATABASE_URL);
+    } catch (error) {
+      console.warn("[Database] Failed to create raw connection:", error);
+      _rawConn = null;
+    }
+  }
+  return _rawConn;
+}
+
 // ─── User Helpers ───
 
 export async function upsertUser(user: InsertUser): Promise<void> {

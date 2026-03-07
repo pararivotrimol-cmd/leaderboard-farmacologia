@@ -249,7 +249,7 @@ export const jigsawCompleteRouter = router({
     /**
      * Get expert groups by class
      */
-    getByClass: protectedProcedure
+    getByClass: publicProcedure
       .input(z.object({ classId: z.number() }))
       .query(async ({ input }) => {
         try {
@@ -562,7 +562,7 @@ export const jigsawCompleteRouter = router({
     /**
      * Get home groups by class
      */
-    getByClass: protectedProcedure
+    getByClass: publicProcedure
       .input(z.object({ classId: z.number() }))
       .query(async ({ input }) => {
         try {

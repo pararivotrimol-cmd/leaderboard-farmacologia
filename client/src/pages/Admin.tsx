@@ -719,6 +719,7 @@ function CronogramaManager({ teacherToken }: { teacherToken: string }) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     weekLabel: "",
     weekDate: "",
@@ -731,9 +732,14 @@ function CronogramaManager({ teacherToken }: { teacherToken: string }) {
     gameWeekNumber: null as number | null,
   });
 
-  const { data: adminEntries, refetch } = trpc.schedule.getAllAdmin.useQuery(
-    { teacherSessionToken: teacherToken },
+  const { data: classesList } = trpc.classes.list.useQuery(
+    { sessionToken: teacherToken },
     { enabled: !!teacherToken }
+  );
+
+  const { data: adminEntries, refetch } = trpc.schedule.getAllAdmin.useQuery(
+    { teacherSessionToken: teacherToken, classId: selectedClassId ?? undefined },
+    { enabled: !!teacherToken && selectedClassId !== null }
   );
   const { data: gwData } = trpc.schedule.getGameWeeks.useQuery(
     { teacherSessionToken: teacherToken },
@@ -771,7 +777,7 @@ function CronogramaManager({ teacherToken }: { teacherToken: string }) {
   function handleSubmit() {
     if (!formData.weekLabel.trim() || !formData.title.trim()) { toast.error("Rótulo e título são obrigatórios"); return; }
     setSaving(true);
-    const payload = { teacherSessionToken: teacherToken, ...formData, weekDate: formData.weekDate || undefined, detail: formData.detail || undefined };
+    const payload = { teacherSessionToken: teacherToken, ...formData, weekDate: formData.weekDate || undefined, detail: formData.detail || undefined, classId: selectedClassId ?? undefined };
     if (editingId !== null) {
       updateMut.mutate({ ...payload, id: editingId }, { onSettled: () => setSaving(false) });
     } else {
@@ -797,11 +803,46 @@ function CronogramaManager({ teacherToken }: { teacherToken: string }) {
   };
   const typeLabels: Record<string, string> = { aula: "Aula", tbl: "TBL", caso: "Caso Clínico", jigsaw: "Jigsaw", prova: "Prova" };
 
+  if (!selectedClassId) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Cronograma do Semestre</h2>
+          <p className="text-sm text-muted-foreground">Selecione uma turma para ver e editar o cronograma</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          {(classesList || []).map((cls: any) => (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassId(cls.id)}
+              className="border border-border rounded-lg p-4 text-left hover:border-primary/50 transition-colors"
+              style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cls.color }} />
+                <span className="font-semibold text-sm text-foreground">{cls.name}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <p>{cls.discipline} — {cls.course}</p>
+                {cls.teacherName && <p className="mt-1">Prof. {cls.teacherName}</p>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const selectedClass = (classesList || []).find((c: any) => c.id === selectedClassId);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Cronograma do Semestre</h2>
+          <button onClick={() => { setSelectedClassId(null); setEntries([]); }} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-1">
+            <ArrowLeft size={12} /> Voltar às turmas
+          </button>
+          <h2 className="text-xl font-bold text-foreground">Cronograma — {selectedClass?.name || "Turma"}</h2>
           <p className="text-sm text-muted-foreground">{entries.length} semanas cadastradas</p>
         </div>
         <button
@@ -4010,7 +4051,7 @@ function TurmasManager({ teacherToken }: { teacherToken: string | null }) {
             </div>
           </div>
           <button
-            onClick={() => setLocation("/cronograma")}
+            onClick={() => window.dispatchEvent(new CustomEvent('admin-navigate', { detail: { section: 'cronograma' } }))}
             className="border border-border rounded-lg p-4 hover:bg-primary/10 transition-colors cursor-pointer"
             style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}
           >
@@ -4364,6 +4405,18 @@ export default function Admin() {
       setPassword(null);
     }
   }, [adminPwData]);
+
+  // Listener para navegação interna entre seções
+  useEffect(() => {
+    const handleAdminNavigate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.section) {
+        setActiveSection(detail.section as any);
+      }
+    };
+    window.addEventListener('admin-navigate', handleAdminNavigate);
+    return () => window.removeEventListener('admin-navigate', handleAdminNavigate);
+  }, []);
   
   const handleLogout = () => {
     localStorage.removeItem("teacherSessionToken");
@@ -4485,7 +4538,7 @@ export default function Admin() {
         )}
         {activeSection === "badges" && password && <BadgesManager password={password} />}
         {activeSection === "attendance" && password && <AttendanceManager password={password} />}
-        {activeSection === "jigsaw" && <AdminJigsawPanel />}
+        {activeSection === "jigsaw" && <AdminJigsawPanel teacherToken={teacherToken || ""} />}
         {activeSection === "monitores" && teacherToken && <MonitoresManager teacherToken={teacherToken} />}
         {activeSection === "cronograma" && teacherToken && <CronogramaManager teacherToken={teacherToken} />}
         {activeSection === "qr-acesso" && <QRCodeAcessoManager />}

@@ -32,6 +32,17 @@ const WEEK_TITLES: Record<number, string> = {
   17: "Revisão Geral — Boss Final",
 };
 
+// Turmas do semestre 2026.1
+const TURMAS = [
+  { id: 26, name: "Medicina I" },
+  { id: 27, name: "Medicina II" },
+  { id: 28, name: "Biomedicina" },
+  { id: 29, name: "Biomedicina II" },
+  { id: 30, name: "Enfermagem" },
+  { id: 31, name: "Nutrição Integral" },
+  { id: 32, name: "Nutrição Noturno" },
+];
+
 type Tab = "overview" | "releases" | "students" | "reports";
 
 export default function AdminGamePanel() {
@@ -41,7 +52,7 @@ export default function AdminGamePanel() {
   const [respondingReport, setRespondingReport] = useState<number | null>(null);
   const [responseText, setResponseText] = useState("");
   const [scheduleDates, setScheduleDates] = useState<Record<number, string>>({});
-  const classId = 1; // Default class
+  const [classId, setClassId] = useState<number>(26); // Padrão: Medicina I
 
   // Queries
   const { data: stats } = trpc.game.getClassStats.useQuery({ classId });
@@ -151,13 +162,26 @@ export default function AdminGamePanel() {
             </div>
           </div>
 
-          {/* Pending reports badge */}
-          {(stats?.pendingReports || 0) > 0 && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-1.5">
-              <AlertTriangle size={14} className="text-red-400" />
-              <span className="text-xs font-medium text-red-400">{stats?.pendingReports} pendentes</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {/* Seletor de Turma */}
+            <select
+              value={classId}
+              onChange={(e) => setClassId(Number(e.target.value))}
+              className="px-3 py-1.5 rounded-lg bg-white/10 border border-emerald-500/30 text-white text-sm"
+            >
+              {TURMAS.map(t => (
+                <option key={t.id} value={t.id} className="bg-gray-900">{t.name}</option>
+              ))}
+            </select>
+
+            {/* Pending reports badge */}
+            {(stats?.pendingReports || 0) > 0 && (
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-1.5">
+                <AlertTriangle size={14} className="text-red-400" />
+                <span className="text-xs font-medium text-red-400">{stats?.pendingReports} pendentes</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

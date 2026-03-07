@@ -2,7 +2,7 @@
  * tRPC Router para Presença com QR Code
  */
 
-import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { attendance } from "../../drizzle/schema";
@@ -25,11 +25,12 @@ export const attendanceRouter = router({
   /**
    * Professor: Gerar QR code para a aula de hoje
    */
-  generateQRCode: adminProcedure
+  generateQRCode: publicProcedure
     .input(
       z.object({
         classId: z.number(),
         classDate: z.string(), // "YYYY-MM-DD"
+        sessionToken: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -217,11 +218,12 @@ export const attendanceRouter = router({
   /**
    * Professor: Listar presenças de uma turma em um dia
    */
-  getClassAttendance: adminProcedure
+  getClassAttendance: publicProcedure
     .input(
       z.object({
         classDate: z.string(),
         classId: z.number(),
+        sessionToken: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -259,15 +261,16 @@ export const attendanceRouter = router({
   /**
    * Professor: Registrar presença manualmente
    */
-  manualCheckIn: adminProcedure
+  manualCheckIn: publicProcedure
     .input(
       z.object({
         studentAccountId: z.number(),
         classDate: z.string(),
         note: z.string().optional(),
+        sessionToken: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
