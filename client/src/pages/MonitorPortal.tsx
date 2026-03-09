@@ -11,7 +11,7 @@ import {
   Gamepad2, Users, BookOpen, ClipboardList,
   FolderOpen, Presentation, LogOut, User,
   ChevronRight, Shield, Eye, EyeOff, Loader2,
-  GraduationCap, BarChart3, MessageSquare
+  GraduationCap, BarChart3, MessageSquare, FileSpreadsheet
 } from "lucide-react";
 
 const MONITOR_SESSION_KEY = "monitor_session_token";
@@ -88,6 +88,14 @@ const MONITOR_FEATURES = [
     href: "/chat",
     color: "#06b6d4",
     bg: "from-cyan-500/20 to-cyan-600/10",
+  },
+  {
+    icon: <FileSpreadsheet size={28} />,
+    label: "Planilha de Notas",
+    description: "Lançar notas de Kahoot e Casos Clínicos por turma",
+    href: "/monitor/notas",
+    color: "#22c55e",
+    bg: "from-green-500/20 to-green-600/10",
   },
 ];
 

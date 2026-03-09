@@ -1578,3 +1578,25 @@ export const jigsawPeerEvaluations = mysqlTable("jigsawPeerEvaluations", {
 
 export type JigsawPeerEvaluation = typeof jigsawPeerEvaluations.$inferSelect;
 export type InsertJigsawPeerEvaluation = typeof jigsawPeerEvaluations.$inferInsert;
+
+/**
+ * Group Activity Grades - Notas lançadas pelos monitores para grupos de Kahoot e Casos Clínicos
+ * Os grupos de Kahoot são os mesmos da fase 2 do Jigsaw (jigsawHomeGroups)
+ */
+export const groupActivityGrades = mysqlTable("groupActivityGrades", {
+  id: int("id").autoincrement().primaryKey(),
+  classId: int("classId").notNull(), // Turma
+  activityType: mysqlEnum("activityType", ["kahoot", "clinical_case"]).notNull(),
+  activityName: varchar("activityName", { length: 200 }).notNull(), // e.g., "Kahoot - Semana 3", "Caso Clínico 1"
+  homeGroupId: int("homeGroupId"), // Grupo mosaico (fase 2 do Jigsaw) - para Kahoot
+  groupName: varchar("groupName", { length: 200 }).notNull(), // Nome do grupo (cacheado)
+  grade: decimal("grade", { precision: 5, scale: 2 }).notNull().default("0"), // Nota (0-10)
+  maxGrade: decimal("maxGrade", { precision: 5, scale: 2 }).notNull().default("10"), // Nota máxima
+  notes: text("notes"), // Observações do monitor
+  launchedByMonitorId: int("launchedByMonitorId"), // ID da conta do monitor que lançou
+  launchedByName: varchar("launchedByName", { length: 200 }), // Nome do monitor (cacheado)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GroupActivityGrade = typeof groupActivityGrades.$inferSelect;
+export type InsertGroupActivityGrade = typeof groupActivityGrades.$inferInsert;

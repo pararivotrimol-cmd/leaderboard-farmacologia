@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../_core/trpc";
 import { getDb, getTeacherAccountBySessionToken } from "../db";
-import { studentAccounts, monitorActivityLogs } from "../../drizzle/schema";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { studentAccounts, monitorActivityLogs, classes, jigsawHomeGroups, jigsawHomeMembers, members, groupActivityGrades } from "../../drizzle/schema";
+import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export const monitorsRouter = router({
@@ -374,5 +374,225 @@ export const monitorsRouter = router({
         })
       );
       return result;
+    }),
+
+  // ============================================================
+  // TURMAS E NOTAS DE ATIVIDADES (Kahoot e Casos Clínicos)
+  // ============================================================
+
+  // Listar todas as turmas ativas
+  listClasses: publicProcedure
+    .input(z.object({ monitorSessionToken: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const monitor = await db
+        .select({ id: studentAccounts.id, accountType: studentAccounts.accountType })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitor.length) throw new Error("Acesso negado");
+      
+      return db
+        .select()
+        .from(classes)
+        .where(eq(classes.isActive, 1))
+        .orderBy(classes.name);
+    }),
+
+  // Listar grupos mosaico (fase 2 do Jigsaw) de uma turma com seus membros
+  listHomeGroups: publicProcedure
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      classId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const monitor = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitor.length) throw new Error("Acesso negado");
+
+      const groups = await db
+        .select()
+        .from(jigsawHomeGroups)
+        .where(eq(jigsawHomeGroups.classId, input.classId))
+        .orderBy(jigsawHomeGroups.meetingNumber, jigsawHomeGroups.name);
+
+      // Para cada grupo, buscar os membros
+      const groupsWithMembers = await Promise.all(
+        groups.map(async (group) => {
+          const groupMembers = await db
+            .select({
+              id: jigsawHomeMembers.id,
+              memberId: jigsawHomeMembers.memberId,
+              memberName: members.name,
+            })
+            .from(jigsawHomeMembers)
+            .leftJoin(members, eq(jigsawHomeMembers.memberId, members.id))
+            .where(eq(jigsawHomeMembers.homeGroupId, group.id));
+          return { ...group, membersList: groupMembers };
+        })
+      );
+
+      return groupsWithMembers;
+    }),
+
+  // Listar notas de atividades de uma turma
+  listActivityGrades: publicProcedure
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      classId: z.number(),
+      activityType: z.enum(["kahoot", "clinical_case"]).optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const monitor = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitor.length) throw new Error("Acesso negado");
+
+      const conditions = [eq(groupActivityGrades.classId, input.classId)];
+      if (input.activityType) {
+        conditions.push(eq(groupActivityGrades.activityType, input.activityType));
+      }
+
+      return db
+        .select()
+        .from(groupActivityGrades)
+        .where(and(...conditions))
+        .orderBy(groupActivityGrades.activityType, groupActivityGrades.activityName, groupActivityGrades.groupName);
+    }),
+
+  // Lançar ou atualizar nota de um grupo
+  upsertActivityGrade: publicProcedure
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      classId: z.number(),
+      activityType: z.enum(["kahoot", "clinical_case"]),
+      activityName: z.string().min(1).max(200),
+      homeGroupId: z.number().optional(),
+      groupName: z.string().min(1).max(200),
+      grade: z.number().min(0).max(100),
+      maxGrade: z.number().min(0).max(100).default(10),
+      notes: z.string().optional(),
+      existingId: z.number().optional(), // se fornecido, atualiza; se não, cria
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      const monitorAccount = await db
+        .select({ id: studentAccounts.id, displayName: studentAccounts.displayName, email: studentAccounts.email })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitorAccount.length) throw new Error("Acesso negado");
+
+      const monitor = monitorAccount[0];
+      const monitorName = monitor.displayName || monitor.email.split("@")[0];
+
+      if (input.existingId) {
+        // Atualizar nota existente
+        await db
+          .update(groupActivityGrades)
+          .set({
+            grade: String(input.grade),
+            maxGrade: String(input.maxGrade),
+            notes: input.notes,
+            launchedByMonitorId: monitor.id,
+            launchedByName: monitorName,
+          })
+          .where(eq(groupActivityGrades.id, input.existingId));
+        return { success: true, action: "updated" };
+      } else {
+        // Criar nova nota
+        await db.insert(groupActivityGrades).values({
+          classId: input.classId,
+          activityType: input.activityType,
+          activityName: input.activityName,
+          homeGroupId: input.homeGroupId,
+          groupName: input.groupName,
+          grade: String(input.grade),
+          maxGrade: String(input.maxGrade),
+          notes: input.notes,
+          launchedByMonitorId: monitor.id,
+          launchedByName: monitorName,
+        });
+        return { success: true, action: "created" };
+      }
+    }),
+
+  // Deletar nota de atividade
+  deleteActivityGrade: publicProcedure
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      gradeId: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      const monitor = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitor.length) throw new Error("Acesso negado");
+
+      await db
+        .delete(groupActivityGrades)
+        .where(eq(groupActivityGrades.id, input.gradeId));
+      return { success: true };
+    }),
+
+  // Listar nomes únicos de atividades (para autocomplete)
+  listActivityNames: publicProcedure
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      classId: z.number(),
+      activityType: z.enum(["kahoot", "clinical_case"]),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const monitor = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor"),
+          eq(studentAccounts.isActive, 1)
+        ))
+        .limit(1);
+      if (!monitor.length) throw new Error("Acesso negado");
+
+      const results = await db
+        .selectDistinct({ activityName: groupActivityGrades.activityName })
+        .from(groupActivityGrades)
+        .where(and(
+          eq(groupActivityGrades.classId, input.classId),
+          eq(groupActivityGrades.activityType, input.activityType)
+        ))
+        .orderBy(groupActivityGrades.activityName);
+      return results.map(r => r.activityName);
     }),
 });

@@ -175,6 +175,30 @@ async function startServer() {
           }
         }
         console.log('[Migration] Geo columns migration check complete');
+        
+        // Migração: criar tabela groupActivityGrades se não existir
+        try {
+          await rawDb.execute(`
+            CREATE TABLE IF NOT EXISTS groupActivityGrades (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              classId INT NOT NULL,
+              activityType ENUM('kahoot', 'clinical_case') NOT NULL,
+              activityName VARCHAR(200) NOT NULL,
+              homeGroupId INT DEFAULT NULL,
+              groupName VARCHAR(200) NOT NULL,
+              grade DECIMAL(5,2) NOT NULL DEFAULT 0,
+              maxGrade DECIMAL(5,2) NOT NULL DEFAULT 10,
+              notes TEXT,
+              launchedByMonitorId INT DEFAULT NULL,
+              launchedByName VARCHAR(200) DEFAULT NULL,
+              createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+          `);
+          console.log('[Migration] OK: groupActivityGrades table created/verified');
+        } catch (err: any) {
+          console.warn('[Migration] groupActivityGrades:', err?.message?.substring(0, 80));
+        }
       }
     } catch (err) {
       console.warn('[Migration] Could not run geo migration:', err);
