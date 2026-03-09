@@ -715,6 +715,7 @@ export default function MonitorGrades() {
                                                 deleteMutation.mutate({
                                                   monitorSessionToken: sessionToken,
                                                   gradeId: grade.id,
+                                                  classId: selectedClassId!,
                                                 });
                                               }
                                             }}

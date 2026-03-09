@@ -2,11 +2,108 @@ import { z } from "zod";
 import { router, publicProcedure } from "../_core/trpc";
 import { getDb, getTeacherAccountBySessionToken } from "../db";
 import { studentAccounts, monitorActivityLogs, classes, jigsawHomeGroups, jigsawHomeMembers, members, groupActivityGrades } from "../../drizzle/schema";
-import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
+// Helper: autenticar monitor e retornar dados completos
+async function getMonitorByToken(sessionToken: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const accounts = await db
+    .select({
+      id: studentAccounts.id,
+      email: studentAccounts.email,
+      displayName: studentAccounts.displayName,
+      accountType: studentAccounts.accountType,
+      isActive: studentAccounts.isActive,
+      assignedClassId: studentAccounts.assignedClassId,
+    })
+    .from(studentAccounts)
+    .where(and(
+      eq(studentAccounts.sessionToken, sessionToken),
+      eq(studentAccounts.accountType, "monitor"),
+      eq(studentAccounts.isActive, 1)
+    ))
+    .limit(1);
+  return accounts[0] ?? null;
+}
+
 export const monitorsRouter = router({
-  // List all monitors (teacher only)
+  // ─── Cadastro público de monitor ───
+  // Monitor se cadastra com email, nome, matrícula (senha = matrícula) e turma
+  selfRegister: publicProcedure
+    .input(z.object({
+      email: z.string().email(),
+      displayName: z.string().min(2).max(200),
+      matricula: z.string().min(3).max(30),
+      assignedClassId: z.number().int().positive(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      // Verificar se email já existe
+      const existingEmail = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(eq(studentAccounts.email, input.email))
+        .limit(1);
+      if (existingEmail.length > 0) {
+        return { success: false, message: "Este e-mail já está cadastrado no sistema." } as const;
+      }
+
+      // Verificar se matrícula já existe
+      const existingMatricula = await db
+        .select({ id: studentAccounts.id })
+        .from(studentAccounts)
+        .where(eq(studentAccounts.matricula, input.matricula))
+        .limit(1);
+      if (existingMatricula.length > 0) {
+        return { success: false, message: "Esta matrícula já está cadastrada no sistema." } as const;
+      }
+
+      // Verificar se a turma existe
+      const turma = await db
+        .select({ id: classes.id, name: classes.name })
+        .from(classes)
+        .where(and(eq(classes.id, input.assignedClassId), eq(classes.isActive, 1)))
+        .limit(1);
+      if (!turma.length) {
+        return { success: false, message: "Turma não encontrada ou inativa." } as const;
+      }
+
+      // Senha = matrícula (hash)
+      const passwordHash = await bcrypt.hash(input.matricula, 10);
+
+      await db.insert(studentAccounts).values({
+        email: input.email,
+        matricula: input.matricula,
+        displayName: input.displayName,
+        passwordHash,
+        accountType: "monitor",
+        assignedClassId: input.assignedClassId,
+        isActive: 0, // Aguarda aprovação do professor
+      });
+
+      return {
+        success: true,
+        message: `Cadastro realizado! Aguarde a aprovação do professor para acessar o portal. Sua turma: ${turma[0].name}`,
+      } as const;
+    }),
+
+  // ─── Listar turmas disponíveis (público, para o formulário de cadastro) ───
+  listClassesPublic: publicProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select({ id: classes.id, name: classes.name, period: classes.period })
+        .from(classes)
+        .where(eq(classes.isActive, 1))
+        .orderBy(classes.name);
+    }),
+
+  // ─── List all monitors (teacher only) ───
   list: publicProcedure
     .input(z.object({ teacherSessionToken: z.string() }))
     .query(async ({ input }) => {
@@ -22,6 +119,7 @@ export const monitorsRouter = router({
           displayName: studentAccounts.displayName,
           accountType: studentAccounts.accountType,
           isActive: studentAccounts.isActive,
+          assignedClassId: studentAccounts.assignedClassId,
           lastLoginAt: studentAccounts.lastLoginAt,
           createdAt: studentAccounts.createdAt,
         })
@@ -30,17 +128,16 @@ export const monitorsRouter = router({
       return monitors;
     }),
 
-  // Register a new monitor (teacher only)
+  // ─── Register a new monitor (teacher only) ───
   register: publicProcedure
-    .input(
-      z.object({
-        teacherSessionToken: z.string(),
-        email: z.string().email(),
-        matricula: z.string().min(3),
-        displayName: z.string().min(2),
-        password: z.string().min(6),
-      })
-    )
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      email: z.string().email(),
+      matricula: z.string().min(3),
+      displayName: z.string().min(2),
+      password: z.string().min(6),
+      assignedClassId: z.number().int().positive().optional(),
+    }))
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
@@ -60,22 +157,22 @@ export const monitorsRouter = router({
         displayName: input.displayName,
         passwordHash,
         accountType: "monitor",
+        assignedClassId: input.assignedClassId ?? null,
         isActive: 1,
       });
       return { success: true, message: "Monitor cadastrado com sucesso" } as const;
     }),
 
-  // Update monitor info (teacher only)
+  // ─── Update monitor info (teacher only) ───
   update: publicProcedure
-    .input(
-      z.object({
-        teacherSessionToken: z.string(),
-        monitorId: z.number(),
-        displayName: z.string().min(2).optional(),
-        isActive: z.number().optional(),
-        newPassword: z.string().min(6).optional(),
-      })
-    )
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      monitorId: z.number(),
+      displayName: z.string().min(2).optional(),
+      isActive: z.number().optional(),
+      newPassword: z.string().min(6).optional(),
+      assignedClassId: z.number().int().positive().nullable().optional(),
+    }))
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
@@ -84,6 +181,7 @@ export const monitorsRouter = router({
       const updates: Record<string, unknown> = {};
       if (input.displayName !== undefined) updates.displayName = input.displayName;
       if (input.isActive !== undefined) updates.isActive = input.isActive;
+      if (input.assignedClassId !== undefined) updates.assignedClassId = input.assignedClassId;
       if (input.newPassword) {
         updates.passwordHash = await bcrypt.hash(input.newPassword, 10);
       }
@@ -93,23 +191,19 @@ export const monitorsRouter = router({
       await db
         .update(studentAccounts)
         .set(updates)
-        .where(
-          and(
-            eq(studentAccounts.id, input.monitorId),
-            eq(studentAccounts.accountType, "monitor")
-          )
-        );
+        .where(and(
+          eq(studentAccounts.id, input.monitorId),
+          eq(studentAccounts.accountType, "monitor")
+        ));
       return { success: true, message: "Monitor atualizado com sucesso" } as const;
     }),
 
-  // Remove a monitor (teacher only)
+  // ─── Remove a monitor (teacher only) ───
   remove: publicProcedure
-    .input(
-      z.object({
-        teacherSessionToken: z.string(),
-        monitorId: z.number(),
-      })
-    )
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      monitorId: z.number(),
+    }))
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
@@ -117,46 +211,40 @@ export const monitorsRouter = router({
       if (!db) throw new Error("Database unavailable");
       await db
         .delete(studentAccounts)
-        .where(
-          and(
-            eq(studentAccounts.id, input.monitorId),
-            eq(studentAccounts.accountType, "monitor")
-          )
-        );
+        .where(and(
+          eq(studentAccounts.id, input.monitorId),
+          eq(studentAccounts.accountType, "monitor")
+        ));
       return { success: true, message: "Monitor removido com sucesso" } as const;
     }),
 
-  // Monitor login
+  // ─── Monitor login ───
   login: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string(),
-      })
-    )
+    .input(z.object({
+      email: z.string().email(),
+      password: z.string(),
+    }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
       const account = await db
         .select()
         .from(studentAccounts)
-        .where(
-          and(
-            eq(studentAccounts.email, input.email),
-            eq(studentAccounts.accountType, "monitor")
-          )
-        )
+        .where(and(
+          eq(studentAccounts.email, input.email),
+          eq(studentAccounts.accountType, "monitor")
+        ))
         .limit(1);
       if (account.length === 0) {
-        return { success: false, message: "Monitor não encontrado" } as const;
+        return { success: false, message: "Monitor não encontrado. Verifique o e-mail ou cadastre-se." } as const;
       }
       const monitor = account[0];
       if (!monitor.isActive) {
-        return { success: false, message: "Conta desativada" } as const;
+        return { success: false, message: "Conta aguardando aprovação do professor. Entre em contato com o professor responsável." } as const;
       }
       const passwordMatch = await bcrypt.compare(input.password, monitor.passwordHash);
       if (!passwordMatch) {
-        return { success: false, message: "Senha incorreta" } as const;
+        return { success: false, message: "Senha incorreta. Lembre-se: a senha é o seu número de matrícula." } as const;
       }
       const sessionToken = `monitor_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       await db
@@ -178,37 +266,21 @@ export const monitorsRouter = router({
           email: monitor.email,
           displayName: monitor.displayName,
           accountType: monitor.accountType,
+          assignedClassId: monitor.assignedClassId,
         },
       } as const;
     }),
 
-  // Get monitor profile from session token
+  // ─── Get monitor profile from session token ───
   me: publicProcedure
     .input(z.object({ sessionToken: z.string() }))
     .query(async ({ input }) => {
       if (!input.sessionToken) return null;
-      const db = await getDb();
-      if (!db) return null;
-      const account = await db
-        .select({
-          id: studentAccounts.id,
-          email: studentAccounts.email,
-          displayName: studentAccounts.displayName,
-          accountType: studentAccounts.accountType,
-          isActive: studentAccounts.isActive,
-        })
-        .from(studentAccounts)
-        .where(
-          and(
-            eq(studentAccounts.sessionToken, input.sessionToken),
-            eq(studentAccounts.accountType, "monitor")
-          )
-        )
-        .limit(1);
-      return account[0] ?? null;
+      const monitor = await getMonitorByToken(input.sessionToken);
+      return monitor;
     }),
 
-  // Monitor logout
+  // ─── Monitor logout ───
   logout: publicProcedure
     .input(z.object({ sessionToken: z.string() }))
     .mutation(async ({ input }) => {
@@ -221,15 +293,14 @@ export const monitorsRouter = router({
       return { success: true } as const;
     }),
 
-  // Promote existing external student to monitor (teacher only)
+  // ─── Promote existing external student to monitor (teacher only) ───
   promoteToMonitor: publicProcedure
-    .input(
-      z.object({
-        teacherSessionToken: z.string(),
-        studentAccountId: z.number(),
-        displayName: z.string().min(2),
-      })
-    )
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      studentAccountId: z.number(),
+      displayName: z.string().min(2),
+      assignedClassId: z.number().int().positive().optional(),
+    }))
     .mutation(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
@@ -240,6 +311,7 @@ export const monitorsRouter = router({
         .set({
           accountType: "monitor",
           displayName: input.displayName,
+          assignedClassId: input.assignedClassId ?? null,
         })
         .where(eq(studentAccounts.id, input.studentAccountId));
       return { success: true, message: "Conta promovida a monitor" } as const;
@@ -249,16 +321,14 @@ export const monitorsRouter = router({
 
   // Log a monitor action (called by monitor portal)
   logAction: publicProcedure
-    .input(
-      z.object({
-        monitorSessionToken: z.string(),
-        actionType: z.string().min(1),
-        actionDescription: z.string().min(1),
-        targetEntity: z.string().optional(),
-        targetId: z.number().optional(),
-        metadata: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      monitorSessionToken: z.string(),
+      actionType: z.string().min(1),
+      actionDescription: z.string().min(1),
+      targetEntity: z.string().optional(),
+      targetId: z.number().optional(),
+      metadata: z.string().optional(),
+    }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
@@ -269,12 +339,10 @@ export const monitorsRouter = router({
           email: studentAccounts.email,
         })
         .from(studentAccounts)
-        .where(
-          and(
-            eq(studentAccounts.sessionToken, input.monitorSessionToken),
-            eq(studentAccounts.accountType, "monitor")
-          )
-        )
+        .where(and(
+          eq(studentAccounts.sessionToken, input.monitorSessionToken),
+          eq(studentAccounts.accountType, "monitor")
+        ))
         .limit(1);
       const monitor = accounts[0];
       if (!monitor) throw new Error("Monitor não autenticado");
@@ -292,23 +360,19 @@ export const monitorsRouter = router({
 
   // Get activity logs (teacher only)
   getActivityLogs: publicProcedure
-    .input(
-      z.object({
-        teacherSessionToken: z.string(),
-        monitorId: z.number().optional(),
-        dateFrom: z.string().optional(), // ISO date string e.g. "2026-02-01"
-        dateTo: z.string().optional(),   // ISO date string e.g. "2026-02-28"
-        limit: z.number().min(1).max(500).default(100),
-        offset: z.number().min(0).default(0),
-      })
-    )
+    .input(z.object({
+      teacherSessionToken: z.string(),
+      monitorId: z.number().optional(),
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+      limit: z.number().min(1).max(500).default(100),
+      offset: z.number().min(0).default(0),
+    }))
     .query(async ({ input }) => {
       const teacher = await getTeacherAccountBySessionToken(input.teacherSessionToken);
       if (!teacher) throw new Error("Unauthorized");
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
-      // Build where conditions
       const conditions = [];
       if (input.monitorId) {
         conditions.push(eq(monitorActivityLogs.monitorId, input.monitorId));
@@ -317,19 +381,16 @@ export const monitorsRouter = router({
         conditions.push(gte(monitorActivityLogs.createdAt, new Date(input.dateFrom)));
       }
       if (input.dateTo) {
-        // Include the full end day by setting time to end of day
         const endDate = new Date(input.dateTo);
         endDate.setHours(23, 59, 59, 999);
         conditions.push(lte(monitorActivityLogs.createdAt, endDate));
       }
-
       const query = db
         .select()
         .from(monitorActivityLogs)
         .orderBy(desc(monitorActivityLogs.createdAt))
         .limit(input.limit)
         .offset(input.offset);
-
       if (conditions.length > 0) {
         return await query.where(conditions.length === 1 ? conditions[0] : and(...conditions));
       }
@@ -350,6 +411,7 @@ export const monitorsRouter = router({
           email: studentAccounts.email,
           displayName: studentAccounts.displayName,
           isActive: studentAccounts.isActive,
+          assignedClassId: studentAccounts.assignedClassId,
           lastLoginAt: studentAccounts.lastLoginAt,
         })
         .from(studentAccounts)
@@ -380,27 +442,24 @@ export const monitorsRouter = router({
   // TURMAS E NOTAS DE ATIVIDADES (Kahoot e Casos Clínicos)
   // ============================================================
 
-  // Listar todas as turmas ativas
+  // Listar a turma do monitor logado (apenas a turma vinculada)
   listClasses: publicProcedure
     .input(z.object({ monitorSessionToken: z.string() }))
     .query(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
       const db = await getDb();
-      const monitor = await db
-        .select({ id: studentAccounts.id, accountType: studentAccounts.accountType })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitor.length) throw new Error("Acesso negado");
-      
-      return db
-        .select()
-        .from(classes)
-        .where(eq(classes.isActive, 1))
-        .orderBy(classes.name);
+      if (!db) throw new Error("Database unavailable");
+
+      // Se o monitor tem turma vinculada, retorna apenas ela
+      if (monitor.assignedClassId) {
+        return db
+          .select()
+          .from(classes)
+          .where(and(eq(classes.id, monitor.assignedClassId), eq(classes.isActive, 1)));
+      }
+      // Sem turma vinculada: retorna lista vazia (não deve acontecer em produção)
+      return [];
     }),
 
   // Listar grupos mosaico (fase 2 do Jigsaw) de uma turma com seus membros
@@ -410,17 +469,14 @@ export const monitorsRouter = router({
       classId: z.number(),
     }))
     .query(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
+      // Verificar que o monitor está acessando apenas sua turma
+      if (monitor.assignedClassId && monitor.assignedClassId !== input.classId) {
+        throw new Error("Acesso negado: você só pode acessar dados da sua turma.");
+      }
       const db = await getDb();
-      const monitor = await db
-        .select({ id: studentAccounts.id })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitor.length) throw new Error("Acesso negado");
+      if (!db) throw new Error("Database unavailable");
 
       const groups = await db
         .select()
@@ -428,7 +484,6 @@ export const monitorsRouter = router({
         .where(eq(jigsawHomeGroups.classId, input.classId))
         .orderBy(jigsawHomeGroups.meetingNumber, jigsawHomeGroups.name);
 
-      // Para cada grupo, buscar os membros
       const groupsWithMembers = await Promise.all(
         groups.map(async (group) => {
           const groupMembers = await db
@@ -443,7 +498,6 @@ export const monitorsRouter = router({
           return { ...group, membersList: groupMembers };
         })
       );
-
       return groupsWithMembers;
     }),
 
@@ -455,23 +509,19 @@ export const monitorsRouter = router({
       activityType: z.enum(["kahoot", "clinical_case"]).optional(),
     }))
     .query(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
+      // Verificar que o monitor está acessando apenas sua turma
+      if (monitor.assignedClassId && monitor.assignedClassId !== input.classId) {
+        throw new Error("Acesso negado: você só pode acessar dados da sua turma.");
+      }
       const db = await getDb();
-      const monitor = await db
-        .select({ id: studentAccounts.id })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitor.length) throw new Error("Acesso negado");
+      if (!db) throw new Error("Database unavailable");
 
-      const conditions = [eq(groupActivityGrades.classId, input.classId)];
+      const conditions: ReturnType<typeof eq>[] = [eq(groupActivityGrades.classId, input.classId)];
       if (input.activityType) {
         conditions.push(eq(groupActivityGrades.activityType, input.activityType));
       }
-
       return db
         .select()
         .from(groupActivityGrades)
@@ -491,26 +541,20 @@ export const monitorsRouter = router({
       grade: z.number().min(0).max(100),
       maxGrade: z.number().min(0).max(100).default(10),
       notes: z.string().optional(),
-      existingId: z.number().optional(), // se fornecido, atualiza; se não, cria
+      existingId: z.number().optional(),
     }))
     .mutation(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
+      // Verificar que o monitor está acessando apenas sua turma
+      if (monitor.assignedClassId && monitor.assignedClassId !== input.classId) {
+        throw new Error("Acesso negado: você só pode lançar notas da sua turma.");
+      }
       const db = await getDb();
-      const monitorAccount = await db
-        .select({ id: studentAccounts.id, displayName: studentAccounts.displayName, email: studentAccounts.email })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitorAccount.length) throw new Error("Acesso negado");
-
-      const monitor = monitorAccount[0];
+      if (!db) throw new Error("Database unavailable");
       const monitorName = monitor.displayName || monitor.email.split("@")[0];
 
       if (input.existingId) {
-        // Atualizar nota existente
         await db
           .update(groupActivityGrades)
           .set({
@@ -523,7 +567,6 @@ export const monitorsRouter = router({
           .where(eq(groupActivityGrades.id, input.existingId));
         return { success: true, action: "updated" };
       } else {
-        // Criar nova nota
         await db.insert(groupActivityGrades).values({
           classId: input.classId,
           activityType: input.activityType,
@@ -545,20 +588,16 @@ export const monitorsRouter = router({
     .input(z.object({
       monitorSessionToken: z.string(),
       gradeId: z.number(),
+      classId: z.number(), // para validar acesso
     }))
     .mutation(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
+      if (monitor.assignedClassId && monitor.assignedClassId !== input.classId) {
+        throw new Error("Acesso negado: você só pode excluir notas da sua turma.");
+      }
       const db = await getDb();
-      const monitor = await db
-        .select({ id: studentAccounts.id })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitor.length) throw new Error("Acesso negado");
-
+      if (!db) throw new Error("Database unavailable");
       await db
         .delete(groupActivityGrades)
         .where(eq(groupActivityGrades.id, input.gradeId));
@@ -573,18 +612,13 @@ export const monitorsRouter = router({
       activityType: z.enum(["kahoot", "clinical_case"]),
     }))
     .query(async ({ input }) => {
+      const monitor = await getMonitorByToken(input.monitorSessionToken);
+      if (!monitor) throw new Error("Acesso negado");
+      if (monitor.assignedClassId && monitor.assignedClassId !== input.classId) {
+        throw new Error("Acesso negado: você só pode acessar dados da sua turma.");
+      }
       const db = await getDb();
-      const monitor = await db
-        .select({ id: studentAccounts.id })
-        .from(studentAccounts)
-        .where(and(
-          eq(studentAccounts.sessionToken, input.monitorSessionToken),
-          eq(studentAccounts.accountType, "monitor"),
-          eq(studentAccounts.isActive, 1)
-        ))
-        .limit(1);
-      if (!monitor.length) throw new Error("Acesso negado");
-
+      if (!db) throw new Error("Database unavailable");
       const results = await db
         .selectDistinct({ activityName: groupActivityGrades.activityName })
         .from(groupActivityGrades)

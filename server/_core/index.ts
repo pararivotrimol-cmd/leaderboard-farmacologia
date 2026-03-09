@@ -199,6 +199,16 @@ async function startServer() {
         } catch (err: any) {
           console.warn('[Migration] groupActivityGrades:', err?.message?.substring(0, 80));
         }
+
+        // Migração: adicionar assignedClassId em studentAccounts (para monitores)
+        try {
+          await rawDb.execute(`ALTER TABLE studentAccounts ADD COLUMN assignedClassId INT DEFAULT NULL`);
+          console.log('[Migration] OK: assignedClassId added to studentAccounts');
+        } catch (err: any) {
+          if (!err?.message?.includes('Duplicate column') && err?.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('[Migration] assignedClassId:', err?.message?.substring(0, 80));
+          }
+        }
       }
     } catch (err) {
       console.warn('[Migration] Could not run geo migration:', err);

@@ -210,6 +210,8 @@ export const studentAccounts = mysqlTable("studentAccounts", {
   accountType: mysqlEnum("accountType", ["student", "monitor", "external"]).notNull().default("student"),
   // Monitor-specific: name for display (monitors may not have a memberId)
   displayName: varchar("displayName", { length: 200 }),
+  // Monitor-specific: assigned class (turma) — monitors can only access their assigned class
+  assignedClassId: int("assignedClassId"),
   // Whether the account is verified/active
   isActive: int("isActive").notNull().default(1),
   // Session token for login persistence
