@@ -8,8 +8,10 @@ import {
   ArrowLeft, Gamepad2, Users, Trophy, Target, Zap, TrendingUp,
   Lock, Unlock, AlertTriangle, CheckCircle2, XCircle, Clock,
   MessageCircle, ChevronDown, ChevronUp, BarChart3, Star,
-  Shield, Eye, Send
+  Shield, Eye, Send, Skull, Swords, RotateCcw, Crown
 } from "lucide-react";
+import { BOSSES } from "@/components/game/BossBattle";
+import type { BossData } from "@/components/game/BossBattle";
 
 // Week titles (17 weeks)
 const WEEK_TITLES: Record<number, string> = {
@@ -43,7 +45,7 @@ const TURMAS = [
   { id: 32, name: "Nutrição Noturno" },
 ];
 
-type Tab = "overview" | "releases" | "students" | "reports";
+type Tab = "overview" | "releases" | "students" | "reports" | "bosses";
 
 export default function AdminGamePanel() {
   const [, setLocation] = useLocation();
@@ -61,6 +63,12 @@ export default function AdminGamePanel() {
   const { data: reports, refetch: refetchReports } = trpc.game.getErrorReports.useQuery({ classId, status: "all" });
   const { data: allQuests } = trpc.game.getAllQuests.useQuery();
   const { data: leaderboard } = trpc.game.getLeaderboard.useQuery({ classId, limit: 10 });
+  const { data: classMembers } = trpc.game.getMembersForClass.useQuery({ classId });
+  const { data: bossStats, refetch: refetchBossStats } = trpc.game.getAdminBossStats.useQuery({ classId });
+  const [selectedTestMemberId, setSelectedTestMemberId] = useState<number>(0);
+  const [expandedBossWeek, setExpandedBossWeek] = useState<number | null>(null);
+  const [previewBoss, setPreviewBoss] = useState<BossData | null>(null);
+  const resetBossMutation = trpc.game.resetBossBattle.useMutation();
 
   // Mutations
   const releaseMutation = trpc.game.releaseWeek.useMutation();
@@ -137,6 +145,7 @@ export default function AdminGamePanel() {
     { key: "releases" as const, label: "Liberação Semanal", icon: <Unlock size={16} /> },
     { key: "students" as const, label: "Evolução Alunos", icon: <Users size={16} /> },
     { key: "reports" as const, label: "Relatórios", icon: <AlertTriangle size={16} /> },
+    { key: "bosses" as const, label: "Boss Battles", icon: <Swords size={16} /> },
   ];
 
   return (
@@ -173,6 +182,33 @@ export default function AdminGamePanel() {
                 <option key={t.id} value={t.id} className="bg-gray-900">{t.name}</option>
               ))}
             </select>
+
+            {/* Botão Testar Jogo como Admin - com seletor de aluno real */}
+            <div className="flex items-center gap-1">
+              <select
+                value={selectedTestMemberId}
+                onChange={(e) => setSelectedTestMemberId(Number(e.target.value))}
+                className="px-2 py-1.5 rounded-lg bg-white/10 border border-purple-500/30 text-white text-xs max-w-[140px]"
+                title="Selecione um aluno para testar o jogo"
+              >
+                <option value={0} className="bg-gray-900">-- Selecionar aluno --</option>
+                {(classMembers || []).map((m: any) => (
+                  <option key={m.id} value={m.id} className="bg-gray-900">{m.name}</option>
+                ))}
+              </select>
+              <a
+                href={selectedTestMemberId > 0 ? `/game/avatar-select?adminView=true&memberId=${selectedTestMemberId}&classId=${classId}&memberName=${encodeURIComponent((classMembers || []).find((m: any) => m.id === selectedTestMemberId)?.name || 'Aluno')}` : '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { if (selectedTestMemberId === 0) { e.preventDefault(); alert('Selecione um aluno primeiro para testar o jogo.'); } }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all hover:opacity-80"
+                style={{ backgroundColor: selectedTestMemberId > 0 ? '#7c3aed' : '#4b5563' }}
+                title={selectedTestMemberId > 0 ? 'Abrir jogo como este aluno' : 'Selecione um aluno primeiro'}
+              >
+                <Eye size={14} />
+                <span className="hidden sm:inline">Testar</span>
+              </a>
+            </div>
 
             {/* Pending reports badge */}
             {(stats?.pendingReports || 0) > 0 && (
@@ -478,6 +514,19 @@ export default function AdminGamePanel() {
                             Último acesso: {new Date(student.lastPlayedAt).toLocaleString("pt-BR")}
                           </p>
                         )}
+                        {/* Botão admin: ver jogo como este aluno */}
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <a
+                            href={`/jogo/${classId}?adminView=true&memberId=${student.memberId}&memberName=${encodeURIComponent(student.memberName || 'Aluno')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all hover:opacity-80"
+                            style={{ backgroundColor: "#7c3aed" }}
+                          >
+                            <Eye size={12} />
+                            Ver jogo como este aluno
+                          </a>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -612,6 +661,239 @@ export default function AdminGamePanel() {
                       Marcar Revisado
                     </Button>
                   </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
+        {/* ═══ BOSS BATTLES TAB ═══ */}
+        {activeTab === "bosses" && (
+          <div className="space-y-4">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-gradient-to-br from-red-500/10 to-red-900/10 border border-red-500/20 rounded-xl p-4 text-center">
+                <Skull size={24} className="mx-auto mb-2 text-red-400" />
+                <p className="text-2xl font-bold text-red-400">
+                  {(bossStats as any)?.weekStats?.reduce((sum: number, w: any) => sum + w.totalAttempts, 0) || 0}
+                </p>
+                <p className="text-xs text-gray-400">Total Tentativas</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-900/10 border border-emerald-500/20 rounded-xl p-4 text-center">
+                <Trophy size={24} className="mx-auto mb-2 text-emerald-400" />
+                <p className="text-2xl font-bold text-emerald-400">
+                  {(bossStats as any)?.weekStats?.reduce((sum: number, w: any) => sum + w.totalVictories, 0) || 0}
+                </p>
+                <p className="text-xs text-gray-400">Total Vitórias</p>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500/10 to-purple-900/10 border border-purple-500/20 rounded-xl p-4 text-center">
+                <Users size={24} className="mx-auto mb-2 text-purple-400" />
+                <p className="text-2xl font-bold text-purple-400">
+                  {(bossStats as any)?.weekStats?.reduce((sum: number, w: any) => sum + w.uniqueVictors, 0) || 0}
+                </p>
+                <p className="text-xs text-gray-400">Alunos Vitoriosos</p>
+              </div>
+              <div className="bg-gradient-to-br from-amber-500/10 to-amber-900/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                <Swords size={24} className="mx-auto mb-2 text-amber-400" />
+                <p className="text-2xl font-bold text-amber-400">
+                  {(bossStats as any)?.weekStats?.filter((w: any) => w.totalVictories > 0).length || 0}/17
+                </p>
+                <p className="text-xs text-gray-400">Bosses Derrotados</p>
+              </div>
+            </div>
+
+            {/* Boss List */}
+            {BOSSES.map((boss) => {
+              const weekStat = ((bossStats as any)?.weekStats || []).find((w: any) => w.weekNumber === boss.weekNumber);
+              const isExpanded = expandedBossWeek === boss.weekNumber;
+              const hasActivity = weekStat && weekStat.totalAttempts > 0;
+
+              return (
+                <div key={boss.id} className={`border rounded-xl overflow-hidden transition-all ${
+                  hasActivity
+                    ? weekStat.uniqueVictors > 0
+                      ? "bg-emerald-500/5 border-emerald-500/20"
+                      : "bg-amber-500/5 border-amber-500/20"
+                    : "bg-white/5 border-white/10"
+                }`}>
+                  {/* Boss Header */}
+                  <button
+                    onClick={() => setExpandedBossWeek(isExpanded ? null : boss.weekNumber)}
+                    className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="text-3xl">{boss.emoji}</div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">Sem. {boss.weekNumber}</span>
+                        <span className="text-sm text-gray-300">{boss.name}</span>
+                        {weekStat && weekStat.uniqueVictors > 0 && (
+                          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">Derrotado</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">{boss.title}</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-white">{weekStat?.totalAttempts || 0}</p>
+                        <p>Tentativas</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-emerald-400">{weekStat?.totalVictories || 0}</p>
+                        <p>Vitórias</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-red-400">{weekStat?.totalDefeats || 0}</p>
+                        <p>Derrotas</p>
+                      </div>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </button>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="border-t border-white/10 p-4 space-y-4">
+                      {/* Boss Info */}
+                      <div className="flex items-center gap-4 bg-white/5 rounded-lg p-3">
+                        {boss.imageUrl && (
+                          <img src={boss.imageUrl} alt={boss.name} className="w-16 h-16 rounded-lg object-cover" />
+                        )}
+                        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                          <div><span className="text-gray-400">HP Boss:</span> <span className="font-bold text-red-400">{boss.hp}</span></div>
+                          <div><span className="text-gray-400">HP Jogador:</span> <span className="font-bold text-emerald-400">{boss.playerHp}</span></div>
+                          <div><span className="text-gray-400">Recompensa PF:</span> <span className="font-bold text-amber-400">{boss.pfReward}</span></div>
+                          <div><span className="text-gray-400">Recompensa XP:</span> <span className="font-bold text-purple-400">{boss.xpReward}</span></div>
+                          <div><span className="text-gray-400">Fases:</span> <span className="font-bold">{boss.phases.length}</span></div>
+                          <div><span className="text-gray-400">Perguntas:</span> <span className="font-bold">{boss.phases.reduce((sum, p) => sum + p.questions.length, 0)}</span></div>
+                          <div><span className="text-gray-400">Tempo Médio:</span> <span className="font-bold">{weekStat?.avgTimeSpent ? `${weekStat.avgTimeSpent}s` : "--"}</span></div>
+                          <div><span className="text-gray-400">Combo Médio:</span> <span className="font-bold">{weekStat?.avgCombo || "--"}</span></div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPreviewBoss(boss)}
+                          className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                        >
+                          <Eye size={12} className="mr-1" /> Ver Perguntas
+                        </Button>
+                      </div>
+
+                      {/* Player Attempts Table */}
+                      {weekStat && weekStat.playerAttempts.length > 0 ? (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <Users size={14} /> Tentativas dos Alunos ({weekStat.playerAttempts.length})
+                          </h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-gray-400 border-b border-white/10">
+                                  <th className="text-left py-2 px-2">Aluno</th>
+                                  <th className="text-center py-2 px-2">Status</th>
+                                  <th className="text-center py-2 px-2">Tentativas</th>
+                                  <th className="text-center py-2 px-2">Dano</th>
+                                  <th className="text-center py-2 px-2">Combo</th>
+                                  <th className="text-center py-2 px-2">Tempo</th>
+                                  <th className="text-center py-2 px-2">PF</th>
+                                  <th className="text-center py-2 px-2">Ações</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {weekStat.playerAttempts.map((pa: any) => (
+                                  <tr key={pa.memberId} className="border-b border-white/5 hover:bg-white/5">
+                                    <td className="py-2 px-2 font-medium">{pa.memberName}</td>
+                                    <td className="py-2 px-2 text-center">
+                                      {pa.won
+                                        ? <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full">Venceu</span>
+                                        : <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full">Derrotado</span>
+                                      }
+                                    </td>
+                                    <td className="py-2 px-2 text-center">{pa.attempts}</td>
+                                    <td className="py-2 px-2 text-center text-amber-400">{pa.bestDamage}</td>
+                                    <td className="py-2 px-2 text-center text-purple-400">{pa.bestCombo}x</td>
+                                    <td className="py-2 px-2 text-center">{pa.bestTime}s</td>
+                                    <td className="py-2 px-2 text-center text-amber-400">+{pa.pfEarned}</td>
+                                    <td className="py-2 px-2 text-center">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={async () => {
+                                          try {
+                                            await resetBossMutation.mutateAsync({
+                                              classId,
+                                              memberId: pa.memberId,
+                                              weekNumber: boss.weekNumber,
+                                            });
+                                            toast.success(`Boss resetado para ${pa.memberName}`);
+                                            refetchBossStats();
+                                          } catch {
+                                            toast.error("Erro ao resetar boss");
+                                          }
+                                        }}
+                                        className="text-xs text-amber-400 hover:text-amber-300"
+                                      >
+                                        <RotateCcw size={12} className="mr-1" /> Resetar
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500">
+                          <Skull size={32} className="mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">Nenhum aluno enfrentou este boss ainda</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Boss Preview Dialog */}
+            <Dialog open={previewBoss !== null} onOpenChange={() => setPreviewBoss(null)}>
+              <DialogContent className="bg-[#111638] border-purple-500/20 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <span className="text-2xl">{previewBoss?.emoji}</span>
+                    {previewBoss?.name} — {previewBoss?.title}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {previewBoss?.phases.map((phase, pi) => (
+                    <div key={pi} className="bg-white/5 rounded-lg p-4">
+                      <h4 className="font-bold text-sm mb-3 flex items-center gap-2">
+                        <Crown size={14} className="text-amber-400" />
+                        Fase {pi + 1}: {phase.name}
+                      </h4>
+                      <div className="space-y-3">
+                        {phase.questions.map((q, qi) => (
+                          <div key={qi} className="bg-white/5 rounded-lg p-3">
+                            <p className="text-sm font-medium mb-2">{qi + 1}. {q.question}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                              {q.alternatives.map((alt) => (
+                                <div
+                                  key={alt.id}
+                                  className={`text-xs px-2 py-1 rounded ${
+                                    alt.id === q.correctAnswer
+                                      ? "bg-emerald-500/20 text-emerald-400 font-bold"
+                                      : "bg-white/5 text-gray-400"
+                                  }`}
+                                >
+                                  {alt.id.toUpperCase()}) {alt.text}
+                                </div>
+                              ))}
+                            </div>
+                            {q.explanation && (
+                              <p className="text-xs text-gray-500 mt-2 italic">{q.explanation}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </DialogContent>
             </Dialog>

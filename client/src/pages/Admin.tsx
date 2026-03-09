@@ -23,7 +23,7 @@ import {
   FlaskConical, ArrowLeft, KeyRound, Bell, AlertTriangle, Clock,
   FileText, Link2, MessageSquare, Upload, Eye, EyeOff, Paperclip,
   Award, Star, Medal, MapPin, CheckCircle, XCircle, UserCheck, Search, Download,
-  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2, User, GraduationCap, BookOpen, History
+  Youtube, Play, Video, GripVertical, Target, LogIn, Calendar, Shuffle, QrCode, Gamepad2, User, GraduationCap, BookOpen, History, Loader2
 } from "lucide-react";
 
 // ─── Login Screen ───
@@ -421,11 +421,39 @@ function BulkXPManager({ password }: { password: string }) {
 }
 
 // ─── Activities Manager ───
+// Tabela de referência das atividades do semestre
+const SEMESTER_ACTIVITIES_REF = [
+  { category: "Participação", name: "Participação em Aula", icon: "📚", maxPF: 5, description: "Presença ativa e contribuições em aula" },
+  { category: "Frequência", name: "Frequência Semanal", icon: "✅", maxPF: 2, description: "Presença registrada via QR Code" },
+  { category: "TBL", name: "TBL 1 — Farmacocinética 2", icon: "🧠", maxPF: 10, description: "Semana 2 — Metabolismo e Excreção" },
+  { category: "TBL", name: "TBL 2 — Boas Práticas de Prescrição", icon: "🧠", maxPF: 10, description: "Semana 4 — Prescrição Racional" },
+  { category: "TBL", name: "TBL 3 — Adrenérgicos", icon: "🧠", maxPF: 10, description: "Semana 9 — SNA Adrenérgico" },
+  { category: "TBL", name: "TBL 4 — AINEs e Corticoides", icon: "🧠", maxPF: 10, description: "Semana 11 — Anti-inflamatórios" },
+  { category: "Caso Clínico", name: "Caso Clínico 1 — Farmacodinâmica", icon: "🏥", maxPF: 8, description: "Semana 3 — Receptores e Mecanismos" },
+  { category: "Caso Clínico", name: "Caso Clínico 2 — SNA Colinergía", icon: "🏥", maxPF: 8, description: "Semana 5 — Transmissão Colinérgica" },
+  { category: "Caso Clínico", name: "Caso Clínico 3 — Anti-adrenérgicos", icon: "🏥", maxPF: 8, description: "Semana 10 — Bloqueadores Adrenérgicos" },
+  { category: "Caso Clínico", name: "Caso Clínico 4 — Anti-histamínicos", icon: "🏥", maxPF: 8, description: "Semana 13 — Receptores H1 e H2" },
+  { category: "Jigsaw", name: "Seminário Jigsaw — Fase 1 (Especialistas)", icon: "🧪", maxPF: 7, description: "Apresentação (0-5) + Participação (0-2)" },
+  { category: "Jigsaw", name: "Seminário Jigsaw — Fase 2 (Mosaico)", icon: "🧪", maxPF: 12, description: "Apresentação (0-5) + Participação (0-2) + Pares (0-5)" },
+  { category: "Jogo", name: "Jogo Semanal — Missões", icon: "🎮", maxPF: 5, description: "Missões semanais liberadas toda terça-feira" },
+  { category: "Escape Room", name: "Escape Room Farmacológico", icon: "🔓", maxPF: 15, description: "Semana 8 — Atividade em equipe" },
+  { category: "Prova", name: "Prova P1", icon: "📝", maxPF: 30, description: "Semana 8 — Farmacocinética até Colinergía" },
+  { category: "Prova", name: "Prova P2", icon: "📝", maxPF: 30, description: "Semana 15 — Adrenérgicos até Anti-histamínicos" },
+  { category: "Prova", name: "Prova Final", icon: "🏆", maxPF: 40, description: "Semana 17 — Conteúdo completo do semestre" },
+];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Participação": "#10b981", "Frequência": "#06b6d4", "TBL": "#6366f1",
+  "Caso Clínico": "#f59e0b", "Jigsaw": "#a855f7", "Jogo": "#ec4899",
+  "Escape Room": "#f97316", "Prova": "#ef4444",
+};
+
 function ActivitiesManager({ password }: { password: string }) {
   const { data: leaderboard } = trpc.leaderboard.getData.useQuery();
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("🎯");
   const [newMaxXP, setNewMaxXP] = useState("1");
+  const [showRef, setShowRef] = useState(true);
   const utils = trpc.useUtils();
 
   const createActivity = trpc.activities.create.useMutation({
@@ -436,26 +464,87 @@ function ActivitiesManager({ password }: { password: string }) {
       setNewMaxXP("1");
       utils.leaderboard.getData.invalidate();
     },
-    onError: (error) => {
-      toast.error(`Erro: ${error.message}`);
-    },
+    onError: (error) => { toast.error(`Erro: ${error.message}`); },
   });
-  
+
+  const importDefault = trpc.activities.importDefault.useMutation({
+    onSuccess: (data) => {
+      toast.success(`✅ ${data.created} atividades importadas! (${data.total} no total do semestre)`);
+      utils.leaderboard.getData.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const deleteActivity = trpc.activities.delete.useMutation({
     onSuccess: () => {
       toast.success("Atividade removida com sucesso!");
       utils.leaderboard.getData.invalidate();
     },
-    onError: (error) => {
-      toast.error(`Erro: ${error.message}`);
-    },
+    onError: (error) => { toast.error(`Erro: ${error.message}`); },
   });
+
+  const totalMaxPF = SEMESTER_ACTIVITIES_REF.reduce((s, a) => s + a.maxPF, 0);
 
   return (
     <div className="space-y-4">
+      {/* Tabela de referência das atividades do semestre */}
+      <div className="border border-border rounded-lg overflow-hidden" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h3 className="font-display font-semibold text-sm text-foreground flex items-center gap-2">
+            <Trophy size={16} className="text-primary" /> Atividades do Semestre — Distribuição de PF
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-primary">Total máx: {totalMaxPF} PF</span>
+            <button onClick={() => setShowRef(!showRef)} className="text-xs text-muted-foreground hover:text-foreground">
+              {showRef ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          </div>
+        </div>
+        {showRef && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Atividade</th>
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Categoria</th>
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Descrição</th>
+                  <th className="text-right px-3 py-2 text-muted-foreground font-medium">PF Máx</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SEMESTER_ACTIVITIES_REF.map((act, i) => (
+                  <tr key={i} className="border-b border-border/40 hover:bg-secondary/20">
+                    <td className="px-3 py-2 font-medium text-foreground">{act.icon} {act.name}</td>
+                    <td className="px-3 py-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ backgroundColor: (CATEGORY_COLORS[act.category] || "#6366f1") + "22", color: CATEGORY_COLORS[act.category] || "#6366f1" }}>{act.category}</span>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{act.description}</td>
+                    <td className="px-3 py-2 text-right font-mono font-bold" style={{ color: CATEGORY_COLORS[act.category] || "#6366f1" }}>+{act.maxPF}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {showRef && (
+          <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Clique em "Importar" para adicionar todas as atividades ao sistema de PF.</p>
+            <button
+              onClick={() => { if (confirm("Importar todas as atividades padrão do semestre?")) importDefault.mutate({ password }); }}
+              disabled={importDefault.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+            >
+              {importDefault.isPending ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+              Importar Atividades Padrão
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Formulário de nova atividade */}
       <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <h3 className="font-display font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-          <Plus size={16} className="text-primary" /> Nova Atividade
+          <Plus size={16} className="text-primary" /> Nova Atividade Personalizada
         </h3>
         <div className="flex gap-2 flex-wrap">
           <input value={newIcon} onChange={e => setNewIcon(e.target.value)} className="w-12 px-2 py-2 rounded-md bg-secondary border border-border text-foreground text-center text-sm" />
@@ -465,17 +554,19 @@ function ActivitiesManager({ password }: { password: string }) {
         </div>
       </div>
 
+      {/* Lista de atividades cadastradas */}
       <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-foreground">Atividades Cadastradas no Sistema</h3>
         {leaderboard?.activities.map(act => (
           <div key={act.id} className="border border-border rounded-lg p-3 flex items-center gap-3" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
             <span className="text-xl">{act.icon}</span>
             <span className="flex-1 text-sm text-foreground font-medium">{act.name}</span>
-            <span className="font-mono text-sm text-primary font-bold">+{act.maxXP}</span>
+            <span className="font-mono text-sm text-primary font-bold">+{act.maxXP} PF</span>
             <button onClick={() => { if (confirm(`Remover "${act.name}"?`)) deleteActivity.mutate({ password, id: act.id }); }} disabled={deleteActivity.isPending} className="p-1.5 rounded hover:bg-destructive/20 text-destructive disabled:opacity-50"><Trash2 size={14} /></button>
           </div>
         ))}
         {(!leaderboard?.activities || leaderboard.activities.length === 0) && (
-          <p className="text-sm text-muted-foreground text-center py-4">Nenhuma atividade cadastrada</p>
+          <p className="text-sm text-muted-foreground text-center py-4">Nenhuma atividade cadastrada. Use o botão "Importar Atividades Padrão" acima.</p>
         )}
       </div>
     </div>
@@ -491,6 +582,8 @@ function HighlightsManager({ password }: { password: string }) {
   const [description, setDescription] = useState("");
   const [topTeam, setTopTeam] = useState("");
   const [topStudent, setTopStudent] = useState("");
+  const [autoClassId, setAutoClassId] = useState<number | undefined>(undefined);
+  const { data: classesList = [] } = trpc.classes.listAll.useQuery();
   const utils = trpc.useUtils();
 
   const createHighlight = trpc.highlights.create.useMutation({
@@ -501,15 +594,50 @@ function HighlightsManager({ password }: { password: string }) {
     },
   });
 
+  const autoGenerate = trpc.highlights.autoGenerate.useMutation({
+    onSuccess: (data) => {
+      utils.leaderboard.getData.invalidate();
+      toast.success(`✨ Destaque gerado! Aluno destaque: ${data.topStudent}`);
+      setWeek(""); setDate(""); setActivity("");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const deleteHighlight = trpc.highlights.delete.useMutation({
     onSuccess: () => { utils.leaderboard.getData.invalidate(); toast.success("Destaque removido!"); },
   });
 
   return (
     <div className="space-y-4">
+      {/* Auto-geração por somatório de pontos */}
+      <div className="border border-emerald-500/30 rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-2 flex items-center gap-2">
+          <Zap size={16} className="text-emerald-400" /> Gerar Destaque Automático por Somatório de PF
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3">Identifica automaticamente o aluno e equipe com maior somatório de pontos (PF) na plataforma.</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <input value={week} onChange={e => setWeek(e.target.value)} type="number" className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Semana (1-16)" />
+          <input value={date} onChange={e => setDate(e.target.value)} className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Data (ex: 10/03/2026)" />
+          <input value={activity} onChange={e => setActivity(e.target.value)} className="col-span-2 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Atividade (ex: TBL, Jigsaw, Semana 1...)" />
+          <select value={autoClassId ?? ""} onChange={e => setAutoClassId(e.target.value ? Number(e.target.value) : undefined)} className="col-span-2 px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm">
+            <option value="">Todas as turmas</option>
+            {(classesList as any[]).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <button
+          onClick={() => autoGenerate.mutate({ password, week: parseInt(week), date, activity, classId: autoClassId })}
+          disabled={!week || !date || !activity || autoGenerate.isPending}
+          className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+        >
+          {autoGenerate.isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+          Gerar Destaque Automático
+        </button>
+      </div>
+
+      {/* Formulário manual */}
       <div className="border border-border rounded-lg p-4" style={{ backgroundColor: "oklch(0.195 0.03 264.052)" }}>
         <h3 className="font-display font-semibold text-sm text-foreground mb-3 flex items-center gap-2">
-          <Plus size={16} className="text-primary" /> Novo Destaque Semanal
+          <Plus size={16} className="text-primary" /> Novo Destaque Manual
         </h3>
         <div className="grid grid-cols-2 gap-2">
           <input value={week} onChange={e => setWeek(e.target.value)} type="number" className="px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm" placeholder="Semana (1-16)" />
@@ -2664,10 +2792,11 @@ function AttendanceManager({ password }: { password: string }) {
   const [manualMemberId, setManualMemberId] = useState("");
   const [manualNote, setManualNote] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [selectedClassId, setSelectedClassId] = useState<number | undefined>(undefined);
+  const { data: classesList = [] } = trpc.classes.listAll.useQuery();
   const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = trpc.attendanceOld.getSummary.useQuery(
-    { password }, { enabled: viewMode === "summary" }
-  );
+    { password, classId: selectedClassId }, { enabled: viewMode === "summary" }
+  );;
   const { data: weeklyData, isLoading: weeklyLoading, refetch: refetchWeekly } = trpc.attendanceOld.getByWeek.useQuery(
     { password, week: selectedWeek }, { enabled: viewMode === "weekly" }
   );
@@ -2781,6 +2910,24 @@ function AttendanceManager({ password }: { password: string }) {
             <Download size={14} /> PDF
           </button>
         </div>
+      </div>
+
+      {/* Seletor de Turma */}
+      <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-secondary/30 border border-border">
+        <span className="text-xs font-medium text-muted-foreground">Filtrar por turma:</span>
+        <select
+          value={selectedClassId ?? ""}
+          onChange={e => setSelectedClassId(e.target.value ? Number(e.target.value) : undefined)}
+          className="flex-1 max-w-xs px-3 py-1.5 rounded-md bg-background border border-border text-foreground text-xs"
+        >
+          <option value="">Todas as turmas</option>
+          {(classesList as any[]).map((c: any) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        {selectedClassId && (
+          <button onClick={() => setSelectedClassId(undefined)} className="text-xs text-muted-foreground hover:text-foreground">Limpar filtro</button>
+        )}
       </div>
 
       {/* View Mode Tabs */}

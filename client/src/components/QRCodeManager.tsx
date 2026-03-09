@@ -4,8 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-import { QrCode, Trash2, ToggleLeft, ToggleRight, Download } from "lucide-react";
+import { QrCode, Trash2, ToggleLeft, ToggleRight, Download, MapPin, Shield } from "lucide-react";
 import QRCode from "qrcode";
+
+// Localização padrão: UNIRIO - Instituto Biomédico, Rua Frei Caneca 94, Centro, RJ
+const DEFAULT_LAT = -22.9105064;
+const DEFAULT_LNG = -43.1925053;
+const DEFAULT_RADIUS = 150; // metros
 
 const DAYS_OF_WEEK = [
   { value: 0, label: "Domingo" },
@@ -29,6 +34,8 @@ export default function QRCodeManager({ classId }: QRCodeManagerProps) {
   const [loading, setLoading] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [showQRPreview, setShowQRPreview] = useState(false);
+  const [geoEnabled, setGeoEnabled] = useState(true);
+  const [geoRadius, setGeoRadius] = useState(DEFAULT_RADIUS);
 
   // Queries e mutations
   const { data: sessions, refetch } = trpc.qrcode.getSessionsByClass.useQuery(
@@ -105,6 +112,10 @@ export default function QRCodeManager({ classId }: QRCodeManagerProps) {
         dayOfWeek,
         startTime,
         endTime,
+        geoLatitude: DEFAULT_LAT,
+        geoLongitude: DEFAULT_LNG,
+        geoRadiusMeters: geoRadius,
+        geoValidationEnabled: geoEnabled,
       });
     } finally {
       setLoading(false);
@@ -187,6 +198,54 @@ export default function QRCodeManager({ classId }: QRCodeManagerProps) {
             >
               {loading ? "Gerando..." : "Gerar QR Code"}
             </Button>
+          </div>
+        </div>
+
+        {/* Configuração de Validação GPS */}
+        <div className="mt-6 p-4 rounded-lg border border-border bg-background">
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin size={18} className="text-primary" />
+            <h4 className="font-semibold text-foreground">Validação Geográfica (GPS)</h4>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Quando ativada, os alunos só podem registrar presença se estiverem fisicamente no local da aula (UNIRIO - Frei Caneca 94).
+          </p>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={geoEnabled}
+                onChange={(e) => setGeoEnabled(e.target.checked)}
+                className="w-4 h-4 rounded border-border"
+              />
+              <span className="text-sm text-foreground">
+                {geoEnabled ? (
+                  <span className="flex items-center gap-1">
+                    <Shield size={14} className="text-green-500" />
+                    GPS Ativado
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">GPS Desativado</span>
+                )}
+              </span>
+            </label>
+            {geoEnabled && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground">Raio:</label>
+                <select
+                  value={geoRadius}
+                  onChange={(e) => setGeoRadius(Number(e.target.value))}
+                  className="px-2 py-1 text-xs border border-border rounded bg-background text-foreground"
+                >
+                  <option value={50}>50m</option>
+                  <option value={100}>100m</option>
+                  <option value={150}>150m (padrão)</option>
+                  <option value={200}>200m</option>
+                  <option value={300}>300m</option>
+                  <option value={500}>500m</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </Card>

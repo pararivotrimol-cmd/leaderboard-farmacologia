@@ -6,7 +6,92 @@ import {
 } from "lucide-react";
 
 // ═══════════════════════════════════════
-// BOSS DATA - 10 bosses, 1 per week
+// HERO AVATAR IMAGES
+// ═══════════════════════════════════════
+const HERO_IMAGES = {
+  idle: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/kwzBmmnYSpOpUuWI.png",
+  attack: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/geTmiCzwyIxiizrk.png",
+  defeated: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/qTmvMkatpNAucyRM.png",
+};
+
+const BATTLE_SCENES = {
+  victory: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/vaNACrYrOCYvaVZD.png",
+  defeat: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/mnlOkwxnLBBFRuFl.png",
+};
+
+// Fallback videos (generic) - used for bosses 10-17 until specific videos are generated
+const BATTLE_VIDEOS_FALLBACK = {
+  victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/IKwJEQhKZqDkdtVJ.mp4",
+  victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/IKwJEQhKZqDkdtVJ.mp4",
+  defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/BLrSVgfJWgCNUCif.mp4",
+  defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/BLrSVgfJWgCNUCif.mp4",
+};
+
+// Per-boss videos with gender variants (bosses 1-9 complete, 10-17 use fallback)
+const BOSS_VIDEOS: Record<number, { victory_male: string; victory_female: string; defeat_male: string; defeat_female: string }> = {
+  1: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/gVvPDieekXASsBPa.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/IBRXmtOIwFbRNeDo.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/rtbwIHSyjoKHwbhL.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/KQwqrReJstTwKHRJ.mp4",
+  },
+  2: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/JdKjWQFMsAklXiki.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/UcKaEhuQMcwqtqhV.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/JCEhYscCjvwKdrvJ.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/IwrBToEyoJegMOQX.mp4",
+  },
+  3: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/gIqhXqNYfmkRbkqE.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/OSsODTTyIaePMyML.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/gidyvyrLaQGuRqjH.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/oktcAbfUxDZAtSrB.mp4",
+  },
+  4: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/bsxtJuHdqgVKCspX.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/fiJgsLlZYkyxOSjO.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/tyMBmWXGtgTFJNmX.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/NOnOlblMuodmmEmq.mp4",
+  },
+  5: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/BArJDzgHpdSvJjfa.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/RwauQkvXzXTXPerX.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/CezIDuEbkLkoxymM.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/cQFZHFzjYSlucHwi.mp4",
+  },
+  6: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/AJuhomYSWDJuXmJP.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/xOBtNOZJNgSiiSNe.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/BdxLJVWVPzRekyqV.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/hiIHajUFyeAKCwQF.mp4",
+  },
+  7: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/kYiflbwmpvXhmIua.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/xRCaEcDKctkJLPfy.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/ynqvzDjnlIfftIrR.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/xLlDvwNzaxsxEXQs.mp4",
+  },
+  8: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/NkySISvKfUKkCAwe.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/OYUiwmyfbwueAoEh.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/TfciSQskYaZOnwfi.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/YRUBfzcbQpzuzvbF.mp4",
+  },
+  9: {
+    victory_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/CGPBgvjrbYfbewfm.mp4",
+    victory_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/cmBtYgGNeYXFYcbs.mp4",
+    defeat_male: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/TGNjrnSQLOLnjOCq.mp4",
+    defeat_female: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663038327412/OsFqLdYljSqGvKtx.mp4",
+  },
+};
+
+function getBossVideo(bossId: number, type: "victory" | "defeat", gender: "male" | "female"): string {
+  const key = `${type}_${gender}` as keyof typeof BATTLE_VIDEOS_FALLBACK;
+  return BOSS_VIDEOS[bossId]?.[key] ?? BATTLE_VIDEOS_FALLBACK[key];
+}
+
+// ═══════════════════════════════════════
+// BOSS DATA - 17 bosses, 1 per week
 // ═══════════════════════════════════════
 
 interface BossQuestion {
@@ -311,12 +396,153 @@ const BOSSES: BossData[] = [
   },
 ];
 
+
+// ═══════════════════════════════════════
+// CSS ANIMATIONS - Caverna do Dragão Style
+// ═══════════════════════════════════════
+const BATTLE_STYLES = `
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+  .animate-shake { animation: shake 0.3s ease-in-out; }
+  @keyframes damageFlash { 0%{opacity:0} 50%{opacity:0.3} 100%{opacity:0} }
+  .damage-flash { animation: damageFlash 0.4s ease-out; }
+
+  @keyframes heroSlash {
+    0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+    30% { transform: translateX(80px) rotate(15deg); opacity: 1; }
+    50% { transform: translateX(120px) rotate(-10deg) scale(1.2); opacity: 1; }
+    70% { transform: translateX(80px) rotate(5deg); opacity: 1; }
+    100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  }
+  .hero-slash { animation: heroSlash 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+  @keyframes bossHit {
+    0% { transform: translateX(0) scale(1); filter: brightness(1); }
+    20% { transform: translateX(15px) scale(0.95); filter: brightness(2) saturate(0); }
+    40% { transform: translateX(-10px) scale(1.05); filter: brightness(1.5); }
+    60% { transform: translateX(5px) scale(0.98); filter: brightness(1.2); }
+    100% { transform: translateX(0) scale(1); filter: brightness(1); }
+  }
+  .boss-hit { animation: bossHit 0.6s ease-out; }
+
+  @keyframes bossAttack {
+    0% { transform: translateX(0) scale(1); }
+    20% { transform: translateX(-30px) scale(1.1); }
+    40% { transform: translateX(-100px) scale(1.2); }
+    60% { transform: translateX(-60px) scale(1.1); }
+    100% { transform: translateX(0) scale(1); }
+  }
+  .boss-attack { animation: bossAttack 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+  @keyframes playerHit {
+    0% { transform: translateX(0) scale(1); filter: brightness(1); }
+    20% { transform: translateX(-20px) scale(0.9); filter: brightness(2) hue-rotate(340deg); }
+    50% { transform: translateX(10px) scale(0.95); filter: brightness(1.3); }
+    100% { transform: translateX(0) scale(1); filter: brightness(1); }
+  }
+  .player-hit { animation: playerHit 0.5s ease-out; }
+
+  @keyframes swordSlash {
+    0% { transform: rotate(-45deg) scale(0); opacity: 0; }
+    30% { transform: rotate(15deg) scale(1.5); opacity: 1; }
+    60% { transform: rotate(45deg) scale(1.2); opacity: 0.8; }
+    100% { transform: rotate(90deg) scale(0); opacity: 0; }
+  }
+  .sword-slash { animation: swordSlash 0.5s ease-out forwards; }
+
+  @keyframes explosionBurst {
+    0% { transform: scale(0); opacity: 1; }
+    50% { transform: scale(2); opacity: 0.8; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+  .explosion-burst { animation: explosionBurst 0.6s ease-out forwards; }
+
+  @keyframes victoryGlow {
+    0% { box-shadow: 0 0 0 rgba(234,179,8,0); }
+    50% { box-shadow: 0 0 80px rgba(234,179,8,0.6), 0 0 120px rgba(234,179,8,0.3); }
+    100% { box-shadow: 0 0 40px rgba(234,179,8,0.3); }
+  }
+  .victory-glow { animation: victoryGlow 1.5s ease-in-out infinite; }
+
+  @keyframes defeatFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    30% { transform: translateY(-20px) rotate(-5deg); opacity: 1; }
+    70% { transform: translateY(40px) rotate(15deg); opacity: 0.7; }
+    100% { transform: translateY(80px) rotate(25deg); opacity: 0.3; }
+  }
+  .defeat-fall { animation: defeatFall 1.2s ease-in forwards; }
+
+  @keyframes bossDefeat {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+    20% { transform: scale(1.1) rotate(-3deg); opacity: 1; filter: brightness(2); }
+    40% { transform: scale(0.9) rotate(5deg); opacity: 0.8; filter: brightness(1.5) saturate(0.5); }
+    60% { transform: scale(0.7) rotate(-8deg); opacity: 0.6; filter: brightness(1) saturate(0.2); }
+    80% { transform: scale(0.4) rotate(10deg); opacity: 0.3; filter: brightness(0.5) saturate(0); }
+    100% { transform: scale(0) rotate(15deg); opacity: 0; filter: brightness(0) saturate(0); }
+  }
+  .boss-defeat { animation: bossDefeat 1.5s ease-in forwards; }
+
+  @keyframes bossVictory {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.15) translateY(-5px); }
+    50% { transform: scale(1.1); }
+    75% { transform: scale(1.2) translateY(-8px); }
+    100% { transform: scale(1.15); }
+  }
+  .boss-victory { animation: bossVictory 1s ease-in-out infinite; }
+
+  @keyframes heroVictory {
+    0% { transform: scale(1) translateY(0); }
+    30% { transform: scale(1.2) translateY(-15px); }
+    60% { transform: scale(1.15) translateY(-10px); }
+    100% { transform: scale(1.25) translateY(-20px); }
+  }
+  .hero-victory { animation: heroVictory 1s ease-out forwards; }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  }
+
+  @keyframes battleIntro {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .battle-intro { animation: battleIntro 0.8s ease-out; }
+
+  @keyframes slideInLeft {
+    0% { transform: translateX(-200px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  .slide-in-left { animation: slideInLeft 0.6s ease-out; }
+
+  @keyframes slideInRight {
+    0% { transform: translateX(200px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  .slide-in-right { animation: slideInRight 0.6s ease-out; }
+
+  @keyframes gameOverText {
+    0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+    50% { transform: scale(1.3) rotate(3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .game-over-text { animation: gameOverText 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes pulseRed {
+    0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+    50% { background-color: rgba(239, 68, 68, 0.25); }
+  }
+  .pulse-red { animation: pulseRed 1s ease-in-out infinite; }
+`;
+
 // ═══════════════════════════════════════
 // BOSS BATTLE COMPONENT
 // ═══════════════════════════════════════
 
 export interface BossBattleProps {
   weekNumber: number;
+  gender?: "male" | "female";
   onComplete: (result: {
     isVictory: boolean;
     bossName: string;
@@ -332,7 +558,7 @@ export interface BossBattleProps {
   onBack: () => void;
 }
 
-export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattleProps) {
+export default function BossBattle({ weekNumber, gender = "male", onComplete, onBack }: BossBattleProps) {
   const boss = useMemo(() => BOSSES.find(b => b.weekNumber === weekNumber), [weekNumber]);
   
   const [phase, setPhase] = useState(0);
@@ -346,18 +572,30 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [timerActive, setTimerActive] = useState(true);
-  const [battleState, setBattleState] = useState<"fighting" | "victory" | "defeat">("fighting");
+  const [timerActive, setTimerActive] = useState(false);
+  const [battleState, setBattleState] = useState<"intro" | "fighting" | "hero-attack" | "boss-attack" | "victory-anim" | "victory" | "defeat-anim" | "defeat">("intro");
   const [startTime] = useState(Date.now());
   const [shakeScreen, setShakeScreen] = useState(false);
   const [flashDamage, setFlashDamage] = useState(false);
   const [phasesCompleted, setPhasesCompleted] = useState(0);
+  const [animPhase, setAnimPhase] = useState(0);
+
+  // Intro animation
+  useEffect(() => {
+    if (battleState === "intro") {
+      const t = setTimeout(() => {
+        setBattleState("fighting");
+        setTimerActive(true);
+      }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [battleState]);
 
   if (!boss) {
     return (
       <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center text-white">
         <div className="text-center">
-          <p className="text-xl">Boss não encontrado para a semana {weekNumber}</p>
+          <p className="text-xl">Boss nao encontrado para a semana {weekNumber}</p>
           <Button onClick={onBack} className="mt-4">Voltar</Button>
         </div>
       </div>
@@ -391,19 +629,29 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
     setShowFeedback(true);
     setCombo(0);
     
-    const bossDamage = 25;
-    const newPlayerHp = Math.max(0, playerHp - bossDamage);
-    setPlayerHp(newPlayerHp);
-    setShakeScreen(true);
-    setTimeout(() => setShakeScreen(false), 500);
-    
-    if (newPlayerHp <= 0) {
-      setBattleState("defeat");
-    }
+    // Boss attack animation
+    setBattleState("boss-attack");
+    setTimeout(() => {
+      const bossDamage = 25;
+      const newPlayerHp = Math.max(0, playerHp - bossDamage);
+      setPlayerHp(newPlayerHp);
+      setShakeScreen(true);
+      setTimeout(() => setShakeScreen(false), 500);
+      
+      if (newPlayerHp <= 0) {
+        setTimeout(() => {
+          setBattleState("defeat-anim");
+          // After video animation (20s), show defeat screen
+          setTimeout(() => setBattleState("defeat"), 21000);
+        }, 500);
+      } else {
+        setBattleState("fighting");
+      }
+    }, 700);
   }, [playerHp]);
 
   const handleAnswer = (answerId: string) => {
-    if (showFeedback || !currentQuestion) return;
+    if (showFeedback || !currentQuestion || battleState !== "fighting") return;
     setTimerActive(false);
     setSelectedAnswer(answerId);
 
@@ -412,40 +660,56 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
     setShowFeedback(true);
 
     if (correct) {
-      const baseAttack = Math.floor(boss.hp / totalQuestions);
-      const comboBonus = Math.floor(baseAttack * combo * 0.15);
-      const timeBonus = Math.floor(timeLeft * 1.5);
-      const totalAttack = baseAttack + comboBonus + timeBonus;
-      
-      const newBossHp = Math.max(0, bossHp - totalAttack);
-      setBossHp(newBossHp);
-      setTotalDamage(prev => prev + totalAttack);
-      setCombo(prev => {
-        const newCombo = prev + 1;
-        setMaxCombo(mc => Math.max(mc, newCombo));
-        return newCombo;
-      });
-      setFlashDamage(true);
-      setTimeout(() => setFlashDamage(false), 400);
+      // Hero attack animation
+      setBattleState("hero-attack");
+      setTimeout(() => {
+        const baseAttack = Math.floor(boss.hp / totalQuestions);
+        const comboBonus = Math.floor(baseAttack * combo * 0.15);
+        const timeBonus = Math.floor(timeLeft * 1.5);
+        const totalAttack = baseAttack + comboBonus + timeBonus;
+        
+        const newBossHp = Math.max(0, bossHp - totalAttack);
+        setBossHp(newBossHp);
+        setTotalDamage(prev => prev + totalAttack);
+        setCombo(prev => {
+          const newCombo = prev + 1;
+          setMaxCombo(mc => Math.max(mc, newCombo));
+          return newCombo;
+        });
+        setFlashDamage(true);
+        setTimeout(() => setFlashDamage(false), 400);
+        setBattleState("fighting");
+      }, 800);
     } else {
-      const bossDamage = 20;
-      const newPlayerHp = Math.max(0, playerHp - bossDamage);
-      setPlayerHp(newPlayerHp);
-      setCombo(0);
-      setShakeScreen(true);
-      setTimeout(() => setShakeScreen(false), 500);
-      
-      if (newPlayerHp <= 0) {
-        setBattleState("defeat");
-        return;
-      }
+      // Boss counter-attack animation
+      setBattleState("boss-attack");
+      setTimeout(() => {
+        const bossDamage = 20;
+        const newPlayerHp = Math.max(0, playerHp - bossDamage);
+        setPlayerHp(newPlayerHp);
+        setCombo(0);
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 500);
+        
+        if (newPlayerHp <= 0) {
+          setTimeout(() => {
+            setBattleState("defeat-anim");
+            // After video animation (20s), show defeat screen
+            setTimeout(() => setBattleState("defeat"), 21000);
+          }, 500);
+        } else {
+          setBattleState("fighting");
+        }
+      }, 700);
     }
   };
 
   const handleNext = () => {
     if (bossHp <= 0) {
-      setBattleState("victory");
+      setBattleState("victory-anim");
       setPhasesCompleted(phase + 1);
+      // After video animation (20s), show victory screen
+      setTimeout(() => setBattleState("victory"), 21000);
       return;
     }
 
@@ -456,8 +720,11 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
       setPhase(prev => prev + 1);
       setQuestionIdx(0);
     } else {
-      setBattleState("defeat");
+      // All questions answered but boss not dead = defeat
+      setBattleState("defeat-anim");
       setPhasesCompleted(boss.phases.length);
+      // After video animation (20s), show defeat screen
+      setTimeout(() => setBattleState("defeat"), 21000);
       return;
     }
 
@@ -483,26 +750,124 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
     });
   };
 
+  const handleRetry = () => {
+    setPhase(0);
+    setQuestionIdx(0);
+    setBossHp(boss.hp);
+    setPlayerHp(boss.playerHp);
+    setCombo(0);
+    setMaxCombo(0);
+    setTotalDamage(0);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setTimeLeft(30);
+    setTimerActive(true);
+    setBattleState("fighting");
+    setPhasesCompleted(0);
+    setAnimPhase(0);
+  };
+
   // ═══════════════════════════════════════
-  // VICTORY SCREEN
+  // INTRO SCREEN - Caverna do Dragao Style
+  // ═══════════════════════════════════════
+  if (battleState === "intro") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a0a2e] to-[#0a0e27] text-white flex items-center justify-center p-4">
+        <style>{BATTLE_STYLES}</style>
+        <div className="max-w-lg w-full text-center space-y-8 battle-intro">
+          {/* Arena */}
+          <div className="relative flex items-center justify-center gap-12 h-56">
+            {/* Hero */}
+            <div className="slide-in-left">
+              <img src={HERO_IMAGES.idle} alt="Herói" className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
+              <p className="text-xs text-emerald-400 font-bold mt-2">HERÓI</p>
+            </div>
+
+            {/* VS */}
+            <div className="text-4xl font-black text-yellow-400 animate-pulse">
+              VS
+            </div>
+
+            {/* Boss */}
+            <div className="slide-in-right">
+              {boss.imageUrl ? (
+                <img src={boss.imageUrl} alt={boss.name} className="w-24 h-24 object-contain drop-shadow-[0_0_30px_rgba(239,68,68,0.5)]" />
+              ) : (
+                <div className="text-7xl drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]">{boss.emoji}</div>
+              )}
+              <p className="text-xs font-bold mt-2" style={{ color: boss.color }}>{boss.name}</p>
+            </div>
+          </div>
+
+          <div>
+            <h1 className="text-3xl font-black text-yellow-400 tracking-wider">BATALHA DE CHEFE</h1>
+            <p className="text-lg text-gray-300 mt-2">{boss.title}</p>
+            <p className="text-sm text-gray-500 mt-1">Semana {boss.weekNumber}</p>
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {["⚡", "🔥", "⚔️", "🔥", "⚡"].map((s, i) => (
+              <span key={i} className="text-2xl animate-bounce" style={{ animationDelay: `${i * 0.15}s` }}>
+                {s}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-sm text-gray-400 animate-pulse">Preparando batalha...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // VICTORY ANIMATION - Video: Hero defeats Boss
+  // ═══════════════════════════════════════
+  if (battleState === "victory-anim") {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <video
+          autoPlay
+          playsInline
+          muted={false}
+          className="w-full h-full object-contain"
+          onEnded={() => setBattleState("victory")}
+        >
+          <source src={getBossVideo(boss?.id ?? 1, "victory", gender)} type="video/mp4" />
+        </video>
+        {/* Skip button */}
+        <button
+          onClick={() => setBattleState("victory")}
+          className="absolute bottom-6 right-6 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-all border border-white/20"
+        >
+          Pular ▶▶
+        </button>
+        {/* Boss name overlay */}
+        <div className="absolute top-6 left-0 right-0 text-center">
+          <p className="text-yellow-400 text-2xl font-black tracking-wider drop-shadow-lg animate-pulse">
+            VITORIA!
+          </p>
+          <p className="text-white/80 text-sm mt-1">{boss.name} foi derrotado!</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // VICTORY SCREEN - Rewards
   // ═══════════════════════════════════════
   if (battleState === "victory") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1040] to-[#0a0e27] text-white flex items-center justify-center p-4">
+        <style>{BATTLE_STYLES}</style>
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="relative">
-            {boss.imageUrl ? (
-              <img src={boss.imageUrl} alt={boss.name} className="w-40 h-40 object-contain mx-auto mb-4 animate-bounce drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]" />
-            ) : (
-              <div className="text-8xl mb-4 animate-bounce">{boss.emoji}</div>
-            )}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-yellow-500/20 animate-ping" />
-            </div>
+          {/* Victory Scene Image */}
+          <div className="relative mx-auto rounded-2xl overflow-hidden border-2 border-yellow-500/30 shadow-[0_0_40px_rgba(234,179,8,0.3)]">
+            <img src={BATTLE_SCENES.victory} alt="Vitória!" className="w-full h-48 object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e27] via-transparent to-transparent" />
           </div>
           
           <div>
-            <h1 className="text-3xl font-extrabold text-yellow-400">VITÓRIA! 🏆</h1>
+            <h1 className="text-3xl font-extrabold text-yellow-400">VITORIA! 🏆</h1>
             <p className="text-lg text-gray-300 mt-2">{boss.name} foi derrotado!</p>
           </div>
 
@@ -516,12 +881,12 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               <div className="text-center">
                 <Star size={24} className="text-purple-400 mx-auto mb-1" />
                 <p className="text-2xl font-mono font-bold text-purple-400">+{boss.xpReward}</p>
-                <p className="text-xs text-gray-400">PF Ganhos</p>
+                <p className="text-xs text-gray-400">XP Ganhos</p>
               </div>
               <div className="text-center">
                 <Flame size={24} className="text-orange-400 mx-auto mb-1" />
                 <p className="text-2xl font-mono font-bold text-orange-400">{maxCombo}x</p>
-                <p className="text-xs text-gray-400">Combo Máximo</p>
+                <p className="text-xs text-gray-400">Combo Maximo</p>
               </div>
               <div className="text-center">
                 <Sword size={24} className="text-red-400 mx-auto mb-1" />
@@ -554,17 +919,51 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
   }
 
   // ═══════════════════════════════════════
-  // DEFEAT SCREEN
+  // DEFEAT ANIMATION - Video: Boss wins, Game Over
+  // ═══════════════════════════════════════
+  if (battleState === "defeat-anim") {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <video
+          autoPlay
+          playsInline
+          muted={false}
+          className="w-full h-full object-contain"
+          onEnded={() => setBattleState("defeat")}
+        >
+          <source src={getBossVideo(boss?.id ?? 1, "defeat", gender)} type="video/mp4" />
+        </video>
+        {/* Skip button */}
+        <button
+          onClick={() => setBattleState("defeat")}
+          className="absolute bottom-6 right-6 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-all border border-white/20"
+        >
+          Pular ▶▶
+        </button>
+        {/* Game Over overlay */}
+        <div className="absolute top-6 left-0 right-0 text-center">
+          <p className="text-red-500 text-3xl font-black tracking-widest drop-shadow-lg animate-pulse">
+            GAME OVER
+          </p>
+          <p className="text-white/80 text-sm mt-1">{boss.name} venceu esta batalha!</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // DEFEAT SCREEN - Try Again / Back to Map
   // ═══════════════════════════════════════
   if (battleState === "defeat") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#2a0a0a] to-[#0a0e27] text-white flex items-center justify-center p-4">
+        <style>{BATTLE_STYLES}</style>
         <div className="max-w-md w-full text-center space-y-6">
-          {boss.imageUrl ? (
-            <img src={boss.imageUrl} alt={boss.name} className="w-40 h-40 object-contain mx-auto mb-4 opacity-50 grayscale drop-shadow-[0_0_20px_rgba(239,68,68,0.3)]" />
-          ) : (
-            <div className="text-8xl mb-4 opacity-50">{boss.emoji}</div>
-          )}
+          {/* Defeat Scene Image */}
+          <div className="relative mx-auto rounded-2xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.3)]">
+            <img src={BATTLE_SCENES.defeat} alt="Derrota" className="w-full h-48 object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e27] via-transparent to-transparent" />
+          </div>
           
           <div>
             <h1 className="text-3xl font-extrabold text-red-400">DERROTA 💀</h1>
@@ -581,14 +980,14 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               <div className="text-center">
                 <Flame size={20} className="text-orange-400 mx-auto mb-1" />
                 <p className="text-xl font-mono font-bold text-orange-400">{maxCombo}x</p>
-                <p className="text-xs text-gray-400">Combo Máximo</p>
+                <p className="text-xs text-gray-400">Combo Maximo</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 pt-2 border-t border-white/10">
               Fases completadas: {phasesCompleted}/{boss.phases.length}
             </p>
             <p className="text-xs text-gray-500">
-              Estude mais e tente novamente! Você receberá uma pequena recompensa de consolação.
+              Estude mais e tente novamente! O jogo volta ao inicio.
             </p>
           </div>
 
@@ -601,21 +1000,7 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               Voltar ao Mapa
             </Button>
             <Button
-              onClick={() => {
-                setPhase(0);
-                setQuestionIdx(0);
-                setBossHp(boss.hp);
-                setPlayerHp(boss.playerHp);
-                setCombo(0);
-                setMaxCombo(0);
-                setTotalDamage(0);
-                setSelectedAnswer(null);
-                setShowFeedback(false);
-                setTimeLeft(30);
-                setTimerActive(true);
-                setBattleState("fighting");
-                setPhasesCompleted(0);
-              }}
+              onClick={handleRetry}
               className="flex-1 bg-red-600 hover:bg-red-700"
             >
               <RotateCcw size={16} className="mr-2" /> Tentar Novamente
@@ -627,16 +1012,11 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
   }
 
   // ═══════════════════════════════════════
-  // BATTLE SCREEN
+  // BATTLE SCREEN - Main gameplay
   // ═══════════════════════════════════════
   return (
     <div className={`min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1040] to-[#0a0e27] text-white flex flex-col ${shakeScreen ? "animate-shake" : ""}`}>
-      <style>{`
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-        .animate-shake { animation: shake 0.3s ease-in-out; }
-        @keyframes damageFlash { 0%{opacity:0} 50%{opacity:0.3} 100%{opacity:0} }
-        .damage-flash { animation: damageFlash 0.4s ease-out; }
-      `}</style>
+      <style>{BATTLE_STYLES}</style>
 
       {flashDamage && (
         <div className="fixed inset-0 bg-red-500 damage-flash pointer-events-none z-50" />
@@ -664,15 +1044,47 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
             </div>
           </div>
 
+          {/* Battle Arena - Hero vs Boss */}
+          <div className="relative flex items-center justify-between px-4 py-2 mb-3 bg-white/5 rounded-xl border border-white/10">
+            {/* Hero */}
+            <div className={`transition-all duration-300 ${battleState === "hero-attack" ? "hero-slash" : battleState === "boss-attack" ? "player-hit" : ""}`}>
+              <img 
+                src={battleState === "hero-attack" ? HERO_IMAGES.attack : HERO_IMAGES.idle} 
+                alt="Herói" 
+                className="w-16 h-16 object-contain" 
+              />
+            </div>
+
+            {/* Center effects */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {battleState === "hero-attack" && (
+                <div className="sword-slash text-4xl">⚡</div>
+              )}
+              {battleState === "boss-attack" && (
+                <div className="explosion-burst text-4xl">💥</div>
+              )}
+              {combo > 0 && battleState === "fighting" && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 text-sm font-bold">
+                  <Flame size={14} /> COMBO x{combo}!
+                </span>
+              )}
+            </div>
+
+            {/* Boss */}
+            <div className={`transition-all duration-300 ${battleState === "hero-attack" ? "boss-hit" : battleState === "boss-attack" ? "boss-attack" : ""}`}>
+              {boss.imageUrl ? (
+                <img src={boss.imageUrl} alt={boss.name} className="w-14 h-14 object-contain" />
+              ) : (
+                <span className="text-4xl">{boss.emoji}</span>
+              )}
+            </div>
+          </div>
+
           {/* Boss HP Bar */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1">
-                {boss.imageUrl ? (
-                  <img src={boss.imageUrl} alt={boss.name} className="w-8 h-8 object-contain" />
-                ) : (
-                  <span className="text-2xl">{boss.emoji}</span>
-                )}
+                <Skull size={12} className="text-red-400" />
                 <span className="font-bold" style={{ color: boss.color }}>{boss.name}</span>
               </span>
               <span className="font-mono text-gray-400">{bossHp}/{boss.hp} HP</span>
@@ -693,7 +1105,7 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1">
                 <Heart size={14} className="text-emerald-400" />
-                <span className="font-bold text-emerald-400">Jogador</span>
+                <span className="font-bold text-emerald-400">Heroi</span>
               </span>
               <span className="font-mono text-gray-400">{playerHp}/{boss.playerHp} HP</span>
             </div>
@@ -707,14 +1119,6 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               />
             </div>
           </div>
-
-          {combo > 0 && (
-            <div className="mt-2 text-center">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 text-sm font-bold">
-                <Flame size={14} /> COMBO x{combo}!
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -733,7 +1137,8 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
                 <button
                   key={alt.id}
                   onClick={() => handleAnswer(alt.id)}
-                  className="w-full p-4 rounded-xl border text-left transition-all bg-white/5 border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5"
+                  disabled={battleState !== "fighting"}
+                  className="w-full p-4 rounded-xl border text-left transition-all bg-white/5 border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center gap-3">
                     <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm uppercase">
@@ -755,17 +1160,25 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
               `}>
                 {isCorrect ? (
                   <>
-                    <div className="text-4xl mb-2">⚔️</div>
+                    <img src={HERO_IMAGES.attack} alt="Ataque" className="w-20 h-20 object-contain mx-auto mb-2 drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
                     <h3 className="text-xl font-bold text-emerald-400">Ataque Certeiro!</h3>
                     <p className="text-sm text-gray-300 mt-1">
-                      Dano causado ao boss!
+                      O herói golpeou {boss.name}!
                       {combo > 1 && <span className="text-orange-400 font-bold"> (Combo x{combo}!)</span>}
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="text-4xl mb-2">💥</div>
-                    <h3 className="text-xl font-bold text-red-400">O Boss contra-atacou!</h3>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      {boss.imageUrl ? (
+                        <img src={boss.imageUrl} alt={boss.name} className="w-16 h-16 object-contain drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]" />
+                      ) : (
+                        <span className="text-4xl">{boss.emoji}</span>
+                      )}
+                      <span className="text-3xl">💥</span>
+                      <img src={HERO_IMAGES.defeated} alt="Herói" className="w-14 h-14 object-contain opacity-70" />
+                    </div>
+                    <h3 className="text-xl font-bold text-red-400">{boss.name} contra-atacou!</h3>
                     <p className="text-sm text-gray-300 mt-1">-20 HP</p>
                   </>
                 )}
@@ -773,11 +1186,11 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
 
               <div className="bg-white/5 rounded-xl p-4">
                 <p className="text-sm text-gray-300">
-                  <span className="text-yellow-400 font-bold">💡 Explicação:</span> {currentQuestion?.explanation}
+                  <span className="text-yellow-400 font-bold">Explicacao:</span> {currentQuestion?.explanation}
                 </p>
                 {!isCorrect && (
                   <p className="text-sm text-emerald-400 mt-2">
-                    ✅ Resposta correta: <strong>
+                    Resposta correta: <strong>
                       {currentQuestion?.alternatives.find(a => a.id === currentQuestion.correctAnswer)?.text}
                     </strong>
                   </p>
@@ -789,9 +1202,9 @@ export default function BossBattle({ weekNumber, onComplete, onBack }: BossBattl
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 font-bold"
               >
                 {bossHp <= 0 ? (
-                  <><Trophy size={16} className="mr-2" /> Vitória!</>
+                  <><Trophy size={16} className="mr-2" /> Vitoria!</>
                 ) : (
-                  <><ChevronRight size={16} className="mr-2" /> Próximo Ataque</>
+                  <><ChevronRight size={16} className="mr-2" /> Proximo Ataque</>
                 )}
               </Button>
             </div>

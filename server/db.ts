@@ -531,6 +531,12 @@ export async function updateStudentAccountPassword(id: number, passwordHash: str
   await db.update(studentAccounts).set({ passwordHash }).where(eq(studentAccounts.id, id));
 }
 
+export async function updateStudentAccountGender(id: number, gender: "male" | "female") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(studentAccounts).set({ gender } as any).where(eq(studentAccounts.id, id));
+}
+
 export async function getAllStudentAccounts() {
   const db = await getDb();
   if (!db) return [];

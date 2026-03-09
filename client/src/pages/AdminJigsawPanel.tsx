@@ -606,13 +606,13 @@ export default function AdminJigsawPanel({ teacherToken }: { teacherToken?: stri
             <FileDown size={14} /> Exportar CSV
           </Button>
           <Button variant="outline" size="sm" className="gap-2"
-            onClick={() => calcTotalsMutation.mutate({ classId })}
+            onClick={() => calcTotalsMutation.mutate({ classId, sessionToken: teacherToken || "" })}
             disabled={calcTotalsMutation.isPending}>
             {calcTotalsMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
             Calcular PF
           </Button>
           <Button variant="outline" size="sm" className="gap-2"
-            onClick={() => notifyMutation.mutate({ classId })}
+            onClick={() => notifyMutation.mutate({ classId, sessionToken: teacherToken || "" })}
             disabled={notifyMutation.isPending || expertGroups.length === 0}>
             {notifyMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
             Notificar alunos
@@ -697,14 +697,14 @@ export default function AdminJigsawPanel({ teacherToken }: { teacherToken?: stri
             <div className="flex gap-2">
               {homeGroups.length > 0 && (
                 <Button size="sm" variant="outline" className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => { if (confirm(`Deletar todos os ${homeGroups.length} grupos mosaico?`)) deleteHomeMutation.mutate({ classId }); }}
+                  onClick={() => { if (confirm(`Deletar todos os ${homeGroups.length} grupos mosaico?`)) deleteHomeMutation.mutate({ classId, sessionToken: teacherToken || "" }); }}
                   disabled={deleteHomeMutation.isPending}>
                   {deleteHomeMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                   Deletar grupos
                 </Button>
               )}
               <Button size="sm" className="gap-1.5 text-xs" style={{ backgroundColor: "#ec4899" }}
-                onClick={() => generateHomeMutation.mutate({ classId })}
+                onClick={() => generateHomeMutation.mutate({ classId, sessionToken: teacherToken || "" })}
                 disabled={generateHomeMutation.isPending || homeGroups.length > 0}>
                 {generateHomeMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <Shuffle size={13} />}
                 Gerar grupos mosaico
@@ -721,7 +721,7 @@ export default function AdminJigsawPanel({ teacherToken }: { teacherToken?: stri
                 Cada grupo mosaico reunirá 1 especialista de cada tema (6 alunos por grupo), criando ~14 grupos.
               </p>
               <Button size="sm" className="gap-2" style={{ backgroundColor: "#ec4899" }}
-                onClick={() => generateHomeMutation.mutate({ classId })} disabled={generateHomeMutation.isPending}>
+                onClick={() => generateHomeMutation.mutate({ classId, sessionToken: teacherToken || "" })} disabled={generateHomeMutation.isPending}>
                 {generateHomeMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Shuffle size={14} />}
                 Gerar grupos mosaico agora
               </Button>

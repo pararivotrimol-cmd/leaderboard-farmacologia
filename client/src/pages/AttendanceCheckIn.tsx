@@ -2,12 +2,13 @@
  * Attendance Check-In — Conexão em Farmacologia
  * Student scans QR Code projected by teacher to register attendance
  * Supports: camera scan, URL params (from QR link), manual entry
+ * GPS validation: student must be within allowed radius of classroom
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   QrCode, Camera, CheckCircle, XCircle, AlertCircle,
-  ArrowLeft, FlaskConical, Scan, Hash, LogOut
+  ArrowLeft, FlaskConical, Scan, Hash, LogOut, MapPin, Navigation
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -18,6 +19,44 @@ const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/
 const ORANGE = "#F7941D";
 const DARK_BG = "#0A1628";
 const CARD_BG = "#0D1B2A";
+
+// ═══════ GPS HELPER ═══════
+function getStudentLocation(): Promise<{ latitude: number; longitude: number }> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocalização não suportada pelo navegador."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            reject(new Error("Permissão de localização negada. Ative a localização nas configurações do navegador para registrar presença."));
+            break;
+          case error.POSITION_UNAVAILABLE:
+            reject(new Error("Localização indisponível. Verifique se o GPS está ativado."));
+            break;
+          case error.TIMEOUT:
+            reject(new Error("Tempo esgotado ao obter localização. Tente novamente."));
+            break;
+          default:
+            reject(new Error("Erro ao obter localização."));
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 30000,
+      }
+    );
+  });
+}
 
 export default function AttendanceCheckIn() {
   const [, setLocation] = useLocation();
@@ -31,6 +70,8 @@ export default function AttendanceCheckIn() {
   const [scanStatus, setScanStatus] = useState<"idle" | "scanning" | "found" | "error">("idle");
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "acquiring" | "acquired" | "error">("idle");
+  const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -44,7 +85,7 @@ export default function AttendanceCheckIn() {
     if (s) setSessionId(s);
     if (c) setClassId(c);
     if (t) setToken(t);
-    // If all params present, auto-submit
+    // If all params present, auto-submit with GPS
     if (s && c && t && student) {
       handleAutoCheckIn(s, c, t);
     }
@@ -62,10 +103,10 @@ export default function AttendanceCheckIn() {
 
   // Check-in mutation
   const checkInMutation = trpc.qrcode.checkIn.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setResult({
         success: true,
-        message: "Presença registrada com sucesso!",
+        message: data.message || "Presença registrada com sucesso!",
       });
       stopCamera();
     },
@@ -77,6 +118,40 @@ export default function AttendanceCheckIn() {
     },
   });
 
+  // Acquire GPS and then check in
+  const performCheckInWithGPS = async (sid: string, cid: string, tkn: string) => {
+    setIsSubmitting(true);
+    setGpsStatus("acquiring");
+
+    try {
+      // Step 1: Get GPS location
+      const coords = await getStudentLocation();
+      setGpsCoords(coords);
+      setGpsStatus("acquired");
+
+      // Step 2: Send check-in with GPS data
+      await checkInMutation.mutateAsync({
+        sessionId: parseInt(sid),
+        memberId: student?.memberId || 0,
+        classId: parseInt(cid),
+        token: tkn,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+    } catch (error: any) {
+      setGpsStatus("error");
+      if (error?.message && !checkInMutation.isError) {
+        // GPS error (not mutation error)
+        setResult({
+          success: false,
+          message: error.message,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Auto check-in from URL params
   const handleAutoCheckIn = async (sid: string, cid: string, tkn?: string) => {
     if (!student) return;
@@ -85,19 +160,7 @@ export default function AttendanceCheckIn() {
       setResult({ success: false, message: "Token de presença não encontrado. Escaneie o QR Code novamente." });
       return;
     }
-    setIsSubmitting(true);
-    try {
-      await checkInMutation.mutateAsync({
-        sessionId: parseInt(sid),
-        memberId: student.memberId || 0,
-        classId: parseInt(cid),
-        token: tokenToUse,
-      });
-    } catch {
-      // Error handled by mutation
-    } finally {
-      setIsSubmitting(false);
-    }
+    await performCheckInWithGPS(sid, cid, tokenToUse);
   };
 
   // Start camera
@@ -158,9 +221,9 @@ export default function AttendanceCheckIn() {
           setClassId(cid);
           if (tkn) setToken(tkn);
           stopCamera();
-          // Auto-submit
+          // Auto-submit with GPS
           if (student) {
-            handleAutoCheckIn(sid, cid, tkn || undefined);
+            performCheckInWithGPS(sid, cid, tkn || token);
           }
           return;
         }
@@ -177,7 +240,7 @@ export default function AttendanceCheckIn() {
           if (data.token) setToken(data.token);
           stopCamera();
           if (student) {
-            handleAutoCheckIn(String(data.sessionId), String(data.classId), data.token);
+            performCheckInWithGPS(String(data.sessionId), String(data.classId), data.token || token);
           }
           return;
         }
@@ -185,7 +248,7 @@ export default function AttendanceCheckIn() {
         // Not valid JSON either
       }
     }
-  }, [student, stopCamera]);
+  }, [student, stopCamera, token]);
 
   // Scanning loop
   useEffect(() => {
@@ -204,22 +267,10 @@ export default function AttendanceCheckIn() {
     return () => stopCamera();
   }, [stopCamera]);
 
-  // Manual check-in
+  // Manual check-in with GPS
   const handleManualCheckIn = async () => {
     if (!sessionId || !classId || !token || !student) return;
-    setIsSubmitting(true);
-    try {
-      await checkInMutation.mutateAsync({
-        sessionId: parseInt(sessionId),
-        memberId: student.memberId || 0,
-        classId: parseInt(classId),
-        token,
-      });
-    } catch {
-      // Error handled by mutation
-    } finally {
-      setIsSubmitting(false);
-    }
+    await performCheckInWithGPS(sessionId, classId, token);
   };
 
   if (isLoading) {
@@ -289,6 +340,43 @@ export default function AttendanceCheckIn() {
           </motion.div>
         )}
 
+        {/* GPS Status Banner */}
+        {isSubmitting && gpsStatus === "acquiring" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl p-4 mb-4 flex items-center gap-3"
+            style={{ backgroundColor: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)" }}
+          >
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+              <Navigation size={20} style={{ color: "#3b82f6" }} />
+            </motion.div>
+            <div>
+              <p className="text-sm font-medium text-white">Obtendo localização...</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Ative o GPS do celular para registrar presença
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {gpsStatus === "acquired" && gpsCoords && isSubmitting && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl p-4 mb-4 flex items-center gap-3"
+            style={{ backgroundColor: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <MapPin size={20} style={{ color: "#22c55e" }} />
+            <div>
+              <p className="text-sm font-medium text-white">Localização obtida</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Verificando se você está na sala de aula...
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Result Display */}
         <AnimatePresence>
           {result && (
@@ -327,6 +415,8 @@ export default function AttendanceCheckIn() {
                   onClick={() => {
                     setResult(null);
                     setScanStatus("idle");
+                    setGpsStatus("idle");
+                    setGpsCoords(null);
                   }}
                   className="mt-4 px-6 py-2 rounded-lg text-sm font-medium text-white"
                   style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
@@ -549,8 +639,11 @@ export default function AttendanceCheckIn() {
             <div className="mt-6 p-4 rounded-xl" style={{ backgroundColor: "rgba(247,148,29,0.06)", border: "1px solid rgba(247,148,29,0.15)" }}>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
                 <strong style={{ color: ORANGE }}>Como funciona:</strong> O professor projeta um QR Code na TV da sala.
-                Escaneie com a câmera ou insira os dados manualmente. A presença é registrada automaticamente
-                durante o horário de aula.
+                Escaneie com a câmera ou insira os dados manualmente. A presença é registrada automaticamente.
+              </p>
+              <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <MapPin size={12} style={{ color: ORANGE }} />
+                <span>Sua localização GPS será verificada para confirmar que você está na sala de aula.</span>
               </p>
             </div>
           </>

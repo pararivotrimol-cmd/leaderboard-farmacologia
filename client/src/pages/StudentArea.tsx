@@ -609,7 +609,7 @@ export default function StudentArea() {
                 Explore a caverna, responda questões de farmacologia e derrote os bosses para ganhar PF!
               </p>
               <button
-                onClick={() => setLocation(`/game-portal/${classId}`)}
+                onClick={() => setLocation(`/jogo/${classId}`)}
                 className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-bold text-white text-base sm:text-lg transition-all hover:scale-105"
                 style={{ backgroundColor: ORANGE }}
               >

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb, getMembersByClass, createStudentNotification } from "../db";
+import { getDb, getRawDb, getMembersByClass, createStudentNotification } from "../db";
 import {
   gameProgress, gameQuests, gameCombats, gameAchievements,
   members, gameTransactions, gameWeeklyReleases, playerAvatars,
@@ -186,7 +186,17 @@ export const gameRouter = router({
         )
         .limit(1);
 
-      return progress[0] || null;
+      if (!progress[0]) return null;
+
+      // Also fetch characterId from playerAvatars
+      const avatarRows = await db
+        .select({ characterId: playerAvatars.characterId })
+        .from(playerAvatars)
+        .where(eq(playerAvatars.memberId, memberId))
+        .limit(1);
+      const characterId = avatarRows[0]?.characterId || null;
+
+      return { ...progress[0], characterId };
     }),
 
   /**
@@ -218,23 +228,22 @@ export const gameRouter = router({
         return existing[0];
       }
 
-      // Create new progress
-      await db.insert(gameProgress).values({
-        memberId: input.memberId,
-        classId: input.classId,
-        level: 1,
-        farmacologiaPoints: 0,
-        experience: 0,
-        questsCompleted: 0,
-        questsTotal: 16,
-        currentQuestId: null,
-        totalCombats: 0,
-        combatsWon: 0,
-        combatsLost: 0,
-        achievements: "[]",
-        isCompleted: false,
-        lastPlayedAt: null,
-      });
+      // Validate that memberId exists in members table before inserting
+      const rawDb = await getRawDb();
+      if (!rawDb) throw new Error("Database unavailable");
+      const [memberCheck] = await rawDb.execute(
+        `SELECT id FROM \`members\` WHERE id = ? LIMIT 1`,
+        [input.memberId]
+      ) as any[];
+      if (!memberCheck || memberCheck.length === 0) {
+        throw new Error(`Aluno não encontrado (memberId=${input.memberId}). A conta não está vinculada a um aluno matriculado. Acesse o portal do aluno e vincule sua conta.`);
+      }
+      // Create new progress using raw SQL to avoid Drizzle ORM serialization issues
+      // with boolean and JSON fields on MySQL
+      await rawDb.execute(
+        `INSERT INTO \`gameProgress\` (\`memberId\`, \`classId\`, \`level\`, \`farmacologiaPoints\`, \`experience\`, \`questsCompleted\`, \`questsTotal\`, \`currentQuestId\`, \`totalCombats\`, \`combatsWon\`, \`combatsLost\`, \`achievements\`, \`isCompleted\`, \`lastPlayedAt\`) VALUES (?, ?, 1, 0, 0, 0, 16, NULL, 0, 0, 0, '[]', 0, NULL)`,
+        [input.memberId, input.classId]
+      );
 
       // Save avatar choice
       if (input.characterId) {
@@ -329,7 +338,7 @@ export const gameRouter = router({
 
         // Check if game complete (85 quests total)
         if (newQuestsCompleted >= 85) {
-          updates.isCompleted = true;
+          updates.isCompleted = sql`1`; // MySQL boolean: use 1 instead of true
         }
       } else {
         updates.combatsLost = prog.combatsLost + 1;
@@ -344,6 +353,35 @@ export const gameRouter = router({
         .update(gameProgress)
         .set(updates)
         .where(eq(gameProgress.id, prog.id));
+
+      // Record combat in gameCombats (needed for boss unlock check)
+      try {
+        // Count previous attempts for this quest
+        const prevAttempts = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(gameCombats)
+          .where(
+            and(
+              eq(gameCombats.gameProgressId, prog.id),
+              eq(gameCombats.questId, input.questId)
+            )
+          );
+        const attemptNum = Number(prevAttempts[0]?.count || 0) + 1;
+
+        await db.insert(gameCombats).values({
+          gameProgressId: prog.id,
+          questId: input.questId,
+          questionId: input.questId,
+          playerAnswer: input.answer,
+          correctAnswer: correctAlt?.id || "",
+          isWon: isCorrect,
+          farmacologiaPointsEarned: pfEarned,
+          timeSpent: input.timeSpent,
+          attemptNumber: attemptNum,
+        });
+      } catch (combatErr) {
+        console.warn("[Game] Failed to insert gameCombat:", combatErr);
+      }
 
       // Log transaction if PF earned or penalized
       if (pfEarned > 0 || pfPenalty > 0) {
@@ -398,9 +436,10 @@ export const gameRouter = router({
 
       if (newAchievements.length > 0) {
         const allAchievements = [...currentAchievements, ...newAchievements];
+        const achievementsStr = JSON.stringify(allAchievements);
         await db
           .update(gameProgress)
-          .set({ achievements: JSON.stringify(allAchievements) })
+          .set({ achievements: sql`${achievementsStr}` })
           .where(eq(gameProgress.id, prog.id));
 
         // Award bonus PF for achievements
@@ -1227,9 +1266,10 @@ export const gameRouter = router({
 
           if (newAchievements.length > 0) {
             const allAchievements = [...currentAchievements, ...newAchievements];
+            const achievementsStr2 = JSON.stringify(allAchievements);
             await db
               .update(gameProgress)
-              .set({ achievements: JSON.stringify(allAchievements) })
+              .set({ achievements: sql`${achievementsStr2}` })
               .where(eq(gameProgress.id, prog.id));
           }
         }
@@ -1271,5 +1311,132 @@ export const gameRouter = router({
         .orderBy(desc(bossBattles.createdAt));
 
       return rows;
+    }),
+
+  /**
+   * Get members of a class for admin game testing
+   */
+  getMembersForClass: publicProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      const classMembers = await getMembersByClass(input.classId);
+      return classMembers.map(m => ({
+        id: m.id,
+        name: (() => { const n = m.name || ''; const p = n.split('\t'); return p.length >= 2 ? p[1].trim() : n.trim(); })(),
+        classId: m.classId,
+      }));
+    }),
+
+  /**
+   * Admin: Get all boss battle stats for a class
+   */
+  getAdminBossStats: publicProcedure
+    .input(z.object({ classId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      // Get all boss battles for this class
+      const allBattles = await db
+        .select()
+        .from(bossBattles)
+        .where(eq(bossBattles.classId, input.classId))
+        .orderBy(desc(bossBattles.createdAt));
+
+      // Get all members with progress in this class
+      const allProgressRows = await db
+        .select({
+          id: gameProgress.id,
+          memberId: gameProgress.memberId,
+          questsCompleted: gameProgress.questsCompleted,
+        })
+        .from(gameProgress)
+        .where(eq(gameProgress.classId, input.classId));
+
+      // Get member names
+      const classMembers = await getMembersByClass(input.classId);
+      const memberMap = new Map(classMembers.map(m => [
+        m.id,
+        (() => { const n = m.name || ''; const p = n.split('\t'); return p.length >= 2 ? p[1].trim() : n.trim(); })()
+      ]));
+
+      // Build stats per week (1-17)
+      const weekStats = [];
+      for (let week = 1; week <= 17; week++) {
+        const weekBattles = allBattles.filter(b => b.weekNumber === week);
+        const victories = weekBattles.filter(b => b.isVictory);
+        const defeats = weekBattles.filter(b => !b.isVictory);
+        const uniquePlayers = new Set(weekBattles.map(b => b.memberId));
+        const uniqueVictors = new Set(victories.map(b => b.memberId));
+
+        // Detailed player attempts for this week
+        const playerAttempts = Array.from(uniquePlayers).map(memberId => {
+          const playerBattles = weekBattles.filter(b => b.memberId === memberId);
+          const won = playerBattles.some(b => b.isVictory);
+          const bestAttempt = playerBattles.reduce((best, b) => {
+            if (!best) return b;
+            if (b.isVictory && !best.isVictory) return b;
+            if (b.phasesCompleted > best.phasesCompleted) return b;
+            return best;
+          }, null as typeof playerBattles[0] | null);
+
+          return {
+            memberId,
+            memberName: memberMap.get(memberId) || `Aluno #${memberId}`,
+            attempts: playerBattles.length,
+            won,
+            bestDamage: bestAttempt?.totalDamageDealt || 0,
+            bestCombo: bestAttempt?.comboMax || 0,
+            bestTime: bestAttempt?.totalTimeSpent || 0,
+            pfEarned: playerBattles.reduce((sum, b) => sum + b.pfEarned, 0),
+            lastAttempt: playerBattles[0]?.createdAt || null,
+          };
+        }).sort((a, b) => (b.won ? 1 : 0) - (a.won ? 1 : 0) || b.bestDamage - a.bestDamage);
+
+        weekStats.push({
+          weekNumber: week,
+          totalAttempts: weekBattles.length,
+          totalVictories: victories.length,
+          totalDefeats: defeats.length,
+          uniquePlayers: uniquePlayers.size,
+          uniqueVictors: uniqueVictors.size,
+          avgTimeSpent: victories.length > 0
+            ? Math.round(victories.reduce((sum, b) => sum + b.totalTimeSpent, 0) / victories.length)
+            : 0,
+          avgCombo: victories.length > 0
+            ? Math.round(victories.reduce((sum, b) => sum + b.comboMax, 0) / victories.length * 10) / 10
+            : 0,
+          playerAttempts,
+        });
+      }
+
+      return {
+        totalPlayersInClass: allProgressRows.length,
+        weekStats,
+      };
+    }),
+
+  /**
+   * Admin: Reset a boss battle for a specific player (allow retry)
+   */
+  resetBossBattle: publicProcedure
+    .input(z.object({
+      classId: z.number(),
+      memberId: z.number(),
+      weekNumber: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      await db.delete(bossBattles).where(
+        and(
+          eq(bossBattles.memberId, input.memberId),
+          eq(bossBattles.classId, input.classId),
+          eq(bossBattles.weekNumber, input.weekNumber)
+        )
+      );
+
+      return { success: true, message: `Boss da semana ${input.weekNumber} resetado para o aluno.` };
     }),
 });

@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Gamepad2, Sparkles, Sword, Shield, Wand2, Eye, Baby } from "lucide-react";
+import { Gamepad2, Sparkles, Sword, Shield, Wand2, Eye, Baby, ShieldAlert } from "lucide-react";
 import { AVATAR_URLS } from "@shared/avatarUrls";
+import { useStudentAuth } from "@/pages/StudentLogin";
 
 interface Avatar {
   id: number;
@@ -83,12 +84,27 @@ const avatars: Avatar[] = [
 export default function GameAvatarSelect() {
   const [, setLocation] = useLocation();
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
-  const [classId, setClassId] = useState<number>(1); // TODO: Get from context
+
+  // Admin view mode: detect ?adminView=true&memberId=X&classId=Y in URL
+  const searchParams = new URLSearchParams(window.location.search);
+  const isAdminView = searchParams.get("adminView") === "true";
+  const adminMemberId = parseInt(searchParams.get("memberId") || "0");
+  const adminClassId = parseInt(searchParams.get("classId") || "0");
+  const adminMemberName = decodeURIComponent(searchParams.get("memberName") || "Aluno");
+
+  // Get real memberId and classId from student auth session (or admin override)
+  const { student: studentData } = useStudentAuth();
+  const memberId = isAdminView ? adminMemberId : (studentData?.memberId || 0);
+  const classId = isAdminView ? adminClassId : (studentData?.classId || 0);
 
   const initializeProgressMutation = trpc.game.initializeProgress.useMutation({
     onSuccess: (data) => {
-      // Redirect to GamePortal instead of broken GameHub
-      setLocation(`/jogo/${data.classId}`);
+      const targetClassId = data.classId || classId;
+      if (isAdminView) {
+        setLocation(`/jogo/${targetClassId}?adminView=true&memberId=${memberId}&memberName=${encodeURIComponent(adminMemberName)}`);
+      } else {
+        setLocation(`/jogo/${targetClassId}`);
+      }
     },
     onError: (error) => {
       alert(`Erro ao iniciar jogo: ${error.message}`);
@@ -100,15 +116,38 @@ export default function GameAvatarSelect() {
       alert("Selecione um avatar primeiro!");
       return;
     }
+    if (!memberId || !classId) {
+      alert("Você precisa estar autenticado como aluno para iniciar o jogo. Acesse pelo portal do aluno.");
+      return;
+    }
 
     initializeProgressMutation.mutate({
       classId,
-      memberId: 1, // TODO: Get from auth context
+      memberId,
+      characterId: selectedAvatar.name.toLowerCase(),
     });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+
+      {/* Banner de modo admin */}
+      {isAdminView && (
+        <div className="bg-purple-700/90 border-b border-purple-500 px-4 py-2 flex items-center gap-3">
+          <ShieldAlert size={16} className="text-yellow-300 shrink-0" />
+          <span className="text-sm text-white font-medium">
+            Modo Admin — Visualizando como <strong className="text-yellow-300">{adminMemberName}</strong>
+            {" "}(memberId: {adminMemberId})
+          </span>
+          <button
+            onClick={() => window.history.back()}
+            className="ml-auto text-xs text-purple-200 underline hover:text-white"
+          >
+            ← Voltar ao painel
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-black/30 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -150,8 +189,8 @@ export default function GameAvatarSelect() {
                     <h3 className="text-2xl font-bold">{avatar.name}</h3>
                     <p className="text-sm opacity-90">{avatar.title}</p>
                   </div>
-                  <img 
-                    src={avatar.imageUrl} 
+                  <img
+                    src={avatar.imageUrl}
                     alt={avatar.name}
                     className="w-24 h-24 object-contain rounded-lg bg-white/10 p-2"
                   />

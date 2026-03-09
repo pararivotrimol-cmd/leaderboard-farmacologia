@@ -139,12 +139,46 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, async () => {
     console.log(`Server running on http://localhost:${port}/`);
     console.log('[Security] Helmet enabled');
     console.log('[Security] CORS configured');
     console.log('[Security] Rate limiting enabled');
     console.log('[WebSocket] Real-time notifications enabled');
+    
+    // Auto-migração: adicionar colunas de geolocalização se não existirem
+    try {
+      const { getRawDb } = await import("../db");
+      const rawDb = await getRawDb();
+      if (rawDb) {
+        const geoMigrations = [
+          "ALTER TABLE qrCodeSessions ADD COLUMN geoLatitude DECIMAL(10,7) DEFAULT NULL",
+          "ALTER TABLE qrCodeSessions ADD COLUMN geoLongitude DECIMAL(10,7) DEFAULT NULL",
+          "ALTER TABLE qrCodeSessions ADD COLUMN geoRadiusMeters INT NOT NULL DEFAULT 150",
+          "ALTER TABLE qrCodeSessions ADD COLUMN geoValidationEnabled BOOLEAN NOT NULL DEFAULT TRUE",
+          "ALTER TABLE attendanceRecords ADD COLUMN latitude DECIMAL(10,7) DEFAULT NULL",
+          "ALTER TABLE attendanceRecords ADD COLUMN longitude DECIMAL(10,7) DEFAULT NULL",
+          "ALTER TABLE attendanceRecords ADD COLUMN distanceMeters DECIMAL(8,2) DEFAULT NULL",
+          "ALTER TABLE attendanceRecords ADD COLUMN geoStatus ENUM('valid','invalid','no_gps','disabled') DEFAULT 'no_gps'",
+          "ALTER TABLE studentAccounts ADD COLUMN gender ENUM('male','female') DEFAULT 'male'",
+        ];
+        for (const sql of geoMigrations) {
+          try {
+            await rawDb.execute(sql);
+            console.log(`[Migration] OK: ${sql.substring(0, 60)}...`);
+          } catch (err: any) {
+            if (err?.code === 'ER_DUP_FIELDNAME' || err?.message?.includes('Duplicate column')) {
+              // Coluna já existe, ignorar
+            } else {
+              console.warn(`[Migration] Warn: ${err?.message?.substring(0, 80)}`);
+            }
+          }
+        }
+        console.log('[Migration] Geo columns migration check complete');
+      }
+    } catch (err) {
+      console.warn('[Migration] Could not run geo migration:', err);
+    }
   });
 }
 

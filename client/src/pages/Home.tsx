@@ -641,7 +641,7 @@ export default function Home() {
             {/* Primary action cards - large on desktop, compact on mobile */}
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
               {/* Cronograma */}
-              <Link href="/cronograma">
+              <Link href={studentData?.classId ? `/cronograma?classId=${studentData.classId}` : "/cronograma"}>
                 <motion.div
                   className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-xl cursor-pointer"
                   style={{ backgroundColor: ORANGE, color: "#fff", boxShadow: `0 4px 20px ${ORANGE}40` }}

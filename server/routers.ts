@@ -1542,6 +1542,45 @@ export const appRouter = router({
         await db.deleteXpActivity(input.id);
         return { success: true };
       }),
+
+    // Import all default semester activities
+    importDefault: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+
+        const defaultActivities = [
+          { name: "Participação em Aula", icon: "📚", maxXP: "5" },
+          { name: "TBL 1 — Farmacocinética 2", icon: "🧠", maxXP: "10" },
+          { name: "TBL 2 — Boas Práticas de Prescrição", icon: "🧠", maxXP: "10" },
+          { name: "TBL 3 — Adrenérgicos", icon: "🧠", maxXP: "10" },
+          { name: "TBL 4 — AINEs e Corticoides", icon: "🧠", maxXP: "10" },
+          { name: "Caso Clínico 1 — Farmacodinâmica", icon: "🏥", maxXP: "8" },
+          { name: "Caso Clínico 2 — SNA Colinergía", icon: "🏥", maxXP: "8" },
+          { name: "Caso Clínico 3 — Anti-adrenérgicos", icon: "🏥", maxXP: "8" },
+          { name: "Caso Clínico 4 — Anti-histamínicos", icon: "🏥", maxXP: "8" },
+          { name: "Seminário Jigsaw — Fase 1 (Especialistas)", icon: "🧪", maxXP: "7" },
+          { name: "Seminário Jigsaw — Fase 2 (Mosaico)", icon: "🧪", maxXP: "12" },
+          { name: "Escape Room Farmacológico", icon: "🔓", maxXP: "15" },
+          { name: "Jogo Semanal — Missões", icon: "🎮", maxXP: "5" },
+          { name: "Prova P1", icon: "📝", maxXP: "30" },
+          { name: "Prova P2", icon: "📝", maxXP: "30" },
+          { name: "Prova Final", icon: "🏆", maxXP: "40" },
+          { name: "Frequência Semanal", icon: "✅", maxXP: "2" },
+        ];
+
+        const existing = await db.getAllXpActivities();
+        const existingNames = existing.map((a: any) => a.name);
+        let created = 0;
+        for (const act of defaultActivities) {
+          if (!existingNames.includes(act.name)) {
+            await db.createXpActivity(act);
+            created++;
+          }
+        }
+        return { created, total: defaultActivities.length };
+      }),
   }),
 
   highlights: router({
@@ -1589,6 +1628,52 @@ export const appRouter = router({
         if (!valid) throw new Error("Não autorizado");
         await db.deleteHighlight(input.id);
         return { success: true };
+      }),
+
+    // Auto-generate highlight based on top XP students
+    autoGenerate: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        week: z.number(),
+        date: z.string(),
+        activity: z.string(),
+        classId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+
+        const allMembers = input.classId
+          ? await db.getMembersByClass(input.classId)
+          : await db.getAllMembers();
+        const allTeams = await db.getAllTeams();
+
+        // Find top individual by XP
+        const sortedMembers = [...(allMembers as any[])]
+          .sort((a, b) => parseFloat(String(b.xp || 0)) - parseFloat(String(a.xp || 0)));
+        const topMember = sortedMembers[0];
+        const topStudentName = topMember ? topMember.name : "—";
+
+        // Find top team by total XP
+        const teamXP = (allTeams as any[]).map(t => ({
+          team: t,
+          totalXP: (allMembers as any[]).filter(m => m.teamId === t.id)
+            .reduce((sum, m) => sum + parseFloat(String(m.xp || 0)), 0),
+        }));
+        const topTeamEntry = teamXP.sort((a, b) => b.totalXP - a.totalXP)[0];
+        const topTeamName = topTeamEntry ? topTeamEntry.team.name : "—";
+
+        const description = `Destaque da ${input.activity}: ${topStudentName} lidera o ranking individual com ${parseFloat(String(topMember?.xp || 0)).toFixed(1)} PF acumulados.`;
+
+        const id = await db.createHighlight({
+          week: input.week,
+          date: input.date,
+          activity: input.activity,
+          description,
+          topTeam: topTeamName,
+          topStudent: topStudentName,
+        });
+        return { id, topStudent: topStudentName, topTeam: topTeamName, description };
       }),
   }),
 
@@ -2192,7 +2277,7 @@ export const appRouter = router({
         email: z.string().email().refine(e => e.endsWith("@edu.unirio.br"), { message: "Email deve ser @edu.unirio.br" }),
         name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
         matricula: z.string().min(5, "Matrícula deve ter pelo menos 5 caracteres"),
-        password: z.string().length(11, "CPF deve ter exatamente 11 dígitos").regex(/^\d{11}$/, "CPF deve conter apenas números"),
+        password: z.string().min(5, "Senha deve ter pelo menos 5 caracteres"),
         memberId: z.number().optional(),
         inviteCode: z.string().optional(),
       }))
@@ -2267,12 +2352,26 @@ export const appRouter = router({
           memberId: account.memberId,
           email: account.email,
           matricula: account.matricula,
+          gender: (account as any).gender || "male",
           memberName: (() => { const n = member?.name; if (!n) return "Desconhecido"; const p = n.split("\t"); return p.length >= 2 ? p[1].trim() : n.trim(); })(),
           teamId: team?.id,
           teamName: team?.name,
           teamEmoji: team?.emoji,
           classId: member?.classId || null,
         };
+      }),
+
+    // Update gender/avatar preference
+    updateGender: publicProcedure
+      .input(z.object({
+        sessionToken: z.string(),
+        gender: z.enum(["male", "female"]),
+      }))
+      .mutation(async ({ input }) => {
+        const account = await db.getStudentAccountBySessionToken(input.sessionToken);
+        if (!account) return { success: false, message: "Sessão inválida" } as const;
+        await db.updateStudentAccountGender(account.id, input.gender);
+        return { success: true, message: "Avatar atualizado com sucesso" } as const;
       }),
 
     // Logout
@@ -2313,7 +2412,7 @@ export const appRouter = router({
       .input(z.object({
         sessionToken: z.string(),
         currentPassword: z.string(),
-        newPassword: z.string().length(11, "CPF deve ter exatamente 11 dígitos").regex(/^\d{11}$/, "CPF deve conter apenas números"),
+        newPassword: z.string().min(5, "Senha deve ter pelo menos 5 caracteres"),
       }))
       .mutation(async ({ input }) => {
         const account = await db.getStudentAccountBySessionToken(input.sessionToken);
@@ -2540,23 +2639,25 @@ export const appRouter = router({
 
     // Admin: get attendance summary (all members, all weeks)
     getSummary: publicProcedure
-      .input(z.object({ password: z.string() }))
+      .input(z.object({ password: z.string(), classId: z.number().optional() }))
       .query(async ({ input }) => {
         const valid = await verifyAdminPassword(input.password);
         if (!valid) throw new Error("Não autorizado");
-        const [summary, allMembers, allTeams, allAccounts] = await Promise.all([
+        const [summary, allMembersRaw, allTeams, allAccounts] = await Promise.all([
           db.getAttendanceSummary(),
-          db.getAllMembers(),
+          input.classId ? db.getMembersByClass(input.classId) : db.getAllMembers(),
           db.getAllTeams(),
           db.getAllStudentAccounts(),
         ]);
-        return allMembers.map(m => {
-          const team = allTeams.find(t => t.id === m.teamId);
-          const account = allAccounts.find(a => a.memberId === m.id);
-          const stats = summary.find(s => s.memberId === m.id);
+        const allMembers = allMembersRaw as any[];
+        return allMembers.map((m: any) => {
+          const team = allTeams.find((t: any) => t.id === m.teamId);
+          const account = allAccounts.find((a: any) => a.memberId === m.id);
+          const stats = summary.find((s: any) => s.memberId === m.id);
           return {
             memberId: m.id,
             memberName: m.name,
+            classId: m.classId,
             teamName: team?.name || "Sem equipe",
             teamEmoji: team?.emoji || "🧪",
             hasAccount: !!account,
@@ -2641,6 +2742,38 @@ export const appRouter = router({
         if (!valid) throw new Error("Não autorizado");
         await db.deleteStudentAccount(input.id);
         return { success: true };
+      }),
+
+    // Admin: reset password for a specific student account
+    resetStudentPassword: publicProcedure
+      .input(z.object({ password: z.string(), studentAccountId: z.number(), newPassword: z.string().min(5) }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const passwordHash = await bcrypt.hash(input.newPassword, 10);
+        await db.updateStudentAccountPassword(input.studentAccountId, passwordHash);
+        return { success: true, message: "Senha resetada com sucesso" };
+      }),
+
+    // Admin: reset ALL student passwords to their matricula
+    resetAllPasswordsToMatricula: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .mutation(async ({ input }) => {
+        const valid = await verifyAdminPassword(input.password);
+        if (!valid) throw new Error("Não autorizado");
+        const accounts = await db.getAllStudentAccounts();
+        let updated = 0;
+        let errors = 0;
+        for (const acc of accounts) {
+          try {
+            const passwordHash = await bcrypt.hash(acc.matricula, 10);
+            await db.updateStudentAccountPassword(acc.id, passwordHash);
+            updated++;
+          } catch (e) {
+            errors++;
+          }
+        }
+        return { success: true, updated, errors, total: accounts.length };
       }),
 
     // Admin: export attendance report data
@@ -3036,6 +3169,13 @@ export const appRouter = router({
 
   // ─── Classes (Turmas) ───
   classes: router({
+    // List all classes without authentication (for UI selectors)
+    listAll: publicProcedure
+      .query(async () => {
+        const allClasses = await db.getAllClasses();
+        return allClasses.map((c: any) => ({ id: c.id, name: c.name, course: c.course }));
+      }),
+
     // List all classes (admin) or classes by teacher
     list: publicProcedure
       .input(z.object({ sessionToken: z.string() }))

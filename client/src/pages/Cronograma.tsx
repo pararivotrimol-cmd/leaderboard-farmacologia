@@ -3,18 +3,29 @@
  * Página separada acessível por alunos, professores e admin
  * Contém timeline semanal, feriados e detalhes de cada semana
  * Dados carregados do banco de dados (editável pelo professor/admin)
+ * Suporta ?classId=X para mostrar o nome correcto da turma
  */
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FlaskConical, Users, Trophy, Zap, BookOpen,
-  ChevronDown, GraduationCap, Brain, Pill, Activity,
-  Target, AlertTriangle, ArrowLeft, Calendar, Navigation
+  ChevronDown, GraduationCap, Brain, Activity,
+  Target, AlertTriangle, ArrowLeft, Calendar, Navigation, Zap, Menu, X
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
 const ORANGE = "#F7941D";
+
+// Mapeamento de classId para nome amigável da turma
+const CLASS_NAMES: Record<number, { short: string; full: string }> = {
+  26: { short: "Nutrição Integral", full: "Farmacologia — Nutrição (Integral) — 2026.1" },
+  27: { short: "Nutrição Noturno", full: "Farmacologia — Nutrição (Noturno) — 2026.1" },
+  28: { short: "Enfermagem", full: "Farmacologia — Enfermagem — 2026.1" },
+  29: { short: "Biomedicina II", full: "Farmacologia II — Biomedicina — 2026.1" },
+  30: { short: "Medicina II", full: "Farmacologia II — Medicina — 2026.1" },
+  31: { short: "Biomedicina I", full: "Farmacologia I — Biomedicina — 2026.1" },
+  32: { short: "Medicina I", full: "Farmacologia I — Medicina — 2026.1" },
+};
 
 // Static fallback data (used if DB is empty or loading fails)
 const staticTimeline = [
@@ -64,13 +75,21 @@ export default function Cronograma() {
   const [filter, setFilter] = useState<string>("all");
   const [hasScrolled, setHasScrolled] = useState(false);
   const [showFloatingBtn, setShowFloatingBtn] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const currentWeekRef = useRef<HTMLDivElement | null>(null);
+  const weekRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-  // Fetch schedule from database
-  const { data: dbEntries, isLoading } = trpc.schedule.getAll.useQuery(undefined, {
-    retry: 1,
-    staleTime: 60_000,
-  });
+  // Read classId from URL query params
+  const searchParams = new URLSearchParams(window.location.search);
+  const classIdParam = searchParams.get("classId");
+  const classId = classIdParam ? parseInt(classIdParam) : null;
+  const classInfo = classId ? CLASS_NAMES[classId] : null;
+
+  // Fetch schedule from database (filtered by classId if available)
+  const { data: dbEntries, isLoading } = trpc.schedule.getAll.useQuery(
+    classId ? { classId } : undefined,
+    { retry: 1, staleTime: 60_000 }
+  );
 
   // Use DB data if available, otherwise fall back to static data
   type TimelineEntry = {
@@ -103,54 +122,64 @@ export default function Cronograma() {
   const currentWeekIndex = timeline.findIndex(item => item.isCurrentGameWeek);
   const hasCurrentWeek = currentWeekIndex !== -1;
 
-  // Scroll helper — scrolls to the current week entry and expands it
-  const scrollToCurrentWeek = () => {
-    if (!currentWeekRef.current) return;
-    setExpandedWeek(currentWeekIndex);
+  // Scroll helper — scrolls to a specific week entry
+  const scrollToWeek = (index: number) => {
+    const el = weekRefs.current[index];
+    if (!el) return;
+    setExpandedWeek(index);
     const HEADER_HEIGHT = 80;
-    const elementTop = currentWeekRef.current.getBoundingClientRect().top + window.scrollY;
+    const elementTop = el.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top: elementTop - HEADER_HEIGHT - 16, behavior: "smooth" });
+    setShowSidebar(false);
   };
+
+  const scrollToCurrentWeek = () => scrollToWeek(currentWeekIndex);
 
   // Auto-scroll once after DB data loads (only when filter is "all")
   useEffect(() => {
     if (isLoading || hasScrolled || !hasCurrentWeek) return;
     setExpandedWeek(currentWeekIndex);
     const timer = setTimeout(() => {
-      if (currentWeekRef.current) {
+      if (weekRefs.current[currentWeekIndex]) {
         scrollToCurrentWeek();
         setHasScrolled(true);
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [isLoading, currentWeekIndex, hasScrolled, hasCurrentWeek]);
+  }, [isLoading, currentWeekIndex, hasScrolled, hasCurrentWeek]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show floating button when user has scrolled away from the current week
   useEffect(() => {
     if (!hasCurrentWeek) return;
     const onScroll = () => {
-      if (!currentWeekRef.current) {
-        setShowFloatingBtn(true);
-        return;
-      }
-      const rect = currentWeekRef.current.getBoundingClientRect();
-      // Show button when the current week entry is out of the visible viewport
+      const el = weekRefs.current[currentWeekIndex];
+      if (!el) { setShowFloatingBtn(true); return; }
+      const rect = el.getBoundingClientRect();
       const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
       setShowFloatingBtn(!isVisible);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [hasCurrentWeek]);
+  }, [hasCurrentWeek, currentWeekIndex]);
 
   const filteredTimeline: TimelineEntry[] = filter === "all"
     ? timeline
     : timeline.filter((item: TimelineEntry) => item.type === filter);
 
+  // Type color dot for sidebar
+  const typeColorDot: Record<string, string> = {
+    aula: "rgba(255,255,255,0.4)",
+    tbl: "#60a5fa",
+    caso: "#34d399",
+    jigsaw: "#c084fc",
+    prova: "#F7941D",
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1628" }}>
       {/* Header */}
       <div className="sticky top-0 z-40 border-b" style={{ backgroundColor: "rgba(10,22,40,0.95)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)" }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => window.history.back()}
             className="p-2 rounded-lg transition-colors hover:bg-white/10"
@@ -158,210 +187,289 @@ export default function Cronograma() {
           >
             <ArrowLeft size={20} />
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <Calendar size={22} style={{ color: ORANGE }} />
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-white truncate" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Jornada do Semestre
               </h1>
-              <p className="text-xs" style={{ color: "rgba(247,148,29,0.8)" }}>
-                Medicina — Farmacologia 1 — 2026.1
+              <p className="text-xs truncate" style={{ color: "rgba(247,148,29,0.8)" }}>
+                {classInfo ? classInfo.full : "Farmacologia — 2026.1"}
               </p>
             </div>
           </div>
+          {/* Mobile sidebar toggle */}
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="lg:hidden p-2 rounded-lg transition-colors hover:bg-white/10"
+            style={{ color: "rgba(255,255,255,0.6)" }}
+          >
+            {showSidebar ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        {/* Subtitle */}
-        <motion.p
-          className="text-base mb-8"
-          style={{ color: "rgba(255,255,255,0.5)" }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex gap-8">
+
+        {/* ─── Sidebar de navegação por semana ─── */}
+        {/* Mobile overlay */}
+        {showSidebar && (
+          <div
+            className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+        {/* Sidebar panel */}
+        <aside
+          className={`
+            fixed lg:sticky top-0 lg:top-20 z-40 lg:z-auto
+            h-screen lg:h-[calc(100vh-5rem)] overflow-y-auto
+            w-64 lg:w-56 xl:w-64 shrink-0
+            transition-transform duration-300 ease-in-out
+            ${showSidebar ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            left-0 lg:left-auto
+          `}
+          style={{
+            backgroundColor: "rgba(10,22,40,0.98)",
+            borderRight: "1px solid rgba(255,255,255,0.08)",
+          }}
         >
-          {timeline.length} semanas de aprendizado intensivo e gamificado
-          {isLoading && <span className="ml-2 text-xs opacity-50">(carregando...)</span>}
-        </motion.p>
-
-        {/* Filter tabs */}
-        <motion.div
-          className="flex gap-2 flex-wrap mb-8"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          {[
-            { key: "all", label: "Todas" },
-            { key: "aula", label: "Aulas" },
-            { key: "tbl", label: "TBL" },
-            { key: "caso", label: "Casos Clínicos" },
-            { key: "jigsaw", label: "Jigsaw" },
-            { key: "prova", label: "Provas" },
-          ].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                backgroundColor: filter === f.key ? ORANGE : "rgba(255,255,255,0.06)",
-                color: filter === f.key ? "#fff" : "rgba(255,255,255,0.5)",
-                border: `1px solid ${filter === f.key ? ORANGE : "rgba(255,255,255,0.1)"}`,
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Feriados Alert */}
-        <motion.div
-          className="mb-8 p-4 rounded-xl border"
-          style={{ backgroundColor: "rgba(247,148,29,0.06)", borderColor: "rgba(247,148,29,0.2)" }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={18} style={{ color: ORANGE }} />
-            <span className="text-sm font-bold" style={{ color: ORANGE }}>
-              Feriados em Terça-feira — 1º Semestre 2026
-            </span>
-          </div>
-          <div className="space-y-2">
-            {holidays.map((h) => (
-              <div key={h.date} className="flex items-start gap-3 text-sm">
-                <span className="font-mono font-semibold shrink-0" style={{ color: ORANGE }}>{h.date}</span>
-                <div>
-                  <span className="font-semibold text-white">{h.name}</span>
-                  <span className="ml-2" style={{ color: "rgba(255,255,255,0.5)" }}>— {h.note}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Timeline */}
-        <div className="relative">
-          <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: "rgba(247,148,29,0.2)" }} />
-          <div className="space-y-4">
-            {filteredTimeline.map((item: TimelineEntry, i: number) => {
-              const typeInfo = typeColors[item.type] || typeColors.aula;
-              const icon = typeIcons[item.type] || <GraduationCap size={18} />;
-              const originalIndex = timeline.indexOf(item);
-              const isCurrent = item.isCurrentGameWeek;
-              return (
-                <motion.div
-                  key={`${item.weekLabel}-${i}`}
-                  ref={isCurrent ? currentWeekRef : undefined}
-                  className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04, duration: 0.3 }}
-                  onClick={() => setExpandedWeek(expandedWeek === originalIndex ? null : originalIndex)}
-                >
-                  {/* Current week glow ring */}
-                  {isCurrent && (
-                    <div
-                      className="absolute inset-0 rounded-xl pointer-events-none"
-                      style={{
-                        border: "1px solid rgba(34,197,94,0.35)",
-                        backgroundColor: "rgba(34,197,94,0.04)",
-                        borderRadius: "12px",
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+          <div className="p-4 pt-20 lg:pt-4">
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "rgba(247,148,29,0.6)" }}>
+              Semanas
+            </p>
+            <nav className="space-y-0.5">
+              {timeline.map((item, idx) => {
+                const isCurrent = item.isCurrentGameWeek;
+                const isExpanded = expandedWeek === idx;
+                const dot = typeColorDot[item.type] || typeColorDot.aula;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (filter !== "all") setFilter("all");
+                      setTimeout(() => scrollToWeek(idx), filter !== "all" ? 50 : 0);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all hover:bg-white/5 group"
                     style={{
-                      backgroundColor: item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.2)" : "rgba(247,148,29,0.15)",
-                      color: item.highlight || expandedWeek === originalIndex ? "#fff" : isCurrent ? "#22c55e" : ORANGE,
-                      border: `2px solid ${item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.6)" : "rgba(247,148,29,0.3)"}`,
+                      backgroundColor: isExpanded ? "rgba(247,148,29,0.1)" : isCurrent ? "rgba(34,197,94,0.08)" : "transparent",
+                      border: isCurrent ? "1px solid rgba(34,197,94,0.25)" : "1px solid transparent",
                     }}
                   >
-                    {icon}
-                  </div>
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: isCurrent ? "#22c55e" : dot }}
+                    />
+                    <span
+                      className="text-xs truncate"
+                      style={{
+                        color: isExpanded ? ORANGE : isCurrent ? "#22c55e" : "rgba(255,255,255,0.5)",
+                        fontWeight: isCurrent || isExpanded ? 600 : 400,
+                      }}
+                    >
+                      {item.weekLabel}
+                    </span>
+                    {item.highlight && (
+                      <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0" style={{ backgroundColor: "rgba(247,148,29,0.15)", color: ORANGE }}>
+                        ★
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
 
-                  <div className="pt-1.5 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-semibold" style={{ color: ORANGE }}>{item.weekLabel}</span>
-                      {item.weekDate && (
-                        <span className="text-xs font-mono" style={{ color: "rgba(247,148,29,0.5)" }}>{item.weekDate}</span>
-                      )}
-                      {isCurrent && (
-                        <span
-                          className="text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse"
-                          style={{ backgroundColor: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)" }}
-                        >
-                          ● Semana Atual
-                        </span>
-                      )}
-                      {(item as any).isGameWeekUnlocked === true && !isCurrent && (
+            {/* Legenda na sidebar */}
+            <div className="mt-6 pt-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>
+                Tipos
+              </p>
+              {Object.entries(typeColors).map(([key, val]) => (
+                <div key={key} className="flex items-center gap-2 py-1">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: val.text }} />
+                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{val.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* ─── Conteúdo principal ─── */}
+        <div className="flex-1 min-w-0">
+          {/* Subtitle */}
+          <motion.p
+            className="text-base mb-6"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {timeline.length} semanas de aprendizado intensivo e gamificado
+            {isLoading && <span className="ml-2 text-xs opacity-50">(carregando...)</span>}
+          </motion.p>
+
+          {/* Filter tabs */}
+          <motion.div
+            className="flex gap-2 flex-wrap mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            {[
+              { key: "all", label: "Todas" },
+              { key: "aula", label: "Aulas" },
+              { key: "tbl", label: "TBL" },
+              { key: "caso", label: "Casos Clínicos" },
+              { key: "jigsaw", label: "Jigsaw" },
+              { key: "prova", label: "Provas" },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  backgroundColor: filter === f.key ? ORANGE : "rgba(255,255,255,0.06)",
+                  color: filter === f.key ? "#fff" : "rgba(255,255,255,0.5)",
+                  border: `1px solid ${filter === f.key ? ORANGE : "rgba(255,255,255,0.1)"}`,
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </motion.div>
+
+          {/* Feriados Alert */}
+          <motion.div
+            className="mb-8 p-4 rounded-xl border"
+            style={{ backgroundColor: "rgba(247,148,29,0.06)", borderColor: "rgba(247,148,29,0.2)" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={18} style={{ color: ORANGE }} />
+              <span className="text-sm font-bold" style={{ color: ORANGE }}>
+                Feriados em Terça-feira — 1º Semestre 2026
+              </span>
+            </div>
+            <div className="space-y-2">
+              {holidays.map((h) => (
+                <div key={h.date} className="flex items-start gap-3 text-sm">
+                  <span className="font-mono font-semibold shrink-0" style={{ color: ORANGE }}>{h.date}</span>
+                  <div>
+                    <span className="font-semibold text-white">{h.name}</span>
+                    <span className="ml-2" style={{ color: "rgba(255,255,255,0.5)" }}>— {h.note}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Timeline */}
+          <div className="relative">
+            <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: "rgba(247,148,29,0.2)" }} />
+            <div className="space-y-4">
+              {filteredTimeline.map((item: TimelineEntry, i: number) => {
+                const typeInfo = typeColors[item.type] || typeColors.aula;
+                const icon = typeIcons[item.type] || <GraduationCap size={18} />;
+                const originalIndex = timeline.indexOf(item);
+                const isCurrent = item.isCurrentGameWeek;
+                return (
+                  <motion.div
+                    key={`${item.weekLabel}-${i}`}
+                    ref={(el) => {
+                      weekRefs.current[originalIndex] = el;
+                      if (isCurrent) currentWeekRef.current = el;
+                    }}
+                    className="relative flex items-start gap-4 sm:gap-6 pl-2 cursor-pointer"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04, duration: 0.3 }}
+                    onClick={() => setExpandedWeek(expandedWeek === originalIndex ? null : originalIndex)}
+                  >
+                    {/* Current week glow ring */}
+                    {isCurrent && (
+                      <div
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{
+                          border: "1px solid rgba(34,197,94,0.35)",
+                          backgroundColor: "rgba(34,197,94,0.04)",
+                          borderRadius: "12px",
+                        }}
+                      />
+                    )}
+
+                    <div
+                      className="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+                      style={{
+                        backgroundColor: item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.2)" : "rgba(247,148,29,0.15)",
+                        color: item.highlight || expandedWeek === originalIndex ? "#fff" : isCurrent ? "#22c55e" : ORANGE,
+                        border: `2px solid ${item.highlight || expandedWeek === originalIndex ? ORANGE : isCurrent ? "rgba(34,197,94,0.6)" : "rgba(247,148,29,0.3)"}`,
+                      }}
+                    >
+                      {icon}
+                    </div>
+
+                    <div className="pt-1.5 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-mono font-semibold" style={{ color: ORANGE }}>{item.weekLabel}</span>
+                        {item.weekDate && (
+                          <span className="text-xs font-mono" style={{ color: "rgba(247,148,29,0.5)" }}>{item.weekDate}</span>
+                        )}
+                        {isCurrent && (
+                          <span
+                            className="text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse"
+                            style={{ backgroundColor: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)" }}
+                          >
+                            ● Semana Atual
+                          </span>
+                        )}
+                        {(item as any).isGameWeekUnlocked === true && !isCurrent && (
+                          <span
+                            className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "rgba(34,197,94,0.6)" }}
+                          >
+                            ✓ Liberada
+                          </span>
+                        )}
                         <span
                           className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                          style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "rgba(34,197,94,0.6)" }}
+                          style={{ backgroundColor: typeInfo.bg, color: typeInfo.text }}
                         >
-                          ✓ Liberada
+                          {typeInfo.label}
                         </span>
-                      )}
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                        style={{ backgroundColor: typeInfo.bg, color: typeInfo.text }}
-                      >
-                        {typeInfo.label}
-                      </span>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white mt-0.5">{item.title}</h3>
+                      <AnimatePresence>
+                        {expandedWeek === originalIndex && item.detail && (
+                          <motion.p
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="text-sm mt-1.5 leading-relaxed"
+                            style={{ color: "rgba(255,255,255,0.55)" }}
+                          >
+                            {item.detail}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-white mt-0.5">{item.title}</h3>
-                    <AnimatePresence>
-                      {expandedWeek === originalIndex && item.detail && (
-                        <motion.p
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="text-sm mt-1.5 leading-relaxed"
-                          style={{ color: "rgba(255,255,255,0.55)" }}
-                        >
-                          {item.detail}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
 
-                  <div className="pt-3 shrink-0">
-                    <ChevronDown
-                      size={16}
-                      className="transition-transform duration-300"
-                      style={{
-                        color: "rgba(255,255,255,0.3)",
-                        transform: expandedWeek === originalIndex ? "rotate(180deg)" : "rotate(0deg)",
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
+                    <div className="pt-3 shrink-0">
+                      <ChevronDown
+                        size={16}
+                        className="transition-transform duration-300"
+                        style={{
+                          color: "rgba(255,255,255,0.3)",
+                          transform: expandedWeek === originalIndex ? "rotate(180deg)" : "rotate(0deg)",
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        {/* Legenda */}
-        <motion.div
-          className="mt-12 p-4 rounded-xl border"
-          style={{ backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <h4 className="text-sm font-bold text-white mb-3">Legenda</h4>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries(typeColors).map(([key, val]) => (
-              <div key={key} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: val.text }} />
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{val.label}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
 
       {/* Floating "Ir para a semana atual" button */}
@@ -374,7 +482,6 @@ export default function Cronograma() {
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={() => {
               setFilter("all");
-              // Small delay to let filter re-render before scrolling
               setTimeout(scrollToCurrentWeek, 50);
             }}
             className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full font-semibold text-sm shadow-lg"

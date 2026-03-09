@@ -68,41 +68,21 @@ export function ResponsiveTabNav({ tabs, activeTab, onTabChange }: ResponsiveTab
         </div>
       </div>
 
-      {/* Tablet/Desktop Horizontal Tabs (md+) */}
+      {/* Desktop: Grid 2 colunas com scroll vertical */}
       <div className="hidden lg:block">
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <div className="grid grid-cols-2 gap-1 p-2 rounded-xl bg-secondary/40 border border-border max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-left ${
                 activeTab === tab.key
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
               }`}
             >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tablet View (md only) - Horizontal with scroll but more compact */}
-      <div className="hidden md:block lg:hidden">
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
-                activeTab === tab.key
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="shrink-0">{tab.icon}</span>
+              <span className="truncate">{tab.label}</span>
             </button>
           ))}
         </div>

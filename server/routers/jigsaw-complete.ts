@@ -6,7 +6,7 @@
 import { router, adminProcedure, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { getDb } from "../db";
+import { getDb, getTeacherAccountBySessionToken } from "../db";
 import { eq, and } from "drizzle-orm";
 import {
   jigsawTopics,
@@ -1018,12 +1018,16 @@ export const jigsawCompleteRouter = router({
    * NOTIFICATIONS - Notify all students about their Jigsaw groups
    * ========================================
    */
-  notifyAllGroups: adminProcedure
-    .input(z.object({ classId: z.number() }))
+  notifyAllGroups: publicProcedure
+    .input(z.object({ classId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        if (input.sessionToken) {
+          const teacher = await getTeacherAccountBySessionToken(input.sessionToken);
+          if (!teacher) throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido" });
+        }
 
         const groups = await db
           .select()
@@ -1078,23 +1082,51 @@ export const jigsawCompleteRouter = router({
    * GENERATE HOME GROUPS (FASE 2 - MOSAICO)
    * ========================================
    */
-  generateHomeGroups: adminProcedure
-    .input(z.object({ classId: z.number() }))
+  generateHomeGroups: publicProcedure
+    .input(z.object({ classId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        if (input.sessionToken) {
+          const teacher = await getTeacherAccountBySessionToken(input.sessionToken);
+          if (!teacher) throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido" });
+        }
 
         const existingHomeGroups = await db
           .select()
           .from(jigsawHomeGroups)
           .where(eq(jigsawHomeGroups.classId, input.classId));
 
+        // Check if existing groups have members; auto-clean empty groups
         if (existingHomeGroups.length > 0) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Grupos mosaico já existem (${existingHomeGroups.length} grupos). Delete-os antes de gerar novamente.`,
-          });
+          const groupsWithMembers = await Promise.all(
+            existingHomeGroups.map(async (g) => {
+              const members = await db
+                .select()
+                .from(jigsawHomeMembers)
+                .where(eq(jigsawHomeMembers.homeGroupId, g.id));
+              return { ...g, memberCount: members.length };
+            })
+          );
+          const nonEmptyGroups = groupsWithMembers.filter((g) => g.memberCount > 0);
+          const emptyGroups = groupsWithMembers.filter((g) => g.memberCount === 0);
+
+          // Auto-delete empty groups
+          if (emptyGroups.length > 0) {
+            for (const eg of emptyGroups) {
+              await db.delete(jigsawHomeGroups).where(eq(jigsawHomeGroups.id, eg.id));
+            }
+            console.log(`[Jigsaw] Auto-cleaned ${emptyGroups.length} empty home groups for class ${input.classId}`);
+          }
+
+          // Only block if there are non-empty groups
+          if (nonEmptyGroups.length > 0) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Grupos mosaico já existem (${nonEmptyGroups.length} grupos com membros). Delete-os antes de gerar novamente.`,
+            });
+          }
         }
 
         const expertGroups = await db
@@ -1147,7 +1179,7 @@ export const jigsawCompleteRouter = router({
             meetingNumber: 1,
             status: "forming",
           });
-          const homeGroupId = (result as any).insertId;
+          const homeGroupId = (result as any)[0]?.insertId ?? (result as any).insertId;
 
           let memberCount = 0;
           for (const eg of shuffledGroups) {
@@ -1172,9 +1204,10 @@ export const jigsawCompleteRouter = router({
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[Jigsaw] Error generating home groups:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Erro ao gerar grupos mosaico",
+          message: `Erro ao gerar grupos mosaico: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
     }),
@@ -1182,12 +1215,16 @@ export const jigsawCompleteRouter = router({
   /**
    * Delete all home groups for a class
    */
-  deleteHomeGroups: adminProcedure
-    .input(z.object({ classId: z.number() }))
+  deleteHomeGroups: publicProcedure
+    .input(z.object({ classId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        if (input.sessionToken) {
+          const teacher = await getTeacherAccountBySessionToken(input.sessionToken);
+          if (!teacher) throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido" });
+        }
 
         const homeGroups = await db
           .select()
@@ -1325,12 +1362,16 @@ export const jigsawCompleteRouter = router({
    * ADMIN: Calculate total PF for all members in a class
    * ========================================
    */
-  calculateAllTotals: adminProcedure
-    .input(z.object({ classId: z.number() }))
+  calculateAllTotals: publicProcedure
+    .input(z.object({ classId: z.number(), sessionToken: z.string().optional() }))
     .mutation(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        if (input.sessionToken) {
+          const teacher = await getTeacherAccountBySessionToken(input.sessionToken);
+          if (!teacher) throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido" });
+        }
 
         const allMembers = await db
           .select({ id: members.id })
@@ -1456,7 +1497,7 @@ export const jigsawCompleteRouter = router({
           .from(jigsawPeerEvaluations)
           .where(and(
             eq(jigsawPeerEvaluations.homeGroupId, input.homeGroupId),
-            eq(jigsawPeerEvaluations.evaluatorMemberId, evaluator.id),
+            eq(jigsawPeerEvaluations.evaluatorMemberId, evaluatorMemberId),
             eq(jigsawPeerEvaluations.evaluatedMemberId, input.evaluatedMemberId)
           ))
           .limit(1);
@@ -1469,7 +1510,7 @@ export const jigsawCompleteRouter = router({
         } else {
           await db.insert(jigsawPeerEvaluations).values({
             homeGroupId: input.homeGroupId,
-            evaluatorMemberId: evaluator.id,
+            evaluatorMemberId: evaluatorMemberId,
             evaluatedMemberId: input.evaluatedMemberId,
             rating: String(input.rating),
           });

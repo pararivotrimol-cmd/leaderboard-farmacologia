@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useStudentAuth } from "@/pages/StudentLogin";
+import { Eye } from "lucide-react";
 import {
   Pause, Play, RotateCcw, LogOut, Zap, Sword, Target, TrendingUp,
   Map, Trophy, ArrowLeft, Clock, Shield, Star, AlertTriangle,
@@ -118,34 +120,37 @@ export default function GamePortal() {
   const [bossAnimData, setBossAnimData] = useState<{ isVictory: boolean; bossEmoji: string; bossName: string; pfEarned: number; pfPenalty: number } | null>(null);
   const [reviewWeek, setReviewWeek] = useState<{ weekNumber: number; weekTitle: string } | null>(null);
 
-  // Hardcoded memberId=1 for now (will be dynamic with auth)
-  const memberId = 1;
+  // Admin view mode: detect ?adminView=true&memberId=X&memberName=Y in URL
+  const searchParams = new URLSearchParams(window.location.search);
+  const isAdminView = searchParams.get("adminView") === "true";
+  const adminViewMemberId = parseInt(searchParams.get("memberId") || "0");
+  const adminViewMemberName = decodeURIComponent(searchParams.get("memberName") || "Aluno");
+
+  // Get real memberId from student auth session (or admin override)
+  const { student: studentData } = useStudentAuth();
+  const memberId = isAdminView ? adminViewMemberId : (studentData?.memberId || 0);
   const utils = trpc.useUtils();
 
-  // Queries
-  const { data: progress, refetch: refetchProgress } = trpc.game.getProgress.useQuery({
-    classId: classIdNum,
-    memberId,
-  });
-
+  // Queries (only run when memberId is valid)
+  const { data: progress, refetch: refetchProgress } = trpc.game.getProgress.useQuery(
+    { classId: classIdNum, memberId },
+    { enabled: memberId > 0 }
+  );
   const { data: availableQuests } = trpc.game.getAvailableQuests.useQuery({
     classId: classIdNum,
   });
-
-  const { data: completedQuestIds } = trpc.game.getCompletedQuests.useQuery({
-    classId: classIdNum,
-    memberId,
-  });
-
+  const { data: completedQuestIds } = trpc.game.getCompletedQuests.useQuery(
+    { classId: classIdNum, memberId },
+    { enabled: memberId > 0 }
+  );
   const { data: leaderboard } = trpc.game.getLeaderboard.useQuery({
     classId: classIdNum,
     limit: 5,
   });
-
-  const { data: bossStatuses, refetch: refetchBossStatuses } = trpc.game.getAllBossStatuses.useQuery({
-    classId: classIdNum,
-    memberId,
-  });
+  const { data: bossStatuses, refetch: refetchBossStatuses } = trpc.game.getAllBossStatuses.useQuery(
+    { classId: classIdNum, memberId },
+    { enabled: memberId > 0 }
+  );
 
   // Count earned achievements for badge
   const earnedAchievementCount = useMemo(() => {
@@ -159,9 +164,9 @@ export default function GamePortal() {
   const reportMutation = trpc.game.reportError.useMutation();
   const completeBossMutation = trpc.game.completeBossBattle.useMutation();
 
-  // Initialize progress if needed
+  // Initialize progress if needed (only when memberId is valid)
   useEffect(() => {
-    if (progress === null) {
+    if (progress === null && memberId > 0) {
       initMutation.mutate({
         classId: classIdNum,
         memberId,
@@ -169,7 +174,7 @@ export default function GamePortal() {
         onSuccess: () => refetchProgress(),
       });
     }
-  }, [progress]);
+  }, [progress, memberId]);
 
   // Timer
   useEffect(() => {
@@ -362,6 +367,7 @@ export default function GamePortal() {
     return (
       <BossBattle
         weekNumber={activeBossWeek}
+        gender={["diana", "sheila"].includes((progress?.characterId || "").toLowerCase()) ? "female" : "male"}
         onComplete={handleBossComplete}
         onBack={() => {
           setView("map");
@@ -377,8 +383,23 @@ export default function GamePortal() {
   if (view === "map") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#111638] to-[#0a0e27] text-white">
+        {/* Admin View Banner */}
+        {isAdminView && (
+          <div className="sticky top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-sm font-medium" style={{ backgroundColor: "#7c3aed", borderBottom: "2px solid #a855f7" }}>
+            <div className="flex items-center gap-2">
+              <Eye size={14} />
+              <span>Modo Admin — Visualizando como: <strong>{adminViewMemberName}</strong> (ID: {adminViewMemberId})</span>
+            </div>
+            <button
+              onClick={() => window.close()}
+              className="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs transition-all"
+            >
+              Fechar
+            </button>
+          </div>
+        )}
         {/* Top HUD */}
-        <div className="sticky top-0 z-50 bg-[#0a0e27]/90 backdrop-blur-md border-b border-emerald-500/20 px-4 2xl:px-8 py-3 2xl:py-4">
+        <div className="sticky z-50 bg-[#0a0e27]/90 backdrop-blur-md border-b border-emerald-500/20 px-4 2xl:px-8 py-3 2xl:py-4" style={{ top: isAdminView ? '40px' : '0' }}>
           <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -684,6 +705,16 @@ export default function GamePortal() {
   if (view === "quest" && selectedQuest) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1040] to-[#0a0e27] text-white flex flex-col">
+        {/* Admin View Banner */}
+        {isAdminView && (
+          <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm font-medium" style={{ backgroundColor: "#7c3aed", borderBottom: "2px solid #a855f7" }}>
+            <div className="flex items-center gap-2">
+              <Eye size={14} />
+              <span>Modo Admin — <strong>{adminViewMemberName}</strong></span>
+            </div>
+            <button onClick={() => window.close()} className="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs transition-all">Fechar</button>
+          </div>
+        )}
         {/* Quest Header */}
         <div className="bg-[#0a0e27]/90 backdrop-blur-md border-b border-purple-500/20 px-4 py-3">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -925,7 +956,25 @@ export default function GamePortal() {
     );
   }
 
-  // Fallback
+  // Fallback: show loading or auth error
+  if (!isAdminView && memberId === 0) {
+    return (
+      <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center">
+        <div className="text-center text-white max-w-sm mx-auto px-4">
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold text-emerald-400 mb-2">Acesso Restrito</h2>
+          <p className="text-gray-400 mb-6">Para jogar, acesse o jogo pelo portal do aluno com o seu login.</p>
+          <a
+            href="/login-aluno"
+            className="inline-block px-6 py-2.5 rounded-lg font-bold text-white transition-all hover:scale-105"
+            style={{ backgroundColor: "#F7941D" }}
+          >
+            Fazer Login
+          </a>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center">
       <div className="text-center text-white">

@@ -1141,6 +1141,12 @@ export const qrCodeSessions = mysqlTable("qrCodeSessions", {
   tokenExpiresAt: timestamp("tokenExpiresAt"), // Expiração do token (10 min)
   tokenRotationCount: int("tokenRotationCount").notNull().default(0), // Contador de rotações
   
+  // Geolocalização da sala de aula (configurada pelo professor)
+  geoLatitude: decimal("geoLatitude", { precision: 10, scale: 7 }),  // Latitude da sala
+  geoLongitude: decimal("geoLongitude", { precision: 10, scale: 7 }), // Longitude da sala
+  geoRadiusMeters: int("geoRadiusMeters").notNull().default(150), // Raio permitido em metros (padrão: 150m)
+  geoValidationEnabled: boolean("geoValidationEnabled").notNull().default(true), // Habilitar validação GPS
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1163,6 +1169,12 @@ export const attendanceRecords = mysqlTable("attendanceRecords", {
   // Validação
   isValid: boolean("isValid").notNull().default(true),
   validationNotes: text("validationNotes"), // Notas do professor se inválido
+  
+  // Geolocalização do aluno no momento do check-in
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  distanceMeters: decimal("distanceMeters", { precision: 8, scale: 2 }), // Distância da sala em metros
+  geoStatus: mysqlEnum("geoStatus", ["valid", "invalid", "no_gps", "disabled"]).default("no_gps"),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

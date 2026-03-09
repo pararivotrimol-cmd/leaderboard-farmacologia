@@ -15,6 +15,31 @@ import crypto from "crypto";
 const TOKEN_VALIDITY_MINUTES = 10;
 const TOKEN_SECRET = process.env.JWT_SECRET || "qrcode-attendance-secret-key";
 
+// ═══════ GEO CONFIGURATION ═══════
+// Localização padrão: UNIRIO - Instituto Biomédico, Rua Frei Caneca 94, Centro, RJ
+const DEFAULT_GEO_LATITUDE = -22.9105064;
+const DEFAULT_GEO_LONGITUDE = -43.1925053;
+const DEFAULT_GEO_RADIUS_METERS = 150; // Raio padrão: 150 metros
+
+/**
+ * Calcula a distância entre dois pontos geográficos usando a fórmula de Haversine
+ * @returns distância em metros
+ */
+function haversineDistance(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const R = 6371000; // Raio da Terra em metros
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 /**
  * Generate a rotating HMAC token for a QR Code session
  * Token = HMAC-SHA256(sessionId + rotationCount + timestamp, secret)
@@ -67,6 +92,10 @@ export const qrcodeRouter = router({
         startTime: z.string().regex(/^\d{2}:\d{2}$/),
         endTime: z.string().regex(/^\d{2}:\d{2}$/),
         sessionToken: z.string().optional(),
+        geoLatitude: z.number().optional(),
+        geoLongitude: z.number().optional(),
+        geoRadiusMeters: z.number().min(50).max(1000).optional(),
+        geoValidationEnabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -100,6 +129,10 @@ export const qrcodeRouter = router({
           currentToken: token,
           tokenExpiresAt: expiresAt,
           tokenRotationCount: 0,
+          geoLatitude: String(input.geoLatitude ?? DEFAULT_GEO_LATITUDE),
+          geoLongitude: String(input.geoLongitude ?? DEFAULT_GEO_LONGITUDE),
+          geoRadiusMeters: input.geoRadiusMeters ?? DEFAULT_GEO_RADIUS_METERS,
+          geoValidationEnabled: input.geoValidationEnabled ?? true,
         })
         .catch((err) => {
           console.error("Erro ao criar sessão QR Code:", err);
@@ -260,8 +293,8 @@ export const qrcodeRouter = router({
     }),
 
   /**
-   * Registrar presença via QR Code com validação de token rotativo
-   * Aluno escaneia o QR Code e registra presença
+   * Registrar presença via QR Code com validação de token rotativo + GPS
+   * Aluno escaneia o QR Code e registra presença (deve estar no local da aula)
    */
   checkIn: publicProcedure
     .input(
@@ -270,6 +303,8 @@ export const qrcodeRouter = router({
         memberId: z.number(),
         classId: z.number(),
         token: z.string().min(1), // Token rotativo obrigatório
+        latitude: z.number().optional(),  // GPS do aluno
+        longitude: z.number().optional(), // GPS do aluno
       })
     )
     .mutation(async ({ input }) => {
@@ -298,7 +333,6 @@ export const qrcodeRouter = router({
       );
 
       if (!tokenValid) {
-        // Check if token is expired vs wrong
         if (
           session[0].tokenExpiresAt &&
           new Date() > session[0].tokenExpiresAt
@@ -312,8 +346,48 @@ export const qrcodeRouter = router({
         );
       }
 
-      // Permitir check-in a qualquer hora e dia (sem restrições)
-      // O professor controla quando o QR code está ativo
+      // ═══════ VALIDAÇÃO GEOGRÁFICA (GPS) ═══════
+      const geoEnabled = session[0].geoValidationEnabled ?? true;
+      const sessionLat = session[0].geoLatitude ? parseFloat(String(session[0].geoLatitude)) : DEFAULT_GEO_LATITUDE;
+      const sessionLon = session[0].geoLongitude ? parseFloat(String(session[0].geoLongitude)) : DEFAULT_GEO_LONGITUDE;
+      const allowedRadius = session[0].geoRadiusMeters ?? DEFAULT_GEO_RADIUS_METERS;
+
+      let distanceFromClass: number | null = null;
+      let geoStatus: "valid" | "invalid" | "no_gps" | "disabled" = "no_gps";
+
+      if (geoEnabled) {
+        // GPS é obrigatório quando validação geográfica está ativada
+        if (input.latitude == null || input.longitude == null) {
+          throw new Error(
+            "Localização GPS obrigatória. Ative a localização do celular e tente novamente."
+          );
+        }
+
+        // Calcular distância entre aluno e sala de aula
+        distanceFromClass = haversineDistance(
+          input.latitude, input.longitude,
+          sessionLat, sessionLon
+        );
+
+        if (distanceFromClass > allowedRadius) {
+          geoStatus = "invalid";
+          throw new Error(
+            `Você está a ${Math.round(distanceFromClass)}m da sala de aula. ` +
+            `O limite é ${allowedRadius}m. Você precisa estar na sala para registrar presença.`
+          );
+        }
+
+        geoStatus = "valid";
+      } else {
+        geoStatus = "disabled";
+        // Se GPS foi enviado mesmo com validação desabilitada, calcular distância para registro
+        if (input.latitude != null && input.longitude != null) {
+          distanceFromClass = haversineDistance(
+            input.latitude, input.longitude,
+            sessionLat, sessionLon
+          );
+        }
+      }
 
       // Verificar se aluno já registrou presença nesta sessão
       const existingRecord = await db
@@ -334,7 +408,7 @@ export const qrcodeRouter = router({
         };
       }
 
-      // Registrar presença
+      // Registrar presença com dados de geolocalização
       await db
         .insert(attendanceRecords)
         .values({
@@ -342,6 +416,10 @@ export const qrcodeRouter = router({
           memberId: input.memberId,
           classId: input.classId,
           isValid: true,
+          latitude: input.latitude != null ? String(input.latitude) : null,
+          longitude: input.longitude != null ? String(input.longitude) : null,
+          distanceMeters: distanceFromClass != null ? String(Math.round(distanceFromClass * 100) / 100) : null,
+          geoStatus,
         })
         .catch((err: any) => {
           console.error("Erro ao registrar presença:", err);
@@ -351,9 +429,10 @@ export const qrcodeRouter = router({
       // Atualizar resumo de presença
       await updateAttendanceSummary(input.memberId, input.classId);
 
+      const distMsg = distanceFromClass != null ? ` (${Math.round(distanceFromClass)}m da sala)` : "";
       return {
         success: true,
-        message: "Presença registrada com sucesso!",
+        message: `Presença registrada com sucesso!${distMsg}`,
         alreadyCheckedIn: false,
       };
     }),
