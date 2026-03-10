@@ -42,12 +42,35 @@ import {
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
+import mysql from "mysql2/promise";
+
+// ─── Connection Pool (suporta 100 usuários simultâneos) ───
+let _pool: mysql.Pool | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
+
+function getPool(): mysql.Pool {
+  if (!_pool && process.env.DATABASE_URL) {
+    _pool = mysql.createPool({
+      uri: process.env.DATABASE_URL,
+      connectionLimit: 25,        // até 25 conexões simultâneas
+      queueLimit: 200,            // fila de até 200 requisições aguardando conexão
+      waitForConnections: true,
+      connectTimeout: 10000,      // 10s para conectar
+      idleTimeout: 60000,         // fecha conexões ociosas após 60s
+      maxIdle: 10,                // mantém até 10 conexões ociosas
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 30000,
+    });
+    console.log("[Database] Connection pool created (limit: 25, queue: 200)");
+  }
+  return _pool!;
+}
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const pool = getPool();
+      _db = drizzle(pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -56,18 +79,16 @@ export async function getDb() {
   return _db;
 }
 
-import mysql from "mysql2/promise";
-let _rawConn: mysql.Connection | null = null;
 export async function getRawDb() {
-  if (!_rawConn && process.env.DATABASE_URL) {
-    try {
-      _rawConn = await mysql.createConnection(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to create raw connection:", error);
-      _rawConn = null;
-    }
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    // Usa o pool para raw queries também (não cria conexão dedicada)
+    const pool = getPool();
+    return pool;
+  } catch (error) {
+    console.warn("[Database] Failed to get raw pool:", error);
+    return null;
   }
-  return _rawConn;
 }
 
 // ─── User Helpers ───

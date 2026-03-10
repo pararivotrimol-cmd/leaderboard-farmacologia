@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import compression from "compression";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -61,6 +62,17 @@ async function startServer() {
     },
   }));
   
+  // Compressão gzip — reduz tamanho das respostas em até 70% (melhora performance para 100 usuários)
+  app.use(compression({
+    level: 6,           // nível de compressão balanceado (1=rápido, 9=máximo)
+    threshold: 1024,    // comprimir respostas maiores que 1KB
+    filter: (req, res) => {
+      // Não comprimir respostas de streaming/SSE
+      if (req.headers['accept'] === 'text/event-stream') return false;
+      return compression.filter(req, res);
+    },
+  }));
+  
   // CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
   app.use(cors({
@@ -84,39 +96,46 @@ async function startServer() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
   
-  // Rate limiting — usando IP real via X-Forwarded-For (trust proxy ativado acima)
+  // Rate limiting — configurado para suportar 100 alunos simultâneos
+  // Considerando que alunos podem estar na mesma rede (mesmo IP público da UNIRIO)
+  // Limites generosos para não bloquear turmas inteiras
+  
   const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // 1000 requests per window per IP
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5000, // 5000 req/15min por IP — comporta 100 alunos com 50 req cada
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas requisições, tente novamente mais tarde' });
     },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+      // Não limitar assets estáticos
+      return req.path.startsWith('/assets/') || req.path.endsWith('.js') || req.path.endsWith('.css');
+    },
   });
   
   const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts per window per IP
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 200, // 200 tentativas de login por IP — comporta 100 alunos com 2 tentativas cada
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas tentativas de login, tente novamente mais tarde' });
     },
     skipSuccessfulRequests: true,
   });
   
-  // tRPC limiter: 500 req/min por IP — suporta turmas grandes fazendo check-in simultâneo
+  // tRPC limiter: 2000 req/min por IP — suporta 100 alunos com 20 req/min cada
   const trpcLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 500, // 500 requests per minute per IP
+    windowMs: 1 * 60 * 1000, // 1 minuto
+    max: 2000, // 2000 req/min por IP
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas requisições à API, tente novamente mais tarde' });
     },
   });
   
-  // Limiter específico para check-in de QR Code — mais permissivo para suportar turmas grandes
+  // Limiter específico para check-in de QR Code — suporta turma inteira de 100 alunos
   const qrCheckInLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 200, // 200 check-ins por IP por 5 minutos
+    windowMs: 5 * 60 * 1000, // 5 minutos
+    max: 500, // 500 check-ins por IP por 5 minutos — comporta 100 alunos com 5 tentativas cada
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas tentativas de check-in. Aguarde alguns minutos.' });
     },
