@@ -97,7 +97,7 @@ export const monitorsRouter = router({
       const db = await getDb();
       if (!db) return [];
       return db
-        .select({ id: classes.id, name: classes.name, period: classes.period })
+        .select({ id: classes.id, name: classes.name, semester: classes.semester, course: classes.course })
         .from(classes)
         .where(eq(classes.isActive, 1))
         .orderBy(classes.name);

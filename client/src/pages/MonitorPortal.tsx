@@ -255,7 +255,7 @@ function MonitorRegisterForm({ onBack }: { onBack: () => void }) {
                   <option value="">Selecione sua turma...</option>
                   {classesData?.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}{c.period ? ` — ${c.period}` : ""}
+                      {c.name}{(c as any).semester ? ` — ${(c as any).semester}` : ""}
                     </option>
                   ))}
                 </select>
@@ -529,8 +529,8 @@ function MonitorDashboard({ monitor, sessionToken, onLogout }: {
             <div>
               <p className="text-sm font-semibold text-foreground">Sua turma: {assignedClass.name}</p>
               <p className="text-xs text-muted-foreground">
-                {(assignedClass as { period?: string }).period
-                  ? `Período: ${(assignedClass as { period?: string }).period}`
+                {(assignedClass as { semester?: string }).semester
+                  ? `Semestre: ${(assignedClass as { semester?: string }).semester}`
                   : "Você tem acesso completo às informações desta turma."}
               </p>
             </div>
