@@ -35,6 +35,9 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   
+  // Trust Railway's proxy so rate limiter uses real client IPs (X-Forwarded-For)
+  app.set('trust proxy', 1);
+  
   initializeWebSocket(server);
   
   // Security headers with Helmet
@@ -64,6 +67,8 @@ async function startServer() {
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
+      // Allow the production domain
+      if (origin.includes('conexaofarmacologia.com.br')) return callback(null, true);
       // Allow any manus.space or manus.computer domain
       if (origin.endsWith('.manus.space') || origin.endsWith('.manus.computer') || allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -79,10 +84,10 @@ async function startServer() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
   
-  // Rate limiting
+  // Rate limiting — usando IP real via X-Forwarded-For (trust proxy ativado acima)
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // 500 requests per window
+    max: 1000, // 1000 requests per window per IP
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas requisições, tente novamente mais tarde' });
     },
@@ -92,24 +97,36 @@ async function startServer() {
   
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 attempts per window
+    max: 10, // 10 attempts per window per IP
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas tentativas de login, tente novamente mais tarde' });
     },
     skipSuccessfulRequests: true,
   });
   
+  // tRPC limiter: 500 req/min por IP — suporta turmas grandes fazendo check-in simultâneo
   const trpcLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
-    max: 200, // 200 requests per minute
+    max: 500, // 500 requests per minute per IP
     handler: (_req, res) => {
       res.status(429).json({ error: 'Muitas requisições à API, tente novamente mais tarde' });
     },
   });
   
+  // Limiter específico para check-in de QR Code — mais permissivo para suportar turmas grandes
+  const qrCheckInLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 200, // 200 check-ins por IP por 5 minutos
+    handler: (_req, res) => {
+      res.status(429).json({ error: 'Muitas tentativas de check-in. Aguarde alguns minutos.' });
+    },
+    skip: (req) => !req.path.includes('qrcode.checkIn'),
+  });
+  
   // Apply rate limiters
   app.use('/api/', generalLimiter);
   app.use('/api/trpc', trpcLimiter);
+  app.use('/api/trpc/qrcode.checkIn', qrCheckInLimiter);
   app.use('/api/oauth/callback', authLimiter);
   
   // Configure body parser with larger size limit for file uploads
