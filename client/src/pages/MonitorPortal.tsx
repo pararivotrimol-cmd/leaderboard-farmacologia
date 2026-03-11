@@ -459,13 +459,16 @@ function MonitorDashboard({ monitor, sessionToken, onLogout }: {
     .join("")
     .toUpperCase();
 
-  // Ajustar href do cronograma para filtrar pela turma do monitor
+  // Ajustar href para filtrar pela turma do monitor
   const featuresWithClass = MONITOR_FEATURES.map((f) => {
     if (f.href === "/cronograma" && assignedClass?.id) {
       return { ...f, href: `/cronograma?classId=${assignedClass.id}` };
     }
     if (f.href === "/monitor/notas" && assignedClass?.id) {
       return { ...f, href: `/monitor/notas?classId=${assignedClass.id}` };
+    }
+    if (f.href === "/jogo" && assignedClass?.id) {
+      return { ...f, href: `/jogo/${assignedClass.id}` };
     }
     return f;
   });
