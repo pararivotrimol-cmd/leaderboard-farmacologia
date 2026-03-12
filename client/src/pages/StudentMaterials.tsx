@@ -222,7 +222,7 @@ export default function StudentMaterials() {
                 )}
 
                 <div className="flex gap-2 pt-3 border-t border-border">
-                  {material.url && (
+                  {material.url && material.fileKey && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -233,19 +233,15 @@ export default function StudentMaterials() {
                       Visualizar
                     </Button>
                   )}
-                  {material.fileKey && (
+                  {material.url && (
                     <Button
                       size="sm"
                       variant="outline"
                       className="flex-1 gap-2"
-                      onClick={() => {
-                        if (material.url) {
-                          window.open(material.url, '_blank');
-                        }
-                      }}
+                      onClick={() => window.open(material.url!, '_blank')}
                     >
                       <Download size={14} />
-                      Baixar
+                      {material.fileKey ? "Baixar" : "Abrir"}
                     </Button>
                   )}
                 </div>

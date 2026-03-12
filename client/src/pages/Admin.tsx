@@ -2068,6 +2068,8 @@ function MaterialsManager({ password }: { password: string }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [materialType, setMaterialType] = useState<"file" | "link" | "comment">("file");
+  const [fileInputMode, setFileInputMode] = useState<"url" | "upload">("url");
+  const [fileExternalUrl, setFileExternalUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [module, setModule] = useState("Geral");
   const [week, setWeek] = useState<string>("");
@@ -2117,14 +2119,25 @@ function MaterialsManager({ password }: { password: string }) {
   });
 
   function resetForm() {
-    setTitle(""); setDescription(""); setLinkUrl(""); setModule("Geral"); setWeek(""); setSelectedFile(null); setUploading(false);
+    setTitle(""); setDescription(""); setLinkUrl(""); setFileExternalUrl(""); setModule("Geral"); setWeek(""); setSelectedFile(null); setUploading(false);
   }
 
   async function handleSubmit() {
     if (!title) { toast.error("Título é obrigatório"); return; }
     setUploading(true);
     try {
-      if (materialType === "file" && selectedFile) {
+      if (materialType === "file" && fileInputMode === "url" && fileExternalUrl) {
+        // Salvar como material com URL externa (Google Drive, OneDrive, etc.)
+        await createMaterial.mutateAsync({
+          password,
+          title,
+          description: description || undefined,
+          type: "file",
+          url: fileExternalUrl,
+          module,
+          week: week ? parseInt(week) : undefined,
+        });
+      } else if (materialType === "file" && fileInputMode === "upload" && selectedFile) {
         const reader = new FileReader();
         const base64 = await new Promise<string>((resolve, reject) => {
           reader.onload = () => {
@@ -2203,23 +2216,56 @@ function MaterialsManager({ password }: { password: string }) {
           <Plus size={16} className="text-primary" /> Novo Material
         </h3>
 
-        {/* File Drop Zone */}
+        {/* File input mode - URL externa ou upload direto */}
         {materialType === "file" && (
           <div className="mb-4">
-            <FileDropZone
-              onFilesSelected={(files) => {
-                if (files.length > 0) {
-                  setSelectedFile(files[0]);
-                  // Se for PDF, abrir preview
-                  if (files[0].type === "application/pdf") {
-                    pdfPreview.openPreview(files[0]);
+            <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 w-fit mb-3">
+              <button
+                onClick={() => setFileInputMode("url")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  fileInputMode === "url" ? "bg-primary/20 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Link2 size={11} /> Link externo
+              </button>
+              <button
+                onClick={() => setFileInputMode("upload")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  fileInputMode === "upload" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Upload size={11} /> Upload direto
+              </button>
+            </div>
+            {fileInputMode === "url" ? (
+              <div className="space-y-2">
+                <div className="p-3 rounded-md bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-xs text-blue-300 leading-relaxed">
+                    <strong className="text-blue-200">Como usar o Google Drive:</strong> Faça upload do arquivo no Google Drive → clique com o botão direito → "Compartilhar" → "Qualquer pessoa com o link" → copie o link e cole abaixo.
+                  </p>
+                </div>
+                <input
+                  value={fileExternalUrl}
+                  onChange={e => setFileExternalUrl(e.target.value)}
+                  className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+                  placeholder="Cole aqui o link do Google Drive, OneDrive ou Dropbox..."
+                />
+              </div>
+            ) : (
+              <FileDropZone
+                onFilesSelected={(files) => {
+                  if (files.length > 0) {
+                    setSelectedFile(files[0]);
+                    if (files[0].type === "application/pdf") {
+                      pdfPreview.openPreview(files[0]);
+                    }
                   }
-                }
-              }}
-              acceptedTypes={[".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png"]}
-              maxSize={50 * 1024 * 1024}
-              multiple={false}
-            />
+                }}
+                acceptedTypes={[".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png"]}
+                maxSize={50 * 1024 * 1024}
+                multiple={false}
+              />
+            )}
           </div>
         )}
 
@@ -2255,7 +2301,7 @@ function MaterialsManager({ password }: { password: string }) {
             placeholder="Descrição ou comentário..."
           />
 
-          {materialType === "file" && (
+          {materialType === "file" && fileInputMode === "upload" && (
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border text-foreground text-sm cursor-pointer hover:bg-secondary/80">
                 <Paperclip size={14} />
@@ -2316,7 +2362,7 @@ function MaterialsManager({ password }: { password: string }) {
 
           <button
             onClick={handleSubmit}
-            disabled={uploading || !title || (materialType === "file" && !selectedFile) || (materialType === "link" && !linkUrl)}
+            disabled={uploading || !title || (materialType === "file" && fileInputMode === "url" && !fileExternalUrl) || (materialType === "file" && fileInputMode === "upload" && !selectedFile) || (materialType === "link" && !linkUrl)}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
           >
             {uploading ? "Enviando..." : <><Upload size={14} /> Publicar Material</>}
