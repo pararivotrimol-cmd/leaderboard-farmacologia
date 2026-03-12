@@ -1,7 +1,72 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
-
+// Storage helpers — usa Cloudinary se configurado, caso contrário usa o proxy Manus
 import { ENV } from './_core/env';
+import { v2 as cloudinary } from 'cloudinary';
+
+// ─── Cloudinary ───────────────────────────────────────────────────────────────
+
+function isCloudinaryConfigured(): boolean {
+  return !!(ENV.cloudinaryCloudName && ENV.cloudinaryApiKey && ENV.cloudinaryApiSecret);
+}
+
+function initCloudinary() {
+  cloudinary.config({
+    cloud_name: ENV.cloudinaryCloudName,
+    api_key: ENV.cloudinaryApiKey,
+    api_secret: ENV.cloudinaryApiSecret,
+    secure: true,
+  });
+}
+
+async function cloudinaryPut(
+  relKey: string,
+  data: Buffer | Uint8Array | string,
+  contentType = "application/octet-stream"
+): Promise<{ key: string; url: string }> {
+  initCloudinary();
+
+  // Converter para base64 data URI
+  const buffer = typeof data === "string" ? Buffer.from(data, "base64") : Buffer.from(data as any);
+  const base64 = buffer.toString("base64");
+  const dataUri = `data:${contentType};base64,${base64}`;
+
+  // Determinar resource_type baseado no mimeType
+  let resourceType: "raw" | "image" | "video" | "auto" = "raw";
+  if (contentType.startsWith("image/")) resourceType = "image";
+  else if (contentType.startsWith("video/")) resourceType = "video";
+
+  // Usar o relKey como public_id (sem extensão para raw)
+  const publicId = relKey.replace(/^\/+/, "").replace(/\.[^.]+$/, "");
+  const folder = "farmacologia-materiais";
+
+  const result = await cloudinary.uploader.upload(dataUri, {
+    public_id: publicId,
+    folder,
+    resource_type: resourceType,
+    use_filename: true,
+    unique_filename: true,
+    overwrite: false,
+  });
+
+  return {
+    key: result.public_id,
+    url: result.secure_url,
+  };
+}
+
+async function cloudinaryGet(relKey: string): Promise<{ key: string; url: string }> {
+  initCloudinary();
+  const key = relKey.replace(/^\/+/, "");
+  // Gerar URL assinada com validade de 1 hora
+  const url = cloudinary.url(key, {
+    resource_type: "raw",
+    secure: true,
+    sign_url: true,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+  });
+  return { key, url };
+}
+
+// ─── Fallback: proxy Manus ────────────────────────────────────────────────────
 
 type StorageConfig = { baseUrl: string; apiKey: string };
 
@@ -67,11 +132,19 @@ function buildAuthHeaders(apiKey: string): HeadersInit {
   return { Authorization: `Bearer ${apiKey}` };
 }
 
+// ─── Exports públicos ─────────────────────────────────────────────────────────
+
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
+  // Usar Cloudinary se configurado
+  if (isCloudinaryConfigured()) {
+    return cloudinaryPut(relKey, data, contentType);
+  }
+
+  // Fallback: proxy Manus
   const { baseUrl, apiKey } = getStorageConfig();
   const key = normalizeKey(relKey);
   const uploadUrl = buildUploadUrl(baseUrl, key);
@@ -92,7 +165,13 @@ export async function storagePut(
   return { key, url };
 }
 
-export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
+export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {
+  // Usar Cloudinary se configurado
+  if (isCloudinaryConfigured()) {
+    return cloudinaryGet(relKey);
+  }
+
+  // Fallback: proxy Manus
   const { baseUrl, apiKey } = getStorageConfig();
   const key = normalizeKey(relKey);
   return {
