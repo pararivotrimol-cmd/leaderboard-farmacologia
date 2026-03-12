@@ -1257,6 +1257,7 @@ export const appRouter = router({
         name: z.string().optional(),
         teamId: z.number().optional(),
         xp: z.string().optional(),
+        classId: z.number().nullable().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const valid = await verifyAdminPassword(input.password);
