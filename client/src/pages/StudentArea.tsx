@@ -22,14 +22,15 @@ export default function StudentArea() {
   const [activeTab, setActiveTab] = useState("cronograma");
   const [, setLocation] = useLocation();
 
-  const { user } = useAuth();
-  const { student: studentData } = useStudentAuth();
+  // Auth: usar studentAuth (login do aluno) como autenticação principal
+  // useAuth (Manus OAuth) é mantido apenas como fallback para professores
+  const { user: oauthUser } = useAuth();
+  const { student: studentData, isAuthenticated: isStudentAuth, isLoading: studentLoading } = useStudentAuth();
   const memberId = studentData?.memberId || null;
 
-  const { data: classData } = trpc.classes.getById.useQuery(
-    { classId: classId || 0, sessionToken: "" },
-    { enabled: !!classId }
-  );
+  // Usar endpoint público para obter nome da turma (não requer token de professor)
+  const { data: allClasses } = trpc.classes.listAll.useQuery();
+  const classInfo = allClasses?.find((c: any) => c.id === classId);
 
   // Buscar dados filtrados por turma
   const { data: leaderboardData } = trpc.leaderboard.getDataByClass.useQuery(
@@ -113,7 +114,13 @@ export default function StudentArea() {
   };
 
   // Verificar se aluno está matriculado na turma
-  const isEnrolled = user && classData && classData.members?.some((m: any) => m.id === user.id);
+  // Usa studentData.classId (do login do aluno) em vez de comparar IDs de tabelas diferentes
+  const isEnrolled = isStudentAuth && studentData && (
+    // Aluno logado via studentAuth: verificar se classId da URL corresponde ao classId do aluno
+    studentData.classId === classId
+  );
+  // Fallback para professores/admin que acessam via OAuth
+  const isOAuthAccess = !!oauthUser;
 
   // Buscar cronograma do banco de dados filtrado pela turma
   const { data: scheduleData } = trpc.schedule.getAll.useQuery(
@@ -151,7 +158,20 @@ export default function StudentArea() {
     return (a1 * 0.3 + a2 * 0.3 + pfVal * 0.4);
   }, [av1, av2, pf]);
 
-  if (!user) {
+  // Mostrar loading enquanto verifica autenticação
+  if (studentLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-[#F7941D] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/60">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não está logado nem via studentAuth nem via OAuth
+  if (!isStudentAuth && !isOAuthAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
         <div className="text-center">
@@ -171,7 +191,7 @@ export default function StudentArea() {
     );
   }
 
-  if (!classId || !classData) {
+  if (!classId || (!classInfo && allClasses)) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
         <div className="text-center">
@@ -191,14 +211,14 @@ export default function StudentArea() {
     );
   }
 
-  if (!isEnrolled) {
+  if (!isEnrolled && !isOAuthAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: DARK_BG }}>
         <div className="text-center max-w-md">
           <Lock size={48} className="mx-auto mb-4" style={{ color: ORANGE }} />
           <h1 className="text-2xl font-bold text-white mb-2">Acesso Restrito</h1>
           <p className="text-white/60 mb-6">
-            Você não está matriculado na turma <strong>{classData.name}</strong>. Apenas alunos matriculados podem acessar esta área.
+            Você não está matriculado na turma <strong>{classInfo?.name || `#${classId}`}</strong>. Apenas alunos matriculados podem acessar esta área.
           </p>
           <Link href="/leaderboard">
             <button
@@ -232,7 +252,7 @@ export default function StudentArea() {
             </Link>
             <div>
               <h1 className="text-lg sm:text-xl 2xl:text-2xl font-bold text-white">Portal do Aluno</h1>
-              <p className="text-sm text-white/60">{classData.name}</p>
+              <p className="text-sm text-white/60">{classInfo?.name || `Turma #${classId}`}</p>
             </div>
           </div>
         </div>
